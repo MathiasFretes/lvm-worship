@@ -11,6 +11,7 @@ Base: GraceChords, commit `6a2907874` del 2026-09-24. Esta clasificación es pre
 | Adaptar | Identidad | El repositorio se llama `lvm-worship`; el branding y los paquetes internos conservan nombres GraceChords por ahora para minimizar el cambio inicial. |
 | Posponer | App Expo | `apps/mobile/` existe y comparte `packages/core`, pero el primer flujo integrado será local en web/escritorio. |
 | Investigar | Funciones ajenas al flujo inicial | Posts, lecturas y Cloudflare Workers existen; medir dependencias y licencias antes de retirar o reemplazar. |
+| Eliminar | Nada aprobado todavía | No hay evidencia suficiente para retirar código durante el baseline; decidir después de mapear dependencias y el flujo integrado. |
 
 ## Baseline verificable
 
