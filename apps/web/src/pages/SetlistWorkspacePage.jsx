@@ -13,6 +13,8 @@ import { showToast } from '../utils/app/toast'
 import { transposeSymPrefer } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '@gracechords/core/chordpro/parser'
 import { buildServiceFromSetlist } from '../lvm/serviceAdapter'
+import { buildWorshipPlanFromSetlist, parseWorshipContext } from '../lvm/worshipPlan'
+import { localSongFromChordPro } from '../lvm/localSong'
 import { decodeSet } from '../utils/setlists/setcode'
 import { effectiveEntryKey } from '../utils/setlists/entries'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
@@ -85,6 +87,26 @@ function defaultSetName(t, locale, existingNames) {
   return uniqueName(t('setlist.defaultName', { date }), existingNames)
 }
 
+const WORSHIP_CONTEXT_KEY = 'lvm.worship.context.v1'
+
+function readWorshipContext() {
+  try {
+    const raw = localStorage.getItem(WORSHIP_CONTEXT_KEY)
+    return raw ? parseWorshipContext(JSON.parse(raw)) : null
+  } catch {
+    return null
+  }
+}
+
+function downloadJson(value, filename) {
+  const url = URL.createObjectURL(new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: 'application/json' }))
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  setTimeout(() => URL.revokeObjectURL(url), 30_000)
+}
+
 export default function SetlistWorkspacePage() {
   const { t, i18n } = useTranslation('pages')
   const { id: routeId, songIds: routeSongIds, code: routeCode } = useParams()
@@ -140,6 +162,7 @@ export default function SetlistWorkspacePage() {
   // import rather than dropped on the floor.
   const [legacySets, setLegacySets] = useState(() => readLegacyLocalSets())
   const [legacyBusy, setLegacyBusy] = useState(false)
+  const [worshipContext, setWorshipContext] = useState(readWorshipContext)
 
   const verseCache = useRef(new Map())
   const searchRef = useRef(null)
@@ -475,6 +498,39 @@ export default function SetlistWorkspacePage() {
     }
   }
 
+  async function onImportContext(file) {
+    try {
+      const context = parseWorshipContext(JSON.parse(await file.text()))
+      if (worshipContext?.serviceId !== context.serviceId) controller.replaceEntries([])
+      localStorage.setItem(WORSHIP_CONTEXT_KEY, JSON.stringify(context))
+      setWorshipContext(context)
+      controller.setName(context.name)
+      controller.setDate(context.startsAt)
+      showToast(t('setlist.platformContextOpened'))
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'No se pudo abrir el contexto')
+    }
+  }
+
+  function onExportWorshipPlan() {
+    try {
+      const plan = buildWorshipPlanFromSetlist({ context: worshipContext, items, songs })
+      downloadJson(plan, `${plan.serviceId}-worship-plan.json`)
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'No se pudo exportar el repertorio')
+    }
+  }
+
+  async function onImportLocalSongs(files) {
+    try {
+      const songs = await Promise.all([...files].map(async (file) => localSongFromChordPro(file.name, await file.text(), `local-${makeUuid()}`)))
+      songs.forEach((song) => controller.toggleSong(song))
+      showToast(t('setlist.localSongsAdded', { count: songs.length }))
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'No se pudieron agregar las canciones')
+    }
+  }
+
   // --- Render --------------------------------------------------------------
   const actions = (
     <SetActions
@@ -497,6 +553,8 @@ export default function SetlistWorkspacePage() {
       onResetKeys={resetKeys}
       onServiceDate={onServiceDate}
       onExportService={onExportService}
+      onImportContext={!routeId ? onImportContext : undefined}
+      onExportWorshipPlan={!routeId && worshipContext ? onExportWorshipPlan : undefined}
     />
   )
 
@@ -716,6 +774,19 @@ export default function SetlistWorkspacePage() {
           <Button size="sm" variant="primary" onClick={onSaveDraft}>
             {t('setlist.saveToMySetlists')}
           </Button>
+        </div>
+      ) : null}
+      {!routeId && worshipContext ? (
+        <div className="gc-draft-banner">
+          <strong>{worshipContext.title}</strong>
+          <span>{t('setlist.platformRepertoire')} · {new Date(worshipContext.startsAt).toLocaleString(i18n.language)}</span>
+          <label className="gc-btn gc-btn--secondary gc-btn--sm">
+            {t('setlist.addLocalChordPro')}
+            <input type="file" accept=".chordpro,.cho,.pro,.txt,text/plain" multiple hidden onChange={(event) => {
+              if (event.target.files?.length) void onImportLocalSongs(event.target.files)
+              event.target.value = ''
+            }} />
+          </label>
         </div>
       ) : null}
       {!routeId && isLoggedIn && items.length > 0 ? (

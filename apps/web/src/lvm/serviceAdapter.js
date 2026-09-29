@@ -3,7 +3,7 @@ import { stepsBetween, transposeSymPrefer } from '@gracechords/core/chordpro/ind
 
 const SCHEMA_VERSION = '0.1'
 
-function toSong(entry, sectionOrder, toKey) {
+export function toSong(entry, sectionOrder, toKey) {
   const parsed = parseChordProOrLegacy(entry.chordpro_content || '')
   const sourceSections = parsed.sections
     .map((section) => ({

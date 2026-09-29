@@ -10,6 +10,21 @@
 > songs only; it is not the full production app. The original Supabase-backed
 > app remains available through `npm run dev` when credentials are configured.
 
+### LVM Worship ↔ Platform (M7)
+
+Platform owns the complete service. In the local `/setlist` draft, use **Abrir contexto de Platform**, add songs from the available library or import local ChordPro (`.cho`, `.chordpro`, `.pro`, `.txt`) files, then set order, keys, and repeated sections. **Guardar para Platform** exports a music-only `WorshipPlan 0.1` JSON. Platform validates and merges it into the selected musical block before exporting the unchanged `Service 0.1` to Presenter. The draft and imported context survive a browser restart in the same profile; keep the exported JSON as a portable backup.
+
+For a local no-backend run of the full web app, build with nonworking public client placeholders, then block external requests or disconnect the network. In PowerShell:
+
+```powershell
+$env:VITE_SUPABASE_URL='https://offline.invalid'
+$env:VITE_SUPABASE_ANON_KEY='offline-placeholder-key'
+cd apps/web
+npx vite build
+```
+
+These placeholders allow the existing web shell to start. The M7 draft and file exchange use only local files and `localStorage`; no Supabase service is contacted successfully. The saved-account setlist path remains outside this offline handoff.
+
 GraceChords is a worship songbook platform for churches and worship teams. It
 manages a [ChordPro](https://www.chordpro.org/) song catalog with fast search,
 key transposition, setlist and songbook building, PDF/PPTX export, a full-screen

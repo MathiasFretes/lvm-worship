@@ -36,6 +36,8 @@ export default function SetActions({
   onResetKeys,
   onServiceDate,
   onExportService,
+  onImportContext,
+  onExportWorshipPlan,
   telegramItems,
 }) {
   const { t } = useTranslation('pages')
@@ -83,9 +85,25 @@ export default function SetActions({
         {busy ? t('setlist.exporting') : t('setlist.exportPdf')}
       </Button>
 
-      <Button size="sm" variant="secondary" iconLeft={<DownloadIcon />} disabled={empty} onClick={onExportService}>
-        {t('setlist.exportService')}
-      </Button>
+      {onImportContext ? (
+        <label className="gc-btn gc-btn--secondary">
+          {t('setlist.importPlatformContext')}
+          <input type="file" accept=".json,application/json" hidden onChange={(event) => {
+            const file = event.target.files?.[0]
+            if (file) onImportContext(file)
+            event.target.value = ''
+          }} />
+        </label>
+      ) : null}
+      {onExportWorshipPlan ? (
+        <Button size="sm" variant="secondary" iconLeft={<DownloadIcon />} disabled={empty} onClick={onExportWorshipPlan}>
+          {t('setlist.saveForPlatform')}
+        </Button>
+      ) : !persisted ? (
+        <Button size="sm" variant="secondary" iconLeft={<DownloadIcon />} disabled={empty} onClick={onExportService}>
+          {t('setlist.exportService')}
+        </Button>
+      ) : null}
 
       <div className="gc-ppt-menu" ref={pptRef}>
         <Button
