@@ -123,6 +123,8 @@
     "dragToReorder": "Arrastra para reordenar",
     "duplicateSet": "Duplicar repertorio",
     "duplicateSong": "Duplicar",
+    "exportService": "Exportar servicio JSON",
+    "sectionOrder": "Orden de secciones (repite números si hace falta)",
     "editedAgo": "Editado {{ago}}",
     "emptySet": "Aún no hay canciones: busca en la biblioteca para agregar una.",
     "incomplete": "Incompleta",

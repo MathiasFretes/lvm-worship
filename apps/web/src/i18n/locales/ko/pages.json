@@ -123,6 +123,8 @@
     "dragToReorder": "끌어서 순서 변경",
     "duplicateSet": "셋리스트 복제",
     "duplicateSong": "복제",
+    "exportService": "예배 JSON 내보내기",
+    "sectionOrder": "섹션 순서 (필요하면 번호 반복)",
     "editedAgo": "{{ago}} 수정됨",
     "emptySet": "아직 곡이 없습니다. 라이브러리에서 검색해 추가하세요.",
     "incomplete": "미완성",

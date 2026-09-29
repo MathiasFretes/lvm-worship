@@ -123,6 +123,8 @@
     "dragToReorder": "Sıralamak için sürükleyin",
     "duplicateSet": "Set listesini çoğalt",
     "duplicateSong": "Çoğalt",
+    "exportService": "İbadet JSON dışa aktar",
+    "sectionOrder": "Bölüm sırası (gerekirse numaraları yineleyin)",
     "editedAgo": "{{ago}} düzenlendi",
     "emptySet": "Henüz ilahi yok — eklemek için kitaplıkta arayın.",
     "incomplete": "Eksik",

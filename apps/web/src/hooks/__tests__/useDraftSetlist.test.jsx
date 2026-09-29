@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { buildServiceFromSetlist } from '../../lvm/serviceAdapter'
 
 const SONGS = [
-  { dbId: 'uuid-a', id: 'abba', title: 'Abba', authors: [], originalKey: 'D', tempo: 128 },
-  { dbId: 'uuid-b', id: 'grace', title: 'Grace', authors: ['John Newton'], originalKey: 'G', tempo: 72 },
+  { dbId: 'uuid-a', id: 'abba', title: 'Abba', authors: [], originalKey: 'D', tempo: 128, chordpro_content: '{start_of_verse}\n[D]Abba\n{end_of_verse}\n{start_of_chorus}\n[G]Aleluya\n{end_of_chorus}' },
+  { dbId: 'uuid-b', id: 'grace', title: 'Grace', authors: ['John Newton'], originalKey: 'G', tempo: 72, chordpro_content: '{start_of_verse}\n[G]Gracia\n{end_of_verse}' },
 ]
 
 vi.mock('../useSongs', () => ({ useSongs: () => ({ songs: SONGS, loading: false }) }))
@@ -87,7 +88,52 @@ describe('useDraftSetlist', () => {
     expect(result.current.items.map((i) => i.songId)).toEqual(['grace', 'abba'])
 
     act(() => { result.current.setKeyFor(result.current.items[0].entryKey, 'Bb') })
-    expect(stored().entries[0]).toEqual({ songId: 'grace', toKey: 'Bb' })
+    expect(stored().entries[0]).toMatchObject({ songId: 'grace', toKey: 'Bb' })
+  })
+
+  it('persists a per-entry section order through duplicate and reload', async () => {
+    const { result } = renderHook(() => useDraftSetlist())
+    act(() => { result.current.toggleSong(SONGS[0]) })
+    act(() => { result.current.setSectionOrderFor(result.current.items[0].entryKey, '1,2,1,2') })
+    act(() => { result.current.duplicateEntry(result.current.items[0].entryKey) })
+    expect(result.current.items.map((item) => item.sectionOrderText)).toEqual(['1,2,1,2', '1,2,1,2'])
+    expect(stored().entries.map((entry) => entry.sectionOrderText)).toEqual(['1,2,1,2', '1,2,1,2'])
+  })
+
+  it('exports the edited draft order and per-song arrangement as Service 0.1', () => {
+    const { result } = renderHook(() => useDraftSetlist())
+    act(() => { result.current.toggleSong(SONGS[0]) })
+    act(() => { result.current.toggleSong(SONGS[1]) })
+    const first = result.current.items[0]
+    act(() => { result.current.setSectionOrderFor(first.entryKey, '1,2,1,2') })
+    act(() => { result.current.duplicateEntry(first.entryKey) })
+    const last = result.current.items[2]
+    act(() => { result.current.moveEntry(last.entryKey, first.entryKey) })
+    const service = buildServiceFromSetlist({
+      name: 'Ensayo', serviceDate: '2026-09-27T19:00:00Z',
+      items: result.current.items, songs: SONGS,
+    })
+    expect(service.items.map((item) => item.song.title)).toEqual(['Grace', 'Abba', 'Abba'])
+    expect(service.items[1].song.sections.map((section) => section.kind)).toEqual(['verse', 'chorus', 'verse', 'chorus'])
+  })
+
+  it('exports a previously selected song after reload without a live catalog', async () => {
+    const { result, unmount } = renderHook(() => useDraftSetlist())
+    act(() => { result.current.toggleSong(SONGS[0]) })
+    unmount()
+    const onlineSongs = [...SONGS]
+    SONGS.splice(0, SONGS.length)
+    try {
+      vi.resetModules()
+      ;({ useDraftSetlist } = await import('../useDraftSetlist'))
+      const offline = renderHook(() => useDraftSetlist())
+      const service = buildServiceFromSetlist({ items: offline.result.current.items, songs: offline.result.current.songs, now: new Date('2026-09-27T19:00:00Z') })
+      expect(service.items[0].song.title).toBe('Abba')
+      expect(service.items[0].song.sections[0].lines[0].text).toBe('Abba')
+      offline.unmount()
+    } finally {
+      SONGS.push(...onlineSongs)
+    }
   })
 
   it('clears storage on reset', () => {
