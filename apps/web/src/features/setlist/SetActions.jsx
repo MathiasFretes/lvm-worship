@@ -35,6 +35,7 @@ export default function SetActions({
   onTransposeSet,
   onResetKeys,
   onServiceDate,
+  onExportService,
   telegramItems,
 }) {
   const { t } = useTranslation('pages')
@@ -80,6 +81,10 @@ export default function SetActions({
         aria-label={t('setlist.exportPdfTooltip')}
       >
         {busy ? t('setlist.exporting') : t('setlist.exportPdf')}
+      </Button>
+
+      <Button size="sm" variant="secondary" iconLeft={<DownloadIcon />} disabled={empty} onClick={onExportService}>
+        {t('setlist.exportService')}
       </Button>
 
       <div className="gc-ppt-menu" ref={pptRef}>
@@ -204,20 +209,20 @@ export default function SetActions({
             >
               <ResetIcon /> {t('setlist.resetKeys')}
             </button>
+            <hr className="gc-menu-divider" />
+            <button
+              type="button"
+              role="menuitem"
+              className="gc-menu-item"
+              onClick={() => {
+                setMoreOpen(false)
+                onServiceDate()
+              }}
+            >
+              {t('setlist.fieldServiceDate')}
+            </button>
             {persisted ? (
               <>
-                <hr className="gc-menu-divider" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="gc-menu-item"
-                  onClick={() => {
-                    setMoreOpen(false)
-                    onServiceDate()
-                  }}
-                >
-                  {t('setlist.fieldServiceDate')}
-                </button>
                 <button
                   type="button"
                   role="menuitem"

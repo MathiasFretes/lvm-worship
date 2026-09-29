@@ -2,6 +2,7 @@
   "name": "gracechords-monorepo",
   "private": true,
   "version": "1.1.0",
+  "engines": { "node": ">=22.22.2" },
   "type": "module",
   "workspaces": [
     "apps/*",
@@ -10,7 +11,9 @@
   "scripts": {
     "postinstall": "node scripts/postinstall.mjs",
     "dev": "npm run dev -w @gracechords/web",
+    "dev:mock": "npm run dev:mock -w @gracechords/web",
     "build": "npm run build -w @gracechords/web",
+    "build:mock": "npm run build:mock -w @gracechords/web",
     "preview": "npm run preview -w @gracechords/web",
     "test": "npm run test -w @gracechords/web",
     "test:run": "npm run test:run -w @gracechords/web",

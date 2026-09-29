@@ -21,6 +21,8 @@ export default function SetTable({
   onRemove,
   onDuplicate,
   onKeyChange,
+  onArrangementChange,
+  sectionLabels = {},
 }) {
   const { t } = useTranslation('pages')
   const [dragKey, setDragKey] = useState(null)
@@ -107,6 +109,20 @@ export default function SetTable({
                 <span className="gc-set-song-title">{song.title || t('setlist.scripture')}</span>
                 {isVerse && song.translation ? (
                   <span className="gc-verse-badge">{song.translation}</span>
+                ) : null}
+                {selected && !isVerse && onArrangementChange ? (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <label>
+                      {t('setlist.sectionOrder')}
+                      <input
+                        aria-label={`${t('setlist.sectionOrder')} — ${song.title}`}
+                        value={item.sectionOrderText || ''}
+                        placeholder="1,2,1,2"
+                        onChange={(e) => onArrangementChange(item.entryKey, e.target.value)}
+                      />
+                    </label>
+                    <small>{(sectionLabels[item.songId] || []).map((label, i) => `${i + 1}=${label}`).join(' · ')}</small>
+                  </div>
                 ) : null}
               </td>
               <td className="gc-col-artist">{song.artist || '—'}</td>

@@ -1,5 +1,15 @@
 # GraceChords
 
+> **LVM Worship fork:** This repository is the GraceChords-based music application
+> for La Voz Misionera. The original project and its documentation remain below
+> during baseline verification. See [product map](docs/product-map.md) and
+> [fork audit](docs/fork-audit.md) for the LVM scope and staged roadmap.
+>
+> Local development without Supabase: `npm ci`, then `npm run dev:mock`.
+> `npm run build:mock` builds that local mode. It currently displays sample
+> songs only; it is not the full production app. The original Supabase-backed
+> app remains available through `npm run dev` when credentials are configured.
+
 GraceChords is a worship songbook platform for churches and worship teams. It
 manages a [ChordPro](https://www.chordpro.org/) song catalog with fast search,
 key transposition, setlist and songbook building, PDF/PPTX export, a full-screen

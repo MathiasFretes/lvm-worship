@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "0.1",
+  "id": "culto-2026-09-27",
+  "title": "Culto General",
+  "startsAt": "2026-09-27T19:00:00-03:00",
+  "setlist": {
+    "id": "repertorio-domingo",
+    "name": "Alabanza del domingo"
+  },
+  "items": [
+    {
+      "id": "song-1",
+      "kind": "SONG",
+      "song": {
+        "id": "song-1",
+        "title": "Canto de ejemplo",
+        "key": "G",
+        "sections": [
+          {
+            "kind": "verse",
+            "label": "Verse",
+            "lines": [
+              {
+                "text": "Texto de muestra para ensayo",
+                "chords": [
+                  {
+                    "symbol": "G",
+                    "index": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "chorus",
+            "label": "Chorus",
+            "lines": [
+              {
+                "text": "Cantamos juntos",
+                "chords": [
+                  {
+                    "symbol": "C",
+                    "index": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "song-2",
+      "kind": "SONG",
+      "song": {
+        "id": "song-2",
+        "title": "Segundo canto de ejemplo",
+        "key": "D",
+        "sections": [
+          {
+            "kind": "verse",
+            "label": "Verse",
+            "lines": [
+              {
+                "text": "Otra letra de muestra",
+                "chords": [
+                  {
+                    "symbol": "D",
+                    "index": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "song-3",
+      "kind": "SONG",
+      "song": {
+        "id": "song-3",
+        "title": "Tercer canto de ejemplo",
+        "key": "A",
+        "sections": [
+          {
+            "kind": "verse",
+            "label": "Verse",
+            "lines": [
+              {
+                "text": "Una tercera canción de muestra",
+                "chords": [
+                  {
+                    "symbol": "A",
+                    "index": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "scripture-1",
+      "kind": "SCRIPTURE",
+      "scripture": {
+        "reference": "Salmo 23:1",
+        "version": "RV1909",
+        "text": "JEHOVÁ es mi pastor; nada me faltará.",
+        "source": "https://ebible.org/details.php?id=spaRV1909"
+      }
+    },
+    {
+      "id": "announcement-1",
+      "kind": "ANNOUNCEMENT",
+      "announcement": {
+        "title": "Encuentro de jóvenes",
+        "body": "Sábado, 18:00 · Sede Central"
+      }
+    },
+    {
+      "id": "sermon-1",
+      "kind": "SERMON",
+      "sermon": {
+        "title": "El buen pastor",
+        "body": "Lectura: Salmo 23"
+      }
+    }
+  ]
+}

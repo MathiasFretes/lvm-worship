@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "vite --mode mock",
     "build": "vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
+    "build:mock": "vite build --mode mock",
     "preview": "vite preview",
     "build:bible": "node scripts/bible-xml-to-json.mjs",
     "test": "vitest",

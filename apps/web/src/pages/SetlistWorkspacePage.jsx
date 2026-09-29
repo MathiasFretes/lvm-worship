@@ -11,6 +11,8 @@ import { useChordStyle } from '../hooks/useSettings'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { showToast } from '../utils/app/toast'
 import { transposeSymPrefer } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '@gracechords/core/chordpro/parser'
+import { buildServiceFromSetlist } from '../lvm/serviceAdapter'
 import { decodeSet } from '../utils/setlists/setcode'
 import { effectiveEntryKey } from '../utils/setlists/entries'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
@@ -95,6 +97,20 @@ export default function SetlistWorkspacePage() {
 
   const controller = useController(routeId)
   const { items, catalog, songs, songsLoading } = controller
+  const sectionLabels = useMemo(() => {
+    const labels = {}
+    for (const song of songs) {
+      if (!song.chordpro_content) continue
+      try {
+        labels[song.dbId || song.id] = parseChordProOrLegacy(song.chordpro_content).sections
+          .filter((section) => section.lines.some((line) => line.lyrics.trim()))
+          .map((section) => section.label || section.kind)
+      } catch {
+        labels[song.dbId || song.id] = []
+      }
+    }
+    return labels
+  }, [songs])
   const lists = usePersonalSetlists()
 
   const [selectedKey, setSelectedKey] = useState(null)
@@ -439,6 +455,26 @@ export default function SetlistWorkspacePage() {
     controller.setDate(next.trim() || null)
   }
 
+  function onExportService() {
+    try {
+      const service = buildServiceFromSetlist({
+        id: controller.setlistId,
+        name: controller.name,
+        serviceDate: controller.serviceDate,
+        items,
+        songs,
+      })
+      const url = URL.createObjectURL(new Blob([`${JSON.stringify(service, null, 2)}\n`], { type: 'application/json' }))
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${service.id}.json`
+      anchor.click()
+      setTimeout(() => URL.revokeObjectURL(url), 0)
+    } catch (error) {
+      showToast(error.message)
+    }
+  }
+
   // --- Render --------------------------------------------------------------
   const actions = (
     <SetActions
@@ -460,6 +496,7 @@ export default function SetlistWorkspacePage() {
       onTransposeSet={transposeSet}
       onResetKeys={resetKeys}
       onServiceDate={onServiceDate}
+      onExportService={onExportService}
     />
   )
 
@@ -516,6 +553,8 @@ export default function SetlistWorkspacePage() {
               onRemove={controller.removeEntry}
               onDuplicate={controller.duplicateEntry}
               onKeyChange={controller.setKeyFor}
+              onArrangementChange={!routeId ? controller.setSectionOrderFor : undefined}
+              sectionLabels={sectionLabels}
             />
             <div className="gc-set-footer-actions">
               <Button size="sm" variant="secondary" onClick={() => setVerseOpen(true)}>

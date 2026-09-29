@@ -30,12 +30,17 @@ function readDraft() {
       serviceDate: parsed.serviceDate || null,
       entries: entries
         .filter((e) => e && typeof e.songId === 'string')
-        .map((e) => ({
-          entryKey: makeEntryKey(e.songId),
-          songId: e.songId,
-          toKey: e.toKey || null,
-          song: null,
-        })),
+        .map((e) => {
+          const sourceSong = e.sourceSong && typeof e.sourceSong.id === 'string' && typeof e.sourceSong.chordpro_content === 'string' ? e.sourceSong : null
+          return {
+            entryKey: makeEntryKey(e.songId),
+            songId: e.songId,
+            toKey: e.toKey || null,
+            sectionOrderText: typeof e.sectionOrderText === 'string' ? e.sectionOrderText : '',
+            song: sourceSong ? entrySongFromCatalog(sourceSong) : null,
+            sourceSong,
+          }
+        }),
     }
   } catch {
     // Corrupt or unavailable (private mode, blocked storage) — an empty draft
@@ -57,7 +62,7 @@ function writeDraft(name, serviceDate, entries) {
       JSON.stringify({
         name,
         serviceDate,
-        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey })),
+        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey, ...(e.sectionOrderText ? { sectionOrderText: e.sectionOrderText } : {}), ...(e.sourceSong ? { sourceSong: e.sourceSong } : {}) })),
       })
     )
   } catch {
@@ -75,8 +80,7 @@ export function clearDraft() {
 
 /** @returns {import('../utils/setlists/entries').SetlistController} */
 export function useDraftSetlist() {
-  const { songs, loading: songsLoading } = useSongs()
-  const catalog = useMemo(() => buildSongCatalog(songs), [songs])
+  const { songs: liveSongs, loading: songsLoading } = useSongs()
 
   const initial = useRef(null)
   if (initial.current === null) initial.current = readDraft() || { name: '', serviceDate: null, entries: [] }
@@ -84,6 +88,12 @@ export function useDraftSetlist() {
   const [name, setNameState] = useState(initial.current.name)
   const [serviceDate, setServiceDate] = useState(initial.current.serviceDate)
   const [entries, setEntries] = useState(initial.current.entries)
+  const songs = useMemo(() => {
+    const byId = new Map(entries.filter((entry) => entry.sourceSong).map((entry) => [entry.sourceSong.id, entry.sourceSong]))
+    liveSongs.forEach((song) => byId.set(song.id, song))
+    return [...byId.values()]
+  }, [entries, liveSongs])
+  const catalog = useMemo(() => buildSongCatalog(songs), [songs])
 
   // The single writer, so no mutation has to remember to persist.
   useEffect(() => {
@@ -104,7 +114,9 @@ export function useDraftSetlist() {
           entryKey: makeEntryKey(song.id),
           songId: song.id,
           toKey: null,
+          sectionOrderText: '',
           song: entrySongFromCatalog(song),
+          sourceSong: song,
         },
       ]
     })
@@ -148,16 +160,22 @@ export function useDraftSetlist() {
     setEntries((prev) => prev.map((e) => (e.entryKey === entryKey ? { ...e, toKey: key } : e)))
   }, [])
 
+  const setSectionOrderFor = useCallback((entryKey, text) => {
+    setEntries((prev) => prev.map((e) => (e.entryKey === entryKey ? { ...e, sectionOrderText: text } : e)))
+  }, [])
+
   const replaceEntries = useCallback((next) => {
     setEntries(
       (next || []).map((e) => ({
         entryKey: makeEntryKey(e.songId),
         songId: e.songId,
         toKey: e.toKey || null,
+        sectionOrderText: e.sectionOrderText || '',
         song: e.song || null,
+        sourceSong: e.sourceSong || songs.find((song) => song.id === e.songId || song.dbId === e.songId) || null,
       }))
     )
-  }, [])
+  }, [songs])
 
   // Clearing state is enough — the effect above removes the stored draft once
   // it is empty.
@@ -191,6 +209,7 @@ export function useDraftSetlist() {
     duplicateEntry,
     moveEntry,
     setKeyFor,
+    setSectionOrderFor,
     replaceEntries,
     reset,
     deleteSet: async () => {
