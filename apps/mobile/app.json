@@ -1,0 +1,158 @@
+{
+  "expo": {
+    "name": "La Voz Misionera",
+    "slug": "gracechords",
+    "scheme": "gracechords",
+    "version": "1.1.3",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.gracechords.app",
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:gracechords.com"],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "com.gracechords.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E2227"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "gracechords.com", "path": "/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songs" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/setlist" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/setlist/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/set/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/worship" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/s/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/reading" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songbook" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/about" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/profile" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/posts" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/app/reset-password" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/app/auth/callback" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "./plugins/withFoojayFix",
+      "./plugins/withIosPodDeploymentTarget",
+      "./plugins/withBaselineProfile",
+      "./plugins/withNativeDebugSymbols",
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "backgroundColor": "#F5F7F9",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#14171A"
+          }
+        }
+      ],
+      "expo-apple-authentication",
+      "expo-notifications",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.153438056905-ds29ptotnqkiq9bmpkqrbnlrrek3d17o"
+        }
+      ],
+      [
+        "react-native-audio-api",
+        {
+          "iosMicrophonePermission": "La Voz Misionera uses the microphone only for the real-time instrument tuner. Audio is analyzed on this device to detect pitch and is never recorded, stored, or transmitted.",
+          "iosBackgroundMode": false,
+          "androidPermissions": ["android.permission.RECORD_AUDIO"],
+          "androidForegroundService": false,
+          "disableFFmpeg": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile\n"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La Voz Misionera uses your photo library only so you can pick a cover image for a songbook PDF you export.",
+          "cameraPermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3be270a3-166a-492a-a4ec-c95f442175d7"
+      }
+    },
+    "owner": "nohoot23"
+  }
+}

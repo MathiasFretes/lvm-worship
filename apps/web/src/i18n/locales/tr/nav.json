@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
+  "home": "Ana Sayfa",
+  "songs": "İlahiler",
+  "setlist": "Set Listesi",
+  "songbook": "İlahi Kitabı",
+  "dailyWord": "Kutsal Kitap",
+  "blog": "Blog",
+  "editorPortal": "Editör Portalı",
+  "profile": "Profil",
+  "songEditor": "İlahi Editörü",
+  "postEditor": "Yazı Editörü",
+  "adminPortal": "Yönetici Portalı",
+  "signIn": "Giriş yap",
+  "signOut": "Çıkış yap",
+  "openMainMenu": "Ana menüyü aç",
+  "userMenu": "Kullanıcı menüsü",
+  "mobileMenu": "Mobil menü",
+  "laVozMisioneraHome": "La Voz Misionera ana sayfası"
+}

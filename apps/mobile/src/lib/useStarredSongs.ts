@@ -1,0 +1,105 @@
+import { useCallback, useEffect, useState } from 'react'
+import { supabase } from './supabase'
+import { reportFailure } from './errors'
+import type { Song } from './useSongList'
+
+// The fields the Home "Starred songs" rows need. A subset of the full Song.
+export type StarredSong = Pick<
+  Song,
+  'id' | 'slug' | 'title' | 'artist' | 'default_key' | 'time_signature'
+>
+
+const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
+
+// i18n key for the user-facing failure. Deliberately generic: never surface raw
+// Supabase/Postgres error text to the UI (that once leaked `column
+// user_starred_songs.created_at does not exist`). The real error is logged for
+// debugging by reportFailure. Was a hardcoded English string until 1.0.1 —
+// it showed untranslated in es/ko/tr.
+const LOAD_ERROR_KEY = 'errors:load.starred'
+
+// Read the current user's starred songs. Two steps rather than a PostgREST embed
+// (`songs!inner(...)`): first the star rows (newest first), then the songs by id.
+// This avoids any relationship-embedding ambiguity and reuses the plain songs
+// select. `user_starred_songs.song_id` is a uuid FK to `songs.id`; RLS scopes the
+// star read to the signed-in user. Ordered by `created_at` desc so the most
+// recently starred songs come first (requires the created_at column added in
+// migration 20260703000000). Read-only — starring/unstarring is a later feature.
+export function useStarredSongs() {
+  const [songs, setSongs] = useState<StarredSong[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Extracted from the mount effect so the Home card can offer a Retry. Before
+  // 1.0.1 a failed read stayed failed until the app relaunched: the effect had
+  // `[]` deps, Home has no RefreshControl, and Home's focus effect only bumps a
+  // tick for the local recents cache.
+  const load = useCallback(() => {
+    let alive = true
+    setLoading(true)
+    setError(null)
+    ;(async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const uid = sessionData.session?.user?.id
+        if (!uid) {
+          if (alive) {
+            setSongs([])
+            setError(null)
+          }
+          return
+        }
+
+        const { data: stars, error: starsErr } = await supabase
+          .from('user_starred_songs')
+          .select('song_id')
+          .eq('user_id', uid)
+          .order('created_at', { ascending: false })
+          .order('song_id', { ascending: true }) // stable tiebreak for equal timestamps (e.g. backfilled rows)
+        if (starsErr) throw starsErr
+
+        const ids = (stars ?? []).map((r: { song_id: string }) => r.song_id)
+        if (ids.length === 0) {
+          if (alive) {
+            setSongs([])
+            setError(null)
+          }
+          return
+        }
+
+        const { data: rows, error: songsErr } = await supabase
+          .from('songs')
+          .select(SONG_COLUMNS)
+          .in('id', ids)
+          .eq('is_deleted', false)
+        if (songsErr) throw songsErr
+
+        // Preserve the star order (newest first) from the first query.
+        const byId = new Map(
+          (rows ?? []).map((s) => [(s as StarredSong).id, s as StarredSong]),
+        )
+        const ordered = ids
+          .map((id) => byId.get(id))
+          .filter((s): s is StarredSong => s != null)
+
+        if (alive) {
+          setSongs(ordered)
+          setError(null)
+        }
+      } catch (err: unknown) {
+        // Logs the real error for debugging and returns false for a deliberate
+        // cancellation, which must not surface as a failure.
+        if (reportFailure('useStarredSongs', err) && alive) setError(LOAD_ERROR_KEY)
+      } finally {
+        if (alive) setLoading(false)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => load(), [load])
+
+  return { songs, loading, error, reload: load }
+}

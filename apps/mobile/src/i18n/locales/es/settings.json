@@ -1,0 +1,84 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Perfil y ajustes",
+  "yourAccount": "Tu cuenta",
+  "changeYourIcon": "Cambia tu icono",
+  "openAccount": "Account",
+  "sections": {
+    "settings": "AJUSTES",
+    "reader": "LECTOR",
+    "library": "BIBLIOTECA",
+    "support": "AYUDA"
+  },
+  "reminder": {
+    "dailyReminder": "Recordatorio de Palabra diaria",
+    "time": "Hora del recordatorio",
+    "timeSheetTitle": "Hora del recordatorio",
+    "permissionDeniedTitle": "Las notificaciones están desactivadas",
+    "permissionDeniedMessage": "Activa las notificaciones de La Voz Misionera en los Ajustes de tu dispositivo para recibir recordatorios de lectura diaria.",
+    "openSettings": "Abrir Ajustes",
+    "notificationTitle": "Palabra diaria",
+    "notificationBody": "La lectura de hoy está lista. Tómate un momento para estar en la Palabra.",
+    "channelName": "Recordatorios de Palabra diaria"
+  },
+  "readingStreak": {
+    "title": "Racha de lectura"
+  },
+  "appearance": "Apariencia",
+  "appearanceOptions": {
+    "auto": "Automático",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "language": "Idioma",
+  "languageAutomatic": "Automático (dispositivo)",
+  "chordStyle": "Estilo de acordes",
+  "chordStyleOptions": {
+    "letters": "Letras",
+    "solfege": "Solfeo"
+  },
+  "dailyWordEntry": "Abrir Palabra del día en",
+  "dailyWordOptions": {
+    "landing": "Página de inicio",
+    "reader": "Lector directamente"
+  },
+  "offlineDownloads": "Sin conexión y descargas",
+  "starred": "Favoritos",
+  "mySetlists": "Mis repertorios",
+  "helpCenter": "Centro de ayuda",
+  "sendFeedback": "Enviar comentarios",
+  "aboutGraceChords": "Acerca de La Voz Misionera",
+  "signInDiagnostics": {
+    "row": "Diagnóstico de inicio de sesión",
+    "subtitle": "Detalles de un problema de inicio de sesión en este dispositivo",
+    "title": "Diagnóstico de inicio de sesión",
+    "intro": "Detalles técnicos de los fallos de inicio de sesión desde el último arranque de la app. Nada de esto se envía a ningún sitio; inclúyelo en un informe de error si te lo piden.",
+    "copy": "Copiar",
+    "copied": "Copiado al portapapeles."
+  },
+  "logOut": "Cerrar sesión",
+  "deleteAccount": "Eliminar cuenta",
+  "signOutAlert": {
+    "title": "Cerrar sesión",
+    "message": "¿Cerrar sesión de La Voz Misionera en este dispositivo?",
+    "confirm": "Cerrar sesión"
+  },
+  "deleteAccountAlert": {
+    "title": "Eliminar cuenta",
+    "message": "Esto elimina permanentemente tu cuenta y todos tus datos: canciones favoritas, repertorios y preferencias. Esta acción no se puede deshacer.",
+    "confirm": "Eliminar cuenta"
+  },
+  "deleteFailedAlert": {
+    "title": "Error al eliminar",
+    "message": "No pudimos eliminar tu cuenta. Inténtalo de nuevo."
+  },
+  "about": {
+    "title": "Acerca de",
+    "version": "Versión {{version}}",
+    "sectionLegal": "LEGAL",
+    "privacyPolicy": "Política de privacidad",
+    "termsOfUse": "Términos de uso",
+    "acknowledgements": "Agradecimientos y licencias",
+    "contact": "Contacto"
+  }
+}

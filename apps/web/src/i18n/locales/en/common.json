@@ -1,0 +1,47 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "appName": "La Voz Misionera",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "back": "Back",
+  "loading": "Loading…",
+  "timeAgo": {
+    "justNow": "just now",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago",
+    "days": "{{count}}d ago"
+  },
+  "search": "Search",
+  "language": "Language",
+  "light": "Light",
+  "dark": "Dark",
+  "theme": "Theme",
+  "lightMode": "Light mode",
+  "darkMode": "Dark mode",
+  "toggleDarkMode": "Toggle dark mode",
+  "switchToLight": "Switch to light mode",
+  "switchToDark": "Switch to dark mode",
+  "settings": "Settings",
+  "chordStyle": "Chord style",
+  "toggleChordStyle": "Toggle chord style",
+  "or": "or",
+  "continueWithGoogle": "Continue with Google",
+  "footer": {
+    "disclaimerBefore": "All lyrics are property of their respective owners. La Voz Misionera provides tools for personal and educational use only. Rights holders, ",
+    "disclaimerLink": "email us",
+    "disclaimerAfter": " for takedown requests.",
+    "download": "Get the La Voz Misionera app",
+    "copyright": "© {{range}} Ryan Moore. All rights reserved."
+  },
+  "announcement": {
+    "regionLabel": "Site announcement",
+    "dismiss": "Dismiss announcement",
+    "iosLaunch": {
+      "message": "La Voz Misionera is now on the App Store.",
+      "cta": "Get the app"
+    }
+  }
+}

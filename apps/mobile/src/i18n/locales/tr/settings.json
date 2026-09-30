@@ -1,0 +1,84 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Profil ve Ayarlar",
+  "yourAccount": "Hesabınız",
+  "changeYourIcon": "Simgenizi değiştirin",
+  "openAccount": "Account",
+  "sections": {
+    "settings": "AYARLAR",
+    "reader": "OKUYUCU",
+    "library": "KÜTÜPHANE",
+    "support": "DESTEK"
+  },
+  "reminder": {
+    "dailyReminder": "Günün Sözü hatırlatıcısı",
+    "time": "Hatırlatma saati",
+    "timeSheetTitle": "Hatırlatma saati",
+    "permissionDeniedTitle": "Bildirimler kapalı",
+    "permissionDeniedMessage": "Günlük okuma hatırlatmaları almak için cihaz Ayarlarınızdan La Voz Misionera bildirimlerini açın.",
+    "openSettings": "Ayarları aç",
+    "notificationTitle": "Günün Sözü",
+    "notificationBody": "Bugünün okuması hazır. Söz'le baş başa kalmak için bir an ayırın.",
+    "channelName": "Günün Sözü hatırlatıcıları"
+  },
+  "readingStreak": {
+    "title": "Okuma serisi"
+  },
+  "appearance": "Görünüm",
+  "appearanceOptions": {
+    "auto": "Otomatik",
+    "light": "Açık",
+    "dark": "Koyu"
+  },
+  "language": "Dil",
+  "languageAutomatic": "Otomatik (cihaz)",
+  "chordStyle": "Akor gösterimi",
+  "chordStyleOptions": {
+    "letters": "Harfler",
+    "solfege": "Solfej"
+  },
+  "dailyWordEntry": "Kutsal Kitap açılışı",
+  "dailyWordOptions": {
+    "landing": "Açılış sayfası",
+    "reader": "Doğrudan okuyucu"
+  },
+  "offlineDownloads": "Çevrimdışı ve indirmeler",
+  "starred": "Yıldızlılar",
+  "mySetlists": "Set listelerim",
+  "helpCenter": "Yardım merkezi",
+  "sendFeedback": "Geri bildirim gönder",
+  "aboutGraceChords": "La Voz Misionera Hakkında",
+  "signInDiagnostics": {
+    "row": "Giriş tanılama",
+    "subtitle": "Bu cihazdaki giriş sorununun ayrıntıları",
+    "title": "Giriş tanılama",
+    "intro": "Uygulama en son başlatıldığından beri oluşan giriş hatalarının teknik ayrıntıları. Buradaki hiçbir bilgi hiçbir yere gönderilmez; istenirse bir hata raporuna ekleyin.",
+    "copy": "Kopyala",
+    "copied": "Panoya kopyalandı."
+  },
+  "logOut": "Çıkış yap",
+  "deleteAccount": "Hesabı sil",
+  "signOutAlert": {
+    "title": "Çıkış yap",
+    "message": "Bu cihazda La Voz Misionera oturumunuzu kapatmak istiyor musunuz?",
+    "confirm": "Çıkış yap"
+  },
+  "deleteAccountAlert": {
+    "title": "Hesabı sil",
+    "message": "Bu işlem hesabınızı ve tüm verilerinizi — yıldızlı ilahiler, set listeleri ve tercihler — kalıcı olarak siler. Bu geri alınamaz.",
+    "confirm": "Hesabı sil"
+  },
+  "deleteFailedAlert": {
+    "title": "Silme başarısız",
+    "message": "Hesabınız silinemedi. Lütfen tekrar deneyin."
+  },
+  "about": {
+    "title": "Hakkında",
+    "version": "Sürüm {{version}}",
+    "sectionLegal": "YASAL",
+    "privacyPolicy": "Gizlilik Politikası",
+    "termsOfUse": "Kullanım Koşulları",
+    "acknowledgements": "Teşekkürler ve Lisanslar",
+    "contact": "İletişim"
+  }
+}

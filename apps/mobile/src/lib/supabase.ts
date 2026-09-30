@@ -1,0 +1,102 @@
+import 'react-native-url-polyfill/auto'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { AppState } from 'react-native'
+import { createGcSupabase } from '@lavozmisionera/core'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { silenceInvalidRefreshTokenLogs } from './authSession'
+import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
+
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL
+const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+// If the public Supabase env vars are missing, DO NOT throw at module import:
+// a top-level throw aborts the whole JS bundle before React (and any error
+// boundary) can mount, which on a release build is an instant, unexplained
+// SIGABRT crash on launch. The classic cause is a release/TestFlight build made
+// without the EXPO_PUBLIC_* vars (a gitignored .env never reaches an EAS cloud
+// build — set them as EAS environment variables instead). Surface the problem
+// as a value the app root can render as a readable screen.
+export const supabaseConfigError: string | null =
+  !url || !anonKey
+    ? 'Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.\n\n' +
+      'For local/simulator builds: copy apps/mobile/.env.example to ' +
+      'apps/mobile/.env and fill in the values.\n\n' +
+      'For TestFlight/EAS builds: a gitignored .env is NOT uploaded to the ' +
+      'cloud build — set these as EAS environment variables ' +
+      '(eas env:create --environment production ...).'
+    : null
+
+// Drop GoTrue's benign, self-healing "Invalid Refresh Token" console.error
+// before the client is created. That log is emitted from inside GoTrue's own
+// automatic init (`_recoverAndRefresh`), which kicks off when createGcSupabase()
+// constructs the client below — so the filter must be installed FIRST to be in
+// place when init runs. See silenceInvalidRefreshTokenLogs for the full why.
+if (!supabaseConfigError) {
+  silenceInvalidRefreshTokenLogs()
+}
+
+// Which requests this client bounds, and which it deliberately does not.
+//
+// The TOKEN REFRESH is left on the platform default on purpose. Build 12 races
+// the boot getSession() against GATE_MS and degrades to signed out, then depends
+// on that same in-flight refresh SETTLING later so the onAuthStateChange
+// subscription in app/_layout.tsx can adopt the corrected session — see
+// authSession.ts. A deadline on that request would compete with the race and
+// close the self-heal window, and nobody is waiting on it: the splash lifted at
+// 2.5 s. (Verified in @supabase/auth-js that an aborted fetch becomes
+// AuthRetryableFetchError, which _callRefreshToken explicitly does NOT treat as
+// grounds for _removeSession — so this exclusion is defence in depth, not the
+// thing standing between a live user and being signed out.)
+//
+// Everything else is bounded: sign-in and sign-up (grant_type=password /
+// id_token hit the same /auth/v1/token path), getUser, and every PostgREST
+// query and mutation. Those all have someone watching a spinner.
+function supabaseRequestBudget(requestUrl: string): number | null {
+  if (requestUrl.includes('grant_type=refresh_token')) return null
+  return FOREGROUND_MS
+}
+
+// Consume the SAME core factory the web app uses. We inject AsyncStorage as the
+// native session store; persistSession + autoRefreshToken default to true in
+// the factory. detectSessionInUrl is irrelevant on native (no URL redirect),
+// so turn it off — the factory defaults it to true for the web.
+//
+// `global.fetch` is the one seam that reaches every request the client makes:
+// supabase-js hands it to GoTrue, PostgREST, storage and functions alike, so a
+// single wrapper bounds ~40 query sites plus all of auth without touching any of
+// them. Per-call .abortSignal() would have to be threaded through every call
+// site and would still miss GoTrue entirely.
+//
+// When config is missing we skip client creation (createClient itself throws on
+// an undefined url) and export a null client. The app root short-circuits to the
+// config-error screen in that case, so this client is never actually used.
+export const supabase: SupabaseClient = supabaseConfigError
+  ? (null as unknown as SupabaseClient)
+  : createGcSupabase({
+      url: url as string,
+      anonKey: anonKey as string,
+      storage: AsyncStorage,
+      auth: {
+        detectSessionInUrl: false,
+      },
+      global: {
+        fetch: withRequestBudget(fetch, supabaseRequestBudget),
+      },
+    })
+
+// Supabase only refreshes tokens while the tab/app is foregrounded. On native
+// there is no tab visibility event, so drive it from AppState: refresh while
+// active, pause while backgrounded. Call once at app root.
+export function registerAuthAutoRefresh() {
+  const sub = AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh()
+    } else {
+      supabase.auth.stopAutoRefresh()
+    }
+  })
+  if (AppState.currentState === 'active') {
+    supabase.auth.startAutoRefresh()
+  }
+  return () => sub.remove()
+}

@@ -1,0 +1,160 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Set Listeleri",
+  "newSet": "Yeni set",
+  "defaultName": "{{date}} İbadeti",
+  "empty": "Henüz set listesi yok",
+  "syncing": "Set listeleriniz eşitleniyor…",
+  "editedAgo": "{{time}} düzenlendi",
+  "deleteConfirm": {
+    "title": "“{{name}}” silinsin mi?",
+    "message": "Bu işlem geri alınamaz."
+  },
+  "alerts": {
+    "couldNotCreate": "Set oluşturulamadı",
+    "couldNotDelete": "Set silinemedi",
+    "couldNotDuplicate": "Set çoğaltılamadı",
+    "couldNotDeleteMany": "Set listeleri silinemedi",
+    "couldNotCopyLink": "Bağlantı kopyalanamadı",
+    "couldNotSendSet": "Set gönderilemedi",
+    "telegramNotLinkedTitle": "Telegram bağlı değil",
+    "telegramNotLinkedMessage": "Önce hesabınızı botla bağlayın: {{url}}",
+    "deleteSetTitle": "Set silinsin mi?",
+    "deleteSetMessage": "“{{name}}” ve içindeki ilahiler kaldırılacak."
+  },
+  "toasts": {
+    "addSongsFirst": "Önce ilahi ekleyin",
+    "setLinkCopied": "Set bağlantısı kopyalandı",
+    "sentToTelegram": "Telegram'a gönderildi",
+    "removedFromSet": "Setten kaldırıldı"
+  },
+  "builder": {
+    "back": "Set Listeleri",
+    "setlistOptions": "Set listesi seçenekleri",
+    "setName": "Set adı",
+    "renameSet": "Seti yeniden adlandır",
+    "clearSetName": "Set adını temizle",
+    "backToSetlists": "Set listelerine dön",
+    "lastEdited": "Son düzenleme {{time}}",
+    "noSongs": "Henüz ilahi yok",
+    "addHintTablet": "Eklemek için kütüphaneden bir ilahiye dokunun.",
+    "addHintPhone": "Kütüphanenizde aramak için Ekle'ye dokunun.",
+    "add": "Ekle",
+    "addSongs": "İlahi ekle",
+    "startSet": "Seti başlat",
+    "notFound": "Bu set listesi artık mevcut değil.",
+    "loadFailed": "Bu set yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin — set listeniz güvende.",
+    "backToSets": "Set listelerine dön"
+  },
+  "timeline": {
+    "reorder": "{{title}} yeniden sırala",
+    "changeKeyFor": "{{title}} için tonu değiştir",
+    "noKey": "—"
+  },
+  "options": {
+    "title": "Set Listesi",
+    "renameSet": "Seti yeniden adlandır",
+    "savedSets": "Kayıtlı setler…",
+    "newSet": "Yeni set",
+    "deleteSet": "Seti sil"
+  },
+  "rowActions": {
+    "closeSongOptions": "İlahi seçeneklerini kapat",
+    "changeKey": "Tonu değiştir",
+    "duplicate": "Çoğalt",
+    "removeFromSet": "Setten kaldır"
+  },
+  "remove": "Kaldır",
+  "performer": {
+    "back": "Set Listesi",
+    "viewOptions": "Görüntüleme seçenekleri",
+    "backToSetlist": "Set listesine dön",
+    "goToSong": "{{number}}. ilahiye git",
+    "previousSong": "Önceki ilahi",
+    "nextSong": "Sonraki ilahi",
+    "noSongs": "Bu sette ilahi yok",
+    "notFound": "Bu set listesi artık mevcut değil."
+  },
+  "session": {
+    "start": "Canlı oturum başlat",
+    "starting": "Başlatılıyor…",
+    "live": "Canlı",
+    "manageTitle": "Canlı oturum",
+    "shareTeam": "Ekip bağlantısını paylaş (akorlar)",
+    "shareEveryone": "Katılımcı bağlantısını paylaş (sözler)",
+    "end": "Oturumu sonlandır",
+    "startFailed": "Oturum başlatılamadı",
+    "endFailed": "Oturum sonlandırılamadı"
+  },
+  "verse": {
+    "add": "Ayet ekle",
+    "title": "Ayet ekle",
+    "placeholder": "örn. Yuhanna 3:16",
+    "translation": "Çeviri",
+    "invalid": "Geçerli bir referans girin (örn. John 3:16).",
+    "confirm": "Ekle"
+  },
+  "sessionFollower": {
+    "joining": "Oturuma katılınıyor…",
+    "notFoundTitle": "Oturum bulunamadı",
+    "notFoundBody": "Bu oturum sona ermiş veya bağlantı hatalı olabilir.",
+    "endedTitle": "Oturumumuza katıldığınız için teşekkürler!",
+    "endedBody": "Oturum sona erdi.",
+    "unavailable": "Bu görünümde kullanılamıyor.",
+    "catchUp": "Lider ilerledi — yetişmek için dokunun",
+    "reconnecting": "Yeniden bağlanılıyor…",
+    "waiting": "Lider bekleniyor…",
+    "live": "CANLI",
+    "loadingSong": "Şarkı yükleniyor…",
+    "home": "Ana sayfa",
+    "toggleTheme": "Açık veya koyu tema değiştir"
+  },
+  "resume": {
+    "title": "Canlı oturuma devam edilsin mi?",
+    "message": "Devam eden bir canlı oturumunuz var. Devam edin veya şimdi sonlandırın.",
+    "resume": "Devam et",
+    "endNow": "Oturumu sonlandır",
+    "later": "Daha sonra"
+  },
+  "addSongs": {
+    "title": "İlahi ekle",
+    "doneAdding": "İlahi eklemeyi bitir",
+    "searchPlaceholder": "İlahi, sanatçı, tema ara…",
+    "clearSearch": "Aramayı temizle",
+    "noMatches": "“{{query}}” ile eşleşen ilahi yok.",
+    "emptyLibrary": "Kütüphaneniz boş.",
+    "add": "{{title}} ilahisini sete ekle",
+    "remove": "{{title}} ilahisini setten kaldır"
+  },
+  "libraryPane": {
+    "searchPlaceholder": "İlahi ara…",
+    "searchLibrary": "Kütüphanede ara"
+  },
+  "prune": {
+    "title": "Set listesi sınırına ulaşıldı",
+    "message": "{{limit}} set listenizden {{count}} tanesini kaydettiniz. Silmek için bazılarını seçin (önce en eskiler), ardından tekrar deneyin.",
+    "select": "{{name}} silmek için seç",
+    "deselect": "{{name}} seçimini kaldır",
+    "deleteSelected": "Seçili set listelerini sil",
+    "deleteCount": "{{count}} tanesini sil",
+    "deleteSelectedShort": "Seçilenleri sil"
+  },
+  "import": {
+    "back": "Geri",
+    "title": "Set listesini içe aktar",
+    "couldNotLoadTitle": "İlahiler yüklenemedi",
+    "couldNotLoadSubtitle": "Bağlantınızı kontrol edin ve bağlantıyı tekrar açmayı deneyin.",
+    "couldNotImportTitle": "Bu set listesi içe aktarılamadı",
+    "couldNotImportSubtitle": "Bu bağlantı bulabileceğimiz hiçbir ilahi içermiyordu.",
+    "backToSetlists": "Set listelerine dön",
+    "save": "Set listelerime kaydet",
+    "saving": "Kaydediliyor…",
+    "couldNotImportAlert": "Set listesi içe aktarılamadı",
+    "missingCount_one": "{{count}} ilahi bulunamadı.",
+    "missingCount_other": "{{count}} ilahi bulunamadı.",
+    "missingNamed": "{{subject}} bulunamadı.",
+    "missingWithOthers_one": "{{names}} ve {{count}} diğeri",
+    "missingWithOthers_other": "{{names}} ve {{count}} diğeri",
+    "listAnd": "{{head}} ve {{last}}"
+  }
+}

@@ -1,0 +1,184 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  __resetReaderReminderForTest,
+  commitReminderOptIn,
+  DEFAULT_READER_REMINDER,
+  formatReminderTime,
+  getReaderReminder,
+  hydrateReaderReminder,
+  REMINDER_NOTIFICATION_ID,
+  setReminderEnabled,
+  setReminderTime,
+  syncReminder,
+  usesTwentyFourHourClock,
+  type NotificationBackend,
+  type ReminderContent,
+} from '../readerReminder'
+import type { KVStorage } from '../defaults'
+
+function memoryStorage(initial: Record<string, string> = {}): KVStorage & { store: Map<string, string> } {
+  const store = new Map(Object.entries(initial))
+  return {
+    store,
+    getItem: async (k) => store.get(k) ?? null,
+    setItem: async (k, v) => void store.set(k, v),
+    removeItem: async (k) => void store.delete(k),
+  }
+}
+
+const CONTENT: ReminderContent = { title: 'Daily Word', body: 'Time to read' }
+
+function fakeBackend(granted = true) {
+  return {
+    getPermissionGranted: vi.fn(async () => granted),
+    requestPermission: vi.fn(async () => granted),
+    cancel: vi.fn(async () => {}),
+    scheduleDaily: vi.fn(async () => {}),
+  } satisfies NotificationBackend
+}
+
+describe('reader reminder store', () => {
+  beforeEach(() => __resetReaderReminderForTest())
+
+  it('is disabled at 08:00 by default', async () => {
+    await hydrateReaderReminder(memoryStorage())
+    expect(getReaderReminder()).toEqual(DEFAULT_READER_REMINDER)
+    expect(getReaderReminder()).toEqual({ enabled: false, hour: 8, minute: 0 })
+  })
+
+  it('persists enable state and time across a simulated reload', async () => {
+    const s = memoryStorage()
+    await hydrateReaderReminder(s)
+    setReminderEnabled(true)
+    setReminderTime(6, 30)
+
+    __resetReaderReminderForTest()
+    await hydrateReaderReminder(s)
+    expect(getReaderReminder()).toEqual({ enabled: true, hour: 6, minute: 30 })
+  })
+
+  it('clamps out-of-range and non-integer times', async () => {
+    await hydrateReaderReminder(memoryStorage())
+    setReminderTime(30, -5)
+    expect(getReaderReminder()).toMatchObject({ hour: 23, minute: 0 })
+    setReminderTime(7.9, 61)
+    expect(getReaderReminder()).toMatchObject({ hour: 7, minute: 59 })
+  })
+
+  it('clamps a stored out-of-range time on hydrate', async () => {
+    const s = memoryStorage({
+      'gc.readerReminder.v1': JSON.stringify({ enabled: true, hour: 99, minute: 99 }),
+    })
+    await hydrateReaderReminder(s)
+    expect(getReaderReminder()).toEqual({ enabled: true, hour: 23, minute: 59 })
+  })
+
+  it('falls back to the disabled default on a corrupt read', async () => {
+    await hydrateReaderReminder(memoryStorage({ 'gc.readerReminder.v1': '{not json' }))
+    expect(getReaderReminder()).toEqual(DEFAULT_READER_REMINDER)
+  })
+})
+
+describe('formatReminderTime', () => {
+  it('formats morning and evening times in en-US', () => {
+    expect(formatReminderTime(8, 0, 'en-US')).toBe('8:00 AM')
+    expect(formatReminderTime(20, 5, 'en-US')).toBe('8:05 PM')
+  })
+})
+
+describe('usesTwentyFourHourClock', () => {
+  it('is false for a 12-hour locale and true for a 24-hour one', () => {
+    expect(usesTwentyFourHourClock('en-US')).toBe(false)
+    expect(usesTwentyFourHourClock('tr')).toBe(true)
+    expect(usesTwentyFourHourClock('de-DE')).toBe(true)
+  })
+
+  it('falls back to 12-hour on an invalid locale', () => {
+    expect(usesTwentyFourHourClock('not a locale')).toBe(false)
+  })
+})
+
+describe('syncReminder', () => {
+  it('cancels and does not schedule when disabled', async () => {
+    const backend = fakeBackend(true)
+    await syncReminder({ enabled: false, hour: 8, minute: 0 }, CONTENT, backend)
+    expect(backend.cancel).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID)
+    expect(backend.scheduleDaily).not.toHaveBeenCalled()
+  })
+
+  it('reschedules when enabled and permission is held', async () => {
+    const backend = fakeBackend(true)
+    await syncReminder({ enabled: true, hour: 7, minute: 15 }, CONTENT, backend)
+    expect(backend.cancel).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID)
+    expect(backend.scheduleDaily).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID, 7, 15, CONTENT)
+  })
+
+  it('does not schedule when enabled but permission is missing', async () => {
+    const backend = fakeBackend(false)
+    await syncReminder({ enabled: true, hour: 7, minute: 15 }, CONTENT, backend)
+    expect(backend.cancel).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID)
+    expect(backend.scheduleDaily).not.toHaveBeenCalled()
+  })
+})
+
+// The first-launch intro's card 3 (app/intro.tsx). Its contract differs from the
+// Settings toggle in two ways that matter enough to pin: permission is checked
+// before prompting, and a denial is silent + leaves the preference off.
+describe('commitReminderOptIn (onboarding card 3)', () => {
+  beforeEach(() => __resetReaderReminderForTest())
+
+  it('does NOT re-request when permission is already granted', async () => {
+    const backend = fakeBackend(true)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(true)
+    expect(backend.getPermissionGranted).toHaveBeenCalled()
+    expect(backend.requestPermission).not.toHaveBeenCalled()
+  })
+
+  it('prompts only when permission is not already held', async () => {
+    const backend = fakeBackend(true)
+    backend.getPermissionGranted.mockResolvedValueOnce(false)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(true)
+    expect(backend.requestPermission).toHaveBeenCalledTimes(1)
+  })
+
+  it('actually SCHEDULES on grant — not just persists the preference', async () => {
+    const backend = fakeBackend(true)
+    await commitReminderOptIn(6, 45, CONTENT, backend)
+    // The whole point: the OS has the notification, not just AsyncStorage.
+    expect(backend.scheduleDaily).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID, 6, 45, CONTENT)
+    expect(getReaderReminder()).toEqual({ enabled: true, hour: 6, minute: 45 })
+  })
+
+  it('persists the chosen time, not the default', async () => {
+    const backend = fakeBackend(true)
+    await commitReminderOptIn(21, 5, CONTENT, backend)
+    expect(getReaderReminder().hour).toBe(21)
+    expect(getReaderReminder().minute).toBe(5)
+    expect(DEFAULT_READER_REMINDER.hour).toBe(8) // guards the 8:00 AM default itself
+  })
+
+  it('on denial: leaves the reminder OFF, schedules nothing, reports false', async () => {
+    const backend = fakeBackend(false)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(false)
+    expect(getReaderReminder().enabled).toBe(false)
+    expect(backend.scheduleDaily).not.toHaveBeenCalled()
+  })
+
+  it('on denial: requests permission exactly once (no retry)', async () => {
+    const backend = fakeBackend(false)
+    await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(backend.requestPermission).toHaveBeenCalledTimes(1)
+  })
+
+  it('works from a cold store with no prior reminder state', async () => {
+    // No hydrate call at all — the module cache is the untouched default. This is
+    // the fresh-install case the intro always runs in.
+    expect(getReaderReminder()).toEqual(DEFAULT_READER_REMINDER)
+    const backend = fakeBackend(true)
+    await expect(commitReminderOptIn(8, 0, CONTENT, backend)).resolves.toBe(true)
+    expect(backend.scheduleDaily).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID, 8, 0, CONTENT)
+  })
+})

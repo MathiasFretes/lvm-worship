@@ -1,0 +1,522 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
+import { compareSongsByTitle } from '../utils/songs/sort'
+import { searchSongs } from '../utils/songs/search'
+// src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
+import { useSongs } from '../hooks/useSongs'
+import { usePersonalSongs } from '../hooks/usePersonalSongs'
+import { Chip, Input, SongCard } from '../components/ui/layout-kit'
+import { publicUrl } from '../utils/network/publicUrl'
+import { isIncompleteSong } from '../utils/songs/songStatus'
+import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
+import {
+  buildGroupSearchText,
+  buildSongCatalog,
+  getLanguageChipLabel,
+  hasGroupLanguage,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+  writeSongLanguagePreference,
+} from '../utils/songs/songCatalog'
+
+const SITE_URL = 'https://lavozmisionera.com'
+const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
+const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | La Voz Misionera'
+const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at La Voz Misionera.'
+
+// Personal/Pending pill shown on a library card for the user's own drafts.
+function personalBadge(s) {
+  if (!s?.isPersonal) return null
+  return (
+    <span className="gc-tag gc-tag--gray">
+      {s.reviewStatus === 'submitted' ? 'Pending' : 'Personal'}
+    </span>
+  )
+}
+
+export default function Songs(){
+  const { t } = useTranslation('pages')
+  const { songs: itemsRaw } = useSongs()
+  const { personalSongs } = usePersonalSongs()
+  const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
+  const languageChipCodes = catalog.translationLanguages || []
+  const [selectedLanguage, setSelectedLanguage] = useState(() =>
+    resolveInitialSongLanguage(languageChipCodes.length ? languageChipCodes : catalog.allLanguages)
+  )
+  const [searchParams] = useSearchParams()
+  const initialQ = searchParams.get('q') || ''
+  const [q, setQ] = useState(initialQ)
+
+  useEffect(() => {
+    writeSongLanguagePreference(selectedLanguage)
+  }, [selectedLanguage])
+
+  const tagMap = useMemo(() => buildTagMap(catalog.items), [catalog.items])
+  const COMMUNITY_KEY = useMemo(() => normalizeTagKey('Community'), [])
+
+  const items = useMemo(() => {
+    const out = []
+    for (const group of catalog.groups || []) {
+      let display = resolveGroupEntry(group, selectedLanguage)
+      if (!display) continue
+      if (isIncompleteSong(display)) {
+        const fallback = group.variants.find((v) => !isIncompleteSong(v))
+        if (!fallback) continue
+        display = fallback
+      }
+      const { keys, labels } = canonicalizeTags(display.tags || [], tagMap)
+      const searchTags = Array.from(
+        new Set(group.variants.flatMap((v) => v.tags || []))
+      )
+      const searchAuthors = Array.from(
+        new Set(group.variants.flatMap((v) => v.authors || []))
+      )
+      out.push({
+        ...display,
+        tags: labels,
+        tagKeys: keys,
+        hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
+        hasTranslations: group.variants.length > 1,
+        group,
+        searchTags,
+        searchAuthors,
+        searchText: buildGroupSearchText(group),
+        searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+      })
+    }
+
+    // The signed-in user's personal drafts, baked into the same list (sorted +
+    // searchable with everything else). A draft that's already been published
+    // (published_song_id set) is hidden — its catalog twin already appears.
+    for (const p of personalSongs) {
+      if (p.published_song_id) continue
+      const { keys, labels } = canonicalizeTags(p.tags || [], tagMap)
+      const authors = p.artist ? p.artist.split(/,\s*/).filter(Boolean) : []
+      out.push({
+        id: `p_${p.id}`,
+        personalId: p.id,
+        // Route through the viewer's read-only personal mode (?p=<id>).
+        to: `/song/${p.slug || p.id}?p=${p.id}`,
+        isPersonal: true,
+        reviewStatus: p.status,
+        title: p.title,
+        originalKey: p.default_key || '',
+        tags: labels,
+        tagKeys: keys,
+        authors,
+        hasSelectedLanguage: true, // always visible regardless of language chip
+        hasTranslations: false,
+        group: null,
+        searchTags: p.tags || [],
+        searchAuthors: authors,
+        searchText: `${p.title} ${(p.tags || []).join(' ')} ${p.artist || ''}`.toLowerCase(),
+        searchTitles: [p.title].filter(Boolean),
+      })
+    }
+    return out
+  }, [catalog.groups, selectedLanguage, tagMap, personalSongs])
+
+  const navigationType = useNavigationType()
+  const navigationTypeRef = useRef(navigationType)
+  const pendingScrollRef = useRef(null)
+  const scrollTopRef = useRef(0)
+
+  const searchRef = useRef(null)
+  const resultsRef = useRef(null)
+  const qLower = q.trim().toLowerCase()
+  const allTags = useMemo(() => {
+    const seen = new Set()
+    const options = []
+    for (const s of items) {
+      for (const key of s.tagKeys || []) {
+        if (!key || seen.has(key) || isHiddenTag(key)) continue
+        seen.add(key)
+        options.push({ key, label: tagMap.get(key) || tagLabelFromKey(key) })
+      }
+    }
+    return options.sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+    )
+  }, [items, tagMap])
+
+  const [selectedTags, setSelectedTags] = useState([])
+  const [lyricsOn, setLyricsOn] = useState(false)
+  const [communityOnly, setCommunityOnly] = useState(() => {
+    try { return localStorage.getItem('pref:communityOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:communityOnly', communityOnly ? '1' : '0') } catch {}
+  }, [communityOnly])
+
+  const [lyricsCache, setLyricsCache] = useState({})
+  const fetchingRef = useRef(new Set())
+
+
+  const selectedTagsKey = selectedTags.join('|')
+  const tagPass = useCallback((s) => {
+    if (!selectedTags.length) return true
+    const tags = s.tagKeys || []
+    return selectedTags.some((t) => tags.includes(t))
+  }, [selectedTags])
+  const communityPass = useCallback((s) => {
+    if (!communityOnly) return true
+    const tags = s.tagKeys || []
+    return tags.includes(COMMUNITY_KEY)
+  }, [communityOnly, COMMUNITY_KEY])
+
+  useEffect(() => {
+    if (!lyricsOn || qLower.length === 0) return
+    const shouldFetch = items
+      .filter(tagPass)
+      .filter(communityPass)
+      .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
+      .slice(0, 200)
+    if (!shouldFetch.length) return
+
+    let cancelled = false
+    ;(async () => {
+      const next = {}
+      for (const s of shouldFetch) {
+        try {
+          fetchingRef.current.add(s.id)
+          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then((r) => r.text())
+          if (cancelled) return
+          next[s.id] = (txt || '').toLowerCase()
+        } catch {}
+      }
+      if (!cancelled && Object.keys(next).length) {
+        setLyricsCache((prev) => ({ ...prev, ...next }))
+      }
+    })()
+    return () => { cancelled = true }
+  // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lyricsOn, qLower, items, selectedTagsKey, communityOnly, tagPass, communityPass])
+
+  const resultParts = useMemo(() => {
+    const scoreMap = new Map()
+    let list
+
+    if (qLower.length) {
+      const rs = searchSongs(items, qLower)
+      list = rs.map((r) => {
+        scoreMap.set(r.item.id, r.score)
+        return r.item
+      })
+    } else {
+      list = items.slice()
+    }
+
+    list = list.filter(tagPass).filter(communityPass)
+
+    if (lyricsOn && qLower.length) {
+      const extra = items
+        .filter(tagPass)
+        .filter(communityPass)
+        .filter((s) => {
+          const txt = lyricsCache[s.id]
+          return typeof txt === 'string' ? txt.includes(qLower) : false
+        })
+      const byId = new Set(list.map((i) => i.id))
+      for (const s of extra) {
+        if (!byId.has(s.id)) list.push(s)
+      }
+    }
+
+    list.sort((a, b) => {
+      if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
+        return a.hasSelectedLanguage ? -1 : 1
+      }
+      const aSW = qLower && a.title.toLowerCase().startsWith(qLower) ? 1 : 0
+      const bSW = qLower && b.title.toLowerCase().startsWith(qLower) ? 1 : 0
+      if (aSW !== bSW) return bSW - aSW
+
+      const as = scoreMap.has(a.id) ? scoreMap.get(a.id) : Number.POSITIVE_INFINITY
+      const bs = scoreMap.has(b.id) ? scoreMap.get(b.id) : Number.POSITIVE_INFINITY
+      if (as !== bs) return as - bs
+
+      return compareSongsByTitle(a, b)
+    })
+
+    const translated = []
+    const fallback = []
+    for (const item of list) {
+      if (item.hasSelectedLanguage) translated.push(item)
+      else fallback.push(item)
+    }
+    return { translated, fallback }
+  }, [items, qLower, lyricsOn, lyricsCache, tagPass, communityPass])
+
+  const results = useMemo(
+    () => [...resultParts.translated, ...resultParts.fallback],
+    [resultParts]
+  )
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const optionRefs = useRef([])
+  const resetRef = useRef(false)
+
+  function onSearchKeyDown(e){
+    if(e.key === 'Enter'){
+      e.preventDefault()
+      const c = resultsRef.current
+      if(!c) return
+      const containerRect = c.getBoundingClientRect()
+      const links = c.querySelectorAll('a')
+      for(const link of links){
+        const rect = link.getBoundingClientRect()
+        if(rect.bottom > containerRect.top && rect.top < containerRect.bottom){
+          link.click()
+          break
+        }
+      }
+    } else if(e.key === 'Escape') {
+      e.preventDefault()
+      setQ('')
+      searchRef.current?.focus()
+    } else if(e.key === 'ArrowDown') {
+      e.preventDefault()
+      if(results.length === 0) return
+      if (activeIndex === 0) {
+        optionRefs.current[0]?.focus()
+      } else {
+        setActiveIndex(0)
+      }
+    } else if(e.key === 'ArrowUp') {
+      e.preventDefault()
+      if(results.length === 0) return
+      const last = results.length - 1
+      setActiveIndex(last)
+    }
+  }
+
+  function onResultsKeyDown(e){
+    if(e.key === 'ArrowDown'){
+      e.preventDefault()
+      setActiveIndex((i) => Math.min(i + 1, results.length - 1))
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault()
+      setActiveIndex((i) => {
+        if(i <= 0){
+          searchRef.current?.focus()
+          return -1
+        }
+        return i - 1
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      if (resetRef.current) {
+        resetRef.current = false
+      } else {
+        optionRefs.current[activeIndex]?.focus()
+      }
+    }
+  }, [activeIndex])
+
+  useEffect(() => {
+    if (results.length > 0) {
+      setActiveIndex(0)
+      resetRef.current = true
+    } else {
+      setActiveIndex(-1)
+    }
+  }, [results])
+
+  useEffect(() => {
+    const nextQ = searchParams.get('q') || ''
+    setQ(nextQ)
+  }, [searchParams])
+
+  useEffect(() => {
+    function onKeyDown(e){
+      if(e.key === '/' && document.activeElement !== searchRef.current){
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    try {
+      const isDesktop = window.matchMedia && window.matchMedia('(min-width: 821px)').matches
+      if (isDesktop) searchRef.current?.focus()
+    } catch {}
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  // Keep scrollTopRef current so the cleanup below never reads a nulled-out DOM ref.
+  useEffect(() => {
+    const el = resultsRef.current
+    if (!el) return
+    const onScroll = () => { scrollTopRef.current = el.scrollTop }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (navigationTypeRef.current === 'POP') {
+      const saved = sessionStorage.getItem('songs:scrollTop')
+      if (saved) pendingScrollRef.current = Number(saved)
+    }
+    return () => {
+      sessionStorage.setItem('songs:scrollTop', String(scrollTopRef.current))
+    }
+  }, [])
+
+  // Double-RAF so grid layout is complete before we set scrollTop.
+  useEffect(() => {
+    if (pendingScrollRef.current !== null && items.length > 0) {
+      const y = pendingScrollRef.current
+      pendingScrollRef.current = null
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (resultsRef.current) resultsRef.current.scrollTop = y
+      }))
+    }
+  }, [items])
+
+  function toggleTag(key){
+    setSelectedTags((prev) => prev.includes(key) ? prev.filter((x) => x!==key) : [...prev, key])
+  }
+  function clearTags(){ setSelectedTags([]) }
+
+  optionRefs.current = []
+
+  return (
+    <div className="HomePage">
+      <Helmet>
+        <title>{SONGS_TITLE}</title>
+        <meta name="description" content={SONGS_DESCRIPTION} />
+        <meta name="keywords" content="worship chord sheets, worship lyrics, transposable charts, La Voz Misionera" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={SONGS_TITLE} />
+        <meta property="og:description" content={SONGS_DESCRIPTION} />
+        <meta property="og:url" content={`${SITE_URL}/songs`} />
+        <meta property="og:site_name" content="La Voz Misionera" />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <link rel="canonical" href={`${SITE_URL}/songs`} />
+      </Helmet>
+      <div className="HomeHeader">
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap'}}>
+          <h1 title={t('songs.titleTooltip')} style={{ marginBottom: 0 }}>{t('songs.title')}</h1>
+          {languageChipCodes.length > 0 ? (
+            <div className="tagbar" aria-label={t('songs.languageAria')}>
+              {languageChipCodes.map((code) => (
+                <Chip
+                  key={code}
+                  variant="filter"
+                  selected={selectedLanguage === code}
+                  onClick={() => setSelectedLanguage(code)}
+                  title={t('songs.languageTooltip', { language: getLanguageChipLabel(code) })}
+                >
+                  {getLanguageChipLabel(code)}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="gc-card" style={{display:'grid', gap:10}}>
+          <Input
+            id="search"
+            ref={searchRef}
+            value={q}
+            onChange={(e)=> setQ(e.target.value)}
+            onKeyDown={onSearchKeyDown}
+            placeholder={t('songs.searchPlaceholder')}
+            aria-label={t('songs.searchAria')}
+          />
+          <div className="row" style={{gap:8, alignItems:'center'}}>
+            <label className="row" style={{gap:8, alignItems:'center'}}>
+              <input
+                type="checkbox"
+                checked={lyricsOn}
+                onChange={(e)=> setLyricsOn(e.target.checked)}
+              />
+              <span className="meta" title={t('songs.lyricsContainTooltip')}>{t('songs.lyricsContain')}</span>
+            </label>
+            <label className="row" style={{gap:8, alignItems:'center'}}>
+              <input
+                type="checkbox"
+                checked={communityOnly}
+                onChange={(e)=> setCommunityOnly(e.target.checked)}
+              />
+              <span className="meta" title={t('songs.communitySetlistTooltip')}>{t('songs.communitySetlist')}</span>
+            </label>
+          </div>
+
+          <div className="row">
+            <div className="tagbar">
+              <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>{t('songs.all')}</Chip>
+              {allTags.map((tag) => (
+                <Chip
+                  key={tag.key}
+                  variant="filter"
+                  selected={selectedTags.includes(tag.key)}
+                  onClick={() => toggleTag(tag.key)}
+                >{tag.label}</Chip>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="HomeResults"
+        role="region"
+        ref={resultsRef}
+        onKeyDown={onResultsKeyDown}
+      >
+        <div className="HomeGrid" role="listbox" aria-label={t('songs.resultsAria')}>
+          {resultParts.translated.map((s, i) => (
+            <SongCard
+              as={Link}
+              key={s.id}
+              to={s.to || `/song/${s.id}`}
+              role="option"
+              ref={(el) => (optionRefs.current[i] = el)}
+              tabIndex={i === activeIndex ? 0 : -1}
+              aria-selected={i === activeIndex}
+              className={i === activeIndex ? 'active' : ''}
+              title={s.title}
+              rightSlot={personalBadge(s)}
+              subtitle={(() => {
+                const visible = filterDisplayTags(s.tags)
+                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
+              })()}
+            />
+          ))}
+
+          {resultParts.translated.length > 0 && resultParts.fallback.length > 0 ? (
+            <div className="gc-translation-divider" role="separator">
+              <span>{t('songs.noTranslation')}</span>
+            </div>
+          ) : null}
+
+          {resultParts.fallback.map((s, i) => {
+            const idx = i + resultParts.translated.length
+            return (
+              <SongCard
+                as={Link}
+                key={s.id}
+                to={s.to || `/song/${s.id}`}
+                role="option"
+                ref={(el) => (optionRefs.current[idx] = el)}
+                tabIndex={idx === activeIndex ? 0 : -1}
+                aria-selected={idx === activeIndex}
+                className={idx === activeIndex ? 'active' : ''}
+                title={s.title}
+                rightSlot={personalBadge(s)}
+                subtitle={(() => {
+                const visible = filterDisplayTags(s.tags)
+                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
+              })()}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}

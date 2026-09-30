@@ -1,0 +1,238 @@
+/* Settings cluster: theme switch, locale picker, chord-style switch.
+   Used in the desktop gear-tray and the mobile drawer. */
+
+.gc-settings-cluster {
+  display: flex;
+  gap: var(--space-2);
+}
+.gc-settings-cluster--row { flex-direction: row; align-items: center; }
+.gc-settings-cluster--column {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+/* Each control gets a comfortable touch target with consistent height. */
+.gc-settings-cluster--column > * {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  width: 100%;
+}
+.gc-settings-cluster--column .gc-pill-toggle { width: 100%; }
+.gc-settings-cluster--column .gc-pill-toggle__track { width: 100%; height: 40px; }
+.gc-settings-cluster--column .gc-locale-picker { width: 100%; }
+.gc-settings-cluster--column .gc-locale-picker__select {
+  width: 100%;
+  height: 40px;
+  text-align: left;
+  text-align-last: left;
+}
+
+/* ---------- Pill toggle (theme + chord style) ----------
+   iOS-style segmented control. Track holds both options at fixed
+   positions; a thumb slides between them to indicate active state. */
+
+.gc-pill-toggle {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.gc-pill-toggle:focus { outline: none; }
+.gc-pill-toggle:focus-visible .gc-pill-toggle__track {
+  box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
+}
+
+.gc-pill-toggle__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-3);
+  border: 1px solid var(--gc-separator);
+  transition: background var(--gc-dur-quick) var(--gc-ease);
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.gc-pill-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 1px 1px rgba(0, 0, 0, 0.10);
+  transition: transform var(--gc-dur) var(--gc-ease);
+}
+.gc-pill-toggle.is-right .gc-pill-toggle__thumb {
+  transform: translateX(100%);
+}
+
+.gc-pill-toggle__option {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  color: var(--gc-text-tertiary);
+  transition: color var(--gc-dur-quick) var(--gc-ease);
+  pointer-events: none;
+}
+.gc-pill-toggle.is-left .gc-pill-toggle__option--left,
+.gc-pill-toggle.is-right .gc-pill-toggle__option--right {
+  color: var(--gc-text);
+}
+
+/* Icon variant — compact, used for theme toggle */
+.gc-pill-toggle--icon .gc-pill-toggle__track { min-width: 76px; }
+.gc-pill-toggle--icon .gc-pill-toggle__option { min-width: 36px; height: 100%; }
+
+/* Icon + text variant — used for theme toggle in the drawer (Sun "Light" / Moon "Dark") */
+.gc-pill-toggle--icon-text .gc-pill-toggle__track {
+  height: 40px;
+  min-width: 160px;
+}
+.gc-pill-toggle--icon-text .gc-pill-toggle__option {
+  gap: 6px;
+  padding: 0 12px;
+  font-size: var(--gc-font-sub);
+  font-weight: 500;
+  font-family: var(--gc-font-family);
+  white-space: nowrap;
+  height: 100%;
+}
+
+/* Text variant — wider, used for chord style (ABC / DoReMi) */
+.gc-pill-toggle--text .gc-pill-toggle__option {
+  min-width: 56px;
+  padding: 0 10px;
+  font-size: var(--gc-font-sub);
+  font-weight: 500;
+  font-family: var(--gc-font-family);
+  white-space: nowrap;
+}
+.gc-pill-toggle--text.is-left .gc-pill-toggle__option--left,
+.gc-pill-toggle--text.is-right .gc-pill-toggle__option--right {
+  color: var(--gc-primary);
+  font-weight: 600;
+}
+
+/* ---------- Locale picker ---------- */
+
+.gc-locale-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.gc-locale-picker__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gc-text-secondary);
+  pointer-events: none;
+}
+.gc-locale-picker__select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--gc-surface-3);
+  color: var(--gc-text);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-pill);
+  font: 500 13px/1 var(--gc-font-family);
+  height: 28px;
+  padding: 0 12px 0 34px;
+  cursor: pointer;
+  transition: background var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-locale-picker__select:hover { background: var(--gc-surface-2); }
+.gc-locale-picker__select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
+  border-color: var(--gc-primary);
+}
+
+/* ---------- Desktop gear tray ---------- */
+
+.gc-settings-tray-host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.gc-settings-tray-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--gc-text-secondary);
+  cursor: pointer;
+  transition: background var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease), color var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-settings-tray-btn:hover,
+.gc-settings-tray-btn[aria-expanded="true"] {
+  color: var(--gc-text);
+  border-color: var(--gc-separator);
+  background: var(--gc-surface-2);
+}
+
+.gc-settings-tray {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  box-shadow: var(--gc-shadow-2);
+  min-width: 240px;
+  z-index: 100;
+  padding: var(--space-3);
+  animation: gc-dropdown-in var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-settings-tray__title {
+  font-size: var(--gc-font-cap);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gc-text-tertiary);
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-1);
+}
+
+/* ---------- Drawer overrides ---------- */
+
+.gc-drawer .gc-settings-cluster { width: 100%; }
+.gc-drawer .gc-locale-picker { width: 100%; }
+.gc-drawer .gc-locale-picker__select {
+  width: 100%;
+  height: 40px;
+  text-align: left;
+  text-align-last: left;
+}
+
+/* Profile button in the drawer: full-width with avatar on the left and chevron on the right. */
+.gc-drawer .gc-profile-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: flex-start;
+}
+.gc-drawer .gc-profile-link__label {
+  flex: 1 1 auto;
+  text-align: left;
+}
+.gc-drawer .gc-profile-link__chevron {
+  color: var(--gc-text-secondary);
+  flex: 0 0 auto;
+}

@@ -1,0 +1,166 @@
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
+import App from './App'
+import { AuthProvider } from './hooks/useAuth'
+import { LocaleProvider } from './hooks/useLocale'
+import { SettingsProvider } from './hooks/useSettings'
+import { initTheme } from './utils/app/theme'
+import { reloadOnceForStaleChunk } from './utils/app/lazyRoute'
+import './i18n'
+
+function bootstrapRouteFromQuery(){
+  if (typeof window === 'undefined') return
+  const { search, pathname } = window.location
+  if (!search) return
+  const params = new URLSearchParams(search || '')
+  const redirect = params.get('redirect') || params.get('r')
+  if (redirect) {
+    let target = ''
+    try { target = decodeURIComponent(redirect) } catch { target = redirect }
+    if (/^https?:\/\//i.test(target)) {
+      try {
+        const url = new URL(target)
+        target = `${url.pathname}${url.search}${url.hash}`
+      } catch {}
+    }
+    if (target && !target.startsWith('/')) target = `/${target}`
+    if (target) window.history.replaceState(null, '', target)
+    return
+  }
+  if (pathname && pathname !== '/' && pathname !== '/index.html') return
+  const song = params.get('song')
+  const resource = params.get('resource')
+  const view = params.get('view') || params.get('page')
+  let target = ''
+  if (song) target = `/songs/${encodeURIComponent(song)}`
+  else if (resource) target = `/posts/${encodeURIComponent(resource)}`
+  else if (view) {
+    const v = view.toLowerCase()
+    const allowed = new Set(['about','songs','setlist','songbook','posts','bundle'])
+    if (allowed.has(v)) target = `/${v}`
+  }
+  if (target) {
+    window.history.replaceState(null, '', target)
+  }
+}
+
+function registerServiceWorker(){
+  if (typeof window === 'undefined') return
+  if (!import.meta.env.PROD) return
+  if (!('serviceWorker' in navigator)) return
+  const version = encodeURIComponent(String(__SW_VERSION__ || 'dev'))
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`/sw.js?v=${version}`, { type: 'module' })
+      .catch(() => {})
+  })
+}
+
+function resetServiceWorkerIfRequested(){
+  if (typeof window === 'undefined') return
+  if (!('serviceWorker' in navigator)) return
+  const url = new URL(window.location.href)
+  if (url.searchParams.get('reset_sw') !== '1') return
+
+  ;(async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(registrations.map((registration) => registration.unregister()))
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        await Promise.all(keys.filter((key) => key.startsWith('gracechords-')).map((key) => caches.delete(key)))
+      }
+    } catch {}
+
+    url.searchParams.delete('reset_sw')
+    url.searchParams.set('v', String(Date.now()))
+    const search = url.searchParams.toString()
+    window.location.replace(`${url.pathname}${search ? `?${search}` : ''}${url.hash}`)
+  })()
+}
+
+function recoverFromMissingStylesheets(){
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  const url = new URL(window.location.href)
+  const alreadyRetried = url.searchParams.get('css_retry') === '1'
+  window.addEventListener('load', () => {
+    const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .filter((node) => (node.getAttribute('href') || '').includes('/assets/'))
+    if (!stylesheets.length) return
+    const missingStylesheet = stylesheets.some((node) => node.sheet == null)
+    const rootStyles = window.getComputedStyle(document.documentElement)
+    const missingThemeTokens = !String(rootStyles.getPropertyValue('--gc-primary') || '').trim()
+    const shouldRecover = missingStylesheet || missingThemeTokens
+    if (shouldRecover && !alreadyRetried) {
+      url.searchParams.set('css_retry', '1')
+      url.searchParams.set('v', String(Date.now()))
+      window.location.replace(`${url.pathname}?${url.searchParams.toString()}${url.hash}`)
+      return
+    }
+    if (alreadyRetried && !shouldRecover) {
+      url.searchParams.delete('css_retry')
+      url.searchParams.delete('v')
+      const search = url.searchParams.toString()
+      window.history.replaceState(null, '', `${url.pathname}${search ? `?${search}` : ''}${url.hash}`)
+    }
+  }, { once: true })
+}
+
+// Recover from stale lazy-route chunks after a deploy. A client running an
+// older bundle references chunk hashes (e.g. SongbookPage-<hash>.js) that the
+// new deploy no longer serves, so the dynamic import 404s and the route dies
+// with "Something went wrong". The service worker self-heals only the entry
+// asset, not per-route chunks — so recover here by reloading once, which pulls
+// fresh HTML + the current chunk hashes (navigations are network-first in
+// sw.js). reloadOnceForStaleChunk() carries the loop guard, shared with
+// lazyRoute() so both recovery paths agree on whether a reload is under way.
+function recoverFromStaleChunks(){
+  if (typeof window === 'undefined') return
+  const CHUNK_ERROR_RE = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload (?:CSS|module)/i
+
+  // Vite dispatches this when __vitePreload can't load a dynamically imported
+  // chunk — the canonical stale-deploy signal. preventDefault stops Vite from
+  // rethrowing (we're reloading anyway); the cost is that __vitePreload then
+  // resolves with `undefined` instead, which is why lazyRoute() has to check
+  // for a module that arrived without a default export.
+  window.addEventListener('vite:preloadError', (event) => {
+    if (typeof event?.preventDefault === 'function') event.preventDefault()
+    reloadOnceForStaleChunk()
+  })
+
+  // Backstop for failures that surface as an unhandled promise rejection.
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = event?.reason?.message ?? event?.reason ?? ''
+    if (CHUNK_ERROR_RE.test(String(message))) reloadOnceForStaleChunk()
+  })
+}
+
+bootstrapRouteFromQuery()
+initTheme()
+resetServiceWorkerIfRequested()
+registerServiceWorker()
+recoverFromMissingStylesheets()
+recoverFromStaleChunks()
+
+// Global styles
+import './styles/index.css'
+
+// Variable font already covers all weights; nothing extra to load after idle
+
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <LocaleProvider>
+            <SettingsProvider>
+              <App />
+            </SettingsProvider>
+          </LocaleProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
+  </React.StrictMode>
+)

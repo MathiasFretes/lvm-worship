@@ -1,0 +1,364 @@
+/**
+ * gracechords-pptx-upload Worker
+ *
+ * Handles PPTX file uploads and deletions for La Voz Misionera songs.
+ * Files are stored in Cloudflare R2 (gracechords-bible bucket, pptx/ prefix).
+ *
+ * Required secrets (set via `wrangler secret put` before deploying):
+ *   SUPABASE_URL              — e.g. https://xyz.supabase.co
+ *   SUPABASE_SERVICE_ROLE_KEY — service_role key from Supabase dashboard → Settings → API
+ *   ALLOWED_ORIGINS           — comma-separated list of allowed frontend origins
+ */
+
+// Role hierarchy: lowest privilege → highest. Mirror of `ROLE_ORDER` in
+// `packages/core/src/rbac/roles.js`; this worker is bundled separately so the
+// constant can't be imported. Keep the two in sync if the hierarchy changes.
+const ROLE_HIERARCHY = ['user', 'editor', 'admin', 'owner']
+
+function isAtLeast(userRole, minRole) {
+  const minIdx = ROLE_HIERARCHY.indexOf(minRole)
+  // An unrecognised minRole must not fail open. Without this, indexOf returns -1
+  // for both operands and `-1 >= -1` grants access to everyone.
+  if (minIdx < 0) return false
+  return ROLE_HIERARCHY.indexOf(userRole) >= minIdx
+}
+
+function jsonError(msg, status) {
+  return new Response(JSON.stringify({ error: msg }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+// ---- CORS ----
+
+function getAllowedOrigins(env) {
+  return (env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+}
+
+// Returns { allowed, origin } where `allowed` is true iff the request can
+// proceed:
+//   - no Origin header (non-browser / same-origin) → allowed
+//   - Origin in the allowlist → allowed
+//   - Origin present but not in allowlist → rejected
+function checkOrigin(request, env) {
+  const origin = request.headers.get('Origin') || ''
+  if (!origin) return { allowed: true, origin: '' }
+  return { allowed: getAllowedOrigins(env).includes(origin), origin }
+}
+
+function getCorsHeaders(origin) {
+  // Vary: Origin is required on every response so a cache that fronts the
+  // worker doesn't serve a response with another origin's ACAO.
+  const headers = {
+    'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    Vary: 'Origin',
+  }
+  if (origin) headers['Access-Control-Allow-Origin'] = origin
+  return headers
+}
+
+function addCors(response, corsHeaders) {
+  const res = new Response(response.body, response)
+  for (const [k, v] of Object.entries(corsHeaders)) {
+    res.headers.set(k, v)
+  }
+  return res
+}
+
+// ---- JWT verification + role fetch ----
+
+async function verifyAndGetRole(request, env) {
+  const auth = request.headers.get('Authorization') || ''
+  if (!auth.startsWith('Bearer ')) {
+    return { error: 401, msg: 'Missing or malformed Authorization header' }
+  }
+  const token = auth.slice(7).trim()
+  if (!token) {
+    return { error: 401, msg: 'Missing bearer token' }
+  }
+
+  // Delegate signature verification to Supabase Auth, same as the Pages
+  // Functions under apps/web/functions/api/. The project signs session JWTs
+  // with asymmetric signing keys, so the legacy HS256 SUPABASE_JWT_SECRET no
+  // longer verifies them — checking locally against it rejected every real
+  // token with 'Invalid token signature'. /auth/v1/user keeps working through
+  // key rotations and also rejects revoked sessions.
+  let userId
+  try {
+    const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    if (resp.status === 401 || resp.status === 403) {
+      return { error: 401, msg: 'Invalid or expired token' }
+    }
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      console.error('[pptx-upload] auth check failed:', resp.status, detail)
+      return { error: 502, msg: 'Auth check failed' }
+    }
+    const user = await resp.json().catch(() => null)
+    userId = user?.id
+  } catch {
+    return { error: 502, msg: 'Auth check failed' }
+  }
+  if (!userId) {
+    return { error: 401, msg: 'Token missing user id' }
+  }
+
+  // Fetch the caller's role from Supabase
+  let userRow
+  try {
+    const resp = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${encodeURIComponent(userId)}&limit=1`,
+      {
+        headers: {
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      },
+    )
+    // Check the transport before the payload. Previously this went straight to
+    // Array.isArray(), so a PostgREST error body — which is a JSON *object*, not
+    // an array — fell through to 'User not found' and every upload 403'd with
+    // what looked like an authorization decision. That masked a schema error
+    // (this query used to select a `global_role` column that no longer exists)
+    // for as long as it took someone to read the source.
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      console.error('[pptx-upload] role lookup failed:', resp.status, detail)
+      return { error: 500, msg: 'Failed to fetch user role' }
+    }
+    const rows = await resp.json()
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return { error: 403, msg: 'User not found' }
+    }
+    userRow = rows[0]
+  } catch {
+    return { error: 500, msg: 'Failed to fetch user role' }
+  }
+
+  return { role: userRow.role || 'user', userId }
+}
+
+// ---- Rate limiting ----
+// Per-user limit on uploads, enforced via KV. Uses two adjacent fixed windows
+// (current + previous, each 5 min) so the effective rate stays close to the
+// configured limit even at window boundaries.
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000
+const RATE_LIMIT_MAX = 10
+
+async function checkRateLimit(env, userId) {
+  if (!env.RATE_LIMIT_KV) return { ok: true }
+  const now = Date.now()
+  const bucket = Math.floor(now / RATE_LIMIT_WINDOW_MS)
+  const curKey = `rl:upload:${userId}:${bucket}`
+  const prevKey = `rl:upload:${userId}:${bucket - 1}`
+
+  const [curRaw, prevRaw] = await Promise.all([
+    env.RATE_LIMIT_KV.get(curKey),
+    env.RATE_LIMIT_KV.get(prevKey),
+  ])
+  const cur = Number(curRaw) || 0
+  const prev = Number(prevRaw) || 0
+  if (cur + prev >= RATE_LIMIT_MAX) {
+    const resetMs = ((bucket + 1) * RATE_LIMIT_WINDOW_MS) - now
+    return { ok: false, retryAfter: Math.max(1, Math.ceil(resetMs / 1000)) }
+  }
+
+  // Best-effort increment. KV has no atomic increment; a brief race on the
+  // boundary may permit one or two extra uploads — acceptable for this limit.
+  await env.RATE_LIMIT_KV.put(curKey, String(cur + 1), {
+    expirationTtl: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) * 2,
+  })
+  return { ok: true }
+}
+
+function rateLimited(retryAfter) {
+  return new Response(
+    JSON.stringify({ error: 'Too many uploads. Please slow down.' }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+      },
+    },
+  )
+}
+
+// ---- Handlers ----
+
+async function handleUpload(request, env) {
+  const authResult = await verifyAndGetRole(request, env)
+  if (authResult.error) {
+    return jsonError(authResult.msg, authResult.error)
+  }
+  if (!isAtLeast(authResult.role, 'editor')) {
+    return jsonError('Insufficient role: editor or higher required', 403)
+  }
+
+  const limit = await checkRateLimit(env, authResult.userId)
+  if (!limit.ok) {
+    return rateLimited(limit.retryAfter)
+  }
+
+  // Parse multipart form data
+  let formData
+  try {
+    formData = await request.formData()
+  } catch {
+    return jsonError('Failed to parse multipart form data', 400)
+  }
+
+  const slug = formData.get('slug')
+  const file = formData.get('file')
+
+  if (!slug || typeof slug !== 'string') {
+    return jsonError('Missing slug field', 400)
+  }
+  if (!file || typeof file.arrayBuffer !== 'function') {
+    return jsonError('Missing file field', 400)
+  }
+
+  // Validate slug
+  if (!/^[a-z0-9_]+$/.test(slug)) {
+    return jsonError('Invalid slug: must match /^[a-z0-9_]+$/', 400)
+  }
+
+  // Validate file type
+  const validType =
+    file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  const validExt = typeof file.name === 'string' && file.name.toLowerCase().endsWith('.pptx')
+  if (!validType && !validExt) {
+    return jsonError('File must be a .pptx (PowerPoint) file', 400)
+  }
+
+  // Validate file size (20MB)
+  const MAX_BYTES = 20 * 1024 * 1024
+  if (file.size > MAX_BYTES) {
+    return jsonError('File exceeds 20MB limit', 400)
+  }
+
+  // Read the body once and verify the ZIP magic bytes. PPTX is an Office Open
+  // XML container (i.e. a ZIP archive) and must start with PK\x03\x04. This
+  // catches mislabeled files (renamed .pdf, etc.) that pass the MIME/extension
+  // check but aren't actually PPTX.
+  let body
+  try {
+    body = await file.arrayBuffer()
+  } catch {
+    return jsonError('Failed to read uploaded file', 400)
+  }
+  if (body.byteLength < 4) {
+    return jsonError('File is too small to be a valid PPTX', 400)
+  }
+  const head = new Uint8Array(body, 0, 4)
+  if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+    return jsonError('File is not a valid PPTX (ZIP) container', 400)
+  }
+
+  // Write to R2
+  const key = `pptx/${slug}.pptx`
+  try {
+    await env.R2_BUCKET.put(key, body, {
+      httpMetadata: {
+        contentType:
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      },
+    })
+  } catch {
+    return jsonError('Upload failed', 500)
+  }
+
+  // Return public URL using the same pattern as SongView (relative path)
+  const url = `/pptx/${slug}.pptx`
+  return new Response(JSON.stringify({ url }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+async function handleDelete(request, env) {
+  const authResult = await verifyAndGetRole(request, env)
+  if (authResult.error) {
+    return jsonError(authResult.msg, authResult.error)
+  }
+  if (!isAtLeast(authResult.role, 'editor')) {
+    return jsonError('Insufficient role: editor or higher required', 403)
+  }
+
+  // Parse JSON body
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return jsonError('Request body must be JSON', 400)
+  }
+
+  const { slug } = body
+  if (!slug || typeof slug !== 'string') {
+    return jsonError('Missing slug field', 400)
+  }
+
+  // Validate slug
+  if (!/^[a-z0-9_]+$/.test(slug)) {
+    return jsonError('Invalid slug: must match /^[a-z0-9_]+$/', 400)
+  }
+
+  // Delete from R2 (idempotent — missing key is not an error)
+  const key = `pptx/${slug}.pptx`
+  try {
+    await env.R2_BUCKET.delete(key)
+  } catch {
+    return jsonError('Delete failed', 500)
+  }
+
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+// ---- Main fetch handler ----
+
+export default {
+  async fetch(request, env) {
+    const { allowed, origin } = checkOrigin(request, env)
+    const corsHeaders = getCorsHeaders(allowed ? origin : '')
+    const method = request.method.toUpperCase()
+    const url = new URL(request.url)
+    const path = url.pathname
+
+    // Handle CORS preflight: still respond with Vary: Origin and either echo
+    // the allowed origin or omit ACAO so the browser blocks the request.
+    if (method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders })
+    }
+
+    // Reject browser-initiated requests from origins that aren't on the
+    // allowlist. Same-origin / non-browser callers (no Origin header) still
+    // pass through so curl-style health checks and server-side calls work.
+    if (!allowed) {
+      return addCors(jsonError('Origin not allowed', 403), corsHeaders)
+    }
+
+    let response
+    if (method === 'POST' && path === '/upload') {
+      response = await handleUpload(request, env)
+    } else if (method === 'DELETE' && path === '/delete') {
+      response = await handleDelete(request, env)
+    } else {
+      response = jsonError('Not found', 404)
+    }
+
+    return addCors(response, corsHeaders)
+  },
+}

@@ -1,0 +1,100 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "chooseTranslation": "Çeviri seç",
+  "chooseDate": "Tarih seç",
+  "readerSettings": "Okuyucu ayarları",
+  "defaultTranslationLabel": "ESV",
+  "landingTitle": "Kutsal Kitap",
+  "streakDays_one": "{{count}} günlük seri",
+  "streakDays_other": "{{count}} günlük seri",
+  "landingReadingHeader": "{{date}} okuması · M'Cheyne",
+  "backToLanding": "Kutsal Kitap'a dön",
+  "reflection": {
+    "landingHeader": "Düşüncelerin",
+    "composeCta": "Düşünceni yaz",
+    "composeHint": "Bugün · henüz yazılmadı",
+    "viewAll": "Tüm düşünceleri gör",
+    "journalTitle": "Düşünceler",
+    "composeTitle": "Yeni düşünce",
+    "editTitle": "Düşünceyi düzenle",
+    "edit": "Düzenle",
+    "editErrorTitle": "Düşünce güncellenemedi",
+    "placeholder": "Düşüncelerini, fikirlerini ya da dualarını yaz…",
+    "charCount": "{{count}} / {{max}}",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "ok": "Tamam",
+    "delete": "Sil",
+    "deleteTitle": "Düşünce silinsin mi?",
+    "deleteMessage": "Bu geri alınamaz.",
+    "duplicateTitle": "Zaten yazıldı",
+    "duplicateMessage": "Bugün için zaten bir düşünce yazdın.",
+    "saveErrorTitle": "Düşünce kaydedilemedi",
+    "emptyTitle": "Henüz düşünce yok",
+    "emptySubtitle": "Bir düşünce yazdığında burada görünecek."
+  },
+  "journal": {
+    "privateLabel": "Özel"
+  },
+  "copyVerses_one": "{{count}} ayeti kopyala",
+  "copyVerses_other": "{{count}} ayeti kopyala",
+  "error": {
+    "title": "Bugünün okuması yüklenemiyor",
+    "subtitle": "İnternete bağlanıp tekrar deneyin veya çevrimdışı okumak için bu çeviriyi Ayarlar → Çevrimdışı ve İndirmeler'den indirin.",
+    "retry": "Tekrar dene"
+  },
+  "empty": {
+    "title": "Bu gün için okuma yok",
+    "subtitle": "Okumaya devam etmek için başka bir tarih seçin."
+  },
+  "translationPicker": {
+    "title": "Çeviri"
+  },
+  "settings": {
+    "title": "Okuyucu ayarları",
+    "textSize": "Yazı boyutu",
+    "smallerText": "Daha küçük yazı",
+    "largerText": "Daha büyük yazı",
+    "pt": "{{pt}} pt",
+    "typeface": "Yazı tipi",
+    "serif": "Serif",
+    "sans": "Sans",
+    "verseLayout": "Ayet düzeni",
+    "lines": "Satırlar",
+    "prose": "Düz metin",
+    "lineSpacing": "Satır aralığı",
+    "tight": "Dar",
+    "normal": "Normal",
+    "relaxed": "Geniş"
+  },
+  "datePicker": {
+    "title": "Tarih seç",
+    "today": "Bugün",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "monthYear": "{{month}} {{year}}",
+    "weekdays": [
+      "Pa",
+      "Pt",
+      "Sa",
+      "Ça",
+      "Pe",
+      "Cu",
+      "Ct"
+    ],
+    "months": [
+      "Ocak",
+      "Şubat",
+      "Mart",
+      "Nisan",
+      "Mayıs",
+      "Haziran",
+      "Temmuz",
+      "Ağustos",
+      "Eylül",
+      "Ekim",
+      "Kasım",
+      "Aralık"
+    ]
+  }
+}

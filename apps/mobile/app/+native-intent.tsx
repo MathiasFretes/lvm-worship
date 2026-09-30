@@ -1,0 +1,64 @@
+// Remaps inbound deep-link / Universal Link paths to Expo Router routes.
+//
+// Native-only file; Expo Router ignores it on web. redirectSystemPath runs for
+// every externally-launched link, on both cold start (initial === true) and warm
+// start (initial === false).
+//
+// The mapping itself lives in src/lib/deepLinks.ts so it stays RN-free and unit
+// tested; this file is only the router hook.
+
+import { router } from 'expo-router'
+import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../src/lib/deepLinks'
+import { getFocusedRouteKey } from '../src/lib/topRoute'
+import { noteInboundLink } from '../src/lib/pendingRoute'
+import { parseAuthLink, setPendingAuthLink } from '../src/lib/authLink'
+
+export function redirectSystemPath({
+  path,
+  initial,
+}: {
+  path: string
+  initial: boolean
+}): string | null {
+  // Auth emails first, and never through resolveDeepLinkPath: their payload
+  // lives in the URL FRAGMENT, which the path mapper drops, and the tokens must
+  // not become route params. Hand them to the module the callback screen reads
+  // and route to that screen by name.
+  const authLink = parseAuthLink(path)
+  if (authLink) {
+    setPendingAuthLink(authLink)
+    return '/auth-link'
+  }
+
+  const target = resolveDeepLinkPath(path)
+
+  // Hand the resolved target to the auth gate before navigating. If the user is
+  // signed out the gate is about to replace this route with /login, and this is
+  // the only place the full destination — query string and all, which matters
+  // for /setlist/import?ids=…&toKeys=… — still exists. The gate keeps it only if
+  // it actually discards the route; see src/lib/pendingRoute.ts.
+  noteInboundLink(target)
+
+  // Expo Router pushes for every inbound link, so a run of shared links stacked one
+  // detail screen per tap — measured at ~6–8 MB each, with the process jettisoned at
+  // ~251 MB after 15 viewer pushes (new PID, no crash report: a resource kill). That
+  // is reachable by tapping several shared song links in sequence, which is exactly
+  // what a reviewer verifying Universal Links does. When the link targets the route
+  // that is already focused, replace it instead of stacking another copy.
+  //
+  // Returning null tells Expo Router we handled the navigation ourselves: it only
+  // dispatches for a truthy return (the `if (href)` guard in expo-router's
+  // link/linking.ts subscribe(), and the same guard in getLinkingConfig's
+  // getInitialURL).
+  //
+  // `initial` is a cold start, where the stack cannot already hold the target, so it
+  // keeps the plain push. In-app navigation never reaches this file at all, so every
+  // router.push to a viewer or a setlist is untouched.
+  const key = deepLinkStackRouteKey(target)
+  if (!initial && key !== null && key === getFocusedRouteKey()) {
+    router.replace(target as Parameters<typeof router.replace>[0])
+    return null
+  }
+
+  return target
+}

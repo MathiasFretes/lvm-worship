@@ -1,0 +1,155 @@
+import { useState } from 'react'
+import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import FormSheetShell from '../FormSheetShell'
+import SymbolIcon from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
+import { useTheme } from '../../theme/ThemeProvider'
+
+// Date picker for browsing the reading plan (today + other days). Mirrors the
+// [UI] Daily Word floating calendar: a month grid with prev/next navigation and
+// a Today shortcut. Deliberately the designed month grid rather than the native
+// date picker the reminder-time sheet uses — the design calls for this browsing
+// affordance. Presented via the native formSheet route (src/lib/formSheetHost.ts).
+
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+type DatePickerProps = {
+  visible: boolean
+  onClose: () => void
+  value: Date
+  onSelect: (date: Date) => void
+}
+
+export default function DatePickerSheet(props: DatePickerProps) {
+  useFormSheet(props.visible, () => <DatePickerContent {...props} />, props.onClose)
+  return null
+}
+
+function DatePickerContent({ value, onSelect }: DatePickerProps) {
+  const t = useTheme()
+  const { t: tx } = useTranslation('reader')
+  const today = new Date()
+  const WEEKDAYS = tx('datePicker.weekdays', { returnObjects: true }) as unknown as string[]
+  const MONTHS = tx('datePicker.months', { returnObjects: true }) as unknown as string[]
+
+  // The month currently on screen. The content mounts fresh on every open
+  // (formSheet route), so the initializer resets to the selected date per open.
+  const [view, setView] = useState({ year: value.getFullYear(), month: value.getMonth() })
+
+  const firstDow = new Date(view.year, view.month, 1).getDay()
+  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate()
+  const cells: (number | null)[] = []
+  for (let i = 0; i < firstDow; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+  const weeks: (number | null)[][] = []
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+
+  const shiftMonth = (delta: number) => {
+    const next = new Date(view.year, view.month + delta, 1)
+    setView({ year: next.getFullYear(), month: next.getMonth() })
+  }
+
+  const pick = (day: number) => onSelect(new Date(view.year, view.month, day))
+
+  const NavButton = ({ dir, label }: { dir: -1 | 1; label: string }) => (
+    <Pressable
+      onPress={() => shiftMonth(dir)}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: t.radii.pill,
+        backgroundColor: t.colors.surfaceAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <SymbolIcon name={dir < 0 ? 'chevron.left' : 'chevron.right'} size={13} color={t.colors.ink} weight="semibold" />
+    </Pressable>
+  )
+
+  return (
+    <FormSheetShell title={tx('datePicker.title')} actionLabel={tx('datePicker.today')} onAction={() => onSelect(new Date())}>
+      <View style={{ padding: t.spacing.lg }}>
+        {/* Month header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: t.spacing.md,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '700', letterSpacing: -0.2, color: t.colors.ink }}>
+            {tx('datePicker.monthYear', { month: MONTHS[view.month], year: view.year })}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+            <NavButton dir={-1} label={tx('datePicker.previousMonth')} />
+            <NavButton dir={1} label={tx('datePicker.nextMonth')} />
+          </View>
+        </View>
+
+        {/* Weekday row */}
+        <View style={{ flexDirection: 'row', marginBottom: t.spacing.xs }}>
+          {WEEKDAYS.map((d, i) => (
+            <Text
+              key={i}
+              style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '600', color: t.colors.sec }}
+            >
+              {d}
+            </Text>
+          ))}
+        </View>
+
+        {/* Weeks */}
+        {weeks.map((week, wi) => (
+          <View key={wi} style={{ flexDirection: 'row' }}>
+            {week.map((day, di) => {
+              if (day == null) return <View key={di} style={{ flex: 1, height: 40 }} />
+              const cellDate = new Date(view.year, view.month, day)
+              const isSelected = sameDay(cellDate, value)
+              const isToday = sameDay(cellDate, today)
+              return (
+                <Pressable
+                  key={di}
+                  onPress={() => pick(day)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  style={{ flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <View
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: t.radii.pill,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isSelected ? t.colors.accent : 'transparent',
+                      borderWidth: !isSelected && isToday ? 1 : 0,
+                      borderColor: t.colors.accent,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: isSelected || isToday ? '700' : '400',
+                        color: isSelected ? t.colors.onAccent : isToday ? t.colors.textAccent : t.colors.ink,
+                      }}
+                    >
+                      {day}
+                    </Text>
+                  </View>
+                </Pressable>
+              )
+            })}
+          </View>
+        ))}
+      </View>
+    </FormSheetShell>
+  )
+}

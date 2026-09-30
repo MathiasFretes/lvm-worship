@@ -1,0 +1,82 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "chooseTranslation": "Choose translation",
+  "chooseDate": "Choose date",
+  "readerSettings": "Reader settings",
+  "defaultTranslationLabel": "ESV",
+  "landingTitle": "Daily Word",
+  "streakDays_one": "{{count}}-day streak",
+  "streakDays_other": "{{count}}-day streak",
+  "landingReadingHeader": "{{date}}'s reading · M'Cheyne",
+  "backToLanding": "Back to Daily Word",
+  "reflection": {
+    "landingHeader": "Your reflection",
+    "composeCta": "Write your reflection",
+    "composeHint": "Today · not written yet",
+    "viewAll": "View all reflections",
+    "journalTitle": "Reflections",
+    "composeTitle": "New reflection",
+    "editTitle": "Edit reflection",
+    "edit": "Edit",
+    "editErrorTitle": "Couldn't update reflection",
+    "placeholder": "Write your reflections, thoughts, or prayers…",
+    "charCount": "{{count}} / {{max}}",
+    "save": "Save",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "delete": "Delete",
+    "deleteTitle": "Delete reflection?",
+    "deleteMessage": "This can't be undone.",
+    "duplicateTitle": "Already written",
+    "duplicateMessage": "You've already written a reflection for today.",
+    "saveErrorTitle": "Couldn't save reflection",
+    "emptyTitle": "No reflections yet",
+    "emptySubtitle": "Your reflections will appear here once you write one."
+  },
+  "journal": {
+    "privateLabel": "Private"
+  },
+  "copyVerses_one": "Copy {{count}} verse",
+  "copyVerses_other": "Copy {{count}} verses",
+  "error": {
+    "title": "Can't load today's reading",
+    "subtitle": "Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline.",
+    "retry": "Retry"
+  },
+  "empty": {
+    "title": "No reading for this day",
+    "subtitle": "Pick another date to keep reading."
+  },
+  "translationPicker": {
+    "title": "Translation"
+  },
+  "settings": {
+    "title": "Reader settings",
+    "textSize": "Text size",
+    "smallerText": "Smaller text",
+    "largerText": "Larger text",
+    "pt": "{{pt}} pt",
+    "typeface": "Typeface",
+    "serif": "Serif",
+    "sans": "Sans",
+    "verseLayout": "Verse layout",
+    "lines": "Lines",
+    "prose": "Prose",
+    "lineSpacing": "Line spacing",
+    "tight": "Tight",
+    "normal": "Normal",
+    "relaxed": "Relaxed"
+  },
+  "datePicker": {
+    "title": "Select date",
+    "today": "Today",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "monthYear": "{{month}} {{year}}",
+    "weekdays": ["S", "M", "T", "W", "T", "F", "S"],
+    "months": [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ]
+  }
+}

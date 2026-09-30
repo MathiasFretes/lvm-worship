@@ -1,0 +1,21 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      // Subpath imports into core, e.g. '@lavozmisionera/core/devotional/dayKey'.
+      // Metro and Vitest honour core's exports map ("./*": "./src/*"); tsc under
+      // expo's moduleResolution does not, so it needs this mapping. Only the
+      // subpath pattern is mapped — the bare barrel '@lavozmisionera/core' does not
+      // match '/*' and keeps resolving through node_modules as before.
+      "@lavozmisionera/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}

@@ -1,0 +1,100 @@
+import { Pressable, ScrollView, Text, View } from 'react-native'
+import {
+  translationOptionLabel,
+  type BibleTranslation,
+  type BibleTranslationGroup,
+} from '@lavozmisionera/core'
+import { useTranslation } from 'react-i18next'
+import FormSheetShell from '../FormSheetShell'
+import SymbolIcon from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
+import { useTheme } from '../../theme/ThemeProvider'
+
+// Translation picker (Daily Word), presented via the native formSheet route
+// (src/lib/formSheetHost.ts). Grouped by language; the active translation
+// carries a checkmark and accent text. Rows always read left-to-right: the
+// option labels are English names/abbreviations (e.g. "Ketab El Hayat (KEH)")
+// even for RTL-script Bibles, so aligning them right would look wrong. Offline
+// download state is out of scope this pass — selection only.
+
+type TranslationPickerProps = {
+  visible: boolean
+  onClose: () => void
+  groups: BibleTranslationGroup[]
+  selectedId: string
+  onSelect: (translation: BibleTranslation) => void
+}
+
+export default function TranslationPickerSheet(props: TranslationPickerProps) {
+  useFormSheet(props.visible, () => <TranslationPickerContent {...props} />, props.onClose)
+  return null
+}
+
+function TranslationPickerContent({ onClose, groups, selectedId, onSelect }: TranslationPickerProps) {
+  const t = useTheme()
+  const { t: tx } = useTranslation('reader')
+
+  return (
+    <FormSheetShell title={tx('translationPicker.title')} onAction={onClose}>
+      <ScrollView
+        style={{ maxHeight: 440 }}
+        contentContainerStyle={{ paddingBottom: t.spacing.md, paddingTop: t.spacing.xs }}
+      >
+        {groups.map((group) => (
+          <View key={group.languageCode}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '700',
+                letterSpacing: 0.7,
+                textTransform: 'uppercase',
+                color: t.colors.sec,
+                paddingHorizontal: t.spacing.lg,
+                paddingTop: t.spacing.md,
+                paddingBottom: t.spacing.xs,
+              }}
+            >
+              {group.languageLabel}
+            </Text>
+            {group.translations.map((item) => {
+              const selected = item.id === selectedId
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => onSelect(item)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: t.spacing.md,
+                    paddingHorizontal: t.spacing.lg,
+                    paddingVertical: t.spacing.md,
+                    backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
+                  })}
+                >
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 16,
+                      letterSpacing: -0.2,
+                      textAlign: 'left',
+                      writingDirection: 'ltr',
+                      color: selected ? t.colors.textAccent : t.colors.ink,
+                      fontWeight: selected ? '700' : '400',
+                    }}
+                  >
+                    {translationOptionLabel(item)}
+                  </Text>
+                  {selected ? (
+                    <SymbolIcon name="checkmark" size={18} color={t.colors.accent} weight="bold" />
+                  ) : null}
+                </Pressable>
+              )
+            })}
+          </View>
+        ))}
+      </ScrollView>
+    </FormSheetShell>
+  )
+}

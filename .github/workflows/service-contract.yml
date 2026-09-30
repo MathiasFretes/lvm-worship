@@ -1,0 +1,20 @@
+name: Service contract
+on:
+  push:
+    branches: [codex/service-contract]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run test:run --workspace @gracechords/web -- src/lvm/__tests__/serviceAdapter.test.js
+      - run: npm run build:mock

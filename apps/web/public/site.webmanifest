@@ -1,0 +1,34 @@
+{
+  "name": "La Voz Misionera",
+  "short_name": "La Voz",
+  "description": "La Voz Misionera provides free worship chord sheets and lyrics for churches, worship teams, and believers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1F84C9",
+  "background_color": "#F5F7F9",
+  "icons": [
+    {
+      "src": "/icons/v2/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icons/v2/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/v2/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/v2/android-chrome-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

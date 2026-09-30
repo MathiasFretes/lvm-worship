@@ -1,0 +1,128 @@
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createClient } from '@supabase/supabase-js'
+
+const BASE_URL = 'https://gracechords.com'
+// Resolve paths from this script's location, not process.cwd(). scriptDir = apps/web/scripts.
+const scriptDir = path.dirname(fileURLToPath(import.meta.url))
+const root = path.resolve(scriptDir, '..')                 // apps/web (dist, src)
+const repoRoot = path.resolve(scriptDir, '..', '..', '..') // monorepo root (.env)
+const outPath = path.join(root, 'dist', 'sitemap.xml')
+
+async function loadDotEnv() {
+  try {
+    const txt = await fs.readFile(path.join(repoRoot, '.env'), 'utf8')
+    for (const line of txt.split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eqIdx = trimmed.indexOf('=')
+      if (eqIdx < 0) continue
+      const key = trimmed.slice(0, eqIdx).trim()
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '')
+      if (key && !(key in process.env)) process.env[key] = val
+    }
+  } catch { /* no .env file – rely on pre-set env vars */ }
+}
+
+await loadDotEnv()
+
+// Cloudflare sets CF_PAGES_BRANCH on every Pages build. These artefacts are
+// production-only: SITE_URL/BASE_URL below is hardcoded to the live domain, so
+// generating them for a *.pages.dev preview would publish canonicals and a
+// sitemap pointing at production from a preview host. Skipping also means a
+// preview build needs no SUPABASE_SERVICE_ROLE_KEY — Pages keeps Production and
+// Preview variables in separate sets, and that missing key is what failed the
+// preview deploy. The credential check below is unchanged, so a production
+// build still fails loudly when it is misconfigured.
+const PRODUCTION_BRANCH = 'main'
+if (process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== PRODUCTION_BRANCH) {
+  console.log(`[sitemap] Preview build (${process.env.CF_PAGES_BRANCH}) — skipping.`)
+  process.exit(0)
+}
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+const { data: songs, error: songsError } = await supabase
+  .from('songs')
+  .select('title, artist, slug, updated_at')
+  .eq('is_deleted', false)
+  .order('title')
+
+if (songsError) {
+  console.error('Supabase query failed:', songsError.message)
+  process.exit(1)
+}
+
+const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
+
+const staticRoutes = [
+  '/', // home
+  '/about',
+  '/songs',
+  '/setlist',
+  '/songbook',
+  '/reading',
+  '/resources',
+  '/bundle',
+  '/download'
+]
+
+const urlSet = new Set()
+
+async function readJson(filePath){
+  try {
+    const txt = await fs.readFile(filePath, 'utf8')
+    return JSON.parse(txt)
+  } catch (err) {
+    console.warn(`Warning: failed to read ${filePath}: ${err?.message || err}`)
+    return {}
+  }
+}
+
+function encodeSlug(raw){
+  if (!raw) return ''
+  return encodeURIComponent(String(raw))
+}
+
+function addUrl(path){
+  if (!path) return
+  const safeLoc = path.startsWith('http') ? path : `${BASE_URL}${path}`
+  urlSet.add(safeLoc)
+}
+
+for (const p of staticRoutes) addUrl(p)
+
+for (const song of (songs || [])) {
+  if (!song?.slug) continue
+  const loc = `/songs/${encodeSlug(song.slug)}/`
+  addUrl(loc)
+}
+
+for (const res of (resourcesData?.items || [])) {
+  if (!res?.slug) continue
+  const loc = `/resources/${encodeSlug(res.slug)}`
+  addUrl(loc)
+}
+
+const xml = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...Array.from(urlSet.values()).sort((a, b) => a.localeCompare(b)).map((loc) => (
+    `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n  </url>`
+  )),
+  '</urlset>',
+  ''
+].join('\n')
+
+await fs.mkdir(path.dirname(outPath), { recursive: true })
+await fs.writeFile(outPath, xml, 'utf8')
+console.log(`Wrote ${urlSet.size} URLs to ${outPath}`)

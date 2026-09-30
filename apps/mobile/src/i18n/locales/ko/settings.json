@@ -1,0 +1,84 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "프로필 및 설정",
+  "yourAccount": "내 계정",
+  "changeYourIcon": "아이콘 변경",
+  "openAccount": "Account",
+  "sections": {
+    "settings": "설정",
+    "reader": "읽기",
+    "library": "라이브러리",
+    "support": "지원"
+  },
+  "reminder": {
+    "dailyReminder": "매일 말씀 알림",
+    "time": "알림 시간",
+    "timeSheetTitle": "알림 시간",
+    "permissionDeniedTitle": "알림이 꺼져 있습니다",
+    "permissionDeniedMessage": "매일 말씀 알림을 받으려면 기기 설정에서 La Voz Misionera 알림을 켜세요.",
+    "openSettings": "설정 열기",
+    "notificationTitle": "매일 말씀",
+    "notificationBody": "오늘의 말씀이 준비되었습니다. 잠시 말씀과 함께하세요.",
+    "channelName": "매일 말씀 알림"
+  },
+  "readingStreak": {
+    "title": "읽기 연속 기록"
+  },
+  "appearance": "테마",
+  "appearanceOptions": {
+    "auto": "자동",
+    "light": "라이트",
+    "dark": "다크"
+  },
+  "language": "언어",
+  "languageAutomatic": "자동 (기기)",
+  "chordStyle": "코드 표기",
+  "chordStyleOptions": {
+    "letters": "알파벳",
+    "solfege": "계이름"
+  },
+  "dailyWordEntry": "오늘의 말씀 열기",
+  "dailyWordOptions": {
+    "landing": "시작 화면",
+    "reader": "바로 리더 열기"
+  },
+  "offlineDownloads": "오프라인 및 다운로드",
+  "starred": "즐겨찾기",
+  "mySetlists": "내 셋리스트",
+  "helpCenter": "고객센터",
+  "sendFeedback": "피드백 보내기",
+  "aboutGraceChords": "La Voz Misionera 정보",
+  "signInDiagnostics": {
+    "row": "로그인 진단",
+    "subtitle": "이 기기에서 발생한 로그인 문제의 세부 정보",
+    "title": "로그인 진단",
+    "intro": "앱을 마지막으로 시작한 이후 발생한 로그인 실패의 기술적 세부 정보입니다. 이 내용은 어디에도 전송되지 않습니다. 요청받은 경우 오류 보고에 포함해 주세요.",
+    "copy": "복사",
+    "copied": "클립보드에 복사되었습니다."
+  },
+  "logOut": "로그아웃",
+  "deleteAccount": "계정 삭제",
+  "signOutAlert": {
+    "title": "로그아웃",
+    "message": "이 기기에서 La Voz Misionera 로그아웃할까요?",
+    "confirm": "로그아웃"
+  },
+  "deleteAccountAlert": {
+    "title": "계정 삭제",
+    "message": "계정과 모든 데이터(즐겨찾기 찬양곡, 셋리스트, 환경설정)가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "confirm": "계정 삭제"
+  },
+  "deleteFailedAlert": {
+    "title": "삭제 실패",
+    "message": "계정을 삭제하지 못했습니다. 다시 시도해 주세요."
+  },
+  "about": {
+    "title": "정보",
+    "version": "버전 {{version}}",
+    "sectionLegal": "법적 고지",
+    "privacyPolicy": "개인정보 처리방침",
+    "termsOfUse": "이용약관",
+    "acknowledgements": "감사의 말 및 라이선스",
+    "contact": "문의"
+  }
+}

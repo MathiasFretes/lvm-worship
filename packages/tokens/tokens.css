@@ -1,0 +1,161 @@
+/* UIKit-inspired tokens (Apple system colors) for La Voz Misionera */
+
+:root {
+  /* Typography */
+  --gc-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  --gc-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
+  --gc-font-lyrics: "Noto Sans", "Inter 18", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --gc-font-chords: "Noto Sans Mono", "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Roboto Mono", monospace;
+
+  /* Type scale */
+  --gc-font-title: clamp(32px, 4vw, 36px);
+  --gc-font-h2: 20px;
+  --gc-font-body: 16px;
+  --gc-font-sub: 14px;
+  --gc-font-cap: 12px;
+
+  --gc-weight-title: 700;
+  --gc-weight-h2: 700;
+  --gc-weight-body: 450;
+  --gc-weight-sub: 450;
+  --gc-weight-cap: 450;
+
+  --gc-lh-title: 1.15;
+  --gc-lh-h2: 1.25;
+  --gc-lh-body: 1.55;
+  --gc-lh-sub: 1.4;
+  --gc-lh-cap: 1.35;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Control sizing */
+  --gc-control-h: 36px;
+  --gc-control-h-mobile: 44px;
+  --gc-btn-gap: 6px;
+  --gc-btn-pad-y: 6px;
+  --gc-btn-pad-x: 12px;
+  --gc-btn-font-size: 15px;
+  --gc-btn-pad-y-sm: 5px;
+  --gc-btn-pad-x-sm: 9px;
+  --gc-btn-font-size-sm: 13px;
+  --gc-btn-pad-y-lg: 8px;
+  --gc-btn-pad-x-lg: 14px;
+  --gc-btn-font-size-lg: 16px;
+  --gc-btn-icon-pad: 6px;
+  --gc-btn-icon-size: 16px;
+  --gc-mobile-dock-z: 120;
+  --gc-mobile-sheet-z: 170;
+  --gc-mobile-dim-opacity: 0.48;
+
+  /* Motion */
+  --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --gc-dur-quick: 180ms;
+  --gc-dur: 220ms;
+
+  /* Focus ring */
+  --gc-focus-size: 2px;
+  --gc-focus-offset: 2px;
+
+  /* ===== Colors (Light) - Signal Blue palette ===== */
+  --gc-primary: #1F84C9;
+  --gc-primary-hover: #1A72B0;
+  --gc-success: #34C759;
+  --gc-warning: #FF9500;
+  --gc-danger: #FF3B30;
+
+  /* Optional accents */
+  --gc-indigo: #5856D6;
+  --gc-purple: #AF52DE;
+  --gc-teal: #5AC8FA;
+  --gc-yellow: #FFCC00;
+
+  /* Telegram brand (matches the official Login Widget button) */
+  --gc-telegram: #54a9eb;
+  --gc-telegram-hover: #3d9adb;
+
+  /* Neutrals / surfaces */
+  --gc-bg: #F5F7F9;
+  --gc-surface-1: #FFFFFF;
+  --gc-surface-2: #EEF1F4;
+  --gc-surface-3: #E3E8EC;
+
+  /* Text */
+  --gc-text: #1E2227;
+  --gc-text-secondary: #5C656F;
+  --gc-text-tertiary: #8A929B;
+
+  /* Borders / separators */
+  --gc-separator: #E3E8EC;
+
+  /* Derived / common */
+  --gc-text-accent: #15619A;
+  --gc-link: var(--gc-text-accent);
+  --gc-focus: var(--gc-primary);
+  --gc-selection-bg: color-mix(in srgb, #1F84C9 12%, #F5F7F9);
+
+  /* Shadows */
+  --gc-shadow-1: 0 1px 4px rgba(20, 28, 38, 0.08);
+  --gc-shadow-2: 0 4px 16px rgba(20, 28, 38, 0.12);
+  --gc-shadow-3: 0 16px 44px rgba(20, 28, 38, 0.18);
+
+  /* Overlays */
+  --gc-overlay: rgba(0, 0, 0, 0.45);
+  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Dark theme (assumes app toggles [data-theme="dark"] on html or body) */
+[data-theme="dark"] {
+  --gc-primary: #4EA6E6;
+  --gc-primary-hover: #66B4EA;
+  --gc-text-accent: #6FB6EA;
+  --gc-success: #30D158;
+  --gc-warning: #FF9F0A;
+  --gc-danger: #FF453A;
+
+  --gc-indigo: #5E5CE6;
+  --gc-purple: #BF5AF2;
+  --gc-teal: #64D2FF;
+  --gc-yellow: #FFD60A;
+
+  --gc-telegram: #54a9eb;
+  --gc-telegram-hover: #6cb3ed;
+
+  --gc-bg: #14171A;
+  --gc-surface-1: #1E2227;
+  --gc-surface-2: #242A30;
+  --gc-surface-3: #2A3036;
+
+  --gc-text: #E8ECF0;
+  --gc-text-secondary: #AEB6BE;
+  --gc-text-tertiary: #7C858E;
+
+  --gc-separator: #2A3036;
+
+  --gc-shadow-1: 0 1px 4px rgba(0, 0, 0, 0.35);
+  --gc-shadow-2: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --gc-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.65);
+
+  --gc-selection-bg: color-mix(in srgb, #4EA6E6 16%, #1E2227);
+
+  --gc-overlay: rgba(0, 0, 0, 0.6);
+  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gc-dur-quick: 0ms;
+    --gc-dur: 0ms;
+  }
+}

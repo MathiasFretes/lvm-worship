@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "slug": "guitar-chord-families",
+      "title": "Guitar Chord Families",
+      "author": "Jisoo Jung",
+      "date": "2025-12-18",
+      "tags": [
+        "guitar",
+        "chords",
+        "guide"
+      ],
+      "summary": "Guitar chord charts for playing worship songs in the keys of G, A, C and E.",
+      "filename": "guitar-chord-families.md"
+    },
+    {
+      "slug": "philosophy-of-simplicity-in-worship",
+      "title": "Philosophy of Simplicity in Worship",
+      "author": "Ryan Moore",
+      "date": "2025-12-15",
+      "tags": [
+        "worship",
+        "theology"
+      ],
+      "summary": "The heart behind La Voz Misionera: worship as response, simplicity as care, and tools that quietly serve the Church",
+      "filename": "philosophy-of-simplicity-in-worship.md"
+    },
+    {
+      "slug": "welcome-to-gracechords",
+      "title": "Welcome to La Voz Misionera!",
+      "author": "Ryan Moore",
+      "date": "2025-12-15",
+      "tags": [
+        "guide",
+        "evergreen",
+        "worship"
+      ],
+      "summary": "Our first post! Come see what La Voz Misionera has to offer and how it can serve you while you serve your church.",
+      "filename": "welcome-to-gracechords.md"
+    }
+  ]
+}

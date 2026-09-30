@@ -1,0 +1,47 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "appName": "La Voz Misionera",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "close": "Cerrar",
+  "back": "Atrás",
+  "loading": "Cargando…",
+  "timeAgo": {
+    "justNow": "justo ahora",
+    "minutes": "hace {{count}} min",
+    "hours": "hace {{count}} h",
+    "days": "hace {{count}} d"
+  },
+  "search": "Buscar",
+  "language": "Idioma",
+  "light": "Claro",
+  "dark": "Oscuro",
+  "theme": "Tema",
+  "lightMode": "Modo claro",
+  "darkMode": "Modo oscuro",
+  "toggleDarkMode": "Alternar modo oscuro",
+  "switchToLight": "Cambiar a modo claro",
+  "switchToDark": "Cambiar a modo oscuro",
+  "settings": "Ajustes",
+  "chordStyle": "Estilo de acordes",
+  "toggleChordStyle": "Alternar estilo de acordes",
+  "or": "o",
+  "continueWithGoogle": "Continuar con Google",
+  "footer": {
+    "disclaimerBefore": "Todas las letras son propiedad de sus respectivos dueños. La Voz Misionera ofrece herramientas solo para uso personal y educativo. Titulares de derechos, ",
+    "disclaimerLink": "escríbanos",
+    "disclaimerAfter": " para solicitudes de retirada.",
+    "download": "Obtén la app de La Voz Misionera",
+    "copyright": "© {{range}} Ryan Moore. Todos los derechos reservados."
+  },
+  "announcement": {
+    "regionLabel": "Anuncio del sitio",
+    "dismiss": "Cerrar anuncio",
+    "iosLaunch": {
+      "message": "La Voz Misionera ya está en el App Store.",
+      "cta": "Obtener la app"
+    }
+  }
+}

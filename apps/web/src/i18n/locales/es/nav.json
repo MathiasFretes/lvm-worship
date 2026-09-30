@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
+  "home": "Inicio",
+  "songs": "Canciones",
+  "setlist": "Repertorio",
+  "songbook": "Cancionero",
+  "dailyWord": "Palabra del día",
+  "blog": "Blog",
+  "editorPortal": "Portal del editor",
+  "profile": "Perfil",
+  "songEditor": "Editor de canciones",
+  "postEditor": "Editor de publicaciones",
+  "adminPortal": "Portal del administrador",
+  "signIn": "Iniciar sesión",
+  "signOut": "Cerrar sesión",
+  "openMainMenu": "Abrir menú principal",
+  "userMenu": "Menú de usuario",
+  "mobileMenu": "Menú móvil",
+  "laVozMisioneraHome": "Inicio de La Voz Misionera"
+}

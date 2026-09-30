@@ -1,0 +1,553 @@
+import { useCallback, useState } from 'react'
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useTranslation } from 'react-i18next'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import ConstrainedContent from '../components/ConstrainedContent'
+import HeroOverscrollFill from '../components/HeroOverscrollFill'
+import SymbolIcon from '../components/SymbolIcon'
+import DailyWordCard from '../components/home/DailyWordCard'
+import RecentSongsCard from '../components/home/RecentSongsCard'
+import { cardStyle } from '../components/home/cardStyle'
+import { useTheme } from '../theme/ThemeProvider'
+import { getDisplayName, pickSubGreetingIndex, timeGreetingKey } from '../lib/greetings'
+import { useCurrentUser } from '../lib/currentUser'
+import { useIsTabletWidth } from '../lib/useIsTabletWidth'
+import { useProfileSprite } from '../lib/useProfileSprite'
+import { getRecentlyOpened } from '../lib/recents'
+import { formatKeyPair } from '../lib/keyDisplay'
+import { useLastSet } from '../lib/useLastSet'
+import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
+import type { Song } from '../lib/useSongList'
+
+type Translator = (key: string, options?: Record<string, unknown>) => string
+
+// Gap between the hero region (Continue card) and the first dashboard card.
+// Deliberately wider than the card-to-card gap (tokens `spacing.lg`), which is
+// the same on both form factors — see the dashboard block below.
+const HERO_GAP = 26
+
+// The Continue card's meta line. `working` is the key the Viewer was last left
+// in (recents.lastKey); when it differs from the song's own key the slot shows
+// the pair, so this card and the Recent-songs card below it can no longer
+// disagree about the same song (QA report Nº 7327, S-02).
+//
+// Returns the rendered text and a spoken form separately: the display string
+// contains "→", which does not read aloud usefully.
+function songMeta(
+  song: Song,
+  working: string | null | undefined,
+  tx: Translator,
+): { text: string; a11yLabel: string } | null {
+  const key = formatKeyPair(song.default_key, working, tx)
+  const rest = [song.time_signature, song.tempo ? tx('common:bpm', { tempo: song.tempo }) : null]
+  const join = (first: string | null) => [first, ...rest].filter(Boolean).join(' · ')
+
+  // Display keeps this card's existing "Key of …" prefix, so the only visible
+  // change is the "→ D" that appears when a transposition is stored.
+  const text = join(key ? tx('common:keyOf', { key: key.text }) : null)
+  if (!text) return null
+  // Spoken form already reads as a sentence ("Key C, transposed to D"), so it
+  // is used as-is rather than wrapped in the prefix a second time.
+  return { text, a11yLabel: join(key ? key.a11yLabel : null) }
+}
+
+export default function HomeScreen() {
+  const t = useTheme()
+  const { t: tx } = useTranslation(['home', 'common', 'errors'])
+  const router = useRouter()
+  const insets = useSafeAreaInsets()
+  const isTablet = useIsTabletWidth()
+  const user = useCurrentUser()
+  const { source: spriteSource } = useProfileSprite()
+  const {
+    songs: starred,
+    loading: starredLoading,
+    error: starredError,
+    reload: reloadStarred,
+  } = useStarredSongs()
+
+  const greeting = tx('greeting.hello', {
+    greeting: tx(timeGreetingKey()),
+    name: getDisplayName(user) ?? tx('greeting.friend'),
+  })
+  const subGreetings = tx('subGreetings', { returnObjects: true }) as unknown as string[]
+  const subGreeting = subGreetings.length
+    ? subGreetings[pickSubGreetingIndex() % subGreetings.length]
+    : ''
+
+  // Recently-opened comes from on-device history (recorded by the Viewer);
+  // the Last set card reads the real most-recently-edited setlist. Re-render
+  // on focus so the Continue card and Recent-songs card reflect opens made
+  // since Home last rendered.
+  const [, setFocusTick] = useState(0)
+  useFocusEffect(
+    useCallback(() => {
+      setFocusTick((n) => n + 1)
+    }, []),
+  )
+  const continueSong = getRecentlyOpened()[0] ?? null
+  const continueMeta = continueSong ? songMeta(continueSong, continueSong.lastKey, tx) : null
+  const { lastSet, error: lastSetError, retry: retryLastSet } = useLastSet()
+
+  // Inline failure line for a dashboard card: the localized reason plus a text
+  // Retry. Deliberately NOT the full-screen EmptyState — these live inside a
+  // card, and the happy-path card layout must stay untouched. `messageKey` is an
+  // i18n key supplied by the hook (see errors.ts); raw error text is never shown.
+  function cardError(messageKey: string, onRetry: () => void) {
+    return (
+      <View style={{ marginTop: t.spacing.md, alignItems: 'flex-start' }}>
+        <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
+          {tx(messageKey)}
+        </Text>
+        <Pressable
+          onPress={onRetry}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={({ pressed }) => ({ paddingVertical: 6, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text
+            style={{
+              fontSize: t.typography.rowSubtitle.fontSize,
+              fontWeight: '600',
+              color: t.colors.textAccent,
+            }}
+          >
+            {tx('common:retry')}
+          </Text>
+        </Pressable>
+      </View>
+    )
+  }
+
+  function onAvatar() {
+    router.push('/settings')
+  }
+
+  // `lastKey` is optional because this opens songs from two cards: the Continue
+  // card, whose entry carries the key the Viewer was last left in, and the
+  // Starred card, whose rows have no stored key. Seeding `initialKey` when one
+  // exists is what makes tapping a song here land in the same key as tapping it
+  // in the Recent-songs card — before this, Continue silently reopened in the
+  // song's original key while Recent songs honoured the stored one.
+  function openSong(s: {
+    slug: string
+    title: string
+    artist: string | null
+    default_key: string | null
+    lastKey?: string | null
+  }) {
+    router.push({
+      pathname: '/viewer/[slug]',
+      params: {
+        slug: s.slug,
+        title: s.title,
+        songKey: s.default_key ?? '',
+        ...(s.lastKey ? { initialKey: s.lastKey } : {}),
+      },
+    })
+  }
+
+  // ===== Dashboard cards, arranged by the grid/stack below =====
+
+  const lastSetCard = lastSet ? (
+    <View style={cardStyle(t)}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 0.7,
+          textTransform: 'uppercase',
+          color: t.colors.textAccent,
+        }}
+      >
+        {tx('lastSet.label')}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
+        <View style={{ minWidth: 0, flex: 1 }}>
+          <Text style={{ fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+            {lastSet.name}
+          </Text>
+          <Text style={{ fontSize: 13, color: t.colors.sec, marginTop: 4 }}>
+            {tx('lastSet.meta', { count: lastSet.songCount, min: lastSet.durationMin })}
+          </Text>
+        </View>
+        {lastSet.keys ? (
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: t.colors.textAccent,
+              backgroundColor: t.colors.accentSoft,
+              borderRadius: 8,
+              paddingHorizontal: 9,
+              paddingVertical: 5,
+              overflow: 'hidden',
+            }}
+          >
+            {tx('lastSet.keys', { keys: lastSet.keys })}
+          </Text>
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+        <Pressable
+          onPress={() => router.push(`/setlist/${lastSet.id}`)}
+          accessibilityRole="button"
+          style={{
+            flex: 1,
+            height: 46,
+            borderRadius: t.radii.md,
+            backgroundColor: t.colors.accent,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.onAccent }}>
+            {tx('lastSet.resume')}
+          </Text>
+          <SymbolIcon name="chevron.right" size={14} color={t.colors.onAccent} weight="semibold" />
+        </Pressable>
+        <Pressable
+          onPress={() => router.push(`/setlist/${lastSet.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel={tx('lastSet.editSet')}
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: t.radii.md,
+            backgroundColor: t.colors.accentSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <SymbolIcon name="square.and.pencil" size={20} color={t.colors.textAccent} />
+        </Pressable>
+      </View>
+    </View>
+  ) : lastSetError ? (
+    // Before 1.0.1 this branch did not exist: HomeScreen discarded useLastSet's
+    // `error`, so a failed read rendered NOTHING — visually identical to "no
+    // setlists yet" and to still-loading, with no retry and no pull-to-refresh on
+    // Home. A request deadline would otherwise have turned a hang into exactly
+    // that blank space. Loading and genuinely-empty still render nothing, as
+    // before.
+    <View style={cardStyle(t)}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 0.7,
+          textTransform: 'uppercase',
+          color: t.colors.textAccent,
+        }}
+      >
+        {tx('lastSet.label')}
+      </Text>
+      {cardError(lastSetError, retryLastSet)}
+    </View>
+  ) : null
+
+  const starredCard = (
+    <View style={cardStyle(t)}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <SymbolIcon name="star.fill" size={12} color={t.colors.star} />
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: '700',
+            letterSpacing: 0.7,
+            textTransform: 'uppercase',
+            color: t.colors.textAccent,
+          }}
+        >
+          {tx('starredCard.label')}
+        </Text>
+      </View>
+
+      {starredLoading ? (
+        <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.md }} />
+      ) : starredError ? (
+        cardError(starredError, reloadStarred)
+      ) : starred.length === 0 ? (
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
+          {tx('starredCard.empty')}
+        </Text>
+      ) : (
+        <View style={{ marginTop: t.spacing.xs }}>
+          {starred.map((s: StarredSong, i: number) => (
+            <Pressable
+              key={s.id}
+              onPress={() => openSong(s)}
+              accessibilityRole="button"
+              accessibilityLabel={tx('common:openSong', { title: s.title })}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: t.spacing.md,
+                paddingVertical: 10,
+                borderTopWidth: i === 0 ? 0 : 0.5,
+                borderTopColor: t.colors.border,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: t.typography.rowTitle.fontSize,
+                    fontWeight: t.typography.rowTitle.fontWeight,
+                    letterSpacing: t.typography.rowTitle.letterSpacing,
+                    color: t.colors.ink,
+                  }}
+                >
+                  {s.title}
+                </Text>
+                {s.artist ? (
+                  <Text
+                    numberOfLines={1}
+                    style={{ marginTop: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
+                  >
+                    {s.artist}
+                  </Text>
+                ) : null}
+              </View>
+              {s.default_key || s.time_signature ? (
+                <View style={{ alignItems: 'flex-end' }}>
+                  {s.default_key ? (
+                    <Text
+                      style={{
+                        fontSize: t.typography.rowKey.fontSize,
+                        fontWeight: t.typography.rowKey.fontWeight,
+                        color: t.colors.textAccent,
+                      }}
+                    >
+                      {s.default_key}
+                    </Text>
+                  ) : null}
+                  {s.time_signature ? (
+                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
+                      {s.time_signature}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  )
+
+  return (
+    <View style={{ flex: 1, backgroundColor: t.colors.bg }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        // Clear the floating native tab bar (insets.bottom includes its height
+        // under native tabs) so the last card scrolls fully above it.
+        contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
+      >
+        <HeroOverscrollFill />
+        {/* ===== Hero ===== */}
+        <View>
+          <LinearGradient
+            colors={t.colors.heroGradient.colors}
+            locations={t.colors.heroGradient.locations}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={{
+              paddingTop: insets.top + t.spacing.sm,
+              paddingHorizontal: t.spacing.lg,
+              paddingBottom: continueSong ? 84 : t.spacing.xl,
+            }}
+          >
+            {/* Soft top glow (approximates the design's radial highlight). */}
+            <LinearGradient
+              pointerEvents="none"
+              colors={[t.colors.heroGlow, 'transparent']}
+              style={StyleSheet.absoluteFill}
+            />
+
+            <ConstrainedContent tier="dashboard">
+            {/* Brand row + avatar */}
+            <View
+              style={{
+                height: 40,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+                <Image
+                  source={require('../../assets/mark.webp')}
+                  accessibilityLabel="La Voz Misionera"
+                  style={{ width: 28, height: 28, borderRadius: 8 }}
+                />
+                <Text style={{ fontSize: 20, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+                  La Voz Misionera
+                </Text>
+              </View>
+              <Pressable
+                onPress={onAvatar}
+                accessibilityRole="button"
+                accessibilityLabel={tx('profileAndSettings')}
+                hitSlop={8}
+                style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: t.radii.pill,
+                    backgroundColor: t.colors.accentSoft,
+                    borderWidth: 1,
+                    borderColor: t.colors.border,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {spriteSource ? (
+                    <Image source={spriteSource} style={{ width: 30, height: 30 }} contentFit="contain" />
+                  ) : (
+                    <SymbolIcon name="person" size={20} color={t.colors.accent} />
+                  )}
+                </View>
+              </Pressable>
+            </View>
+
+            {/* Greeting */}
+            <View style={{ paddingTop: 22, paddingHorizontal: 4 }}>
+              <Text style={{ fontSize: 30, fontWeight: '700', letterSpacing: -0.4, lineHeight: 36, color: t.colors.ink }}>
+                {greeting}
+              </Text>
+              {subGreeting ? (
+                <Text style={{ fontSize: 15, lineHeight: 22, color: t.colors.sec, marginTop: 6 }}>
+                  {subGreeting}
+                </Text>
+              ) : null}
+            </View>
+            </ConstrainedContent>
+          </LinearGradient>
+
+          {/* Continue where you left off — overlaps up into the hero. Shown only
+              when there is recent history. */}
+          {continueSong ? (
+            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: -66 }}>
+              <ConstrainedContent tier="dashboard">
+              <View style={cardStyle(t, true)}>
+                <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.2, color: t.colors.ink, marginBottom: 13 }}>
+                  {tx('continueCard.label')}
+                </Text>
+                <Pressable
+                  onPress={() => openSong(continueSong)}
+                  accessibilityRole="button"
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}
+                >
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 12,
+                      backgroundColor: t.colors.accentSoft,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 23, fontWeight: '700', color: t.colors.textAccent }}>
+                      {continueSong.default_key?.charAt(0) ?? '♪'}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 17, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+                      {continueSong.title}
+                    </Text>
+                    {continueSong.artist ? (
+                      <Text numberOfLines={1} style={{ fontSize: 14, color: t.colors.sec, marginTop: 1 }}>
+                        {continueSong.artist}
+                      </Text>
+                    ) : null}
+                    {continueMeta ? (
+                      <Text
+                        numberOfLines={1}
+                        accessibilityLabel={continueMeta.a11yLabel}
+                        style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 3 }}
+                      >
+                        {continueMeta.text}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: t.radii.pill,
+                      backgroundColor: t.colors.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <SymbolIcon name="chevron.right" size={16} color={t.colors.onAccent} weight="semibold" />
+                  </View>
+                </Pressable>
+              </View>
+              </ConstrainedContent>
+            </View>
+          ) : null}
+        </View>
+
+        {/* ===== Dashboard: 2-column grid on tablets, one stack on phones.
+            Same cards on both form factors — only the arrangement differs. ===== */}
+        {isTablet ? (
+          // Padding sits OUTSIDE the width cap, matching the Continue card's
+          // nesting, so the grid's total width equals the hero cards above.
+          <View style={{ paddingHorizontal: t.spacing.lg }}>
+            <ConstrainedContent tier="dashboard">
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: t.spacing.lg,
+                  marginTop: HERO_GAP,
+                }}
+              >
+                <View style={{ flex: 1, gap: t.spacing.lg }}>
+                  {lastSetCard}
+                  {starredCard}
+                </View>
+                <View style={{ flex: 1, gap: t.spacing.lg }}>
+                  <DailyWordCard />
+                  <RecentSongsCard />
+                </View>
+              </View>
+            </ConstrainedContent>
+          </View>
+        ) : (
+          // One `gap` on the stack instead of a marginTop per card, so every
+          // card-to-card space is the same `t.spacing.lg` the grid uses between
+          // its cells — previously the first two gaps were HERO_GAP and the rest
+          // spacing.lg. A null card (no last set) contributes no gap.
+          <View
+            style={{ paddingHorizontal: t.spacing.lg, marginTop: HERO_GAP, gap: t.spacing.lg }}
+          >
+            {lastSetCard}
+            <DailyWordCard />
+            <RecentSongsCard />
+            {starredCard}
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  )
+}

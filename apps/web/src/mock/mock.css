@@ -1,0 +1,9 @@
+@import '@lavozmisionera/tokens/tokens.css';
+body { margin: 0; background: var(--gc-surface-2); color: var(--gc-text); font-family: var(--gc-font-family); }
+.mock-app { max-width: 56rem; margin: 0 auto; padding: var(--space-6); }
+.mock-app header { border-bottom: 1px solid var(--gc-surface-3); margin-bottom: var(--space-6); }
+.mock-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-weight: var(--gc-weight-title); }
+.mock-app ul { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+.mock-app button { width: 100%; text-align: left; font: inherit; padding: var(--space-4); border: 1px solid var(--gc-surface-3); border-radius: var(--radius-md); background: var(--gc-surface-1); color: var(--gc-text); cursor: pointer; }
+.mock-app button:hover, .mock-app button:focus-visible { border-color: var(--gc-primary); }
+.mock-app pre { white-space: pre-wrap; padding: var(--space-4); background: var(--gc-surface-1); border: 1px solid var(--gc-surface-3); border-radius: var(--radius-md); }
