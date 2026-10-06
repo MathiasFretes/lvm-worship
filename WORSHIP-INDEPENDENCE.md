@@ -21,6 +21,35 @@ Estado: en curso. Esta rama no acredita todavía una implementación totalmente 
 - Las pantallas de acceso siguen cargando `gc-brand-wide-*.svg`. Los tokens `--gc-*`, `createGcSupabase` y las claves persistidas `gc.*` siguen en rutas activas. Deben migrarse con compatibilidad para no perder datos.
 - Las páginas legales eliminadas afirmaban que Ryan Moore operaba La Voz Misionera. No deben restaurarse con esa atribución. El operador, contacto y prácticas de datos reales deben confirmarse antes de publicar nuevos textos.
 
+## M7.7A — Inventario por función
+
+Comparación realizada sobre `f659708` contra el árbol público `rwm6857/GraceChords` `main` (`5cb40d2`, 6 de octubre de 2026). Se compararon hashes de blobs **en la misma ruta**. `Idéntico` prueba igualdad de contenido; `diferente` o `ruta nueva` no prueban que el archivo sea original de LVM. Las cifras incluyen pruebas y recursos auxiliares, no solo código ejecutado.
+
+| Área | Archivos LVM | Idénticos | Diferentes | Rutas nuevas |
+| --- | ---: | ---: | ---: | ---: |
+| `apps/web/src` | 339 | 202 | 130 | 7 |
+| `apps/web/public` | 87 | 60 | 27 | 0 |
+| `packages/core` | 55 | 49 | 6 | 0 |
+| `apps/mobile/src` | 350 | 222 | 128 | 0 |
+| `apps/mobile/assets` | 25 | 24 | 1 | 0 |
+
+Los siete archivos de ruta nueva en `apps/web/src` están bajo `lvm/` y comprenden tres módulos de contrato y cuatro pruebas/fixtures. Esta observación se limita a la ruta y al contenido comparado; la procedencia de cada implementación se revisa por separado.
+
+| Función web activa | Evidencia concreta | Decisión M7.7 | Siguiente gate |
+| --- | --- | --- | --- |
+| Shell y navegación | `App.jsx` y `Navbar.tsx` difieren; `layout-kit/Button.jsx` y `Card.jsx` son idénticos | Conservar rutas y UX valiosa; reimplementar primitives y shell visual con identidad LVM | Navegación y estados a 390/768/1024/1440 px |
+| Dashboard | `HomeDashboardPage.jsx` difiere; varios recursos visuales públicos coinciden | Rehacer presentación y sustituir assets; conservar los flujos útiles | Estado vacío/carga/error y rutas reales |
+| Canciones y búsqueda | `SongsPage.jsx` y `SongViewPage.jsx` difieren; `useSongs.jsx` y parser ChordPro de `core` son idénticos | Conservar modelo funcional; reimplementar adaptadores propios de búsqueda, lectura y acordes por etapas | Canciones, acordes, transposición y búsqueda verificados |
+| Editor de canción | `EditorPage.jsx` y `portal/EditorPage.jsx` difieren | Auditar campos y flujo antes de reemplazar; no confundir diff con autoría | Guardado, errores y permisos probados |
+| Repertorios | `SetlistWorkspacePage.jsx` difiere; en `features/setlist` hay 18 archivos idénticos y 9 distintos | Conservar comportamiento y contrato con Service; reimplementar UI y lógica heredada por partes | Orden/repeticiones, export y handoff offline |
+| Auth, perfil y ajustes | `LoginPage.jsx` y `ProfilePage.jsx` difieren; `useAuth.jsx` y `SpritePicker.jsx` son idénticos | Inventariar ahora; coordinar cambios de identidad/datos con M9 Auth | Sesión y datos de usuario compatibles |
+| Worship Mode | `WorshipModePage.jsx` es idéntico | Reimplementar la experiencia conservando su función | Presentación y controles sin regresión |
+| Service integration | `lvm/localSong.js`, `serviceAdapter.js` y `worshipPlan.js` tienen rutas nuevas | Conservar frontera y pruebas; revisar procedencia por módulo | Service → Worship → Service offline |
+| Lecturas, publicaciones, admin y songbook | Las páginas principales difieren, pero dependen de componentes y core compartidos | Revisar ownership antes de reimplementar; contenido público/admin podría corresponder a LVM Service y Web Pública | Decisión de dominio por pantalla |
+| Legal y licencias | Tres páginas legales sin ruta publicada; `/licenses` activo | Mantener páginas legales fuera hasta tener textos aprobados; continuar inventario de atribuciones | URLs, operador y avisos revisados antes de release |
+
+Primera secuencia de implementación propuesta: shell/primitives → Dashboard → canciones y búsqueda → editor → repertorios → Worship Mode. Auth, lecturas, publicaciones y admin se abordan cuando su ownership y contratos estén claros. Ninguna fila se considera migrada solo por cambiar nombres, colores o hashes.
+
 ## Decisiones por área
 
 | Área | Dueño futuro | Decisión | Condición de cierre |
