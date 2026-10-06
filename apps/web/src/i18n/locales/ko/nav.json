@@ -16,5 +16,7 @@
   "openMainMenu": "메인 메뉴 열기",
   "userMenu": "사용자 메뉴",
   "mobileMenu": "모바일 메뉴",
+  "mainNavigation": "기본 탐색",
+  "closeMainMenu": "메인 메뉴 닫기",
   "laVozMisioneraHome": "La Voz Misionera 홈"
 }

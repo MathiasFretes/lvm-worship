@@ -26,7 +26,7 @@ const PostDetailPage = lazyRoute(() => import('./pages/PostDetailPage'))
 const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
 const ManagePostsPage = lazyRoute(() => import('./pages/portal/ManagePostsPage'))
 const EditPostPage = lazyRoute(() => import('./pages/portal/EditPostPage'))
-import NavBar from './components/ui/Navbar'
+import WorshipNavigation from './components/ui/WorshipNavigation'
 import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -104,7 +104,7 @@ function Layout(){
       {/* Above the sticky navbar and not sticky itself, so it scrolls away and
           the nav keeps its top:0 anchor. */}
       <AnnouncementStrip />
-      <NavBar />
+      <WorshipNavigation />
       <main id="main" className="Route">
         <Outlet />
       </main>

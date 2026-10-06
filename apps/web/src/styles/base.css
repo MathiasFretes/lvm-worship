@@ -60,7 +60,6 @@ a{ color: inherit; text-decoration: none }
 .card,
 input, select, textarea,
 .toolbar,
-.gc-navbar,
 .tool-card,
 .home-hero,
 .home-hero__overlay{
@@ -70,17 +69,6 @@ input, select, textarea,
     border-color var(--gc-dur) var(--gc-ease),
     box-shadow var(--gc-dur) var(--gc-ease),
     background-image var(--gc-dur) var(--gc-ease);
-}
-
-/* Navbar: ensure readable text on selected/current page */
-.gc-navbar .gc-navlink{ color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
-.gc-navbar .gc-navlink.active,
-.gc-navbar .gc-navlink.active:link,
-.gc-navbar .gc-navlink.active:visited{
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: var(--primary-text) !important;
-  -webkit-text-fill-color: var(--primary-text) !important;
 }
 
 .container{ padding: var(--space-4); width:100%; max-width:1200px; margin:0 auto }
@@ -1345,8 +1333,7 @@ button.tool-card{
 }
 
 /* ===== Announcement strip ===== */
-/* Sits above the sticky navbar in App.jsx's Layout and is deliberately not
-   sticky itself, so it scrolls away and .gc-navbar keeps its top:0 anchor. */
+/* Sits above WorshipNavigation and scrolls away while the navigation stays sticky. */
 /* A primary-tinted surface rather than a solid --gc-primary fill: white on
    #1F84C9 is 4.04:1 and on #4EA6E6 only 2.65:1, both short of AA for 14px
    body text. The tint keeps --gc-text's contrast and reads as Signal Blue in

@@ -37,7 +37,7 @@ Los siete archivos de ruta nueva en `apps/web/src` están bajo `lvm/` y comprend
 
 | Función web activa | Evidencia concreta | Decisión M7.7 | Siguiente gate |
 | --- | --- | --- | --- |
-| Shell y navegación | `App.jsx` y `Navbar.tsx` difieren; `layout-kit/Button.jsx` y `Card.jsx` son idénticos | Conservar rutas y UX valiosa; reimplementar primitives y shell visual con identidad LVM | Navegación y estados a 390/768/1024/1440 px |
+| Shell y navegación | `WorshipNavigation.tsx` y `worship-navigation.css` sustituyen a `Navbar.tsx`; las rutas de `App.jsx` se conservan | Shell y navegación LVM implementados ✅. `SettingsCluster`, `SpriteAvatar`, avisos y los componentes de cada ruta conservan su implementación actual y se auditan en sus áreas | Rutas, menú móvil, estado activo, responsive y Service integration verificados en B1 |
 | Dashboard | `HomeDashboardPage.jsx` difiere; varios recursos visuales públicos coinciden | Rehacer presentación y sustituir assets; conservar los flujos útiles | Estado vacío/carga/error y rutas reales |
 | Canciones y búsqueda | `SongsPage.jsx` y `SongViewPage.jsx` difieren; `useSongs.jsx` y parser ChordPro de `core` son idénticos | Conservar modelo funcional; reimplementar adaptadores propios de búsqueda, lectura y acordes por etapas | Canciones, acordes, transposición y búsqueda verificados |
 | Editor de canción | `EditorPage.jsx` y `portal/EditorPage.jsx` difieren | Auditar campos y flujo antes de reemplazar; no confundir diff con autoría | Guardado, errores y permisos probados |
@@ -49,6 +49,24 @@ Los siete archivos de ruta nueva en `apps/web/src` están bajo `lvm/` y comprend
 | Legal y licencias | Tres páginas legales sin ruta publicada; `/licenses` activo | Mantener páginas legales fuera hasta tener textos aprobados; continuar inventario de atribuciones | URLs, operador y avisos revisados antes de release |
 
 Primera secuencia de implementación propuesta: shell/primitives → Dashboard → canciones y búsqueda → editor → repertorios → Worship Mode. Auth, lecturas, publicaciones y admin se abordan cuando su ownership y contratos estén claros. Ninguna fila se considera migrada solo por cambiar nombres, colores o hashes.
+
+## M7.7B1 — Contrato de comportamiento del shell web
+
+Antes del reemplazo, `App.jsx` renderiza una franja de anuncios no fija, una barra superior fija al desplazarse y el contenido de la ruta. Auth, recuperación de contraseña, Worship Mode y sesión en vivo tienen rutas sin esa barra. Los avisos y accesos auxiliares globales permanecen fuera de `Layout`.
+
+- Escritorio: marca textual con retorno a inicio; accesos a inicio, canciones, repertorios, cancionero, lectura y publicaciones; acceso al portal editorial según rol; ajustes (tema, idioma, acordes); login o menú de cuenta.
+- Móvil/tablet hasta 820 px: botón de menú y panel lateral con los mismos destinos principales, ajustes, estado offline y cuenta. Abre por botón, cierra por enlace, Escape o fondo; retiene el foco dentro y bloquea el scroll del documento mientras está abierto.
+- Repertorios dirige a `/setlists` con sesión y a `/setlist` sin sesión. Las rutas `/setlists/*` comparten estado activo; canciones incluyen `/songs` y `/song/*`. Los accesos editor/admin se muestran solo con el rol correspondiente; el router sigue protegiendo esas rutas.
+- Las URLs públicas y de integración no se renombran en B1. Dashboard, catálogo, editor, repertorios, lectura, posts y contratos LVM conservan sus componentes de ruta.
+
+La implementación nueva debe expresar el estado activo con `aria-current`, ofrecer foco visible, conservar cierre/restauración de foco del panel móvil y dejar ajustes/cuenta disponibles sin copiar el antiguo `Navbar.tsx` ni sus reglas de menú/drawer.
+
+### Cierre B1
+
+- `WorshipNavigation.tsx` y su CSS son la nueva capa de navegación LVM. Los colores de marca se declaran en `packages/tokens/tokens.css` y el shell los consume sin duplicar valores. `App.jsx` conserva las rutas y monta el componente nuevo. El archivo heredado `Navbar.tsx` fue retirado, junto con sus reglas de barra, menú de usuario y bandeja de ajustes que ya no se usan.
+- Las reglas `.gc-drawer` permanecen temporalmente porque `WorshipModePage.jsx` aún las utiliza para su panel de ajustes; se revisarán en B6. Los controles internos `SettingsCluster` y `SpriteAvatar` tampoco se declaran reimplementados en B1.
+- El menú mantiene destinos, salida de invitado a `/setlist`, salida con sesión a `/setlists`, accesos por rol, ajustes y cuenta. `aria-current`, cierre con Escape, restauración del foco y bloqueo del scroll tienen pruebas específicas.
+- Revisión de navegador en `/songs` a 390, 768, 1024 y 1440 px: `document.scrollWidth` coincide con el viewport; el menú móvil aparece hasta 1024 px y el menú de escritorio a 1440 px. A 390 px el panel mide 351 px, muestra seis destinos públicos y bloquea el scroll de fondo. La revisión usó credenciales de Supabase ficticias solo para renderizar el shell local; no certifica datos ni Auth reales.
 
 ## Decisiones por área
 

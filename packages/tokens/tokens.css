@@ -68,6 +68,13 @@
   --gc-focus-size: 2px;
   --gc-focus-offset: 2px;
 
+  /* LVM Design System 0.1 — shared brand foundation for the new web shell. */
+  --lvm-brand-navy: #0e1a2b;
+  --lvm-brand-navy-raised: #172033;
+  --lvm-brand-gold: #c89b3c;
+  --lvm-on-dark: #ffffff;
+  --lvm-border-subtle: #e1e6ef;
+
   /* ===== Colors (Light) - Signal Blue palette ===== */
   --gc-primary: #1F84C9;
   --gc-primary-hover: #1A72B0;
