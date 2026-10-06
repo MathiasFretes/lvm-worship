@@ -20,16 +20,18 @@
  * Returns [] when query is blank (caller should show all items).
  */
 
-function norm(str) {
-  return (str || '')
-    .toLowerCase()
+export function normalizeSongSearch(str) {
+  return String(str || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLocaleLowerCase()
     .replace(/['‘’ʼ]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
 }
 
 function wordList(str) {
-  return norm(str).split(' ').filter(Boolean)
+  return normalizeSongSearch(str).split(' ').filter(Boolean)
 }
 
 function anyWordStartsWith(words, token) {
@@ -40,7 +42,7 @@ function anyWordStartsWith(words, token) {
 }
 
 function scoreItem(item, q, tokens) {
-  const titleNorm = norm(item.title)
+  const titleNorm = normalizeSongSearch(item.title)
   const titleWords = wordList(item.title)
 
   if (titleNorm.startsWith(q)) return 0
@@ -52,7 +54,7 @@ function scoreItem(item, q, tokens) {
   const variantTitles = item.searchTitles || []
   for (let i = 0; i < variantTitles.length; i++) {
     const vt = variantTitles[i]
-    const vtNorm = norm(vt)
+    const vtNorm = normalizeSongSearch(vt)
     const vtWords = wordList(vt)
     if (vtNorm.startsWith(q)) return 0.5
     if (tokens.every(t => anyWordStartsWith(vtWords, t))) return 1.5
@@ -61,7 +63,7 @@ function scoreItem(item, q, tokens) {
 
   const allTags = (item.tags || []).concat(item.searchTags || [])
   for (let i = 0; i < allTags.length; i++) {
-    const tagNorm = norm(allTags[i])
+    const tagNorm = normalizeSongSearch(allTags[i])
     if (tokens.some(t => tagNorm.startsWith(t))) return 3
   }
 
@@ -75,7 +77,7 @@ function scoreItem(item, q, tokens) {
 }
 
 export function searchSongs(items, query) {
-  const q = norm(query)
+  const q = normalizeSongSearch(query)
   if (!q) return []
   const tokens = q.split(' ').filter(Boolean)
 

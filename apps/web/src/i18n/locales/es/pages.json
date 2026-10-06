@@ -20,14 +20,17 @@
     "searchPlaceholder": "Buscar título/etiquetas/autores…",
     "searchAria": "Buscar canciones",
     "lyricsContain": "La letra contiene",
-    "lyricsContainTooltip": "Buscar dentro del texto de las canciones (se descarga bajo demanda)",
+    "lyricsContainTooltip": "Buscar en las letras disponibles en el catálogo",
     "communitySetlist": "Repertorio de la comunidad",
     "communitySetlistTooltip": "Limitar resultados a canciones etiquetadas como Comunidad",
     "all": "Todas",
     "languageAria": "Idioma de la canción",
     "languageTooltip": "Mostrar canciones en {{language}}",
     "noTranslation": "Sin traducción en el idioma seleccionado",
-    "resultsAria": "Resultados de canciones"
+    "resultsAria": "Resultados de canciones",
+    "noResults": "Ninguna canción coincide con estos filtros.",
+    "personal": "Personal",
+    "pending": "Pendiente"
   },
   "setlist": {
     "title": "Creador de repertorios",

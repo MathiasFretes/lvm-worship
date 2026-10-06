@@ -109,7 +109,24 @@ describe('useSongs', () => {
     const { result } = renderHook(() => useSongs())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.songs).toEqual([])
+    expect(result.current.error).toMatchObject({ message: 'boom' })
     expect(errSpy).toHaveBeenCalled()
+  })
+
+  it('recovers a failed catalog request when the user retries', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { client, spies } = mockSupabase({ data: null, error: { message: 'offline' } })
+    spies.order.mockResolvedValueOnce({ data: null, error: { message: 'offline' } })
+      .mockResolvedValueOnce({ data: [fullRow], error: null })
+    vi.doMock('../../lib/supabase', () => ({ supabase: client }))
+    const { useSongs } = await import('../useSongs')
+
+    const { result } = renderHook(() => useSongs())
+    await waitFor(() => expect(result.current.error).toBeTruthy())
+    await result.current.retry()
+    await waitFor(() => expect(result.current.songs).toHaveLength(1))
+    expect(result.current.error).toBeNull()
+    expect(spies.order).toHaveBeenCalledTimes(2)
   })
 
   it('serves cached data to later instances without refetching (dedupe)', async () => {

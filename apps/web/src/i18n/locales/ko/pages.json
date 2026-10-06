@@ -20,14 +20,17 @@
     "searchPlaceholder": "제목/태그/작가 검색…",
     "searchAria": "찬양곡 검색",
     "lyricsContain": "가사 포함",
-    "lyricsContainTooltip": "찬양 본문 내 검색 (필요 시 불러옴)",
+    "lyricsContainTooltip": "목록에 있는 가사에서 검색",
     "communitySetlist": "커뮤니티 셋리스트",
     "communitySetlistTooltip": "Community 태그가 있는 곡으로만 제한",
     "all": "전체",
     "languageAria": "찬양곡 언어",
     "languageTooltip": "{{language}} 찬양곡 보기",
     "noTranslation": "선택한 언어로 번역 없음",
-    "resultsAria": "찬양곡 결과"
+    "resultsAria": "찬양곡 결과",
+    "noResults": "이 필터와 일치하는 찬양곡이 없습니다.",
+    "personal": "개인",
+    "pending": "검토 대기"
   },
   "setlist": {
     "title": "셋리스트 빌더",

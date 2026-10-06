@@ -17,14 +17,20 @@ import { supabase } from '../lib/supabase'
 
 const STALE_MS = 5 * 60 * 1000  // revalidate after 5 minutes
 
-let _cache = null
-let _promise = null
-let _cacheTime = 0
-const _listeners = new Set()
+let snapshot = { songs: [], loading: true, error: null }
+let cacheTime = 0
+let request = null
+const listeners = new Set()
+
+function publish(next) {
+  snapshot = next
+  listeners.forEach(listener => listener(next))
+}
 
 async function fetchSongs() {
-  if (_promise) return _promise
-  _promise = supabase
+  if (request) return request
+  publish({ ...snapshot, loading: snapshot.songs.length === 0, error: null })
+  request = supabase
     .from('songs')
     .select(
       'id, slug, title, artist, default_key, tempo, time_signature, tags, ' +
@@ -34,18 +40,19 @@ async function fetchSongs() {
     .eq('is_deleted', false)
     .order('title')
     .then(({ data, error }) => {
-      if (error) {
-        console.error('[useSongs] Failed to load songs from Supabase:', error)
-        _promise = null // allow retry
-        return _cache || []
-      }
-      const normalised = (data || []).map(normaliseSong)
-      _cache = normalised
-      _cacheTime = Date.now()
-      _listeners.forEach(fn => fn(normalised))
-      return normalised
+      if (error) throw error
+      const songs = (data || []).map(normaliseSong)
+      cacheTime = Date.now()
+      publish({ songs, loading: false, error: null })
+      return songs
     })
-  return _promise
+    .catch(error => {
+      console.error('[useSongs] Failed to load songs from Supabase:', error)
+      publish({ ...snapshot, loading: false, error })
+      return snapshot.songs
+    })
+    .finally(() => { request = null })
+  return request
 }
 
 /**
@@ -112,34 +119,21 @@ function normaliseSong(song) {
 }
 
 /**
- * Hook.  Returns { songs, loading }.
+ * Hook. Returns { songs, loading, error, retry }.
  * songs — array of normalised song objects
  * loading — true while the first fetch is in flight
  */
 export function useSongs() {
-  const [songs, setSongs] = useState(_cache || [])
-  const [loading, setLoading] = useState(!_cache)
+  const [state, setState] = useState(snapshot)
 
   useEffect(() => {
-    _listeners.add(setSongs)
-
-    if (!_cache) {
-      // First load — fetch and clear loading when done.
-      // _listeners will push the data into this component's state.
-      fetchSongs().then(() => setLoading(false))
-    } else {
-      setLoading(false)
-      // Stale-while-revalidate: if cached data is older than STALE_MS,
-      // clear the cached promise so fetchSongs issues a fresh request.
-      // _listeners will push the updated songs to all mounted hook instances.
-      if (Date.now() - _cacheTime > STALE_MS) {
-        _promise = null
-        fetchSongs()
-      }
+    listeners.add(setState)
+    setState(snapshot)
+    if (snapshot.loading || (cacheTime && Date.now() - cacheTime > STALE_MS)) {
+      void fetchSongs()
     }
-
-    return () => _listeners.delete(setSongs)
+    return () => listeners.delete(setState)
   }, [])
 
-  return { songs, loading }
+  return { ...state, retry: fetchSongs }
 }

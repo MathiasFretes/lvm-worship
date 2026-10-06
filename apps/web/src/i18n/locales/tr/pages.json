@@ -20,14 +20,17 @@
     "searchPlaceholder": "Başlık/etiket/yazar ara…",
     "searchAria": "İlahileri ara",
     "lyricsContain": "Sözlerde geçenler",
-    "lyricsContainTooltip": "İlahi metinleri içinde ara (gerektiğinde indirilir)",
+    "lyricsContainTooltip": "Katalogda bulunan şarkı sözlerinde ara",
     "communitySetlist": "Topluluk Set Listesi",
     "communitySetlistTooltip": "Sonuçları Topluluk etiketli ilahilere sınırla",
     "all": "Tümü",
     "languageAria": "İlahi dili",
     "languageTooltip": "{{language}} ilahileri göster",
     "noTranslation": "Seçili dilde çeviri yok",
-    "resultsAria": "İlahi sonuçları"
+    "resultsAria": "İlahi sonuçları",
+    "noResults": "Bu filtrelerle eşleşen ilahi yok.",
+    "personal": "Kişisel",
+    "pending": "Beklemede"
   },
   "setlist": {
     "title": "Set Listesi Oluşturucu",

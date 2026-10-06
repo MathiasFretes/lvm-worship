@@ -39,7 +39,7 @@ Los siete archivos de ruta nueva en `apps/web/src` están bajo `lvm/` y comprend
 | --- | --- | --- | --- |
 | Shell y navegación | `WorshipNavigation.tsx` y `worship-navigation.css` sustituyen a `Navbar.tsx`; las rutas de `App.jsx` se conservan | Shell y navegación LVM implementados ✅. `SettingsCluster`, `SpriteAvatar`, avisos y los componentes de cada ruta conservan su implementación actual y se auditan en sus áreas | Rutas, menú móvil, estado activo, responsive y Service integration verificados en B1 |
 | Dashboard | `WorshipDashboardPage.jsx` y `features/dashboard/` reemplazan a `HomeDashboardPage.jsx`; se retiraron sus once imágenes y estilos exclusivos | Dashboard LVM implementado ✅. Conserva acceso a biblioteca, repertorios, cancionero y búsqueda; usa un resumen propio del catálogo y estados de carga/vacío/error | Vista y rutas a 390/768/1024/1440 px; pruebas de datos, estados y navegación |
-| Canciones y búsqueda | `SongsPage.jsx` y `SongViewPage.jsx` difieren; `useSongs.jsx` y parser ChordPro de `core` son idénticos | Conservar modelo funcional; reimplementar adaptadores propios de búsqueda, lectura y acordes por etapas | Canciones, acordes, transposición y búsqueda verificados |
+| Canciones y búsqueda | `SongsPage.jsx` usa tarjeta, layout, estados y búsqueda LVM; `useSongs.jsx` expone error/reintento. `SongViewPage.jsx` y el parser ChordPro conservan su implementación actual | Biblioteca y búsqueda LVM ✅ (B3). La lectura, acordes y transposición se revisarán como un bloque separado; un hash distinto no prueba procedencia | Listado, búsqueda, filtros, rutas, pruebas y responsive verificados en B3 |
 | Editor de canción | `EditorPage.jsx` y `portal/EditorPage.jsx` difieren | Auditar campos y flujo antes de reemplazar; no confundir diff con autoría | Guardado, errores y permisos probados |
 | Repertorios | `SetlistWorkspacePage.jsx` difiere; en `features/setlist` hay 18 archivos idénticos y 9 distintos | Conservar comportamiento y contrato con Service; reimplementar UI y lógica heredada por partes | Orden/repeticiones, export y handoff offline |
 | Auth, perfil y ajustes | `LoginPage.jsx` y `ProfilePage.jsx` difieren; `useAuth.jsx` y `SpritePicker.jsx` son idénticos | Inventariar ahora; coordinar cambios de identidad/datos con M9 Auth | Sesión y datos de usuario compatibles |
@@ -75,6 +75,14 @@ El Dashboard nuevo concentra la planificación musical: acceso a biblioteca, rep
 `features/dashboard/dashboardRepository.js` lee solo `slug`, `title`, `artist` y `default_key` de las primeras seis canciones no eliminadas, con conteo exacto de la biblioteca. La vista distingue respuesta vacía de error y permite reintentar. El hook original `useSongs` no se modificó; B3 auditará la biblioteca y su búsqueda.
 
 En navegador local se revisó `/` a 390, 768, 1024 y 1440 px: tres accesos reales y búsqueda visibles, sin overflow horizontal. Las pruebas específicas cubren carga, error/reintento, vacío, datos, rutas y acceso a repertorios según sesión. La revisión visual utilizó configuración ficticia de Supabase y solo demuestra el render del Dashboard, no contenido remoto real.
+
+## M7.7B3 — Biblioteca y búsqueda de canciones
+
+`SongsPage.jsx` conserva las rutas `/songs` y `/song/:id`, las preferencias de idioma, filtros por tags/comunidad, canciones personales y navegación por teclado. Usa una tarjeta y estilos propios de LVM. La búsqueda normaliza tildes y letras Unicode; la opción de buscar en letras usa `chordpro_content` ya cargado, sin solicitudes por canción a archivos estáticos. Las canciones personales siguen viniendo del repositorio compartido y la lista no incluye su letra completa, por lo que esa opción se limita a las letras disponibles en el catálogo.
+
+`useSongs.jsx` mantiene la forma de datos que necesitan el lector, repertorios y WorshipPlan, pero ahora distingue errores de resultados vacíos y ofrece reintento. El lector `SongViewPage.jsx`, el modelo de agrupación y el parser ChordPro no se declaran reimplementados en B3. Sus rutas y pruebas siguen funcionando; su procedencia y reemplazo se revisan aparte.
+
+El gate local de B3 cubre 410 pruebas web, lint e i18n; Vite compila. `npm run build` ejecuta además la generación SEO, que requiere `VITE_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` reales, no presentes en este entorno. No se cambió ese pipeline ni se introdujeron secretos. En navegador local, con respuestas de catálogo simuladas, `/songs` muestra dos canciones a 390 y 1440 px sin overflow; a 768 y 1024 px también se comprobó el ancho sin overflow. Esa revisión no certifica el backend remoto.
 
 ## Decisiones por área
 

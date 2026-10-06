@@ -20,14 +20,17 @@
     "searchPlaceholder": "Search title/tags/authors…",
     "searchAria": "Search songs",
     "lyricsContain": "Lyrics contain",
-    "lyricsContainTooltip": "Search within song texts (fetched on demand)",
+    "lyricsContainTooltip": "Search the lyrics available in the catalog",
     "communitySetlist": "Community Setlist",
     "communitySetlistTooltip": "Limit results to songs tagged Community",
     "all": "All",
     "languageAria": "Song language",
     "languageTooltip": "Show {{language}} songs",
     "noTranslation": "No Translation in Selected Language",
-    "resultsAria": "Song results"
+    "resultsAria": "Song results",
+    "noResults": "No songs match these filters.",
+    "personal": "Personal",
+    "pending": "Pending"
   },
   "setlist": {
     "title": "Setlist Builder",
