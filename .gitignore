@@ -6,6 +6,7 @@ node_modules/
 .npm/
 .pnpm-store/
 .vite/
+.wrangler/state/
 coverage/
 dist/
 # ...but analysis/out/dist is generated CONTENT, not build output, and its
