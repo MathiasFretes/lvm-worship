@@ -9,10 +9,7 @@ const ReadingsPage = lazyRoute(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
 const Songbook = lazyRoute(() => import('./pages/SongbookPage'))
 const About = lazyRoute(() => import('./pages/AboutPage'))
-const PrivacyPage = lazyRoute(() => import('./pages/PrivacyPage'))
-const TermsPage = lazyRoute(() => import('./pages/TermsPage'))
 const LicensesPage = lazyRoute(() => import('./pages/LicensesPage'))
-const DeleteAccountPage = lazyRoute(() => import('./pages/DeleteAccountPage'))
 const LoginPage = lazyRoute(() => import('./pages/LoginPage'))
 const SignupPage = lazyRoute(() => import('./pages/SignupPage'))
 const ProfilePage = lazyRoute(() => import('./pages/ProfilePage'))
@@ -48,10 +45,7 @@ export default function App(){
             <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />
             <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
             <Route path="/licenses" element={<LicensesPage />} />
-            <Route path="/delete-account" element={<DeleteAccountPage />} />
             <Route path="/download" element={<DownloadPage />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/songs/:id" element={<SongView />} />

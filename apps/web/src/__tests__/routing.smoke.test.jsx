@@ -41,9 +41,7 @@ describe('Routing smoke', () => {
     expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
   })
 
-  test('delete-account route renders publicly (no sign-in)', async () => {
-    // This URL is referenced by the Google Play store listing, so it must render
-    // for anonymous visitors. The page shows the deletion instructions heading.
+  test('unapproved delete-account page is not published', async () => {
     window.location.hash = '#/delete-account'
     render(
       <HelmetProvider>
@@ -52,7 +50,7 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByRole('heading', { level: 1, name: /delete your account/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /not found/i })).toBeInTheDocument()
   })
 
   test('admin route is gated — anonymous users are redirected home', async () => {
