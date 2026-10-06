@@ -38,7 +38,7 @@ Los siete archivos de ruta nueva en `apps/web/src` están bajo `lvm/` y comprend
 | Función web activa | Evidencia concreta | Decisión M7.7 | Siguiente gate |
 | --- | --- | --- | --- |
 | Shell y navegación | `WorshipNavigation.tsx` y `worship-navigation.css` sustituyen a `Navbar.tsx`; las rutas de `App.jsx` se conservan | Shell y navegación LVM implementados ✅. `SettingsCluster`, `SpriteAvatar`, avisos y los componentes de cada ruta conservan su implementación actual y se auditan en sus áreas | Rutas, menú móvil, estado activo, responsive y Service integration verificados en B1 |
-| Dashboard | `HomeDashboardPage.jsx` difiere; varios recursos visuales públicos coinciden | Rehacer presentación y sustituir assets; conservar los flujos útiles | Estado vacío/carga/error y rutas reales |
+| Dashboard | `WorshipDashboardPage.jsx` y `features/dashboard/` reemplazan a `HomeDashboardPage.jsx`; se retiraron sus once imágenes y estilos exclusivos | Dashboard LVM implementado ✅. Conserva acceso a biblioteca, repertorios, cancionero y búsqueda; usa un resumen propio del catálogo y estados de carga/vacío/error | Vista y rutas a 390/768/1024/1440 px; pruebas de datos, estados y navegación |
 | Canciones y búsqueda | `SongsPage.jsx` y `SongViewPage.jsx` difieren; `useSongs.jsx` y parser ChordPro de `core` son idénticos | Conservar modelo funcional; reimplementar adaptadores propios de búsqueda, lectura y acordes por etapas | Canciones, acordes, transposición y búsqueda verificados |
 | Editor de canción | `EditorPage.jsx` y `portal/EditorPage.jsx` difieren | Auditar campos y flujo antes de reemplazar; no confundir diff con autoría | Guardado, errores y permisos probados |
 | Repertorios | `SetlistWorkspacePage.jsx` difiere; en `features/setlist` hay 18 archivos idénticos y 9 distintos | Conservar comportamiento y contrato con Service; reimplementar UI y lógica heredada por partes | Orden/repeticiones, export y handoff offline |
@@ -67,6 +67,14 @@ La implementación nueva debe expresar el estado activo con `aria-current`, ofre
 - Las reglas `.gc-drawer` permanecen temporalmente porque `WorshipModePage.jsx` aún las utiliza para su panel de ajustes; se revisarán en B6. Los controles internos `SettingsCluster` y `SpriteAvatar` tampoco se declaran reimplementados en B1.
 - El menú mantiene destinos, salida de invitado a `/setlist`, salida con sesión a `/setlists`, accesos por rol, ajustes y cuenta. `aria-current`, cierre con Escape, restauración del foco y bloqueo del scroll tienen pruebas específicas.
 - Revisión de navegador en `/songs` a 390, 768, 1024 y 1440 px: `document.scrollWidth` coincide con el viewport; el menú móvil aparece hasta 1024 px y el menú de escritorio a 1440 px. A 390 px el panel mide 351 px, muestra seis destinos públicos y bloquea el scroll de fondo. La revisión usó credenciales de Supabase ficticias solo para renderizar el shell local; no certifica datos ni Auth reales.
+
+## M7.7B2 — Dashboard de Worship Web
+
+El Dashboard nuevo concentra la planificación musical: acceso a biblioteca, repertorios y cancionero; búsqueda enviada a la ruta existente `/songs?q=...`; y una selección de canciones del catálogo. La antigua portada con imagen, acciones aleatorias y publicaciones se retiró. Blog y Palabra del día siguen accesibles desde la navegación, sin incorporarlos al Dashboard mientras su ownership siga pendiente.
+
+`features/dashboard/dashboardRepository.js` lee solo `slug`, `title`, `artist` y `default_key` de las primeras seis canciones no eliminadas, con conteo exacto de la biblioteca. La vista distingue respuesta vacía de error y permite reintentar. El hook original `useSongs` no se modificó; B3 auditará la biblioteca y su búsqueda.
+
+En navegador local se revisó `/` a 390, 768, 1024 y 1440 px: tres accesos reales y búsqueda visibles, sin overflow horizontal. Las pruebas específicas cubren carga, error/reintento, vacío, datos, rutas y acceso a repertorios según sesión. La revisión visual utilizó configuración ficticia de Supabase y solo demuestra el render del Dashboard, no contenido remoto real.
 
 ## Decisiones por área
 

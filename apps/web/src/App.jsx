@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Link, Outlet } from 'react-router-dom'
 import lazyRoute from './utils/app/lazyRoute'
-import HomeDashboard from './pages/HomeDashboardPage'
+import HomeDashboard from './pages/WorshipDashboardPage'
 import Songs from './pages/SongsPage'
 import SongView from './pages/SongViewPage'
 const Setlist = lazyRoute(() => import('./pages/SetlistWorkspacePage'))

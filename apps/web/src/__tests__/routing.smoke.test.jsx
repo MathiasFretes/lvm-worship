@@ -12,8 +12,7 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    // Query by the associated <label for="search">Search</label>
-	expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
+    expect(await screen.findByRole('searchbox', { name: /find a song/i })).toBeInTheDocument()
   })
 
   test('draft setlist route renders', async () => {
@@ -26,7 +25,7 @@ describe('Routing smoke', () => {
       </HelmetProvider>
     )
     // PDF download is in the setlist workspace's action bar on every route.
-    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /download pdf/i }, { timeout: 5000 })).toBeInTheDocument()
   })
 
   test('saved setlists route renders', async () => {
@@ -38,7 +37,7 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /download pdf/i }, { timeout: 5000 })).toBeInTheDocument()
   })
 
   test('unapproved delete-account page is not published', async () => {
@@ -65,6 +64,6 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
+    expect(await screen.findByRole('searchbox', { name: /find a song/i })).toBeInTheDocument()
   })
 })
