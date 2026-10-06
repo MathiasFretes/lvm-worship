@@ -618,9 +618,9 @@ export default function SongView(){
           {t('worshipMode')}
         </Button>
         </>)}
-        {entry?.gracetracks_url && (
+        {entry?.tracks_url && (
           <a
-            href={entry.gracetracks_url}
+            href={{}}
             target="_blank"
             rel="noopener noreferrer"
             className="gc-btn gc-btn--ghost"

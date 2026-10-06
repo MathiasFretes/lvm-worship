@@ -167,7 +167,7 @@ export default function HomeDashboard(){
   }
 
   function handleContribute(){
-    try { window.open('https://github.com/rwm6857/LaVozMisionera', '_blank', 'noopener,noreferrer') } catch {}
+    try { window.open('https://github.com/LaVozMisionera', '_blank', 'noopener,noreferrer') } catch {}
   }
 
   function findExactMatch(term){

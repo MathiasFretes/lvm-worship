@@ -17,7 +17,6 @@
   "closeSheet": "Close {{title}}",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
-  "copyright": "© {{range}} Ryan Moore. All rights reserved.",
   "keyOf": "Key of {{key}}",
   "keyTransposed": "{{from}} → {{to}}",
   "keyTransposedA11y": "Key {{from}}, transposed to {{to}}",

@@ -1,11 +1,3 @@
-//
-//  ContentView.swift
-//  La Voz Misionera Studio
-//
-//  Created by Ryan Moore on 7/24/26.
-//
-//  App shell: config check → session check → library + viewer.
-//
 
 import SwiftUI
 
