@@ -15,6 +15,8 @@ Se comparó el árbol local de `claude/m77-worship-independence-audit` (base `0d
 
 Coincidencias idénticas por área: `apps/mobile` 300, `apps/web` 283, `packages/core` 49, `apps/studio` 2 y otras áreas 56. Hay coincidencias en componentes ejecutados, no solamente en documentación: `apps/mobile/src/components/Button.tsx`, `Card.tsx`, `BottomSheet.tsx`, `LoadingSkeleton.tsx` y otros. También coinciden el icono móvil, las imágenes de splash, quince sprites y gráficos públicos de web. El repositorio actual tiene historia local condensada; esa historia no sirve para atribuir por sí sola los archivos diferentes.
 
+Entre las rutas que no existen en el origen están `apps/web/src/lvm/localSong.js`, `serviceAdapter.js`, `worshipPlan.js`, sus pruebas y las fixtures del contrato. Son evidencia concreta de trabajo específico de LVM para el puente con Service. La mayoría de las otras rutas nuevas están bajo el proyecto Swift de Studio; varias podrían ser renombres de archivos preexistentes, por lo que requieren comparación de contenido antes de atribuirles autoría nueva.
+
 ## Hallazgos que afectan al producto
 
 1. **Independencia de GitHub ≠ independencia de código.** `MathiasFretes/lvm-worship` no figura como fork, pero las 690 coincidencias directas impiden presentarlo hoy como implementación íntegramente original.
