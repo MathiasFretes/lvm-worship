@@ -1,0 +1,113 @@
+@import '../../styles/editor.css';
+
+.lvm-song-editor {
+  width: min(100%, 82rem);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+  color: var(--gc-text);
+}
+.lvm-song-editor__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.lvm-song-editor__header h1 { margin: 0; }
+.lvm-song-editor__header p { margin: var(--space-2) 0 0; color: var(--gc-text-secondary); }
+.lvm-song-editor__eyebrow {
+  color: var(--lvm-brand-gold) !important;
+  font-size: var(--gc-font-cap);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.lvm-song-editor__finder,
+.lvm-song-editor__panel,
+.lvm-song-editor__message {
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  background: var(--gc-surface-1);
+  padding: var(--space-4);
+}
+.lvm-song-editor__finder { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+.lvm-song-editor__finder label { font-weight: 700; }
+.lvm-song-editor__finder input,
+.lvm-song-editor__fields input,
+.lvm-song-editor__fields select,
+.lvm-song-editor__tools select,
+.lvm-song-editor textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-sm);
+  background: var(--gc-surface-2);
+  color: var(--gc-text);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+}
+.lvm-song-editor__finder :is(input, a):focus-visible,
+.lvm-song-editor__panel :is(input, select, textarea, button):focus-visible,
+.lvm-song-editor :is(button, a):focus-visible {
+  outline: 2px solid var(--lvm-brand-gold);
+  outline-offset: 2px;
+}
+.lvm-song-editor__matches { display: grid; max-height: 12rem; overflow: auto; }
+.lvm-song-editor__matches a { padding: var(--space-2); color: var(--gc-text); text-decoration: none; }
+.lvm-song-editor__matches a:hover { background: var(--gc-surface-2); }
+.lvm-song-editor__columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; gap: var(--space-4); }
+.lvm-song-editor__panel { min-width: 0; }
+.lvm-song-editor__panel h2 { margin: 0 0 var(--space-4); }
+.lvm-song-editor__panel-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.lvm-song-editor__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.lvm-song-editor__fields label { display: grid; gap: var(--space-1); min-width: 0; font-weight: 600; }
+.lvm-song-editor__fields label:first-child,
+.lvm-song-editor__fields label:nth-child(2),
+.lvm-song-editor__fields label:nth-child(4) { grid-column: 1 / -1; }
+.lvm-song-editor__fields [role='alert'] { color: var(--gc-danger); font-weight: 400; }
+.lvm-song-editor__fields [aria-invalid='true'] { border-color: var(--gc-danger); }
+.lvm-song-editor__tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.lvm-song-editor__tools select { width: auto; }
+.lvm-song-editor__tools button,
+.lvm-song-editor__secondary,
+.lvm-song-editor__danger,
+.lvm-song-editor__primary,
+.lvm-song-editor__confirm button,
+.lvm-song-editor__message button {
+  min-height: 2.75rem;
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: var(--gc-surface-2);
+  color: var(--gc-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lvm-song-editor__primary { border-color: var(--lvm-brand-gold); background: var(--lvm-brand-gold); color: var(--lvm-brand-navy); }
+.lvm-song-editor__danger { color: var(--gc-danger); }
+.lvm-song-editor__tools button:disabled,
+.lvm-song-editor__actions button:disabled { opacity: .5; cursor: not-allowed; }
+.lvm-song-editor label[for='lvm-chordpro-body'] { display: block; margin-bottom: var(--space-2); font-weight: 700; }
+.lvm-song-editor textarea { min-height: 27rem; resize: vertical; font-family: var(--gc-font-mono, monospace); line-height: 1.55; }
+.lvm-song-editor__attachment { margin-top: var(--space-5); }
+.lvm-song-editor__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.lvm-song-editor__message { margin: var(--space-4) 0; }
+.lvm-song-editor__confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--lvm-brand-navy) 70%, transparent);
+}
+.lvm-song-editor__confirm > div { width: min(100%, 28rem); padding: var(--space-5); border-radius: var(--radius-lg); background: var(--gc-surface-1); }
+.lvm-song-editor__confirm button { margin-right: var(--space-2); }
+@media (max-width: 52rem) {
+  .lvm-song-editor__columns { grid-template-columns: minmax(0, 1fr); }
+  .lvm-song-editor__fields { grid-template-columns: minmax(0, 1fr); }
+  .lvm-song-editor__fields label { grid-column: 1 / -1; }
+  .lvm-song-editor textarea { min-height: 18rem; }
+}
