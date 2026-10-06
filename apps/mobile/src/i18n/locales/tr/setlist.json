@@ -16,16 +16,12 @@
     "couldNotDuplicate": "Set çoğaltılamadı",
     "couldNotDeleteMany": "Set listeleri silinemedi",
     "couldNotCopyLink": "Bağlantı kopyalanamadı",
-    "couldNotSendSet": "Set gönderilemedi",
-    "telegramNotLinkedTitle": "Telegram bağlı değil",
-    "telegramNotLinkedMessage": "Önce hesabınızı botla bağlayın: {{url}}",
     "deleteSetTitle": "Set silinsin mi?",
     "deleteSetMessage": "“{{name}}” ve içindeki ilahiler kaldırılacak."
   },
   "toasts": {
     "addSongsFirst": "Önce ilahi ekleyin",
     "setLinkCopied": "Set bağlantısı kopyalandı",
-    "sentToTelegram": "Telegram'a gönderildi",
     "removedFromSet": "Setten kaldırıldı"
   },
   "builder": {

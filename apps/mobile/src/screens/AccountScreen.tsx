@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, AppState, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useState } from 'react'
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
-import { useFocusEffect, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
@@ -20,14 +20,6 @@ import { useCurrentUser } from '../lib/currentUser'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { useDisplayName, setLocalDisplayName } from '../lib/useDisplayName'
 import { saveDisplayName } from '../lib/profile'
-import { actionFailureMessage } from '../lib/errors'
-import {
-  fetchTelegramLink,
-  startTelegramLink,
-  unlinkTelegram,
-  UNLINKED,
-  type TelegramLinkState,
-} from '../lib/telegramLink'
 
 // Account — one level under Profile & Settings. Holds the identity, security and
 // connection actions that used to be scattered across the settings screen, plus
@@ -37,28 +29,18 @@ import {
 // deletion discoverable in-app, not top-level, so one level down matches how
 // Apple's own Settings treats Apple ID sign-out.
 
-/** Formats the link date in the app locale; the day is all the row needs. */
-function formatLinkedDate(iso: string | null, language: string): string | null {
-  if (!iso) return null
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return null
-  return new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(d)
-}
-
 export default function AccountScreen() {
   const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['profile', 'settings', 'common'])
+  const { t: tx } = useTranslation(['profile', 'settings', 'common'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useCurrentUser()
   const { source: spriteSource } = useProfileSprite()
   const displayName = useDisplayName()
 
-  const [sheet, setSheet] = useState<null | 'name' | 'telegram'>(null)
+  const [sheet, setSheet] = useState<null | 'name'>(null)
   const [nameDraft, setNameDraft] = useState('')
   const [savingName, setSavingName] = useState(false)
-  const [telegram, setTelegram] = useState<TelegramLinkState>(UNLINKED)
-  const [telegramBusy, setTelegramBusy] = useState(false)
   const [barH, setBarH] = useState(0)
 
   const email = user?.email ?? ''
@@ -70,38 +52,6 @@ export default function AccountScreen() {
   // identities at once, and inferring from OAuth would wrongly hide the row for
   // exactly those accounts.
   const hasEmailIdentity = (user?.identities ?? []).some((i) => i.provider === 'email')
-
-  const loadTelegram = useCallback(async () => {
-    try {
-      setTelegram(await fetchTelegramLink())
-    } catch (err) {
-      // Status is decoration on a settings row, not content. Leaving the row on
-      // its last known value beats replacing the screen with an error.
-      console.error('[AccountScreen] telegram status failed:', err)
-    }
-  }, [])
-
-  // The app cannot observe a link happening elsewhere — it completes in a
-  // browser (and, after PR 2, in Telegram). Refetch on focus AND on the
-  // foreground transition: returning from another app fires only the latter,
-  // because this screen never lost focus while the user was away.
-  const focused = useRef(false)
-  useFocusEffect(
-    useCallback(() => {
-      focused.current = true
-      void loadTelegram()
-      return () => {
-        focused.current = false
-      }
-    }, [loadTelegram]),
-  )
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && focused.current) void loadTelegram()
-    })
-    return () => sub.remove()
-  }, [loadTelegram])
 
   function openNameSheet() {
     setNameDraft(displayName ?? '')
@@ -126,49 +76,6 @@ export default function AccountScreen() {
     } finally {
       setSavingName(false)
     }
-  }
-
-  // Mint a token and hand off to Telegram. We never learn whether the user
-  // actually tapped START, so there is nothing to await — the focus and
-  // foreground refetches above are what update the row when they come back.
-  async function onLinkTelegram() {
-    if (telegramBusy) return
-    setTelegramBusy(true)
-    try {
-      await Linking.openURL(await startTelegramLink())
-    } catch (err) {
-      Alert.alert(
-        tx('telegram.linkFailedTitle'),
-        actionFailureMessage('AccountScreen.startTelegramLink', err, tx),
-      )
-    } finally {
-      setTelegramBusy(false)
-    }
-  }
-
-  function onUnlinkTelegram() {
-    Alert.alert(tx('telegram.unlinkAlert.title'), tx('telegram.unlinkAlert.message'), [
-      { text: tx('common:cancel'), style: 'cancel' },
-      {
-        text: tx('telegram.unlinkAlert.confirm'),
-        style: 'destructive',
-        onPress: async () => {
-          setTelegramBusy(true)
-          try {
-            await unlinkTelegram()
-            setTelegram(UNLINKED)
-            setSheet(null)
-          } catch (err) {
-            Alert.alert(
-              tx('telegram.unlinkFailedTitle'),
-              actionFailureMessage('AccountScreen.unlinkTelegram', err, tx),
-            )
-          } finally {
-            setTelegramBusy(false)
-          }
-        },
-      },
-    ])
   }
 
   function onSignOut() {
@@ -205,15 +112,6 @@ export default function AccountScreen() {
       },
     ])
   }
-
-  const linkedDate = formatLinkedDate(telegram.linkedAt, i18n.language)
-  const telegramValue = telegram.linked
-    ? linkedDate
-      ? tx('telegram.linkedOn', { date: linkedDate })
-      : tx('telegram.linked')
-    : telegramBusy
-      ? tx('telegram.linking')
-      : tx('telegram.link')
 
   return (
     <Screen edges={['left', 'right']}>
@@ -303,36 +201,6 @@ export default function AccountScreen() {
           </>
         ) : null}
 
-        {/* CONNECTIONS */}
-        <SectionHeader label={tx('sections.connections')} />
-        <Card>
-          <ListRow
-            title={tx('telegram.title')}
-            leading={<RowIcon name="paperplane.fill" />}
-            value={telegramValue}
-            accessibilityLabel={`${tx('telegram.title')}, ${telegramValue}`}
-            chevron
-            isLast
-            onPress={() => {
-              if (telegram.linked) setSheet('telegram')
-              else void onLinkTelegram()
-            }}
-          />
-        </Card>
-        {!telegram.linked ? (
-          <Text
-            style={{
-              paddingHorizontal: t.spacing.md,
-              paddingTop: t.spacing.sm,
-              fontSize: 12.5,
-              lineHeight: 17,
-              color: t.colors.sec,
-            }}
-          >
-            {tx('telegram.linkHint')}
-          </Text>
-        ) : null}
-
         <DangerCard label={tx('logOut')} onPress={onSignOut} hint={tx('logOutHint')} />
         <DangerCard
           label={tx('deleteAccount')}
@@ -377,13 +245,6 @@ export default function AccountScreen() {
         onChange={setNameDraft}
         busy={savingName}
         onSave={() => void onSaveName()}
-        onClose={() => setSheet(null)}
-      />
-      <TelegramSheet
-        visible={sheet === 'telegram'}
-        linkedDate={linkedDate}
-        busy={telegramBusy}
-        onUnlink={onUnlinkTelegram}
         onClose={() => setSheet(null)}
       />
     </Screen>
@@ -444,40 +305,3 @@ function NameSheetContent({ value, onChange, busy, onSave }: NameSheetProps) {
   )
 }
 
-type TelegramSheetProps = {
-  visible: boolean
-  linkedDate: string | null
-  busy: boolean
-  onUnlink: () => void
-  onClose: () => void
-}
-
-function TelegramSheet(props: TelegramSheetProps) {
-  useFormSheet(props.visible, () => <TelegramSheetContent {...props} />, props.onClose)
-  return null
-}
-
-function TelegramSheetContent({ linkedDate, busy, onUnlink, onClose }: TelegramSheetProps) {
-  const t = useTheme()
-  const { t: tx } = useTranslation('profile')
-  return (
-    <FormSheetShell title={tx('telegram.title')} onAction={onClose}>
-      <View style={{ paddingBottom: t.spacing.lg }}>
-        <ListRow
-          title={tx('telegram.status')}
-          value={linkedDate ? tx('telegram.linkedOn', { date: linkedDate }) : tx('telegram.linked')}
-          accessibilityLabel={tx('telegram.status')}
-        />
-        <ListRow
-          title={busy ? tx('telegram.unlinking') : tx('telegram.unlink')}
-          accessibilityLabel={tx('telegram.unlink')}
-          isLast
-          onPress={busy ? undefined : onUnlink}
-          trailing={
-            <SymbolIcon name="xmark.circle.fill" size={16} color={t.colors.danger} />
-          }
-        />
-      </View>
-    </FormSheetShell>
-  )
-}

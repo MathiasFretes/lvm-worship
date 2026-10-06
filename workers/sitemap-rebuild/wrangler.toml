@@ -1,4 +1,4 @@
-name = "gracechords-sitemap-rebuild"
+name = "lvm-sitemap-rebuild"
 main = "index.js"
 compatibility_date = "2025-01-01"
 

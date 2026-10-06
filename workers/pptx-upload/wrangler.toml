@@ -3,13 +3,13 @@
 # wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # wrangler secret put ALLOWED_ORIGINS
 
-name = "gracechords-pptx-upload"
+name = "lvm-pptx-upload"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
 [[r2_buckets]]
 binding = "R2_BUCKET"
-bucket_name = "gracechords-bible"
+bucket_name = "lvm-bible"
 
 # Per-user upload rate limiting (10 uploads / 5 min).
 [[kv_namespaces]]

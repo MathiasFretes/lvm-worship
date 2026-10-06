@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
-const BASE_URL = 'https://gracechords.com'
+const BASE_URL = 'https://lavozmisionera.com'
 // Resolve paths from this script's location, not process.cwd(). scriptDir = apps/web/scripts.
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(scriptDir, '..')                 // apps/web (dist, src)

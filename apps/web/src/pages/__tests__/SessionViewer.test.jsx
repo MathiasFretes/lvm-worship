@@ -154,10 +154,10 @@ describe('SessionViewer', () => {
 
     fireEvent.click(screen.getByLabelText('Larger text'))
     expect(sizedAncestor(await screen.findByText('Father we love You')).style.fontSize).toBe('22px')
-    expect(localStorage.getItem('gracechords.session.fontPx')).toBe('22')
+    expect(localStorage.getItem('lvm.session.fontPx')).toBe('22')
 
     fireEvent.click(screen.getByLabelText('Smaller text'))
     expect(sizedAncestor(await screen.findByText('Father we love You')).style.fontSize).toBe('20px')
-    expect(localStorage.getItem('gracechords.session.fontPx')).toBe('20')
+    expect(localStorage.getItem('lvm.session.fontPx')).toBe('20')
   })
 })

@@ -5,7 +5,7 @@
  * so the browser never makes a cross-origin request to R2 directly (no CORS needed).
  *
  * Required environment variable (set in Cloudflare Pages → Settings → Environment Variables):
- *   VITE_R2_PUBLIC_URL — the base URL of the R2 bucket, e.g. https://assets.gracechords.com
+ *   VITE_R2_PUBLIC_URL — the base URL of the R2 bucket, e.g. https://assets.lavozmisionera.com
  *                        (also accepts BIBLE_CDN_URL for backwards compatibility)
  */
 export async function onRequest(context) {

@@ -226,18 +226,6 @@ export default function SetlistWorkspacePage() {
   // --- Derived -------------------------------------------------------------
   const selectedIds = useMemo(() => new Set(items.map((i) => i.songId)), [items])
   const worshipPath = useMemo(() => buildWorshipPath(items, routeId), [items, routeId])
-  const telegramItems = useMemo(
-    () =>
-      items
-        .filter((i) => !isVerseId(i.songId))
-        .map((i) => {
-          const song = catalog.byId.get(i.song.slug)
-          const dbId = song?.dbId || (routeId ? i.songId : null)
-          return dbId ? { song_id: dbId, key: effectiveEntryKey(i) || '' } : null
-        })
-        .filter(Boolean),
-    [items, catalog, routeId]
-  )
 
   // --- Set mutations -------------------------------------------------------
   const moveBy = useCallback(
@@ -541,7 +529,6 @@ export default function SetlistWorkspacePage() {
       pptxProgress={pptxProgress}
       combineProgress={combineProgress}
       persisted={!!routeId}
-      telegramItems={telegramItems}
       onShare={onShare}
       onPdf={onPdf}
       onCombinePptx={onCombinePptx}

@@ -2,15 +2,12 @@
 //   Body: { reflection_id: uuid, reason?: string }
 //   Headers: Authorization: Bearer <supabase access token>
 //
-// Records a report (service role) and fires a Telegram alert to the admin dev
-// channel via the bot worker's /internal/report-alert route (same Pages-Function
-// -> bot-worker pattern as /api/telegram/push). The report row is the source of
-// truth; the alert is best-effort — a failed alert never fails the user's report
-// (the row is already saved and readable in the dashboard).
+// Records a report (service role). The report row is the source of truth and
+// is readable in the dashboard.
 //
-// The reflections `reports` table also has an insert-own RLS policy, but the
-// alert only fires when a report goes through THIS endpoint — 2B's report button
-// calls it. No client UI ships in this phase (2A).
+// The reflections `reports` table also has an insert-own RLS policy, but a
+// report is only recorded when it goes through THIS endpoint — 2B's report
+// button calls it. No client UI ships in this phase (2A).
 
 import {
   corsPreflight,
@@ -20,8 +17,6 @@ import {
   UUID_RE,
   verifySupabaseJwt,
 } from './_shared.js'
-
-const PREVIEW_LEN = 200
 
 export async function onRequest(context) {
   const { request, env } = context
@@ -56,8 +51,7 @@ export async function onRequest(context) {
   // Without this gate the endpoint stayed open to any signed-in account, and
   // because it never verifies that reflection_id refers to a real (or public)
   // row, an arbitrary UUID would still insert a `reports` row via the service
-  // role AND fire a Telegram alert into the admin dev channel. That is a spam
-  // vector into a human's notifications, reachable by anyone who can sign up.
+  // role. That is a spam vector, reachable by anyone who can sign up.
   // Cloudflare Pages routes by file, so this endpoint answers whether or not a
   // client calls it.
   const flagResp = await supabaseRest(
@@ -83,45 +77,5 @@ export async function onRequest(context) {
     return jsonError(`Report insert failed: ${insertResp.status} ${text}`.trim(), 502)
   }
 
-  // Look up the reported reflection so the alert carries what the admin needs.
-  const refResp = await supabaseRest(
-    env,
-    `reflections?select=body,user_id,reflection_date&id=eq.${encodeURIComponent(reflectionId)}&limit=1`,
-  )
-  const refRows = refResp.ok ? await refResp.json().catch(() => []) : []
-  const reflection = refRows?.[0] || null
-
-  // Best-effort admin alert via the bot worker.
-  let alert = 'skipped'
-  if (env.BOT_INTERNAL_URL && env.BOT_WEBHOOK_TOKEN) {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000)
-    try {
-      const alertResp = await fetch(
-        `${env.BOT_INTERNAL_URL.replace(/\/$/, '')}/internal/report-alert`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.BOT_WEBHOOK_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            reflection_id: reflectionId,
-            author_id: reflection?.user_id || null,
-            reflection_date: reflection?.reflection_date || null,
-            reason,
-            preview: (reflection?.body || '').slice(0, PREVIEW_LEN),
-          }),
-          signal: controller.signal,
-        },
-      )
-      alert = alertResp.ok ? 'sent' : 'failed'
-    } catch {
-      alert = 'failed'
-    } finally {
-      clearTimeout(timeout)
-    }
-  }
-
-  return json({ status: 'reported', alert }, { status: 202 })
+  return json({ status: 'reported' }, { status: 202 })
 }

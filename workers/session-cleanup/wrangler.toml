@@ -4,7 +4,7 @@
 #
 # Optional var (below): SESSION_TTL_HOURS — inactivity TTL in hours (default 24).
 
-name = "gracechords-session-cleanup"
+name = "lvm-session-cleanup"
 main = "index.js"
 compatibility_date = "2025-01-01"
 

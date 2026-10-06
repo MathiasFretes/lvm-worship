@@ -38,7 +38,6 @@ import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { supabase } from '../lib/supabase'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { exportSetlist } from '../lib/exportSong'
-import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { uuidv4 } from '../lib/uuid'
 import { actionFailureMessage } from '../lib/errors'
 import { defaultSetlistName } from '../lib/setlistName'
@@ -218,25 +217,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
       Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SetlistBuilder.export', err, tx))
-    }
-  }
-
-  async function sendTelegram() {
-    if (items.length === 0) {
-      showToast(tx('toasts.addSongsFirst'))
-      return
-    }
-    try {
-      const result = await pushSetToTelegram(
-        items.map((item, i) => ({ songId: item.songId, key: effectiveKeys[i] })),
-      )
-      if (result === 'not_linked') {
-        Alert.alert(tx('alerts.telegramNotLinkedTitle'), tx('alerts.telegramNotLinkedMessage', { url: TELEGRAM_BOT_URL }))
-        return
-      }
-      showToast(tx('toasts.sentToTelegram'))
-    } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotSendSet'), actionFailureMessage('SetlistBuilder.sendTelegram', err, tx))
     }
   }
 
@@ -610,7 +590,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         songCount={items.length}
         onExport={exportSet}
         onCopyLink={copyLink}
-        onTelegram={sendTelegram}
       />
       <AddSongsModal
         visible={addOpen}

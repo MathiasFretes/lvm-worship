@@ -3,12 +3,11 @@ import { UserFacingError } from './errors'
 import { markSessionError } from './sessionError'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
 
-// Shared client for the web app's Pages Functions API (/api/export/song,
-// /api/telegram/push).
+// Shared client for the web app's Pages Functions API (/api/export/song).
 
 const base = process.env.EXPO_PUBLIC_API_BASE_URL
 
-// Export and Telegram pushes are foreground work — the user tapped a button and
+// Exports are foreground work — the user tapped a button and
 // is waiting on a sheet or a toast. Without a bound these ran to the ~60 s
 // platform default with nothing but a spinner.
 const budgetedFetch = withRequestBudget(fetch, () => FOREGROUND_MS)
@@ -39,7 +38,7 @@ async function authHeader(): Promise<{ Authorization: string }> {
 // land as a status code we can recognise:
 //
 //   401 — fetch drops the Authorization header when a redirect crosses origins
-//         (www.gracechords.com → gracechords.com are different origins), so the
+//         (www.lavozmisionera.com → lavozmisionera.com are different origins), so the
 //         API sees no credentials and answers "Missing bearer token".
 //   405 — a 301/302 rewrites POST to GET per spec, and the API rejects the
 //         method. (307/308 would preserve it; Cloudflare's apex/www rule is 301.)
@@ -84,7 +83,7 @@ export async function apiPost(path: string, body: unknown): Promise<Response> {
 // targeted hint for the redirect case a retry couldn't fix.
 export async function apiError(res: Response, fallback: string): Promise<Error> {
   // The chokepoint for every non-ok Pages Function response — song, songbook and
-  // setlist exports, and Telegram pushes. It catches the failures raised inside
+  // setlist exports. It catches the failures raised inside
   // the Song Viewer and the Performer, which alert raw messages without going
   // through errors.ts and which this change is not allowed to edit.
   markSessionError(`api ${res.status}`)
@@ -96,7 +95,7 @@ export async function apiError(res: Response, fallback: string): Promise<Error> 
     // 405, so the base URL is wrong in a way one redirect hop cannot fix.
     return new UserFacingError(
       'The API rejected the request (405) — EXPO_PUBLIC_API_BASE_URL likely points at a ' +
-        'redirecting domain. Set it to the canonical one (e.g. https://gracechords.com).',
+        'redirecting domain. Set it to the canonical one (e.g. https://lavozmisionera.com).',
     )
   }
   const body = (await res.json().catch(() => null)) as { error?: string } | null

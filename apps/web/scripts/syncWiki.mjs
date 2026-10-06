@@ -80,7 +80,7 @@ async function currentBranch(repoDir) {
     ? `https://${token}@github.com/${slug}.wiki.git`
     : `https://github.com/${slug}.wiki.git`;
 
-  const tmp = await ensuredTmpDir("gracechords-wiki-");
+  const tmp = await ensuredTmpDir("lvm-wiki-");
   console.log(`[wiki-sync] Cloning wiki to ${tmp} ...`);
   await execFile("git", ["clone", "--depth=1", wikiHttps, tmp]);
 

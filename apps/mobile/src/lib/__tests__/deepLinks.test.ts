@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../deepLinks'
 
-const WEB = 'https://gracechords.com'
+const WEB = 'https://lavozmisionera.com'
 
 describe('resolveDeepLinkPath', () => {
   describe('direct parallels', () => {
@@ -72,8 +72,8 @@ describe('resolveDeepLinkPath', () => {
       expect(resolveDeepLinkPath(`${WEB}/s/XYZ`)).toBe('/session/XYZ')
     })
 
-    it('handles the gracechords:// custom-scheme form', () => {
-      expect(resolveDeepLinkPath('gracechords://s/XYZ')).toBe('/session/XYZ')
+    it('handles the lavozmisionera:// custom-scheme form', () => {
+      expect(resolveDeepLinkPath('lavozmisionera://s/XYZ')).toBe('/session/XYZ')
     })
   })
 
@@ -97,7 +97,7 @@ describe('resolveDeepLinkPath', () => {
     })
 
     it('leaves an unrecognised custom-scheme link untouched', () => {
-      expect(resolveDeepLinkPath('gracechords://daily')).toBe('gracechords://daily')
+      expect(resolveDeepLinkPath('lavozmisionera://daily')).toBe('lavozmisionera://daily')
     })
   })
 })
@@ -124,14 +124,14 @@ describe('deepLinkStackRouteKey', () => {
   )
 
   it('returns null for a passthrough URL', () => {
-    expect(deepLinkStackRouteKey('https://gracechords.com/admin')).toBeNull()
+    expect(deepLinkStackRouteKey('https://lavozmisionera.com/admin')).toBeNull()
   })
 
   // The reason the key is the whole route and not just the first segment: an inbound
   // /setlist/<x> resolves to the import preview, never to the in-app setlist/[id], so
   // a shared-set link arriving while the user sits on their own setlist still pushes.
   it('never keys an inbound setlist link as the in-app setlist detail route', () => {
-    const target = resolveDeepLinkPath('https://gracechords.com/setlist/one,two')
+    const target = resolveDeepLinkPath('https://lavozmisionera.com/setlist/one,two')
     expect(target).toBe('/setlist/import?ids=one,two')
     expect(deepLinkStackRouteKey(target)).toBe('setlist/import')
   })

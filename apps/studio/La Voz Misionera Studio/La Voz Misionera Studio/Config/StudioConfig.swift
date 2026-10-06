@@ -28,8 +28,8 @@ import Foundation
 struct StudioConfig {
     let supabaseURL: URL
     let supabaseAnonKey: String
-    /// Base URL of the web app's Pages Functions, which render PDF/JPG exports and
-    /// relay Telegram pushes (`EXPO_PUBLIC_API_BASE_URL` on mobile).
+    /// Base URL of the web app's Pages Functions, which render PDF/JPG exports
+    /// (`EXPO_PUBLIC_API_BASE_URL` on mobile).
     ///
     /// Optional on purpose: everything except Export works without it, so a missing
     /// value disables that one surface instead of gating the whole app behind a
@@ -100,7 +100,7 @@ struct StudioConfig {
 
     private static let fallbackSupabaseURL = ""
     private static let fallbackSupabaseAnonKey = ""
-    /// e.g. "https://www.gracechords.com" — the canonical origin, not a
+    /// e.g. "https://www.lavozmisionera.com" — the canonical origin, not a
     /// redirecting one (mobile's apiError has a whole branch about that).
     private static let fallbackAPIBaseURL = ""
 }

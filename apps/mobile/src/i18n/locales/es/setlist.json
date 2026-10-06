@@ -16,16 +16,12 @@
     "couldNotDuplicate": "No se pudo duplicar el repertorio",
     "couldNotDeleteMany": "No se pudieron eliminar los repertorios",
     "couldNotCopyLink": "No se pudo copiar el enlace",
-    "couldNotSendSet": "No se pudo enviar el repertorio",
-    "telegramNotLinkedTitle": "Telegram no vinculado",
-    "telegramNotLinkedMessage": "Primero vincula tu cuenta con el bot: {{url}}",
     "deleteSetTitle": "¿Eliminar repertorio?",
     "deleteSetMessage": "Se eliminará «{{name}}» y sus canciones."
   },
   "toasts": {
     "addSongsFirst": "Primero añade canciones",
     "setLinkCopied": "Enlace del repertorio copiado",
-    "sentToTelegram": "Enviado a Telegram",
     "removedFromSet": "Eliminada del repertorio"
   },
   "builder": {

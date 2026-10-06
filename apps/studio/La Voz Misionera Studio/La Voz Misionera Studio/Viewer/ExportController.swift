@@ -37,8 +37,6 @@ final class ExportController: ObservableObject {
         let id = UUID()
         let title: String
         let message: String
-        /// Shown for the "link your account first" case.
-        var showsTelegramLink = false
     }
 
     /// Whether the actions can run at all: a song is open and the API base is set.
@@ -76,22 +74,6 @@ final class ExportController: ObservableObject {
             try file.data.write(to: url)
             Self.presentSharingPicker(for: url)
             return nil
-        }
-    }
-
-    func sendToTelegram() {
-        run { services, song in
-            switch try await services.export.pushSongToTelegram(songID: song.id, key: self.exportKey) {
-            case .sent:
-                return ExportAlert(title: "Sent to Telegram",
-                                   message: "“\(song.title)” is on its way to your linked chat.")
-            case .notLinked:
-                return ExportAlert(
-                    title: "Link Telegram first",
-                    message: "Open the La Voz Misionera bot in Telegram and link your account, then try again.",
-                    showsTelegramLink: true
-                )
-            }
         }
     }
 

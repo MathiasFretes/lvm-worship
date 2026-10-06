@@ -27,7 +27,7 @@ const GRACE_MS = 50_000
 // site's own theme switch is out of reach — the header carries its own. Font
 // size is follower-local (the leader's view is unaffected) and persists, since
 // a phone in a dark room is rejoined session after session.
-const FONT_KEY = 'gracechords.session.fontPx'
+const FONT_KEY = 'lvm.session.fontPx'
 const FONT_DEFAULT = 20
 const FONT_MIN = 14
 const FONT_MAX = 36

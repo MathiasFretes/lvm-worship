@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { marked } from 'marked'
 
-const SITE_URL = 'https://gracechords.com'
+const SITE_URL = 'https://lavozmisionera.com'
 // Resolve paths from this script's location, not process.cwd(), so the build
 // works regardless of where it is invoked from. scriptDir = apps/web/scripts.
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))

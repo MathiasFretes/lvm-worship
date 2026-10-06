@@ -331,7 +331,7 @@ describe('emailSignUp', () => {
 })
 
 describe('requestPasswordReset', () => {
-  const input = { email: '  alex@example.com  ', redirectTo: 'https://gracechords.com/reset-password' }
+  const input = { email: '  alex@example.com  ', redirectTo: 'https://lavozmisionera.com/reset-password' }
 
   it('trims the address and forwards the web redirect', async () => {
     const supabase = fakeSupabase()
@@ -339,7 +339,7 @@ describe('requestPasswordReset', () => {
 
     expect(result).toEqual({ ok: true })
     expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('alex@example.com', {
-      redirectTo: 'https://gracechords.com/reset-password',
+      redirectTo: 'https://lavozmisionera.com/reset-password',
     })
   })
 

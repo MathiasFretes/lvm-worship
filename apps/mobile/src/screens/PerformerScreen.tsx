@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated as RNAnimated,
-  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -56,11 +55,6 @@ import { useChartAutoFit } from '../lib/useChartAutoFit'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { useSessionController } from '../lib/useSessionController'
-import {
-  pushSetToTelegram,
-  pushSongToTelegram,
-  TELEGRAM_BOT_URL,
-} from '../lib/telegramPush'
 
 const TRANSPOSE_BAR_CLEARANCE = 120
 const SWIPE_THRESHOLD = 50
@@ -316,17 +310,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     await Sharing.shareAsync(uri)
   }
 
-  async function notLinkedAlert() {
-    Alert.alert(
-      tx('export:alerts.linkTelegramTitle'),
-      tx('export:alerts.linkTelegramMessage'),
-      [
-        { text: tx('export:alerts.openTelegram'), onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
-        { text: tx('export:alerts.notNow'), style: 'cancel' },
-      ],
-    )
-  }
-
   const shareHandlers: PerformerShareHandlers = {
     onExportSong: async (format) => {
       try {
@@ -334,17 +317,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         setSheet(null)
       } catch (err) {
         reportError(tx('export:alerts.exportFailedTitle'), err)
-      }
-    },
-    onTelegramSong: async () => {
-      if (!entry) return
-      try {
-        const result = await pushSongToTelegram({ songId: entry.songId, key: exportKey })
-        if (result === 'not_linked') return notLinkedAlert()
-        setSheet(null)
-        Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSongMessage'))
-      } catch (err) {
-        reportError(tx('export:alerts.telegramFailedTitle'), err)
       }
     },
     onExportSet: async () => {
@@ -365,18 +337,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         Alert.alert(tx('export:alerts.copiedTitle'), tx('export:alerts.setLinkCopied'))
       } catch (err) {
         reportError(tx('export:alerts.couldNotCopyLinkTitle'), err)
-      }
-    },
-    onTelegramSet: async () => {
-      try {
-        const result = await pushSetToTelegram(
-          items.map((it, i) => ({ songId: it.songId, key: entryKeys[i] })),
-        )
-        if (result === 'not_linked') return notLinkedAlert()
-        setSheet(null)
-        Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSetMessage'))
-      } catch (err) {
-        reportError(tx('export:alerts.telegramFailedTitle'), err)
       }
     },
   }

@@ -2,7 +2,7 @@
 -- La Voz Misionera: live Sessions (Phase 1, 2026-07-20)
 --
 -- A worship leader starts a live session from an existing setlist and shares a
--- link; followers open https://gracechords.com/s/{code} on the web and their
+-- link; followers open https://lavozmisionera.com/s/{code} on the web and their
 -- view follows the leader in real time (current item + transpose). Sessions are
 -- ephemeral and leader-live-only — they layer on top of setlists.
 --

@@ -1,6 +1,6 @@
-# lavozmisionera-pptx-upload Worker
+# lvm-pptx-upload Worker
 
-Handles PPTX file uploads and deletions for La Voz Misionera songs. Files are stored in Cloudflare R2 (`lavozmisionera-bible` bucket, `pptx/` prefix).
+Handles PPTX file uploads and deletions for La Voz Misionera songs. Files are stored in Cloudflare R2 (`lvm-bible` bucket, `pptx/` prefix).
 
 ## Endpoints
 
@@ -36,7 +36,7 @@ Handles PPTX file uploads and deletions for La Voz Misionera songs. Files are st
 
 5. Copy the deployed worker URL and set it in the SPA's environment:
    ```env
-   VITE_PPTX_WORKER_URL=https://lavozmisionera-pptx-upload.your-subdomain.workers.dev
+   VITE_PPTX_WORKER_URL=https://lvm-pptx-upload.your-subdomain.workers.dev
    ```
 
 ## Local dev

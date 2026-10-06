@@ -219,7 +219,7 @@ export function roleOrderJSON() {
  * Title → URL-safe slug through `packages/core`'s `slugify`.
  *
  * Bridged rather than reimplemented because the slug is the song's public URL on
- * gracechords.com: a Swift regex that differed from core's by one character class
+ * lavozmisionera.com: a Swift regex that differed from core's by one character class
  * would mint Studio-shaped slugs that no other client produces, and the drift
  * would only show up as a wrong link. Returns '' for a title with no
  * alphanumerics, which is core's signal that no slug can be derived — the caller

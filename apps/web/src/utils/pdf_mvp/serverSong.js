@@ -2,9 +2,8 @@
 // The pure engine reads `sections` plus `title` and `key`/`originalKey`, and
 // renders chord symbols verbatim — transposition is the caller's
 // responsibility (the site does it in SongViewPage; server callers do it
-// here). Extracted from workers/telegram-bot/src/pdfRender.js so the export
-// Pages Function can share it; the worker still carries its own copy until it
-// is refactored onto this module (follow-up).
+// here). Extracted for the export Pages Function so server callers can build
+// renderable songs without pulling in the browser renderer.
 
 import { parseChordProOrLegacy } from '../chordpro/parser.ts'
 import { stepsBetween, transposeSymPrefer } from '../chordpro/index.js'

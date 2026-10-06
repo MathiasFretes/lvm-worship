@@ -344,11 +344,11 @@ function persistSelections(dateKey: string, selections: Record<string, Set<numbe
 }
 
 function storageKey(dateKey: string){
-  return `gracechords.reading.selection.v1.${dateKey}`
+  return `lvm.reading.selection.v1.${dateKey}`
 }
 
 function passageStorageKey(dateKey: string){
-  return `gracechords.reading.activePassage.v1.${dateKey}`
+  return `lvm.reading.activePassage.v1.${dateKey}`
 }
 
 function loadActivePassageId(dateKey: string){

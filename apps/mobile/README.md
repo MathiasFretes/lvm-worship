@@ -42,7 +42,7 @@ A few things are still stubs or later stages — see [Roadmap](#roadmap).
 - **Stack:** Expo SDK 55, Expo Router v7, TypeScript, React 19.2 / React Native 0.83.
 - **Native dirs:** `ios/` and `android/` use Continuous Native Generation — they are gitignored and regenerated via `npx expo prebuild`. Never commit them; treat `app.json` (+ config plugins) as the source of truth for native config.
 - **Theme:** the typed token map from `@lavozmisionera/tokens/native` (light/dark palette), consumed via `useTheme()`. Icons go through `SymbolIcon` — **SF Symbols on iOS, Material Symbols on Android**; never hand-drawn SVGs.
-- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export**, **Telegram** push, and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export** and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
 
 ## Run it (macOS + Xcode required for the iOS simulator)
 
@@ -73,8 +73,8 @@ var into `.env.example` in the same commit.
 
 - `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` — auth + data.
 - `EXPO_PUBLIC_API_BASE_URL` — deployed web app; mobile calls its Pages
-  Functions for export (`/api/export/song`, `/api/export/setlist`) and Telegram
-  push (`/api/telegram/push`). Use the canonical (non-redirecting) domain.
+  Functions for export (`/api/export/song`, `/api/export/setlist`).
+  Use the canonical (non-redirecting) domain.
 - `EXPO_PUBLIC_R2_PUBLIC_URL` — Cloudflare R2 base for Daily Word Bible JSON
   (defaults to `https://assets.lavozmisionera.com`).
 - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` —

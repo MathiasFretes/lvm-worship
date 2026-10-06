@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appIDs": ["J7Y8NYZ48Q.com.gracechords.app"],
+        "appIDs": ["J7Y8NYZ48Q.com.lavozmisionera.app"],
         "components": [
           { "/": "/", "comment": "Home -> home tab" },
           { "/": "/songs", "comment": "Song library -> songs tab" },

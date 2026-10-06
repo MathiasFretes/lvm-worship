@@ -44,7 +44,7 @@ export default function EditPostPage() {
   const initialContentRef = useRef('')
   const autosaveTimerRef = useRef(null)
 
-  const draftKey = `gracechords_post_draft_${isNew ? 'new' : id}`
+  const draftKey = `lvm_post_draft_${isNew ? 'new' : id}`
 
   // Restore saved draft for new posts on mount
   useEffect(() => {

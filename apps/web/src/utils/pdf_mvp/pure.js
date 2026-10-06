@@ -1,7 +1,7 @@
 // DOM-free PDF renderer for songs and setlists.
 // Same layout algorithm as ./index.js but returns Uint8Array buffers instead
 // of triggering browser downloads, so this module is safe to import from
-// Cloudflare Workers (e.g. workers/telegram-bot) and Node test runners.
+// Cloudflare Workers (Pages Functions) and Node test runners.
 //
 // Decision ladder (matches the README):
 // 1) Try 1 column at 16→12 pt, single page.

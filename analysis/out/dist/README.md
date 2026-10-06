@@ -167,17 +167,17 @@ import { selectDayForDate } from '@lavozmisionera/core/devotional/selection'
 Manual, by hand. There is no upload script and no credential handling here.
 
 ```bash
-npx wrangler r2 object put "lavozmisionera-bible/devotionals/$(node -e "process.stdout.write(require('./analysis/out/dist/manifest.json').contentVersion)")/month/01.json" --file analysis/out/dist/month/01.json --content-type application/json --cache-control "public, max-age=31536000, immutable"
+npx wrangler r2 object put "lvm-bible/devotionals/$(node -e "process.stdout.write(require('./analysis/out/dist/manifest.json').contentVersion)")/month/01.json" --file analysis/out/dist/month/01.json --content-type application/json --cache-control "public, max-age=31536000, immutable"
 ```
 
 Repeat per month, then upload the manifest **last** so no client ever sees a
 manifest pointing at objects that are not there yet:
 
 ```bash
-npx wrangler r2 object put lavozmisionera-bible/devotionals/manifest.json --file analysis/out/dist/manifest.json --content-type application/json --cache-control "public, max-age=3600"
+npx wrangler r2 object put lvm-bible/devotionals/manifest.json --file analysis/out/dist/manifest.json --content-type application/json --cache-control "public, max-age=3600"
 ```
 
-The bucket is `lavozmisionera-bible` — the same bucket that serves Bible chapter JSON
+The bucket is `lvm-bible` — the same bucket that serves Bible chapter JSON
 (`bible/`) and PPTX decks (`pptx/`); `devotionals/` is a new prefix alongside them.
 
 Clients reach it over the custom domain, not the bucket name:

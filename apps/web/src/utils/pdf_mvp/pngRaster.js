@@ -1,9 +1,7 @@
 // PDF page-1 → PNG rasterisation via @hyzyla/pdfium (WASM) plus a small
 // pure-JS PNG encoder (DEFLATE through the global CompressionStream API —
-// available in CF Workers/Pages Functions, no extra deps). Extracted from
-// workers/telegram-bot/src/pdfRender.js so the export Pages Function can
-// share it; the worker still carries its own copy until it is refactored
-// onto this module (follow-up).
+// available in CF Workers/Pages Functions, no extra deps). Extracted for the
+// export Pages Function so it can be reused outside the browser.
 //
 // The `.wasm` import stays in each entry point: Workers/Pages block
 // WebAssembly.instantiate(buffer) and only allow pre-compiled

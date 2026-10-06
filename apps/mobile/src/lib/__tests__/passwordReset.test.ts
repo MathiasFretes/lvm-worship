@@ -129,6 +129,6 @@ describe('the auth email redirect URLs', () => {
 
   it('falls back to the production site when the base is unset', () => {
     // A misconfigured build must still send a WORKING link rather than crash.
-    expect(passwordResetRedirectUrl(undefined)).toBe('https://gracechords.com/app/reset-password')
+    expect(passwordResetRedirectUrl(undefined)).toBe('https://lavozmisionera.com/app/reset-password')
   })
 })

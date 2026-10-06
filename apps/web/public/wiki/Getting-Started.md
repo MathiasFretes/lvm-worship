@@ -25,7 +25,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # PPTX upload/delete Worker
-VITE_PPTX_WORKER_URL=https://lavozmisionera-pptx-upload.your-subdomain.workers.dev
+VITE_PPTX_WORKER_URL=https://lvm-pptx-upload.your-subdomain.workers.dev
 
 # R2 Public URL — base URL for Bible JSON and PPTX assets
 VITE_R2_PUBLIC_URL=https://assets.lavozmisionera.com

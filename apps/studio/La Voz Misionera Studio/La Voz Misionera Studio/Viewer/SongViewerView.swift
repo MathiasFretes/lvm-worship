@@ -101,11 +101,6 @@ struct SongViewerView: View {
                 ),
                 presenting: export.alert
             ) { alert in
-                if alert.showsTelegramLink {
-                    Button("Open Telegram") {
-                        NSWorkspace.shared.open(ExportService.telegramBotURL)
-                    }
-                }
                 Button("OK", role: .cancel) {}
             } message: { alert in
                 Text(alert.message)
@@ -287,7 +282,7 @@ struct SongViewerView: View {
             }
         }
         ToolbarItem(placement: .primaryAction) {
-            // A menu, not a popover: these are four discrete commands, which is
+            // A menu, not a popover: these are three discrete commands, which is
             // exactly what a Mac menu is for — and it mirrors File ▸ Export item
             // for item instead of inventing a second vocabulary.
             Menu {
@@ -295,7 +290,6 @@ struct SongViewerView: View {
                 Button("Export as JPG…") { export.save(.jpg) }
                 Divider()
                 Button("Share…") { export.share() }
-                Button("Send to Telegram") { export.sendToTelegram() }
             } label: {
                 Label("Export and share", systemImage: "square.and.arrow.up")
             }

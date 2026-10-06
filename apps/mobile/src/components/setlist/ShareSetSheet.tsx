@@ -9,11 +9,11 @@ import { useTheme } from '../../theme/ThemeProvider'
 // The setlist "Export & share" sheet (modeled on the viewer's ExportSheet),
 // presented via the native formSheet route (src/lib/formSheetHost.ts). This is
 // the builder version — whole-set only, no This song / Whole set scope toggle.
-// Set PDF, Copy link, and Telegram all work today (the same combined-PDF export
+// Set PDF and Copy link work today (the same combined-PDF export
 // the Performer uses, via /api/export/setlist). PDF is the primary (blue)
-// action; Copy link and Telegram are full-width secondary rows.
+// action; Copy link is a full-width secondary row.
 
-type Busy = 'pdf' | 'link' | 'telegram' | null
+type Busy = 'pdf' | 'link' | null
 
 type ShareSetProps = {
   visible: boolean
@@ -21,7 +21,6 @@ type ShareSetProps = {
   songCount: number
   onExport: () => Promise<void>
   onCopyLink: () => Promise<void>
-  onTelegram: () => Promise<void>
 }
 
 export default function ShareSetSheet(props: ShareSetProps) {
@@ -29,7 +28,7 @@ export default function ShareSetSheet(props: ShareSetProps) {
   return null
 }
 
-function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram }: ShareSetProps) {
+function ShareSetContent({ onClose, songCount, onExport, onCopyLink }: ShareSetProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('export')
   const [busy, setBusy] = useState<Busy>(null)
@@ -83,27 +82,15 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
           disabled={!!busy}
           onPress={run('link', onCopyLink)}
         />
-
-        {/* Telegram */}
-        <SecondaryRow
-          label={tx('sendSetToTelegram')}
-          subtitle={tx('optionalBot')}
-          icon="paperplane.fill"
-          busy={busy === 'telegram'}
-          dimmed={!!busy && busy !== 'telegram'}
-          disabled={!!busy}
-          onPress={run('telegram', onTelegram)}
-        />
       </View>
     </FormSheetShell>
   )
 }
 
-// Full-width secondary action row: accentSoft icon chip, label (+ optional
-// subtitle), trailing chevron. Shared shape for the Copy link and Telegram rows.
+// Full-width secondary action row: accentSoft icon chip, label, trailing
+// chevron. Shared shape for the Copy link row.
 function SecondaryRow({
   label,
-  subtitle,
   icon,
   busy,
   dimmed,
@@ -111,7 +98,6 @@ function SecondaryRow({
   onPress,
 }: {
   label: string
-  subtitle?: string
   icon: SymbolIconProps['name']
   busy: boolean
   dimmed: boolean
@@ -155,7 +141,6 @@ function SecondaryRow({
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.sec }}>{subtitle}</Text> : null}
       </View>
       <SymbolIcon name="chevron.right" size={14} color={t.colors.sec} />
     </Pressable>

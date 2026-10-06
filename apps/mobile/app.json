@@ -1,18 +1,18 @@
 {
   "expo": {
     "name": "La Voz Misionera",
-    "slug": "gracechords",
-    "scheme": "gracechords",
+    "slug": "lavozmisionera",
+    "scheme": "lavozmisionera",
     "version": "1.1.3",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.gracechords.app",
+      "bundleIdentifier": "com.lavozmisionera.app",
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "associatedDomains": ["applinks:gracechords.com"],
+      "associatedDomains": ["applinks:lavozmisionera.com"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -54,7 +54,7 @@
       }
     },
     "android": {
-      "package": "com.gracechords.app",
+      "package": "com.lavozmisionera.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E2227"
@@ -64,24 +64,24 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "gracechords.com", "path": "/" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/songs" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/setlist" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/setlist/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/set/" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/worship" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/s/" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/reading" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/songbook" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/about" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/profile" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/posts" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/app/reset-password" },
-            { "scheme": "https", "host": "gracechords.com", "path": "/app/auth/callback" }
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/songs" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/song/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/songs/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/setlist" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/setlist/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/set/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/worship" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/worship/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/s/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/reading" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/songbook" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/about" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/profile" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/posts" },
+            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/posts/" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/app/reset-password" },
+            { "scheme": "https", "host": "lavozmisionera.com", "path": "/app/auth/callback" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

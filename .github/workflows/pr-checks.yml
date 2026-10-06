@@ -40,7 +40,7 @@ jobs:
       - name: Tests (warn-only)
         continue-on-error: true
         # Suite is green (323/323); any failure is a real regression. Root
-        # script delegates to the @gracechords/web workspace.
+        # script delegates to the @lavozmisionera/web workspace.
         run: npm run test:run
 
       - name: Build (warn-only, vite only)
@@ -55,7 +55,7 @@ jobs:
 
   # apps/mobile had no CI at all until now — its typecheck/test/i18n:check
   # scripts existed but nothing ran them, and every root script delegates to
-  # @gracechords/web only. Warn-only to match the job above; these are the
+  # @lavozmisionera/web only. Warn-only to match the job above; these are the
   # cheap, OS-independent checks (no Xcode, no Gradle, no simulator).
   mobile:
     runs-on: ubuntu-latest
@@ -74,17 +74,17 @@ jobs:
 
       - name: Typecheck (warn-only)
         continue-on-error: true
-        run: npm run typecheck -w @gracechords/mobile
+        run: npm run typecheck -w @lavozmisionera/mobile
 
       - name: Tests (warn-only)
         continue-on-error: true
-        run: npm run test -w @gracechords/mobile
+        run: npm run test -w @lavozmisionera/mobile
 
       - name: i18n parity (warn-only)
         continue-on-error: true
         # The mobile script reads locales/ off disk; the root i18n:check only
         # covers the web workspace, so this has to be invoked directly.
-        run: npm run i18n:check -w @gracechords/mobile
+        run: npm run i18n:check -w @lavozmisionera/mobile
 
   # apps/studio consumes packages/tokens as a *committed* Swift mirror (an Xcode
   # build cannot run node), so the only thing keeping it honest is regenerating

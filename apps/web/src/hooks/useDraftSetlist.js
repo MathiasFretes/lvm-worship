@@ -16,7 +16,7 @@ import { useSongs } from './useSongs'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
 import { entrySongFromCatalog, makeEntryKey, toWorkingItems } from '../utils/setlists/entries'
 
-export const DRAFT_STORAGE_KEY = 'gracechords.draft.v1'
+export const DRAFT_STORAGE_KEY = 'lvm.draft.v1'
 
 function readDraft() {
   try {

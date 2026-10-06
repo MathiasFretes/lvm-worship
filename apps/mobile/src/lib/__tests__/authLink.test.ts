@@ -58,22 +58,22 @@ describe('parseAuthLink', () => {
 
   it('accepts the full https URL as well as a bare path', () => {
     expect(
-      parseAuthLink(`https://gracechords.com${RECOVERY}#${TOKENS}&type=recovery`)?.kind,
+      parseAuthLink(`https://lavozmisionera.com${RECOVERY}#${TOKENS}&type=recovery`)?.kind,
     ).toBe('recovery')
   })
 
   it('accepts the custom scheme, which is how a simulator opens the link', () => {
     // URL() reads the first segment after a schemeless host as the HOST, so
-    // gracechords://app/reset-password would otherwise parse as host "app" +
+    // lavozmisionera://app/reset-password would otherwise parse as host "app" +
     // pathname "/reset-password" and match nothing. This is the form used by
     // `xcrun simctl openurl` and `adb am start`, where an https link cannot be
     // verified against an undeployed AASA or an unmatched signing certificate.
-    expect(parseAuthLink(`gracechords://app/reset-password#${TOKENS}&type=recovery`)).toEqual({
+    expect(parseAuthLink(`lavozmisionera://app/reset-password#${TOKENS}&type=recovery`)).toEqual({
       kind: 'recovery',
       accessToken: 'AT',
       refreshToken: 'RT',
     })
-    expect(parseAuthLink(`gracechords://app/auth/callback#${TOKENS}&type=signup`)?.kind).toBe(
+    expect(parseAuthLink(`lavozmisionera://app/auth/callback#${TOKENS}&type=signup`)?.kind).toBe(
       'signup',
     )
   })

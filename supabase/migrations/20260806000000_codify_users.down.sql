@@ -55,8 +55,6 @@
 --   DROP FUNCTION IF EXISTS public.has_min_role(text);
 --   DROP FUNCTION IF EXISTS public.get_user_role();
 --
---   DROP INDEX IF EXISTS public.idx_users_telegram_user_id;
---
 --   DROP TABLE IF EXISTS public.users;   -- <-- destroys every account
 --
 -- Note the function drops will fail if other objects still depend on them:

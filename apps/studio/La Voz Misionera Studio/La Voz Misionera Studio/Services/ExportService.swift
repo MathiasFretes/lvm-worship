@@ -2,10 +2,10 @@
 //  ExportService.swift
 //  La Voz Misionera Studio
 //
-//  Server-rendered export and Telegram delivery, against the same web Pages
-//  Functions apps/mobile calls: POST /api/export/song and POST /api/telegram/push.
+//  Server-rendered export, against the same web Pages Functions apps/mobile
+//  calls: POST /api/export/song.
 //
-//  Ports apps/mobile/src/lib/api.ts, exportSong.ts and telegramPush.ts — including
+//  Ports apps/mobile/src/lib/api.ts and exportSong.ts — including
 //  api.ts's redirect retry: if the configured base redirects (apex → www), URLSession
 //  follows it but turns the POST into a GET per spec and the API answers 405, so a
 //  redirected 405 is retried once against the final origin.
@@ -50,7 +50,7 @@ enum ExportError: LocalizedError {
             return """
             The API rejected the request (405) — API_BASE_URL likely points at a \
             redirecting domain. Set it to the canonical one (e.g. \
-            https://www.gracechords.com).
+            https://www.lavozmisionera.com).
             """
         case .failed(let message):
             return message
@@ -58,15 +58,7 @@ enum ExportError: LocalizedError {
     }
 }
 
-/// Result of a Telegram push, mirroring mobile's `'sent' | 'not_linked'`.
-enum TelegramPushResult {
-    case sent
-    case notLinked
-}
-
 struct ExportService {
-    static let telegramBotURL = URL(string: "https://t.me/lavozmisionera_bot")!
-
     let client: SupabaseClient
     let apiBaseURL: URL?
 
@@ -95,16 +87,6 @@ struct ExportService {
         let filename = Self.filename(fromContentDisposition: disposition)
             ?? "song-export.\(fallbackExtension)"
         return ExportedFile(data: data, filename: filename)
-    }
-
-    func pushSongToTelegram(songID: String, key: String) async throws -> TelegramPushResult {
-        let (data, response) = try await post(
-            "/api/telegram/push",
-            body: ["items": [["song_id": songID, "key": key]], "context": "song"]
-        )
-        if response.statusCode == 409 { return .notLinked }
-        try throwIfFailed(response, data: data, fallback: "telegram_failed")
-        return .sent
     }
 
     // MARK: - Transport

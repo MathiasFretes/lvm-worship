@@ -193,7 +193,7 @@ do {
 
     let contents: [String: Any] = [
         "images": entries,
-        "info": ["author": "gracechords-generate-appicon", "version": 1],
+        "info": ["author": "lvm-generate-appicon", "version": 1],
     ]
     let json = try JSONSerialization.data(
         withJSONObject: contents,

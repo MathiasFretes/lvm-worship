@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { AppleIcon, QrCodeIcon } from '../components/Icons'
 
 const SITE_URL = 'https://lavozmisionera.com'
-const APP_STORE_URL = 'https://apps.apple.com/us/app/gracechords/id6787127446'
+const APP_STORE_URL = 'https://apps.apple.com/us/app/lavozmisionera/id6787127446'
 // public/ assets are served from the site root and referenced by URL, not
 // imported (matches SpriteAvatar's /sprites/ usage).
 const APP_STORE_BADGE = '/badges/app-store-badge.svg'

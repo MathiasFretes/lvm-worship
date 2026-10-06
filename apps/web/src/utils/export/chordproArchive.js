@@ -49,5 +49,5 @@ export function buildChordProArchiveFiles(songs) {
 }
 
 export function chordProArchiveName(date = new Date()) {
-  return `gracechords-chordpro-${date.toISOString().slice(0, 10)}.zip`
+  return `lvm-chordpro-${date.toISOString().slice(0, 10)}.zip`
 }

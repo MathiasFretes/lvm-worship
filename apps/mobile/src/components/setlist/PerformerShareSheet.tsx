@@ -11,8 +11,8 @@ import { useTheme } from '../../theme/ThemeProvider'
 // viewer version, which keeps the scope toggle (the builder's ShareSetSheet
 // does not). This-song mirrors the Song Viewer's ExportSheet (PDF and JPG as
 // equal side-by-side tiles — both export a file and open the system share
-// sheet — plus Telegram); Whole-set offers the combined PDF (server endpoint)
-// as the primary (blue) action, Copy link and Telegram. No separate "share"
+// sheet); Whole-set offers the combined PDF (server endpoint)
+// as the primary (blue) action and Copy link. No separate "share"
 // button, and no ChordPro. The screen owns the async work and error alerts;
 // this component only tracks which action is busy.
 
@@ -22,11 +22,9 @@ type Busy = string | null
 export type PerformerShareHandlers = {
   // This song
   onExportSong: (format: 'pdf' | 'jpg') => Promise<void>
-  onTelegramSong: () => Promise<void>
   // Whole set
   onExportSet: () => Promise<void>
   onCopyLink: () => Promise<void>
-  onTelegramSet: () => Promise<void>
 }
 
 type PerformerShareProps = {
@@ -89,14 +87,13 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
     </Pressable>
   )
 
-  // Full-width secondary action row: accentSoft icon chip, label (+ optional
-  // subtitle), trailing chevron. Shared shape for JPG, Copy link and Telegram.
+  // Full-width secondary action row: accentSoft icon chip, label, trailing
+  // chevron. Shared shape for the Copy link row.
   const secondaryRow = (
     label: string,
     icon: SymbolIconProps['name'],
     which: string,
     fn: () => Promise<void>,
-    subtitle?: string,
   ) => (
     <Pressable
       onPress={run(which, fn)}
@@ -133,7 +130,6 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.sec }}>{subtitle}</Text> : null}
       </View>
       <SymbolIcon name="chevron.right" size={14} color={t.colors.sec} />
     </Pressable>
@@ -246,7 +242,6 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
               {formatTile('PDF', 'doc.text', 'song-pdf', () => handlers.onExportSong('pdf'))}
               {formatTile('JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
             </View>
-            {secondaryRow(tx('sendToTelegram'), 'paperplane.fill', 'song-telegram', handlers.onTelegramSong, tx('optionalBot'))}
           </>
         ) : (
           <>
@@ -257,7 +252,6 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
               handlers.onExportSet,
             )}
             {secondaryRow(tx('copyLink'), 'link', 'set-link', handlers.onCopyLink)}
-            {secondaryRow(tx('sendSetToTelegram'), 'paperplane.fill', 'set-telegram', handlers.onTelegramSet, tx('optionalBot'))}
           </>
         )}
       </View>

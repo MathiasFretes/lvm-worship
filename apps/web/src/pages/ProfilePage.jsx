@@ -7,7 +7,6 @@ import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
 import LanguageSelector from '../components/ui/LanguageSelector'
-import TelegramLoginButton from '../components/TelegramLoginButton'
 import { showToast } from '../utils/app/toast'
 import '../styles/settings.css'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
@@ -41,11 +40,6 @@ export default function ProfilePage() {
     (session?.user?.app_metadata?.providers || []).includes('email') ||
     session?.user?.app_metadata?.provider === 'email'
 
-  // Telegram link state
-  const [telegramState, setTelegramState] = useState({ linked: false, telegram_user_id: null, telegram_linked_at: null })
-  const [telegramLoading, setTelegramLoading] = useState(true)
-  const [telegramBusy, setTelegramBusy] = useState(false)
-
   // Redirect if not logged in
   useEffect(() => {
     if (!loading && !isLoggedIn) {
@@ -54,7 +48,6 @@ export default function ProfilePage() {
   }, [isLoggedIn, loading, navigate])
 
   // Scroll to anchor when the route hash points at a section on this page
-  // (e.g. /profile#telegram from the "Link your Telegram" dialog).
   useEffect(() => {
     if (loading) return
     const hash = (location.hash || '').replace(/^#/, '')
@@ -128,87 +121,6 @@ export default function ProfilePage() {
   async function signOut() {
     await supabase.auth.signOut()
     navigate('/')
-  }
-
-  // Fetch current Telegram link state once logged in.
-  useEffect(() => {
-    if (!session) return
-    let cancelled = false
-    setTelegramLoading(true)
-    fetch('/api/telegram/link', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Status ${res.status}`)
-        return res.json()
-      })
-      .then((data) => {
-        if (cancelled) return
-        setTelegramState({
-          linked: !!data.linked,
-          telegram_user_id: data.telegram_user_id || null,
-          telegram_linked_at: data.telegram_linked_at || null,
-        })
-      })
-      .catch(() => {
-        if (cancelled) return
-        setTelegramState({ linked: false, telegram_user_id: null, telegram_linked_at: null })
-      })
-      .finally(() => {
-        if (!cancelled) setTelegramLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [session])
-
-  async function handleTelegramAuth(user) {
-    if (!session) return
-    setTelegramBusy(true)
-    try {
-      const res = await fetch('/api/telegram/link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(user),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        showToast(data?.error || 'Could not link Telegram. Try again.')
-        return
-      }
-      setTelegramState({
-        linked: true,
-        telegram_user_id: data.telegram_user_id,
-        telegram_linked_at: data.telegram_linked_at,
-      })
-      showToast('Telegram linked.')
-    } catch {
-      showToast('Could not link Telegram. Try again.')
-    } finally {
-      setTelegramBusy(false)
-    }
-  }
-
-  async function unlinkTelegram() {
-    if (!session) return
-    setTelegramBusy(true)
-    try {
-      const res = await fetch('/api/telegram/link', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-      if (!res.ok) {
-        showToast('Could not unlink. Try again.')
-        return
-      }
-      setTelegramState({ linked: false, telegram_user_id: null, telegram_linked_at: null })
-      showToast('Telegram unlinked.')
-    } catch {
-      showToast('Could not unlink. Try again.')
-    } finally {
-      setTelegramBusy(false)
-    }
   }
 
   async function deleteAccount() {
@@ -336,43 +248,6 @@ export default function ProfilePage() {
                 </div>
               )
             })}
-          </div>
-        )}
-      </section>
-
-      {/* Telegram section */}
-      <section id="telegram" className="gc-profile-section">
-        <h2>Telegram</h2>
-        <p style={{ margin: 0, color: 'var(--gc-text-secondary)' }}>
-          Link your account to <strong>@lavozmisionera_bot</strong> on Telegram so you can DM the bot a song title (or a comma-separated setlist) and get chord charts back instantly.
-        </p>
-        {telegramLoading ? (
-          <p style={{ color: 'var(--gc-text-secondary)' }}>Checking link status…</p>
-        ) : telegramState.linked ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-            <div className="gc-role-badge">
-              Linked
-              {telegramState.telegram_linked_at && (
-                <span style={{ marginLeft: 6, fontWeight: 400, opacity: 0.7 }}>
-                  · {new Date(telegramState.telegram_linked_at).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-            <button
-              className="gc-btn gc-btn--ghost gc-btn--sm"
-              onClick={unlinkTelegram}
-              disabled={telegramBusy}
-              style={{ width: 'fit-content' }}
-            >
-              {telegramBusy ? 'Unlinking…' : 'Unlink'}
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <TelegramLoginButton onAuth={handleTelegramAuth} disabled={telegramBusy} />
-            {telegramBusy && (
-              <p style={{ color: 'var(--gc-text-secondary)' }}>Linking your Telegram account…</p>
-            )}
           </div>
         )}
       </section>

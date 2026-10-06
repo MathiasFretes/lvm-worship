@@ -1,11 +1,11 @@
 Provide PowerPoint slides for songs that need projection.
 
 ## Storage
-PPTX slide decks are stored in **Cloudflare R2** (`lavozmisionera-bible` bucket, `pptx/` prefix). Files are named by song slug (e.g., `glorious_king.pptx`).
+PPTX slide decks are stored in **Cloudflare R2** (`lvm-bible` bucket, `pptx/` prefix). Files are named by song slug (e.g., `glorious_king.pptx`).
 
 ## Uploading a Slide Deck
 
-Uploads go through the `lavozmisionera-pptx-upload` Cloudflare Worker which validates your session and role before writing to R2.
+Uploads go through the `lvm-pptx-upload` Cloudflare Worker which validates your session and role before writing to R2.
 
 1. Open the song in the Editor Portal (`/editor`).
 2. In the PPTX section of the editor, click **Upload PPTX**.
@@ -23,7 +23,7 @@ The Worker is deployed separately from the main SPA. See [`workers/pptx-upload/R
 
 Set the Worker URL in your environment:
 ```env
-VITE_PPTX_WORKER_URL=https://lavozmisionera-pptx-upload.your-subdomain.workers.dev
+VITE_PPTX_WORKER_URL=https://lvm-pptx-upload.your-subdomain.workers.dev
 ```
 
 ## Setlist & Songbook

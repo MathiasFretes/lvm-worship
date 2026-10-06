@@ -13,39 +13,39 @@ import { passwordResetRedirectUrl, signUpConfirmRedirectUrl } from '../passwordR
 
 describe('passwordResetRedirectUrl', () => {
   it('points at the path the app claims, not the web reset page', () => {
-    expect(passwordResetRedirectUrl('https://gracechords.com')).toBe(
-      'https://gracechords.com/app/reset-password',
+    expect(passwordResetRedirectUrl('https://lavozmisionera.com')).toBe(
+      'https://lavozmisionera.com/app/reset-password',
     )
   })
 
   it('tolerates a trailing slash', () => {
-    expect(passwordResetRedirectUrl('https://gracechords.com/')).toBe(
-      'https://gracechords.com/app/reset-password',
+    expect(passwordResetRedirectUrl('https://lavozmisionera.com/')).toBe(
+      'https://lavozmisionera.com/app/reset-password',
     )
   })
 
   // apiBase() throws when the env var is missing. This must not: a misconfigured
   // build should still send a link to the production site.
   it('falls back to production rather than throwing when unset', () => {
-    expect(passwordResetRedirectUrl(undefined)).toBe('https://gracechords.com/app/reset-password')
-    expect(passwordResetRedirectUrl('')).toBe('https://gracechords.com/app/reset-password')
+    expect(passwordResetRedirectUrl(undefined)).toBe('https://lavozmisionera.com/app/reset-password')
+    expect(passwordResetRedirectUrl('')).toBe('https://lavozmisionera.com/app/reset-password')
   })
 })
 
 describe('signUpConfirmRedirectUrl', () => {
   it('points at the confirmation path the app claims', () => {
-    expect(signUpConfirmRedirectUrl('https://gracechords.com')).toBe(
-      'https://gracechords.com/app/auth/callback',
+    expect(signUpConfirmRedirectUrl('https://lavozmisionera.com')).toBe(
+      'https://lavozmisionera.com/app/auth/callback',
     )
   })
 
   it('falls back to production too — a confirmation link must never be dead', () => {
-    expect(signUpConfirmRedirectUrl(undefined)).toBe('https://gracechords.com/app/auth/callback')
+    expect(signUpConfirmRedirectUrl(undefined)).toBe('https://lavozmisionera.com/app/auth/callback')
   })
 
   it('is a DIFFERENT path from the web OAuth callback', () => {
-    expect(signUpConfirmRedirectUrl('https://gracechords.com')).not.toBe(
-      'https://gracechords.com/auth/callback',
+    expect(signUpConfirmRedirectUrl('https://lavozmisionera.com')).not.toBe(
+      'https://lavozmisionera.com/auth/callback',
     )
   })
 })

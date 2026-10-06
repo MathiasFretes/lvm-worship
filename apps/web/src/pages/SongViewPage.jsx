@@ -16,7 +16,6 @@ import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
-import PushToTelegramButton from '../components/PushToTelegramButton'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -619,13 +618,6 @@ export default function SongView(){
           {t('worshipMode')}
         </Button>
         </>)}
-        {entry?.dbId ? (
-          <PushToTelegramButton
-            items={[{ song_id: entry.dbId, key: toKey }]}
-            context="song"
-            className="gc-btn--telegram"
-          />
-        ) : null}
         {entry?.gracetracks_url && (
           <a
             href={entry.gracetracks_url}
@@ -765,15 +757,6 @@ export default function SongView(){
             <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
             <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>
           </>)}
-          {entry?.dbId ? (
-            <PushToTelegramButton
-              items={[{ song_id: entry.dbId, key: toKey }]}
-              context="song"
-              iconOnly
-              title="Send to Telegram"
-              className="gc-btn--telegram"
-            />
-          ) : null}
         </MobileDock>
       )}
       <MobileActionSheet

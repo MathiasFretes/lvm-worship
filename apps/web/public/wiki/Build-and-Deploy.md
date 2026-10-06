@@ -26,7 +26,7 @@ Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc
 |------|---------|---------|
 | `pr-checks.yml` | Pull request to `main` | Lint + test + Vite build. Non-blocking (`continue-on-error`) — signal, not a gate |
 | `wiki-sync.yml` | Push to `main` touching `apps/web/public/wiki/**` | Publishes the wiki source to the GitHub Wiki (needs `WIKI_PUSH_TOKEN`) |
-| `feature-post.yml` | PR merged | Announces `feat(` PRs (or ones labelled `post` / containing `#post`) to the Telegram dev channel |
+| `feature-post.yml` | PR merged | Announces `feat(` PRs (or ones labelled `post` / containing `#post`) to the dev channel |
 | `codeqL.yml` | Schedule / push | CodeQL security scanning |
 
 ## Cloudflare Workers (separate deploy)

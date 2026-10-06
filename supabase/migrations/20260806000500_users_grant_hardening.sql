@@ -30,10 +30,6 @@
 --   role                  written only by update_user_role(), SECURITY DEFINER,
 --                         which executes as the function owner and is unaffected
 --                         by grants to authenticated.
---   telegram_user_id      written only by apps/web/functions/api/telegram/link.js
---   telegram_linked_at    (lines 156 and 196) using SUPABASE_SERVICE_ROLE_KEY,
---                         which bypasses these grants entirely. service_role
---                         keeps its blanket privileges below.
 --   updated_at            written by the set_updated_at BEFORE trigger. Column
 --                         privileges are checked against the columns named in the
 --                         statement's SET list, NOT against columns a trigger
@@ -124,6 +120,6 @@ GRANT UPDATE (display_name, preferences) ON TABLE public.users TO authenticated;
 -- Note the message says TABLE, not "column role", even though the missing
 -- privilege is column-level — Postgres does not name the offending column here.
 -- Verified against PostgreSQL 16. The same message appears for any non-granted
--- column, e.g. an attempt to write telegram_user_id, so treat 42501 on this table
--- as "wrote a column outside the grant" rather than as evidence about which one.
+-- column, so treat 42501 on this table as "wrote a column outside the grant"
+-- rather than as evidence about which one.
 -- =============================================================================

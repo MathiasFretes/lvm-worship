@@ -172,7 +172,6 @@ vi.mock('../../hooks/useSongs', () => ({ useSongs: () => ({ songs: SONGS, loadin
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({ isLoggedIn: true, role, session: { user: { id: 'user-1' } }, user: { id: 'user-1' }, profile: null, hasMinRole: () => false, loading: false }),
 }))
-vi.mock('../../components/PushToTelegramButton', () => ({ default: () => null }))
 
 let SetlistWorkspacePage
 

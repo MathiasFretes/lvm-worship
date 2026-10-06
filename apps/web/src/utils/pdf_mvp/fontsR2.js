@@ -7,10 +7,8 @@
 // absent, this resolves without registering fonts and the renderer falls back
 // to Helvetica/Courier.
 //
-// Mirrors workers/telegram-bot/src/fontsWorker.js; both the Telegram worker and
-// the /api/export/song Pages Function need this and don't share a bundle.
-// Deduping the worker onto this module is a follow-up (see serverSong.js /
-// pngRaster.js).
+// The /api/export/song Pages Function needs this and doesn't share a bundle
+// with the app (see serverSong.js / pngRaster.js).
 
 const FONT_PREFIX = 'fonts/'
 

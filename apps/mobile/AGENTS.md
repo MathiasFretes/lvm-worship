@@ -129,7 +129,7 @@ the app scores 0% and loses Store visibility and publishing.
   release crash can be retraced instead of guessed at.
 - R8 breakage is runtime-only and invisible in debug. Smoke-test a production
   build across: both native sign-ins and email/password, the viewer + transpose,
-  setlist autosave, PDF/PNG export and the share sheet, Telegram push, the Daily
+  setlist autosave, PDF/PNG export and the share sheet, the Daily
   Word reader and an offline download, reminder notifications, tuner, metronome,
   pitch pipe, and deep links.
 - Measure it on the real artifact before uploading:
@@ -595,8 +595,7 @@ duplicate logic here and never edit core internals to suit mobile.
   `POST /api/export/song` (PDF, or a page-1 PNG for `jpg`) and
   `POST /api/export/setlist` (whole-set PDF); bytes are cached with
   `expo-file-system` and handed to the system share sheet via `expo-sharing`.
-  `src/lib/telegramPush.ts` posts to `/api/telegram/push` (song + setlist,
-  batched at 25; 409 → "link your Telegram" alert). **Charts ZIP / ChordPro
+  **Charts ZIP / ChordPro
   export backends don't exist anywhere** — those tiles render disabled.
 
 ## Settings & defaults

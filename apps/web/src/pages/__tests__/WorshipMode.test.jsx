@@ -90,7 +90,7 @@ describe('WorshipMode', () => {
     fireEvent.click(btn)
     const after = document.documentElement.getAttribute('data-theme')
     expect(after && after !== before).toBe(true)
-    expect(['light','dark']).toContain(localStorage.getItem('gracechords.theme'))
+    expect(['light','dark']).toContain(localStorage.getItem('lvm.theme'))
   })
 
   it('uses PDF pt window for fit (font size from {16..12})', async () => {

@@ -3,15 +3,15 @@
 //   Headers: Authorization: Bearer <supabase access token>
 //
 // Renders a single song server-side with the same pure pdf_mvp engine the
-// web app and the Telegram bot use, and returns the bytes — PDF always,
+// web app uses, and returns the bytes — PDF always,
 // or a PNG raster of page 1 for format 'jpg'/'png' ('jpg' is accepted as an
 // alias; the rasteriser encodes PNG and share sheets don't care). If the
 // pdfium WASM isn't available the image formats respond 501
 // { error: 'image_unavailable' } so clients can fall back to PDF.
 //
 // Fonts: no registerFonts is passed, so the engine falls back to jsPDF's
-// built-in Helvetica/Courier (same trade-off as the Telegram worker —
-// legible, not glyph-identical to the browser's Noto output).
+// built-in Helvetica/Courier (legible, not glyph-identical to the browser's
+// Noto output).
 
 import { renderSingleSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'
@@ -78,7 +78,7 @@ export async function onRequest(context) {
   let pdf
   try {
     const renderable = toRenderableSong(found.song, key)
-    // Register Noto from R2 so output matches the browser + Telegram bot; the
+    // Register Noto from R2 so output matches the browser; the
     // registrar falls back to Helvetica/Courier if the R2 binding is absent.
     pdf = await renderSingleSongPdfBuffer(renderable, { registerFonts: makeFontRegistrar(env) })
   } catch (err) {

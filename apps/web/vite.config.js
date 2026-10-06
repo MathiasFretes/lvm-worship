@@ -81,7 +81,7 @@ export default defineConfig({
     process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],
   // In local dev, proxy /bible/* and /pptx/* to the R2 CDN so the Pages Function path is simulated.
-  // Set VITE_R2_PUBLIC_URL in .env.local to enable this (e.g. https://assets.gracechords.com).
+  // Set VITE_R2_PUBLIC_URL in .env.local to enable this (e.g. https://assets.lavozmisionera.com).
   server: process.env.VITE_R2_PUBLIC_URL
     ? {
         proxy: {

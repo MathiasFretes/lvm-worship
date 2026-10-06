@@ -16,16 +16,12 @@
     "couldNotDuplicate": "Could not duplicate set",
     "couldNotDeleteMany": "Could not delete setlists",
     "couldNotCopyLink": "Could not copy link",
-    "couldNotSendSet": "Could not send set",
-    "telegramNotLinkedTitle": "Telegram not linked",
-    "telegramNotLinkedMessage": "Link your account with the bot first: {{url}}",
     "deleteSetTitle": "Delete set?",
     "deleteSetMessage": "“{{name}}” and its songs will be removed."
   },
   "toasts": {
     "addSongsFirst": "Add songs first",
     "setLinkCopied": "Set link copied",
-    "sentToTelegram": "Sent to Telegram",
     "removedFromSet": "Removed from set"
   },
   "builder": {

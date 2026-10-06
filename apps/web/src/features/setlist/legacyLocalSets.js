@@ -6,8 +6,8 @@
 // offers a one-time import and only then clears the key.
 //
 // Deliberately read-only apart from the clear: nothing writes this shape again.
-const STORAGE_KEY = 'gracechords.sets.v1'
-const DISMISSED_KEY = 'gracechords.sets.v1.dismissed'
+const STORAGE_KEY = 'lvm.sets.v1'
+const DISMISSED_KEY = 'lvm.sets.v1.dismissed'
 
 /** @returns {Array<{ id: string, name: string, items: Array<{ id: string, toKey: string }>, updatedAt: number }>} */
 export function readLegacyLocalSets() {

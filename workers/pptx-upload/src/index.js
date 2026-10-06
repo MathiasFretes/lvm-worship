@@ -1,8 +1,8 @@
 /**
- * gracechords-pptx-upload Worker
+ * lvm-pptx-upload Worker
  *
  * Handles PPTX file uploads and deletions for La Voz Misionera songs.
- * Files are stored in Cloudflare R2 (gracechords-bible bucket, pptx/ prefix).
+ * Files are stored in Cloudflare R2 (lvm-bible bucket, pptx/ prefix).
  *
  * Required secrets (set via `wrangler secret put` before deploying):
  *   SUPABASE_URL              — e.g. https://xyz.supabase.co

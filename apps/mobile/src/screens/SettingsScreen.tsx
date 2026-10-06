@@ -46,8 +46,8 @@ import { setStreakEnabled, useReadingStreak } from '../lib/readingStreak'
 // (Settings / Reader / Library / Support). Theme + chord style are app-wide
 // DEFAULTS written here and read by the Song Viewer / Performer / Daily Word.
 //
-// The profile card now pushes ACCOUNT (app icon, name, email, change password,
-// Telegram) rather than the sprite picker directly. Log out and Delete account
+// The profile card now pushes ACCOUNT (app icon, name, email, change password)
+// rather than the sprite picker directly. Log out and Delete account
 // live there too — moved, not copied, so there is only one of each.
 
 const HELP_URL = 'https://lavozmisionera.com/help'
@@ -375,7 +375,7 @@ export default function SettingsScreen() {
             onPress={() => void Linking.openURL(FEEDBACK_MAILTO)}
           />
           <ListRow
-            title={tx('aboutGraceChords')}
+            title={tx('aboutLaVozMisionera')}
             leading={<RowIcon name="info.circle" />}
             chevron
             onPress={() => router.push('/about')}

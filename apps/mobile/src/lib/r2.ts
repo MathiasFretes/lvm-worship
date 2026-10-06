@@ -6,7 +6,7 @@
 // the Supabase client). bibleSource re-exports `r2Base` so its existing callers
 // are unaffected.
 
-const DEFAULT_R2_PUBLIC_URL = 'https://assets.gracechords.com'
+const DEFAULT_R2_PUBLIC_URL = 'https://assets.lavozmisionera.com'
 
 /** Base URL for R2 assets, no trailing slash. Override with EXPO_PUBLIC_R2_PUBLIC_URL. */
 export function r2Base(): string {

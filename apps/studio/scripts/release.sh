@@ -24,7 +24,7 @@
 #   A notarytool keychain profile          One-time, and it is what keeps the
 #                                          app-specific password out of this file:
 #                                            xcrun notarytool store-credentials \
-#                                              gracechords-studio \
+#                                              lvm-studio \
 #                                              --apple-id you@example.com \
 #                                              --team-id J7Y8NYZ48Q \
 #                                              --password <app-specific-password>
@@ -54,7 +54,7 @@ set -euo pipefail
 readonly TEAM_ID="J7Y8NYZ48Q"
 readonly SCHEME="La Voz Misionera Studio"
 readonly APP_NAME="La Voz Misionera Studio"
-readonly NOTARY_PROFILE="${NOTARY_PROFILE:-gracechords-studio}"
+readonly NOTARY_PROFILE="${NOTARY_PROFILE:-lvm-studio}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly STUDIO_DIR="$(dirname "$SCRIPT_DIR")"
@@ -143,7 +143,7 @@ API_BASE_URL="${API_BASE_URL:-}"
 if [[ -n "$API_BASE_URL" ]]; then
 	ok "API base URL: $API_BASE_URL"
 else
-	warn "API_BASE_URL not set — Export (PDF/JPG and Telegram push) will be disabled in this build."
+	warn "API_BASE_URL not set — Export (PDF/JPG) will be disabled in this build."
 fi
 
 if $CHECK_ONLY; then

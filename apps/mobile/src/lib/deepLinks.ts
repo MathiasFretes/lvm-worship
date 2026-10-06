@@ -11,9 +11,9 @@
 // (the blog) resolve to the home tab rather than dead-ending.
 //
 // Anything unrecognised passes through unchanged, which keeps internal
-// gracechords:// links working.
+// lavozmisionera:// links working.
 
-const APP_SCHEME = 'gracechords://'
+const APP_SCHEME = 'lavozmisionera://'
 
 // Raw (still-encoded) query value — keep per-item encoding intact so the import
 // parser can split on comma then decode each item (mirrors the web parser).
@@ -25,10 +25,10 @@ function rawParam(search: string, key: string): string {
 export function resolveDeepLinkPath(path: string): string {
   try {
     // The custom scheme carries no real host, but URL parses the first segment
-    // as one (gracechords://s/CODE -> host "s", path "/CODE"). Strip the scheme
+    // as one (lavozmisionera://s/CODE -> host "s", path "/CODE"). Strip the scheme
     // so the whole remainder is read as a path.
     const href = path.startsWith(APP_SCHEME) ? `/${path.slice(APP_SCHEME.length)}` : path
-    const url = new URL(href, 'https://gracechords.com')
+    const url = new URL(href, 'https://lavozmisionera.com')
     const seg = url.pathname.split('/').filter(Boolean)
 
     // Home.
@@ -41,7 +41,7 @@ export function resolveDeepLinkPath(path: string): string {
     }
 
     // /s/:code -> native live-session follower (session/[code]). Covers the
-    // gracechords://s/:code custom-scheme form too, via the strip above.
+    // lavozmisionera://s/:code custom-scheme form too, via the strip above.
     if (seg[0] === 's' && seg[1]) {
       return `/session/${encodeURIComponent(seg[1])}`
     }

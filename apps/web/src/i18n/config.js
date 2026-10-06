@@ -11,7 +11,7 @@ export const SUPPORTED_LOCALES = [
 
 export const DEFAULT_LOCALE = 'en'
 
-export const LOCALE_STORAGE_KEY = 'gracechords.uiLanguage'
+export const LOCALE_STORAGE_KEY = 'lvm.uiLanguage'
 
 export const I18N_NAMESPACES = [
   'common',

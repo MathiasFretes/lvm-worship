@@ -559,7 +559,7 @@ for (const [label, args] of [
 
 // ── slugify parity ───────────────────────────────────────────────────────────
 // The slug becomes the song's public URL, so a divergence here is a broken link
-// on gracechords.com rather than a cosmetic difference.
+// on lavozmisionera.com rather than a cosmetic difference.
 console.log('\nslugify parity (bundle vs. songs/slug.ts):')
 {
   const titles = [

@@ -42,7 +42,7 @@ const { withDangerousMod } = require('@expo/config-plugins')
 const fs = require('fs')
 const path = require('path')
 
-const MARKER = '# gracechords: raise stale pod deployment targets'
+const MARKER = '# lavozmisionera: raise stale pod deployment targets'
 const MIN_TARGET = '15.1'
 
 const BLOCK = `

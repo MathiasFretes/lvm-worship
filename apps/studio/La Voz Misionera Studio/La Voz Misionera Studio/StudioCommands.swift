@@ -17,7 +17,7 @@
 
 import SwiftUI
 
-/// File ▸ Export as… / Share… / Send to Telegram, acting on the frontmost song.
+/// File ▸ Export as… / Share…, acting on the frontmost song.
 struct ExportCommands: Commands {
     @FocusedObject private var controller: ExportController?
 
@@ -39,7 +39,6 @@ struct ExportCommands: Commands {
                 Divider()
 
                 Button("Share…") { controller?.share() }
-                Button("Send to Telegram") { controller?.sendToTelegram() }
             }
             .disabled(!isEnabled)
 

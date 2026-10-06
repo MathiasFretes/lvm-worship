@@ -5,7 +5,7 @@ import {
   readLegacyLocalSets,
 } from '../legacyLocalSets'
 
-const KEY = 'gracechords.sets.v1'
+const KEY = 'lvm.sets.v1'
 
 function seed(sets) {
   localStorage.setItem(KEY, JSON.stringify({ sets }))

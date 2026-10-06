@@ -10,7 +10,7 @@
 // Apache-2.0 (see LICENSE) and is not part of this file. Scripture-text
 // attribution is a separate, hand-maintained section in LicensesPage.jsx.
 //
-// Run: npm run generate:licenses -w @gracechords/web
+// Run: npm run generate:licenses -w @lavozmisionera/web
 
 import { execFileSync } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -28,8 +28,8 @@ function productionClosure() {
   const raw = execFileSync(
     'npm',
     ['ls', '--omit=dev', '--all', '--json',
-     '--workspace', '@gracechords/web',
-     '--workspace', '@gracechords/mobile'],
+     '--workspace', '@lavozmisionera/web',
+     '--workspace', '@lavozmisionera/mobile'],
     { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, encoding: 'utf8' }
   )
   const tree = JSON.parse(raw)
@@ -69,7 +69,7 @@ const entries = []
 for (const [key, entry] of Object.entries(meta)) {
   const { name, version } = splitNameVersion(key)
   if (!closure.has(name)) continue
-  if (name.startsWith('@gracechords/')) continue // our own workspace packages
+  if (name.startsWith('@lavozmisionera/')) continue // our own workspace packages
   entries.push({ name, version, license: entry.licenses, repo: repoUrl(entry) })
 }
 

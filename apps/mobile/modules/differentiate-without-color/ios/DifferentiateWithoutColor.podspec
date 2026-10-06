@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary        = 'Reads the iOS "Differentiate Without Color" accessibility setting.'
   s.description    = 'Local Expo module exposing UIAccessibility.shouldDifferentiateWithoutColor.'
   s.author         = 'La Voz Misionera'
-  s.homepage       = 'https://gracechords.com'
+  s.homepage       = 'https://lavozmisionera.com'
   s.license        = 'MIT'
   s.platforms      = { :ios => '15.1' }
   s.source         = { git: '' }

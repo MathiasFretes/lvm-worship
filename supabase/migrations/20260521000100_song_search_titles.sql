@@ -1,5 +1,5 @@
 -- =============================================================================
--- La Voz Misionera: Song search variants for @lavozmisionera_bot (2026-05-21)
+-- La Voz Misionera: Song search variants (2026-05-21)
 -- Bot DMs send free-text song titles. The bot's /api/bot/songs/search endpoint
 -- needs to match "King of Kings (Majesty)" from either "king of kings" or
 -- "majesty", and either side of a "Holy / Santo" slash split. Variants are

@@ -21,7 +21,7 @@
 // Configuration → Redirect URLs allow-list, or GoTrue silently substitutes the
 // project's Site URL and the email lands on the web home page instead.
 
-const DEFAULT_SITE_URL = 'https://gracechords.com'
+const DEFAULT_SITE_URL = 'https://lavozmisionera.com'
 
 export const PASSWORD_RESET_PATH = '/app/reset-password'
 export const SIGNUP_CONFIRM_PATH = '/app/auth/callback'

@@ -3,12 +3,12 @@
 //   Headers: Authorization: Bearer <supabase access token>
 //
 // Renders a whole setlist to a single combined PDF, one song per page, using
-// the same DOM-free pdf_mvp engine the single-song endpoint and the Telegram
-// bot use. Returns application/pdf bytes. This is the multi-song counterpart
-// to /api/export/song; there is intentionally no image scope for sets.
+// the same DOM-free pdf_mvp engine the single-song endpoint uses. Returns
+// application/pdf bytes. This is the multi-song counterpart to
+// /api/export/song; there is intentionally no image scope for sets.
 //
 // Fonts: registers Noto from R2 (makeFontRegistrar) so output matches the
-// browser + Telegram bot, falling back to Helvetica/Courier if R2 is absent.
+// browser, falling back to Helvetica/Courier if R2 is absent.
 
 import { renderMultiSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'

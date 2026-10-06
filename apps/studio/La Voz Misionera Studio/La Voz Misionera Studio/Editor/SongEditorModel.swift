@@ -720,7 +720,7 @@ final class SongEditorModel: ObservableObject {
             let saved: SongEditable
             if let songID = songID {
                 // The slug is NOT re-derived from a changed title. It is the song's
-                // public URL on gracechords.com, and re-slugging on a title edit
+                // public URL on lavozmisionera.com, and re-slugging on a title edit
                 // would silently break every existing link and QR code pointing at
                 // it. Core's upsertSong makes the same choice (`existing.slug ||
                 // deriveUniqueSlug(...)`).

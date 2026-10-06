@@ -16,7 +16,7 @@
 // default (or requested) key.
 //
 // Fonts: registers Noto from R2 (makeFontRegistrar) so output matches the
-// browser + Telegram bot, falling back to Helvetica/Courier if R2 is absent.
+// browser, falling back to Helvetica/Courier if R2 is absent.
 
 import { renderSongbookPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'

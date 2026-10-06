@@ -76,7 +76,7 @@ describe('buildChordProArchiveFiles', () => {
 describe('chordProArchiveName', () => {
   test('is date-stamped', () => {
     expect(chordProArchiveName(new Date('2026-09-14T12:00:00Z'))).toBe(
-      'gracechords-chordpro-2026-09-14.zip'
+      'lvm-chordpro-2026-09-14.zip'
     )
   })
 })

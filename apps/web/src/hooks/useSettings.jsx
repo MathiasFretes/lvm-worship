@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { applyTheme, currentTheme } from '../utils/app/theme'
 
-const CHORD_STYLE_KEY = 'gracechords.chordStyle'
+const CHORD_STYLE_KEY = 'lvm.chordStyle'
 
 const SettingsContext = createContext(null)
 

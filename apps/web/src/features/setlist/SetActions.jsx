@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/layout-kit'
-import PushToTelegramButton from '../../components/PushToTelegramButton'
 import {
   DownloadIcon,
   EllipsisIcon,
@@ -38,7 +37,6 @@ export default function SetActions({
   onExportService,
   onImportContext,
   onExportWorshipPlan,
-  telegramItems,
 }) {
   const { t } = useTranslation('pages')
   const [pptOpen, setPptOpen] = useState(false)
@@ -146,15 +144,6 @@ export default function SetActions({
           </div>
         ) : null}
       </div>
-
-      <PushToTelegramButton
-        items={telegramItems}
-        context="setlist"
-        size="sm"
-        label={t('setlist.sendToTelegram')}
-        shortLabel={t('setlist.telegram')}
-        className="gc-btn--telegram"
-      />
 
       <Button
         variant="primary"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Animated, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Animated, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import * as Crypto from 'expo-crypto'
@@ -38,7 +38,6 @@ import ViewOptionsSheet, {
 } from '../../src/components/ViewOptionsSheet'
 import { capoChipValues } from '../../src/lib/capo'
 import { exportSong } from '../../src/lib/exportSong'
-import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong, usePersonalSong } from '../../src/lib/useSong'
 import { supabase } from '../../src/lib/supabase'
 import { upsertDraft } from '../../src/lib/drafts/draftsStore'
@@ -54,7 +53,7 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
 // view controls (floating transpose bar, View-options sheet) and the Export &
 // share sheet (server-rendered PDF/JPG via the web app's /api/export/song
-// Pages Function, system share, Telegram push). View state here is
+// Pages Function, system share). View state here is
 // session-ephemeral useState — discarded on unmount, never persisted — except
 // the tablet-only column mode, which persists per song (src/lib/viewerPrefs).
 // The optional `initialKey` param seeds the transpose so a setlist can open
@@ -266,32 +265,6 @@ export default function ViewerScreen() {
           actionFailureMessage('Viewer.export', err, tx),
         )
       }
-    }
-  }
-
-  const handleTelegram = async () => {
-    if (!song) return
-    try {
-      const result = await pushSongToTelegram({ songId: song.id, key: exportKey })
-      if (result === 'not_linked') {
-        Alert.alert(
-          tx('export:alerts.linkTelegramTitle'),
-          tx('export:alerts.linkTelegramMessage'),
-          [
-            { text: tx('export:alerts.openTelegram'), onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
-            { text: tx('export:alerts.notNow'), style: 'cancel' },
-          ],
-        )
-        return
-      }
-      setSheet(null)
-      Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSongMessage'))
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      Alert.alert(
-        msg === 'not_signed_in' ? tx('export:alerts.signInRequiredTitle') : tx('export:alerts.telegramFailedTitle'),
-        msg === 'not_signed_in' ? tx('export:alerts.signInToSendTelegram') : msg,
-      )
     }
   }
 
@@ -508,7 +481,6 @@ export default function ViewerScreen() {
         visible={sheet === 'export'}
         onClose={() => setSheet(null)}
         onExport={handleExport}
-        onTelegram={handleTelegram}
       />
     </Screen>
   )

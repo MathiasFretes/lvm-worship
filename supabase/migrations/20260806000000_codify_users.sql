@@ -22,7 +22,7 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Table. 10 live columns.
+-- 1. Table. 8 live columns.
 --
 -- Live attnums skip 3, 4, 13, 14 and 15 — five dropped columns still holding
 -- tombstones. 13/14/15 are age_range/age_attested_at/age_source, added by
@@ -47,8 +47,6 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at         timestamptz NOT NULL DEFAULT now(),
   role               text        NOT NULL DEFAULT 'user'::text,
   account_created_at timestamptz NOT NULL DEFAULT now(),
-  telegram_user_id   bigint,
-  telegram_linked_at timestamptz,
   ugc_accepted_at    timestamptz
 );
 
@@ -91,23 +89,14 @@ BEGIN
       CHECK (role = ANY (ARRAY['owner'::text, 'admin'::text, 'editor'::text,
                                'collaborator'::text, 'user'::text]));
   END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint
-                 WHERE conrelid = 'public.users'::regclass AND conname = 'users_telegram_user_id_key') THEN
-    ALTER TABLE public.users ADD CONSTRAINT users_telegram_user_id_key UNIQUE (telegram_user_id);
-  END IF;
 END $$;
 
 -- ---------------------------------------------------------------------------
 -- 4. Indexes.
 --
--- users_pkey and users_telegram_user_id_key are created implicitly by their
--- constraints in section 3. Only the partial index is explicit. It matches
--- 20260521000000_telegram_link.sql:26-28 exactly.
+-- users_pkey is created implicitly by its constraint in section 3. There is no
+-- other explicit index on this table.
 -- ---------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_users_telegram_user_id
-  ON public.users USING btree (telegram_user_id)
-  WHERE (telegram_user_id IS NOT NULL);
 
 -- ---------------------------------------------------------------------------
 -- 5. Functions, verbatim from pg_get_functiondef.

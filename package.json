@@ -11,9 +11,7 @@
   "scripts": {
     "postinstall": "node scripts/postinstall.mjs",
     "dev": "npm run dev -w @lavozmisionera/web",
-    "dev:mock": "npm run dev:mock -w @lavozmisionera/web",
     "build": "npm run build -w @lavozmisionera/web",
-    "build:mock": "npm run build:mock -w @lavozmisionera/web",
     "preview": "npm run preview -w @lavozmisionera/web",
     "test": "npm run test -w @lavozmisionera/web",
     "test:run": "npm run test:run -w @lavozmisionera/web",

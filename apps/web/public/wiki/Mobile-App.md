@@ -26,7 +26,7 @@ A few pieces are still stubs or later stages (see [Roadmap](#roadmap)).
 - **Expo SDK 55**, **Expo Router v7**, TypeScript, React Native 0.83.
 - **Theme:** the typed token map from `@lavozmisionera/tokens/native` (iOS light/dark palette), consumed via `useTheme()`. Icons are **SF Symbols only** (iOS/iPadOS).
 - **Native dirs** (`ios/`, `android/`) use Continuous Native Generation — gitignored, regenerated via `npx expo prebuild`. `app.json` is the source of truth for native config.
-- **Backends:** Supabase (auth, stars, setlists) via core's `createGcSupabase` factory — the public anon key, stored with AsyncStorage, token refresh driven by `AppState`; the web app's **Pages Functions** for song/setlist export and Telegram push; Cloudflare **R2** for Daily Word Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists) via core's `createGcSupabase` factory — the public anon key, stored with AsyncStorage, token refresh driven by `AppState`; the web app's **Pages Functions** for song/setlist export; Cloudflare **R2** for Daily Word Bible JSON.
 
 ## Running it
 Requires macOS + Xcode for the simulator:
@@ -47,7 +47,7 @@ Without a Mac, verify the JS bundle and RN-free logic on any OS with
 
 ## For developers
 Conventions (theme, primitives, SF Symbols, auth gating, Metro monorepo
-resolution, Supabase wiring, export/Telegram, defaults) live in
+resolution, Supabase wiring, export, defaults) live in
 `apps/mobile/AGENTS.md`. Shared logic must be added to `@lavozmisionera/core` as
 additive exports — never duplicated in the app.
 

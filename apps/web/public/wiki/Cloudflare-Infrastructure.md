@@ -37,7 +37,7 @@ In **local dev**, Vite proxies `/bible/*` to `VITE_R2_PUBLIC_URL` (set in `.env.
 
 R2 is used as object storage for large binary assets.
 
-**Bucket**: `lavozmisionera-bible`
+**Bucket**: `lvm-bible`
 
 | Prefix | Contents |
 |--------|----------|
@@ -52,7 +52,7 @@ R2 has no egress fees. Files are served publicly via the R2 public URL (set as `
 
 Workers are deployed separately from Pages using Wrangler.
 
-### `lavozmisionera-pptx-upload` (`workers/pptx-upload/`)
+### `lvm-pptx-upload` (`workers/pptx-upload/`)
 
 Handles PPTX file uploads and deletes for song slide decks.
 
@@ -73,7 +73,7 @@ SUPABASE_SERVICE_ROLE_KEY
 ALLOWED_ORIGINS   # comma-separated: https://lavozmisionera.com,...
 ```
 
-**R2 binding**: `R2_BUCKET` → `lavozmisionera-bible`
+**R2 binding**: `R2_BUCKET` → `lvm-bible`
 
 **Deploy**:
 ```bash
@@ -86,7 +86,7 @@ See [`workers/pptx-upload/README.md`](../workers/pptx-upload/README.md) for full
 
 ---
 
-### `lavozmisionera-sitemap-rebuild` (`workers/sitemap-rebuild/`)
+### `lvm-sitemap-rebuild` (`workers/sitemap-rebuild/`)
 
 A scheduled Worker that rebuilds the sitemap on a weekly cron.
 
@@ -106,6 +106,6 @@ wrangler deploy
 |----------|---------|-------------|
 | `VITE_R2_PUBLIC_URL` | Dev proxy + Pages Function | `.env.local` / CF Pages env |
 | `VITE_PPTX_WORKER_URL` | SPA frontend | `.env` / CF Pages env |
-| Worker secrets | `lavozmisionera-pptx-upload` | `wrangler secret put` |
+| Worker secrets | `lvm-pptx-upload` | `wrangler secret put` |
 
 [[Build-and-Deploy]] [[Slides-(PPTX)]] [[Project-Structure]]

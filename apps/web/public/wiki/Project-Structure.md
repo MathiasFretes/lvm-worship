@@ -13,7 +13,7 @@ packages/
   core/           @lavozmisionera/core   — shared, DOM-free logic (ChordPro parser,
                                          transposition, RBAC, setlist codec, Supabase factory)
   tokens/         @lavozmisionera/tokens — design tokens (web CSS + native TS map)
-workers/          Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot)
+workers/          Cloudflare Workers (PPTX upload, sitemap rebuild)
 supabase/         SQL migrations
 gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
 ```
@@ -69,6 +69,5 @@ SQL migrations applied in order — `users`, `songs`, `posts`, `user_starred_son
 Standalone Cloudflare Workers, each deployed with `wrangler deploy`:
 - `pptx-upload/` — authenticated PPTX upload/delete to R2 (validates Supabase JWT + role)
 - `sitemap-rebuild/` — weekly cron to rebuild the sitemap
-- `telegram-bot/` — powers `@lavozmisionera_bot` (see `workers/telegram-bot/ARCHITECTURE.md`)
 
 [[Index-Building]] [[UI-Design-System]] [[Roles-and-Access]] [[Cloudflare-Infrastructure]] [[Mobile-App]]
