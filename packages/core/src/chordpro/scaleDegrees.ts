@@ -32,8 +32,7 @@ const ROOT_RE = /^([A-G](?:#{1,2}|b{1,2})?)/
  * Returns '' for anything that does not start with a note name.
  */
 export function chordRoot(sym: string): string {
-  const m = ROOT_RE.exec(String(sym ?? '').trim())
-  return m ? m[1] : ''
+  return ROOT_RE.exec(String(sym ?? '').trim())?.[1] ?? ''
 }
 
 /**
@@ -53,6 +52,11 @@ export function chordRoot(sym: string): string {
 export function scaleDegreeNotes(key: string): string[] | null {
   const chords = getDiatonicChords(key) as DiatonicChord[] | null
   if (!chords || chords.length !== 7) return null
-  const notes = chords.map((c) => chordRoot(c.symbol))
-  return notes.some((n) => !n) ? null : notes
+  const notes: string[] = []
+  for (const chord of chords) {
+    const note = chordRoot(chord.symbol)
+    if (!note) return null
+    notes.push(note)
+  }
+  return notes
 }

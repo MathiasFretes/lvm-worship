@@ -7,14 +7,16 @@
  * @returns {Promise<string>} the user's role, or 'user' if unauthenticated/missing.
  */
 export async function fetchUserRole(client) {
-  const { data: userData } = await client.auth.getUser()
-  const user = userData && userData.user
-  if (!user) return 'user'
-  const { data, error } = await client
+  const authResult = await client.auth.getUser()
+  const userId = authResult.data?.user?.id
+  if (!userId) return 'user'
+
+  const query = client
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle()
+  const { data, error } = await query
   if (error) throw error
-  return (data && data.role) || 'user'
+  return data?.role || 'user'
 }

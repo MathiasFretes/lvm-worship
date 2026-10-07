@@ -15,19 +15,17 @@ export function rootToSolfege(rootWithAcc) {
 export function symToSolfege(sym) {
   if (!sym) return sym
   const s = String(sym)
-  if (s.includes('/')) {
-    const [r, b] = s.split('/')
-    return symToSolfege(r) + '/' + symToSolfege(b)
+  const slash = s.indexOf('/')
+  if (slash >= 0) {
+    return symToSolfege(s.slice(0, slash)) + '/' + symToSolfege(s.slice(slash + 1).split('/')[0])
   }
-  const m = s.match(/^([A-G][#b]?)(.*)$/)
-  if (!m) return s
-  return rootToSolfege(m[1]) + (m[2] || '')
+  const match = s.match(/^([A-G][#b]?)(.*)$/)
+  return match ? rootToSolfege(match[1]) + (match[2] || '') : s
 }
 
 export function formatChord(sym, opts = {}) {
-  const style = opts.style || 'letters'
   if (!sym) return sym
-  if (style === 'solfege') return symToSolfege(sym)
+  if (opts.style === 'solfege') return symToSolfege(sym)
   return String(sym)
 }
 

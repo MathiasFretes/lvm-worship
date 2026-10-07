@@ -4,10 +4,12 @@
 // supabase/migrations/20260708000000_remove_collaborator_role.sql:99-104.
 // Owner is uncapped (Infinity).
 
+const STANDARD_LIMIT = 50
+
 export const PERSONAL_SETLIST_LIMITS = {
   user: 30,
-  editor: 50,
-  admin: 50,
+  editor: STANDARD_LIMIT,
+  admin: STANDARD_LIMIT,
   owner: Infinity,
 }
 
@@ -15,5 +17,6 @@ export const PERSONAL_SETLIST_LIMITS = {
 // `user` cap, matching the trigger's ELSE branch.
 export function personalSetlistLimit(role) {
   const limit = PERSONAL_SETLIST_LIMITS[role]
-  return limit === undefined ? PERSONAL_SETLIST_LIMITS.user : limit
+  if (limit !== undefined) return limit
+  return PERSONAL_SETLIST_LIMITS.user
 }

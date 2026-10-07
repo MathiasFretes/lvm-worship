@@ -22,19 +22,25 @@ const SHORT_MAP: Record<string, { start: boolean; kind: string }> = {
 const RX_PLAIN_HEADER = /^(verse|chorus|bridge|intro|tag|outro)(?:\s+(\d+))?$/i;
 const RX_META = /^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}$/;
 
-// Inline chord parser
-const RX_CHORD = /\[([^\]]+)\]/g;
 function parseInline(line: string): SongLine {
   const chords: ChordPlacement[] = [];
   let plain = '';
-  let last = 0;
-  line.replace(RX_CHORD, (match, sym: string, offset: number) => {
-    plain += line.slice(last, offset);
-    chords.push({ sym, index: plain.length });
-    last = offset + match.length;
-    return match;
-  });
-  plain += line.slice(last);
+  let cursor = 0;
+  while (cursor < line.length) {
+    const open = line.indexOf('[', cursor);
+    if (open < 0) {
+      plain += line.slice(cursor);
+      break;
+    }
+    const close = line.indexOf(']', open + 1);
+    if (close < 0) {
+      plain += line.slice(cursor);
+      break;
+    }
+    plain += line.slice(cursor, open);
+    chords.push({ sym: line.slice(open + 1, close), index: plain.length });
+    cursor = close + 1;
+  }
   return { lyrics: plain, chords };
 }
 
@@ -58,7 +64,7 @@ function parseInstrumentalDirective(body: string): InstrumentalDirective {
   const raw = (body || '').trim();
   if (!raw) return { chords, repeat };
 
-  const repeatToken = (token: string) => {
+  const parseToken = (token: string) => {
     const trimmed = token.trim();
     if (!trimmed) return { chord: '', rep: undefined as number | undefined };
     const directRepeat = trimmed.match(/^(.*?)(x\d+)$/i);
@@ -70,36 +76,18 @@ function parseInstrumentalDirective(body: string): InstrumentalDirective {
     return { chord: trimmed, rep: undefined };
   };
 
-  const assignRepeat = (token: string) => {
-    if (/^x\d+$/i.test(token.trim())) {
-      const rep = parseInt(token.trim().slice(1), 10);
-      if (!Number.isNaN(rep)) repeat = rep;
-      return true;
+  const tokens = raw.includes(',')
+    ? raw.split(',').map((part) => part.trim()).filter(Boolean)
+    : raw.split(/\s+/).filter(Boolean);
+  for (const token of tokens) {
+    const standaloneRepeat = /^x(\d+)$/i.exec(token);
+    if (!raw.includes(',') && standaloneRepeat) {
+      repeat = parseInt(standaloneRepeat[1], 10);
+      continue;
     }
-    return false;
-  };
-
-  const pushPart = (part: string) => {
-    if (!part) return;
-    const { chord, rep } = repeatToken(part);
+    const { chord, rep } = parseToken(token);
     if (chord) chords.push(chord);
-    if (rep && !Number.isNaN(rep)) repeat = rep;
-  };
-
-  if (raw.includes(',')) {
-    const parts = raw.split(',').map(p => p.trim()).filter(Boolean);
-    for (const part of parts) {
-      pushPart(part);
-    }
-  } else {
-    const tokens = raw.split(/\s+/).filter(Boolean);
-    for (let i = 0; i < tokens.length; i++) {
-      const tok = tokens[i];
-      if (assignRepeat(tok)) continue;
-      const { chord, rep } = repeatToken(tok);
-      if (chord) chords.push(chord);
-      if (rep && !Number.isNaN(rep)) repeat = rep;
-    }
+    if (rep !== undefined) repeat = rep;
   }
 
   return { chords, repeat };
@@ -129,12 +117,10 @@ function parseDirective(raw: string): Dir | null {
 export function parseChordProOrLegacy(input: string): SongDoc {
   const lines = input.split(/\r?\n/);
 
-  // detect start/end directives
-  let hasEnv = false;
-  for (const L of lines) {
-    const t = L.trim();
-    if (RX_LONG_DIR.test(t) || RX_SHORT_DIR.test(t)) { hasEnv = true; break; }
-  }
+  const hasEnv = lines.some((line) => {
+    const trimmed = line.trim();
+    return RX_LONG_DIR.test(trimmed) || RX_SHORT_DIR.test(trimmed);
+  });
 
   const doc: SongDoc = { meta: {}, sections: [], layoutHints: { columnBreakAfter: [] }, chordDefs: [] };
   let cur: SongSection | null = null;

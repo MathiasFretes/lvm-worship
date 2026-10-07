@@ -45,14 +45,17 @@ function cloneValue(type, value){
 function pickMasterEntry(items){
   const list = Array.isArray(items) ? items : []
   if (!list.length) return null
-  const english = list.filter((it) => normalizeLanguageCode(it?.language) === 'en')
-  return (
-    english.find((it) => !it?.incomplete) ||
-    english[0] ||
-    list.find((it) => !it?.incomplete) ||
-    list[0] ||
-    null
-  )
+  const candidates = [
+    (item) => normalizeLanguageCode(item?.language) === 'en' && !item?.incomplete,
+    (item) => normalizeLanguageCode(item?.language) === 'en',
+    (item) => !item?.incomplete,
+    () => true,
+  ]
+  for (const predicate of candidates) {
+    const match = list.find(predicate)
+    if (match) return match
+  }
+  return null
 }
 
 function hasExplicitOverride(item, rule){
@@ -80,8 +83,9 @@ export function inheritTranslationMetadata(items = []){
     if (!item) continue
     const songId = String(item.songId || item.id || '').trim()
     if (!songId) continue
-    if (!groups.has(songId)) groups.set(songId, [])
-    groups.get(songId).push(item)
+    const group = groups.get(songId)
+    if (group) group.push(item)
+    else groups.set(songId, [item])
   }
 
   for (const groupItems of groups.values()) {
@@ -102,8 +106,10 @@ export function inheritTranslationMetadata(items = []){
 }
 
 export function stripSongIndexInternalFields(items = []){
-  return (Array.isArray(items) ? items : []).map((item) => {
+  const output = []
+  for (const item of Array.isArray(items) ? items : []) {
     const { _metaPresence, _analysis, ...rest } = item || {}
-    return rest
-  })
+    output.push(rest)
+  }
+  return output
 }

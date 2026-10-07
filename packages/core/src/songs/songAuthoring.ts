@@ -44,15 +44,27 @@ export type SongFormErrors = {
   title?: string
   default_key?: string
   tags?: string
+  tempo?: string
+  youtube_id?: string
 }
 
-/** Required-field validation matching the web editor (title, key, ≥1 tag). */
+/** Validation shared by the web and mobile editors. */
 export function validateSongForm(form: Partial<SongForm>): SongFormErrors {
   const errors: SongFormErrors = {}
   if (!form.title || !String(form.title).trim()) errors.title = 'Title is required'
-  if (!form.default_key) errors.default_key = 'Key is required'
-  if (!Array.isArray(form.tags) || form.tags.length === 0) {
+  if (!form.default_key || !String(form.default_key).trim()) errors.default_key = 'Key is required'
+  if (!Array.isArray(form.tags) || !form.tags.some((tag) => String(tag).trim())) {
     errors.tags = 'At least one tag is required'
+  }
+  if (
+    form.tempo !== '' &&
+    form.tempo != null &&
+    (!Number.isInteger(Number(form.tempo)) || Number(form.tempo) < 20 || Number(form.tempo) > 400)
+  ) {
+    errors.tempo = 'Tempo must be between 20 and 400 BPM'
+  }
+  if (form.youtube_id && !normalizeYoutubeInput(form.youtube_id).valid) {
+    errors.youtube_id = 'Enter a valid YouTube ID or URL'
   }
   return errors
 }

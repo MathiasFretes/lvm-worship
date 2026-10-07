@@ -12,19 +12,20 @@ export function parseChordLine(line = '', measureLyric = s => s.length, measureC
   const chords = []
   let lyrics = ''
   let x = 0
-  const re = /\[([^\]]+)\]/g
-  let last = 0
-  let m
-  while ((m = re.exec(line))) {
-    const before = line.slice(last, m.index)
+  let cursor = 0
+  while (cursor < line.length) {
+    const open = line.indexOf('[', cursor)
+    const close = open < 0 ? -1 : line.indexOf(']', open + 1)
+    if (open < 0 || close < 0) break
+    const before = line.slice(cursor, open)
     lyrics += before
     x += measureLyric(before)
-    const sym = m[1]
+    const sym = line.slice(open + 1, close)
     const w = measureChord(sym)
     chords.push({ sym, x, w })
-    last = m.index + m[0].length
+    cursor = close + 1
   }
-  lyrics += line.slice(last)
+  lyrics += line.slice(cursor)
   const spaceW = measureLyric(' ')
   resolveChordCollisions(chords, spaceW)
   return { lyrics, chords }
@@ -41,11 +42,8 @@ export function parseChordLine(line = '', measureLyric = s => s.length, measureC
 export function resolveChordCollisions(chords, spaceWidth = 0, maxIter = 10) {
   if (!Array.isArray(chords) || chords.length < 2) return chords
   chords.sort((a, b) => a.x - b.x)
-  let changed = true
-  let iter = 0
-  while (changed && iter < maxIter) {
-    changed = false
-    iter++
+  for (let iteration = 0; iteration < maxIter; iteration += 1) {
+    let changed = false
     for (let i = 1; i < chords.length; i++) {
       const prev = chords[i - 1]
       const cur = chords[i]
@@ -57,6 +55,7 @@ export function resolveChordCollisions(chords, spaceWidth = 0, maxIter = 10) {
         changed = true
       }
     }
+    if (!changed) break
   }
   chords.sort((a, b) => a.x - b.x)
   return chords

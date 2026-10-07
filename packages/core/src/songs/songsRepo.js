@@ -5,7 +5,7 @@
 // cache and a heavier row→view normalisation). Core deliberately did not export
 // a song query layer; the mobile slice needs one, so this is an ADDITIVE export
 // — it does not change any web behaviour. Callers inject the Supabase client
-// created via createGcSupabase(), keeping core free of env/storage concerns.
+// created via createLvmSupabase(), keeping core free of env/storage concerns.
 
 /**
  * Fetch the catalog of non-deleted songs, ordered by title.
@@ -16,15 +16,19 @@
  * @param {{ columns?: string }} [opts] - override the selected columns.
  * @returns {Promise<Array<{ id: string, slug: string, title: string, artist: string|null, default_key: string|null }>>}
  */
-export async function fetchSongList(client, opts = {}) {
+async function runSongQuery(query, fallback) {
+  const { data, error } = await query
+  if (error) throw error
+  return data ?? fallback
+}
+
+export function fetchSongList(client, opts = {}) {
   const columns = opts.columns || 'id, slug, title, artist, default_key'
-  const { data, error } = await client
+  return runSongQuery(client
     .from('songs')
     .select(columns)
     .eq('is_deleted', false)
-    .order('title')
-  if (error) throw error
-  return data || []
+    .order('title'), [])
 }
 
 /**
@@ -36,16 +40,14 @@ export async function fetchSongList(client, opts = {}) {
  * @param {{ columns?: string }} [opts] - override the selected columns.
  * @returns {Promise<{ id: string, slug: string, title: string, artist: string|null, default_key: string|null, time_signature: string|null, tempo: number|null, chordpro_content: string|null }|null>}
  */
-export async function fetchSongBySlug(client, slug, opts = {}) {
+export function fetchSongBySlug(client, slug, opts = {}) {
   const columns =
     opts.columns ||
     'id, slug, title, artist, default_key, time_signature, tempo, chordpro_content'
-  const { data, error } = await client
+  return runSongQuery(client
     .from('songs')
     .select(columns)
     .eq('slug', slug)
     .eq('is_deleted', false)
-    .maybeSingle()
-  if (error) throw error
-  return data
+    .maybeSingle(), null)
 }

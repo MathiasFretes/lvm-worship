@@ -9,6 +9,10 @@ import {
 } from '../songs/verseRef'
 
 const KEY_CHARS = 'ABCDEFGHIJKL' // 12 symbols for 12 semitone keys (maps to KEYS index)
+const SONG_CODE_WIDTH = 4
+const SONG_ENTRY_WIDTH = SONG_CODE_WIDTH + 1
+const SONG_CODE_SPACE = 36 ** SONG_CODE_WIDTH
+const FLAT_KEYS = new Map([['Db', 'C#'], ['Eb', 'D#'], ['Gb', 'F#'], ['Ab', 'G#'], ['Bb', 'A#']])
 
 function fnv1a32(str){
   let h = 0x811c9dc5
@@ -24,8 +28,7 @@ function normKey(k){
   const i = KEYS.indexOf(k)
   if(i >= 0) return KEYS[i]
   // crude flats normalization
-  const flat = { Db:'C#', Eb:'D#', Gb:'F#', Ab:'G#', Bb:'A#' }
-  return flat[k] || 'C'
+  return FLAT_KEYS.get(k) || 'C'
 }
 
 export function keyToChar(key){
@@ -44,17 +47,16 @@ export function charToKey(ch){
 function buildMaps(items){
   const idToCode = new Map()
   const codeToId = new Map()
-  const MOD = Math.pow(36, 4)
   for(const it of items){
     const id = String(it.id)
-    let n = fnv1a32(id) % MOD
+    let n = fnv1a32(id) % SONG_CODE_SPACE
     // ensure 4-char base36, resolve collisions deterministically by linear probing
-    for(let tries=0; tries<MOD; tries++){
-      const code = n.toString(36).toUpperCase().padStart(4,'0')
+    for(let tries=0; tries<SONG_CODE_SPACE; tries++){
+      const code = n.toString(36).toUpperCase().padStart(SONG_CODE_WIDTH,'0')
       const existing = codeToId.get(code)
       if(!existing){ idToCode.set(id, code); codeToId.set(code, id); break }
       if(existing === id){ idToCode.set(id, code); break }
-      n = (n + 1) % MOD
+      n = (n + 1) % SONG_CODE_SPACE
     }
   }
   return { idToCode, codeToId }
@@ -92,15 +94,15 @@ export function decodeSet(songs, code){
       i += res.len + 1
       continue
     }
-    const block = s.slice(i, i+5)
-    if (block.length < 5) return { error: 'Invalid code length', entries: [] }
-    const idCode = block.slice(0,4)
-    const keyChar = block.slice(4)
+    const block = s.slice(i, i + SONG_ENTRY_WIDTH)
+    if (block.length < SONG_ENTRY_WIDTH) return { error: 'Invalid code length', entries: [] }
+    const idCode = block.slice(0, SONG_CODE_WIDTH)
+    const keyChar = block.slice(SONG_CODE_WIDTH)
     const id = codeToId.get(idCode)
     if(!id) return { error: `Unknown song code: ${idCode}`, entries: [] }
     const key = charToKey(keyChar)
     entries.push({ id, toKey: key })
-    i += 5
+    i += SONG_ENTRY_WIDTH
   }
   return { entries }
 }

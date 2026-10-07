@@ -13,6 +13,10 @@
 
 import { resolvePlanMmdd } from '../bible/plan'
 
+function hyphenatePlanKey(mmdd: string): string {
+  return [mmdd.substring(0, 2), mmdd.substring(2)].join('-')
+}
+
 /**
  * The `MM-DD` key for a date's devotionals, matching the day whose readings the
  * devotionals were paired against.
@@ -21,13 +25,12 @@ import { resolvePlanMmdd } from '../bible/plan'
  * `resolvePlanMmdd` applies to the readings, because it IS that clamp.
  */
 export function devotionalDayKey(date: Date): string {
-  const mmdd = resolvePlanMmdd(date)
-  return `${mmdd.slice(0, 2)}-${mmdd.slice(2)}`
+  return hyphenatePlanKey(resolvePlanMmdd(date))
 }
 
 /** Zero-padded month (`"01"`–`"12"`) for a day key — the month file to load. */
 export function monthOfDayKey(dayKey: string): string {
-  return dayKey.slice(0, 2)
+  return dayKey.substring(0, 2)
 }
 
 /** Zero-padded month for a date, via the same clamp as `devotionalDayKey`. */

@@ -37,32 +37,42 @@ export function effectiveKey(entry, song) {
  */
 export function summarizeSet(entries, songsById) {
   const list = entries || []
-  const keys = []
-  const bpms = []
+  let lowestKey = Infinity
+  let highestKey = -Infinity
+  let lowestBpm = Infinity
+  let highestBpm = -Infinity
+  let hasBpm = false
   for (const entry of list) {
     const song = songsById ? songsById.get(String(entry.song_id)) : entry
     const key = effectiveKey(entry, song)
     const idx = keyIndex(key)
-    if (idx >= 0) keys.push(idx)
+    if (idx >= 0) {
+      lowestKey = Math.min(lowestKey, idx)
+      highestKey = Math.max(highestKey, idx)
+    }
     const tempo = song && song.tempo
-    if (typeof tempo === 'number' && tempo > 0) bpms.push(tempo)
+    if (typeof tempo === 'number' && tempo > 0) {
+      hasBpm = true
+      lowestBpm = Math.min(lowestBpm, tempo)
+      highestBpm = Math.max(highestBpm, tempo)
+    }
   }
 
   // `keys` is the raw range ("G–D" / "G") for badges; `keyRange` the labeled
   // footer segment ("Keys G–D" / "Key G").
   let keysRaw = null
   let keyRange = null
-  if (keys.length > 0) {
-    const lo = KEYS[Math.min(...keys)]
-    const hi = KEYS[Math.max(...keys)]
+  if (lowestKey !== Infinity) {
+    const lo = KEYS[lowestKey]
+    const hi = KEYS[highestKey]
     keysRaw = lo === hi ? lo : `${lo}–${hi}`
     keyRange = lo === hi ? `Key ${lo}` : `Keys ${lo}–${hi}`
   }
 
   let bpmRange = null
-  if (bpms.length > 0) {
-    const lo = Math.min(...bpms)
-    const hi = Math.max(...bpms)
+  if (hasBpm) {
+    const lo = lowestBpm
+    const hi = highestBpm
     bpmRange = lo === hi ? `${lo} BPM` : `${lo}–${hi} BPM`
   }
 

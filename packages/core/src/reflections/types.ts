@@ -8,14 +8,20 @@
 // decision. The underlying column is a wider text/CHECK domain.
 export type ReflectionVisibility = 'private'
 
-export type Reflection = {
+type ReflectionIdentity = {
   id: string
   user_id: string
+}
+
+type ReflectionContent = {
   /** Local calendar day the reflection is for, as YYYY-MM-DD. */
   reflection_date: string
   /** Optional link to the day's reading; NULL in Phase 1 (day-of-year keyed). */
   content_key: string | null
   visibility: ReflectionVisibility
   body: string
+}
+
+export type Reflection = ReflectionIdentity & ReflectionContent & {
   created_at: string
 }

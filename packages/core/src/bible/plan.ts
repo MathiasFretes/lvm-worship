@@ -14,6 +14,11 @@ type RawPlanEntry = {
   readings: RawPlanReading[]
 }
 
+type RawPlanDocument = {
+  schemaVersion: number
+  entries: RawPlanEntry[]
+}
+
 export function normalizePlanReading(input: RawPlanReading): PlanReading | null {
   if (typeof input === 'object' && input) {
     const book = Number((input as PlanReading).book)
@@ -33,7 +38,11 @@ export function normalizePlanReading(input: RawPlanReading): PlanReading | null 
   return { book: parsed.bookNumber, ref: parsed.ref }
 }
 
-const PLAN: PlanEntry[] = (planData as RawPlanEntry[]).map((entry) => ({
+const rawEntries = Array.isArray(planData)
+  ? planData as RawPlanEntry[]
+  : (planData as RawPlanDocument).entries
+
+const PLAN: PlanEntry[] = rawEntries.map((entry) => ({
   mmdd: entry.mmdd,
   readings: entry.readings
     .map((reading) => normalizePlanReading(reading))
@@ -51,9 +60,9 @@ export function mmddFromDate(date: Date){
 }
 
 export function addDays(date: Date, delta: number){
-  const next = new Date(date)
-  next.setDate(next.getDate() + delta)
-  return next
+  const result = new Date(date.getTime())
+  result.setDate(result.getDate() + delta)
+  return result
 }
 
 /**
@@ -86,7 +95,9 @@ export function getPlanForDate(date: Date){
 }
 
 export function expandReadings(readings: RawPlanReading[]): Passage[] {
-  return readings.flatMap((raw) => expandReading(raw)).filter(Boolean)
+  const passages: Passage[] = []
+  for (const reading of readings) passages.push(...expandReading(reading))
+  return passages
 }
 
 export function expandReading(raw: RawPlanReading): Passage[] {

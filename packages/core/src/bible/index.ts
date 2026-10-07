@@ -2,6 +2,9 @@
 // mobile Daily Word Reader (and available to web). Fetch base URL / impl are
 // injected so the same accessors serve R2 now and a local offline source later.
 
+/** Version of the normalized manifest/plan contracts exported by this domain. */
+export const BIBLE_DOMAIN_SCHEMA_VERSION = 1
+
 export * from './types'
 export * from './plan'
 export * from './direction'

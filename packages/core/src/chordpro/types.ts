@@ -1,41 +1,45 @@
-export type ChordPlacement = { sym: string; index: number };
+export interface ChordPlacement {
+  sym: string;
+  /** UTF-16 offset into SongLine.lyrics. */
+  index: number;
+}
 
-export type InstrumentalDirective = {
+export interface InstrumentalDirective {
   chords: string[];
   repeat?: number | undefined;
-};
+}
 
-export type SongLine = {
+export interface SongLine {
   lyrics: string;
   chords: ChordPlacement[];
   comment?: string;
   instrumental?: InstrumentalDirective;
-};
+}
 
-export type SongSection = {
+export interface SongSection {
   kind: string; // e.g., 'verse', 'chorus'
   label?: string | undefined;
   lines: SongLine[];
   instrumental?: InstrumentalDirective;
-};
+}
 
-export type SongMeta = {
+export interface SongMeta {
   title?: string;
   key?: string;
   capo?: number;
   meta?: Record<string, string>;
-};
+}
 
-export type SongLayoutHints = {
+export interface SongLayoutHints {
   requestedColumns?: 1 | 2;
   columnBreakAfter?: number[];
-};
+}
 
 export type ChordDefine = { name: string; raw: string };
 
-export type SongDoc = {
+export interface SongDoc {
   meta: SongMeta;
   sections: SongSection[];
   layoutHints?: SongLayoutHints;
   chordDefs?: ChordDefine[];
-};
+}

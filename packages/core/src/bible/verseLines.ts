@@ -33,10 +33,12 @@ export type FetchChapter = (
 ) => Promise<ChapterData>
 
 function listChapterVerses(chapterData: ChapterData): number[] {
-  return Object.keys(chapterData?.verses || {})
-    .map((n) => Number(n))
-    .filter((n) => !Number.isNaN(n))
-    .sort((a, b) => a - b)
+  const numbers: number[] = []
+  for (const key of Object.keys(chapterData?.verses || {})) {
+    const number = Number(key)
+    if (!Number.isNaN(number)) numbers.push(number)
+  }
+  return numbers.sort((a, b) => a - b)
 }
 
 // The verse numbers a segment selects from a chapter. `ranges == null` means the
@@ -66,7 +68,11 @@ export async function resolveVerseLines(
   const multiChapter = segments.length > 1
   const lines: VerseLine[] = []
   for (const segment of segments) {
-    const chapterData = await fetchChapter(parsed?.translation || '', parsed?.bookNumber || 0, segment.chapter)
+    const chapterData = await fetchChapter(
+      parsed?.translation || '',
+      parsed?.bookNumber || 0,
+      segment.chapter,
+    )
     if (!chapterData) continue
     for (const num of selectSegmentVerseNumbers(chapterData, segment)) {
       lines.push({

@@ -11,28 +11,24 @@ export type BibleTranslationGroup = {
 }
 
 export function buildBibleTranslationGroups(translations: BibleTranslation[], locale = 'en'){
-  const byLanguage = new Map<string, BibleTranslationGroup>()
-
-  for (const translation of translations || []){
+  const groupsByCode = new Map<string, BibleTranslation[]>()
+  for (const translation of translations || []) {
     const code = normalizeLanguageCode(translation.language)
-    const existing = byLanguage.get(code)
-    if (existing) {
-      existing.translations.push(translation)
-      continue
-    }
-    byLanguage.set(code, {
-      languageCode: code,
-      languageLabel: resolveLanguageLabel(code, locale),
-      translations: [translation],
-    })
+    const bucket = groupsByCode.get(code)
+    if (bucket) bucket.push(translation)
+    else groupsByCode.set(code, [translation])
   }
 
-  const groups = Array.from(byLanguage.values())
-  for (const group of groups){
-    group.translations.sort((a, b) => (
+  const groups = Array.from(groupsByCode, ([code, items]) => {
+    const sorted = [...items].sort((a, b) => (
       translationOptionLabel(a).localeCompare(translationOptionLabel(b), undefined, { sensitivity: 'base' })
     ))
-  }
+    return {
+      languageCode: code,
+      languageLabel: resolveLanguageLabel(code, locale),
+      translations: sorted,
+    }
+  })
   groups.sort((a, b) => a.languageLabel.localeCompare(b.languageLabel, undefined, { sensitivity: 'base' }))
 
   return groups

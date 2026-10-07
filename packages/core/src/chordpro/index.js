@@ -18,8 +18,30 @@ export function parseChordPro(text){
     const { plain, chords } = extractChords(raw); current.lines.push({ text: plain, chords })
   } if(current.lines.length) blocks.push(current); return { meta, blocks }
 }
-export function extractChords(line){ let plain=''; const chords=[]; let i=0; while(i<line.length){ if(line[i]==='['){ const j=line.indexOf(']', i+1); if(j!==-1){ const sym=line.slice(i+1,j).trim(); chords.push({ sym, index: plain.length }); i=j+1; continue } } plain+=line[i]; i++ } return { plain, chords } }
-export function makeMonospaceChordLine(plain, chordPositions){ if(!chordPositions?.length) return ''; let out=''; let cursor=0; for(const c of chordPositions){ const pad=Math.max(0, c.index - cursor); out += ' '.repeat(pad) + c.sym; cursor = c.index + c.sym.length } return out }
+export function extractChords(line){
+  const chords=[]
+  let plain=''
+  let cursor=0
+  while(cursor < line.length){
+    const open=line.indexOf('[', cursor)
+    const close=open < 0 ? -1 : line.indexOf(']', open + 1)
+    if(open < 0 || close < 0){ plain += line.slice(cursor); break }
+    plain += line.slice(cursor, open)
+    chords.push({ sym: line.slice(open + 1, close).trim(), index: plain.length })
+    cursor=close + 1
+  }
+  return { plain, chords }
+}
+export function makeMonospaceChordLine(_plain, chordPositions){
+  if(!chordPositions?.length) return ''
+  const parts=[]
+  let cursor=0
+  for(const chord of chordPositions){
+    parts.push(' '.repeat(Math.max(0, chord.index - cursor)), chord.sym)
+    cursor=chord.index + chord.sym.length
+  }
+  return parts.join('')
+}
 export const KEYS=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const FLAT={'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'}; function norm(n){ return FLAT[n] || n }
 // Normalize a key name to its sharp spelling in KEYS ('Bb' -> 'A#'); unknown
 // input passes through. Shared so key comparisons agree across modules.
@@ -46,7 +68,10 @@ export function stepsBetween(fromKey, toKey){
 export function transposeSym(sym, steps, preferFlat = false){
   // Legacy/simple behavior with a default preference; does not preserve original accidental.
   if (steps === 0) return sym
-  if(sym.includes('/')){ const [r,b]=sym.split('/'); return transposeSym(r,steps,preferFlat)+'/'+transposeSym(b,steps,preferFlat) }
+  if(sym.includes('/')){
+    const [root, bass]=sym.split('/')
+    return transposeSym(root,steps,preferFlat)+'/'+transposeSym(bass,steps,preferFlat)
+  }
   const m=sym.match(/^([A-G][#b]?)(.*)$/); if(!m) return sym
   const i=KEYS.indexOf(norm(m[1])); if(i===-1) return sym
   const root = KEYS[(i+steps+12)%12]
@@ -58,8 +83,8 @@ export function transposeSym(sym, steps, preferFlat = false){
 export function transposeSymPrefer(sym, steps, defaultPreferFlat = false){
   if (steps === 0) return sym
   if (sym.includes('/')){
-    const [r,b] = sym.split('/')
-    return transposeSymPrefer(r, steps, defaultPreferFlat) + '/' + transposeSymPrefer(b, steps, defaultPreferFlat)
+    const [root, bass]=sym.split('/')
+    return transposeSymPrefer(root, steps, defaultPreferFlat)+'/'+transposeSymPrefer(bass, steps, defaultPreferFlat)
   }
   const m = sym.match(/^([A-G])([#b]?)(.*)$/)
   if (!m) return sym

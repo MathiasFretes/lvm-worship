@@ -9,17 +9,21 @@ const LIST_COLUMNS =
 const FULL_COLUMNS =
   LIST_COLUMNS + ', country, youtube_id, language, pptx_url, mp3_url, chordpro_content'
 
+function unwrap(result, fallback){
+  if (result.error) throw result.error
+  return result.data ?? fallback
+}
+
 /**
  * Fetch the current user's personal songs, newest first.
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  */
 export async function fetchPersonalSongs(client) {
-  const { data, error } = await client
+  const result = await client
     .from('personal_songs')
     .select(LIST_COLUMNS)
     .order('updated_at', { ascending: false })
-  if (error) throw error
-  return data || []
+  return unwrap(result, [])
 }
 
 /**
@@ -28,13 +32,12 @@ export async function fetchPersonalSongs(client) {
  * @param {string} id
  */
 export async function fetchPersonalSongById(client, id) {
-  const { data, error } = await client
+  const result = await client
     .from('personal_songs')
     .select(FULL_COLUMNS)
     .eq('id', id)
     .maybeSingle()
-  if (error) throw error
-  return data || null
+  return unwrap(result, null)
 }
 
 /**
@@ -49,13 +52,12 @@ export async function createPersonalSong(client, input = {}) {
   if (authError || !user) throw authError || new Error('Not authenticated')
 
   const row = { ...input, owner_id: user.id }
-  const { data, error } = await client
+  const result = await client
     .from('personal_songs')
     .insert(row)
     .select(FULL_COLUMNS)
     .single()
-  if (error) throw error
-  return data
+  return unwrap(result, null)
 }
 
 /**
@@ -65,14 +67,13 @@ export async function createPersonalSong(client, input = {}) {
  * @param {Record<string, any>} patch
  */
 export async function updatePersonalSong(client, id, patch = {}) {
-  const { data, error } = await client
+  const result = await client
     .from('personal_songs')
     .update(patch)
     .eq('id', id)
     .select(FULL_COLUMNS)
     .single()
-  if (error) throw error
-  return data
+  return unwrap(result, null)
 }
 
 /**

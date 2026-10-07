@@ -6,11 +6,11 @@
 
 /** Lowercase, underscore-separated, URL-safe slug from a title. */
 export function slugify(title: string): string {
-  return (title || '')
+  return String(title || '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join('_')
 }
 
 /**
@@ -33,15 +33,11 @@ export async function deriveUniqueSlug(
   const { currentId, table = 'songs', ownerId } = opts
   const base = slugify(title)
   if (!base) return ''
-  let candidate = base
-  let n = 2
-  // Bounded loop guard — titles that somehow collide thousands of times bail out.
-  for (let guard = 0; guard < 1000; guard++) {
+  for (let attempt = 1; ; attempt += 1) {
+    const candidate = attempt === 1 ? base : `${base}_${attempt}`
     let query = client.from(table).select('id').eq('slug', candidate)
     if (ownerId) query = query.eq('owner_id', ownerId)
     const { data } = await query.maybeSingle()
     if (!data || data.id === currentId) return candidate
-    candidate = `${base}_${n++}`
   }
-  return candidate
 }

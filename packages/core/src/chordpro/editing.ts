@@ -8,14 +8,22 @@
 export type Selection = { start: number; end: number }
 export type EditResult = { value: string; selection: Selection }
 
+function replaceSelection(
+  value: string,
+  selection: Selection,
+  replacement: string,
+  nextSelection: Selection,
+): EditResult {
+  return {
+    value: value.slice(0, selection.start) + replacement + value.slice(selection.end),
+    selection: nextSelection,
+  }
+}
+
 /** Insert `text` at the current caret, replacing any selected range. */
 export function insertAtCursor(value: string, selection: Selection, text: string): EditResult {
-  const { start, end } = selection
-  const before = value.slice(0, start)
-  const after = value.slice(end)
-  const next = before + text + after
-  const pos = start + text.length
-  return { value: next, selection: { start: pos, end: pos } }
+  const caret = selection.start + text.length
+  return replaceSelection(value, selection, text, { start: caret, end: caret })
 }
 
 /**
@@ -29,24 +37,21 @@ export function wrapSection(
   { directive, label }: { directive: string; label: string },
 ): EditResult {
   const { start, end } = selection
-  const selected = value.slice(start, end)
-  const before = value.slice(0, start)
-  const after = value.slice(end)
-
   const startDir = `{start_of_${directive}: ${label}}`
   const endDir = `{end_of_${directive}}`
+  const selected = value.slice(start, end)
 
   if (selected) {
     const insertion = `${startDir}\n${selected}\n${endDir}\n`
-    const next = before + insertion + after
-    // Select the whole inserted block so the user can see what was wrapped.
-    return { value: next, selection: { start, end: start + insertion.length } }
+    return replaceSelection(value, selection, insertion, {
+      start,
+      end: start + insertion.length,
+    })
   }
 
   const insertion = `${startDir}\n\n${endDir}\n`
-  const next = before + insertion + after
   const pos = start + startDir.length + 1 // caret on the blank content line
-  return { value: next, selection: { start: pos, end: pos } }
+  return replaceSelection(value, selection, insertion, { start: pos, end: pos })
 }
 
 export const CHORD_VARIANTS = ['7', 'maj7', 'sus2', 'sus4'] as const
@@ -70,7 +75,7 @@ export type SectionPreset = {
 // `pre_chorus`/`interlude` directives the web bar used to emit — is silently
 // dropped by the parser, so those become NAMED choruses instead (Ryan's
 // convention: a Pre-Chorus is `{start_of_chorus: Pre-Chorus}`).
-export const SECTION_PRESETS: readonly SectionPreset[] = [
+const PRESET_SPECS = [
   { label: 'Verse', directive: 'verse', sectionLabel: 'Verse' },
   { label: 'Chorus', directive: 'chorus', sectionLabel: 'Chorus' },
   { label: 'Bridge', directive: 'bridge', sectionLabel: 'Bridge' },
@@ -79,4 +84,6 @@ export const SECTION_PRESETS: readonly SectionPreset[] = [
   { label: 'Outro', directive: 'outro', sectionLabel: 'Outro' },
   { label: 'Tag', directive: 'tag', sectionLabel: 'Tag' },
   { label: 'Interlude', directive: 'chorus', sectionLabel: 'Interlude' },
-]
+] satisfies SectionPreset[]
+
+export const SECTION_PRESETS: readonly SectionPreset[] = Object.freeze(PRESET_SPECS)

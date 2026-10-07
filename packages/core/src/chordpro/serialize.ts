@@ -6,7 +6,7 @@ export type SerializeOpts = {
 };
 
 export function slugifyUnderscore(s: string) {
-  return (s || '')
+  return String(s || '')
     .toLowerCase()
     .replace(/[^\w]+/g, '_')
     .replace(/_+/g, '_')
@@ -64,7 +64,7 @@ function lineWithChords(ln: SongLine, useDirectives: boolean): string {
   }
   if (ln.comment) return useDirectives ? `{c: ${cleanLabel(ln.comment)}}` : ln.comment;
   if (!ln?.chords?.length) return ln.lyrics || '';
-  const chars = Array.from(ln.lyrics || '');
+  const lyrics = ln.lyrics || '';
   const byIndex = new Map<number, string[]>();
   for (const c of ln.chords) {
     const arr = byIndex.get(c.index) || [];
@@ -72,12 +72,14 @@ function lineWithChords(ln: SongLine, useDirectives: boolean): string {
     byIndex.set(c.index, arr);
   }
   let out = '';
-  for (let i = 0; i <= chars.length; i++) {
+  // Placement offsets are JavaScript/textarea UTF-16 offsets. Iterate code
+  // units deliberately so astral characters do not shift following chords.
+  for (let i = 0; i <= lyrics.length; i++) {
     if (byIndex.has(i)) {
       const syms = byIndex.get(i)!;
       out += syms.map(s => `[${s}]`).join('');
     }
-    if (i < chars.length) out += chars[i];
+    if (i < lyrics.length) out += lyrics[i];
   }
   return out.replace(/[ \t]+$/, '');
 }

@@ -65,7 +65,7 @@ export * from './auth/authErrorKey'
 export * from './rbac/roles'
 export * from './rbac/userRole'
 
-// Supabase factory (createGcSupabase). Web imports it via the
+// Supabase factory (createLvmSupabase). Web imports it via the
 // '@lavozmisionera/core/supabase/client' subpath, which works under Vite; exposing
 // it on the barrel too lets Metro (React Native) consume the same factory
 // without the extensionless subpath its package-exports resolver rejects.
