@@ -41,7 +41,7 @@ describe('bible translation pref store', () => {
     await hydrateBibleTranslationPref(s)
     setBibleTranslationPref('keh')
     expect(getBibleTranslationPref()).toBe('keh')
-    expect(s.store.get('gc.bible.translation.v1')).toBe('keh')
+    expect(s.store.get('lvm.bible.translation.v1')).toBe('keh')
 
     // Simulated relaunch reads it back.
     await hydrateBibleTranslationPref(memoryStorage())

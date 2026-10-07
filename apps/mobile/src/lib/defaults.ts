@@ -42,11 +42,11 @@ export const DEFAULT_APP_DEFAULTS: AppDefaults = {
   dailyWordDestination: 'landing',
 }
 
-const THEME_KEY = 'gc.defaults.theme'
-const CHORD_STYLE_KEY = 'gc.defaults.chordStyle'
-const KEEP_AWAKE_KEY = 'gc.defaults.keepAwake'
-const LANGUAGE_KEY = 'gc.defaults.language'
-const DAILY_WORD_DESTINATION_KEY = 'gc.defaults.dailyWordDestination'
+const THEME_KEY = 'lvm.defaults.theme'
+const CHORD_STYLE_KEY = 'lvm.defaults.chordStyle'
+const KEEP_AWAKE_KEY = 'lvm.defaults.keepAwake'
+const LANGUAGE_KEY = 'lvm.defaults.language'
+const DAILY_WORD_DESTINATION_KEY = 'lvm.defaults.dailyWordDestination'
 
 const THEME_PREFS: readonly ThemePref[] = ['system', 'light', 'dark']
 const CHORD_STYLES: readonly ChordStyle[] = ['letters', 'solfege']
@@ -132,7 +132,9 @@ export function setDefaultLanguage(v: string | null): void {
   if (cache.language === v) return
   cache = { ...cache, language: v }
   emit()
-  if (v == null) storage?.removeItem(LANGUAGE_KEY).catch(() => {})
+  if (v == null) {
+    storage?.removeItem(LANGUAGE_KEY).catch(() => {})
+  }
   else storage?.setItem(LANGUAGE_KEY, v).catch(() => {})
 }
 

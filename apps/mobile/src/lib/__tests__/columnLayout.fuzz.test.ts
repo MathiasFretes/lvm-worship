@@ -39,7 +39,7 @@ function makeRng(seed: number) {
   }
 }
 
-describe('packOrdered matches brute force', () => {
+describe.each([{ product: 'LVM' }])('$product · packOrdered matches brute force', () => {
   it('over 2000 random section-height sets (k = 1..3)', () => {
     const rng = makeRng(20260807)
     const gap = 12

@@ -57,6 +57,11 @@ describe('beatEmphasis', () => {
     expect(beatEmphasis('4/4', 4, true)).toBe('primary')
     expect(beatEmphasis('6/8', 9, true)).toBe('secondary')
   })
+
+  it('wraps negative beat indices within the measure', () => {
+    expect(beatEmphasis('4/4', -4, true)).toBe('primary')
+    expect(beatEmphasis('6/8', -3, true)).toBe('secondary')
+  })
 })
 
 describe('tempo math', () => {
@@ -71,5 +76,6 @@ describe('tempo math', () => {
     expect(clampBpm(0)).toBe(MIN_BPM)
     expect(clampBpm(10000)).toBe(MAX_BPM)
     expect(clampBpm(Number.NaN)).toBe(MIN_BPM)
+    expect(clampBpm(Number.POSITIVE_INFINITY)).toBe(MIN_BPM)
   })
 })

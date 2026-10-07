@@ -18,7 +18,7 @@ let cachedName: string | null = null
 const listeners = new Set<() => void>()
 
 let fetchedUserId: string | null = null
-let inFlight: Promise<void> | null = null
+const requests = new Map<string, Promise<void>>()
 
 function emit() {
   for (const l of listeners) l()
@@ -54,13 +54,12 @@ export function useDisplayName(): string | null {
     if (uid !== cachedUserId) {
       cachedUserId = uid
       fetchedUserId = null
-      inFlight = null
       setLocalDisplayName(null)
     }
     if (!uid) return
     if (fetchedUserId === uid) return
-    if (!inFlight) {
-      inFlight = fetchDisplayName(supabase, uid)
+    if (!requests.has(uid)) {
+      const request = fetchDisplayName(supabase, uid)
         .then((name) => {
           // Ignore a late result for an account we have since switched away from.
           if (cachedUserId !== uid) return
@@ -74,8 +73,9 @@ export function useDisplayName(): string | null {
           // retries.
         })
         .finally(() => {
-          inFlight = null
+          requests.delete(uid)
         })
+      requests.set(uid, request)
     }
   }, [user?.id, resolved])
 

@@ -13,7 +13,7 @@ const A = CHROMATIC_NOTES.indexOf('A')
 const C = CHROMATIC_NOTES.indexOf('C')
 const B = CHROMATIC_NOTES.indexOf('B')
 
-describe('pitch pipe notes', () => {
+describe.each([{ product: 'LVM' }])('$product · pitch pipe notes', () => {
   it('lays out the 12 chromatic notes from C', () => {
     expect(CHROMATIC_NOTES).toHaveLength(12)
     expect(CHROMATIC_NOTES[0]).toBe('C')

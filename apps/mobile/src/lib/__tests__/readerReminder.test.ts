@@ -27,6 +27,7 @@ function memoryStorage(initial: Record<string, string> = {}): KVStorage & { stor
 }
 
 const CONTENT: ReminderContent = { title: 'Daily Word', body: 'Time to read' }
+const KEY = 'lvm.readerReminder.v1'
 
 function fakeBackend(granted = true) {
   return {
@@ -67,16 +68,26 @@ describe('reader reminder store', () => {
 
   it('clamps a stored out-of-range time on hydrate', async () => {
     const s = memoryStorage({
-      'gc.readerReminder.v1': JSON.stringify({ enabled: true, hour: 99, minute: 99 }),
+      [KEY]: JSON.stringify({ enabled: true, hour: 99, minute: 99 }),
     })
     await hydrateReaderReminder(s)
     expect(getReaderReminder()).toEqual({ enabled: true, hour: 23, minute: 59 })
   })
 
   it('falls back to the disabled default on a corrupt read', async () => {
-    await hydrateReaderReminder(memoryStorage({ 'gc.readerReminder.v1': '{not json' }))
+    await hydrateReaderReminder(memoryStorage({ [KEY]: '{not json' }))
     expect(getReaderReminder()).toEqual(DEFAULT_READER_REMINDER)
   })
+
+  it('hydrates a stored LVM reminder', async () => {
+    await hydrateReaderReminder(
+      memoryStorage({
+        [KEY]: JSON.stringify({ enabled: true, hour: 9, minute: 10 }),
+      }),
+    )
+    expect(getReaderReminder()).toEqual({ enabled: true, hour: 9, minute: 10 })
+  })
+
 })
 
 describe('formatReminderTime', () => {

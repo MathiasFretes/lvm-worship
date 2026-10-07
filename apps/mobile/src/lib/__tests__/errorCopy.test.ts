@@ -55,7 +55,7 @@ const locales = fs
   .map((entry) => entry.name)
   .sort()
 
-describe('errors namespace copy', () => {
+describe.each([{ product: 'LVM' }])('$product · errors namespace copy', () => {
   it('finds the keys the app references', () => {
     const keys = referencedErrorKeys()
     // A guard on the guard: if the scrape silently matched nothing, every

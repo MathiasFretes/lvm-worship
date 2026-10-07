@@ -81,7 +81,7 @@ function makeApp(opts: { introSeenAtLaunch?: boolean; production?: boolean } = {
 async function seedEstablishedInstall(over: Record<string, unknown> = {}) {
   const data = new Map<string, string>([
     [
-      'gc.review.v1',
+      'lvm.review.v1',
       JSON.stringify({
         firstLaunchDate: '2026-07-27',
         openDays: 4,
@@ -110,7 +110,7 @@ beforeEach(() => {
   __resetSessionErrorForTest()
 })
 
-describe('review flow — dwell trigger', () => {
+describe.each([{ product: 'LVM' }])('$product · review flow — dwell trigger', () => {
   it('song viewer, ~10s dwell, then back out: NOT eligible, names the dwell gate', async () => {
     await seedEstablishedInstall()
     const app = makeApp()
@@ -177,7 +177,7 @@ describe('review flow — dwell trigger', () => {
   })
 })
 
-describe('review flow — streak trigger', () => {
+describe.each([{ product: 'LVM' }])('$product · review flow — streak trigger', () => {
   it('reader exit with a streak of 3: NOT eligible; 4+: eligible', async () => {
     await seedEstablishedInstall()
     const app = makeApp()
@@ -196,7 +196,7 @@ describe('review flow — streak trigger', () => {
   })
 })
 
-describe('review flow — session error', () => {
+describe.each([{ product: 'LVM' }])('$product · review flow — session error', () => {
   it('an export failure disqualifies the rest of the session, and relaunch clears it', async () => {
     await seedEstablishedInstall()
     const app = makeApp()
@@ -220,7 +220,7 @@ describe('review flow — session error', () => {
   })
 })
 
-describe('review flow — launch and history gates', () => {
+describe.each([{ product: 'LVM' }])('$product · review flow — launch and history gates', () => {
   it('same launch as the intro: NOT eligible', async () => {
     await seedEstablishedInstall()
     const app = makeApp({ introSeenAtLaunch: false })
@@ -265,7 +265,7 @@ describe('review flow — launch and history gates', () => {
   })
 })
 
-describe('review flow — the request records itself', () => {
+describe.each([{ product: 'LVM' }])('$product · review flow — the request records itself', () => {
   it('a made request immediately blocks the next one, with no success callback', async () => {
     await seedEstablishedInstall()
     const app = makeApp()

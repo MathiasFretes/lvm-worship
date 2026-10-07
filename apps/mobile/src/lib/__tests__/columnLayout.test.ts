@@ -26,7 +26,7 @@ function columnHeights(heights: number[], cuts: number[], gap = GAP): number[] {
   )
 }
 
-describe('packOrdered', () => {
+describe.each([{ product: 'LVM' }])('$product · packOrdered', () => {
   it('keeps everything in one column when asked for one', () => {
     const heights = [100, 200, 300]
     expect(packOrdered(heights, GAP, 1)).toEqual({ cuts: [0], maxHeight: stacked(heights) })
@@ -107,7 +107,7 @@ describe('packOrdered', () => {
   })
 })
 
-describe('instrumentalFits (horizontal spill guard)', () => {
+describe.each([{ product: 'LVM' }])('$product · instrumentalFits (horizontal spill guard)', () => {
   it('passes songs with no chord-only rows', () => {
     expect(instrumentalFits(0, 100, 14)).toBe(true)
   })
@@ -128,7 +128,7 @@ describe('instrumentalFits (horizontal spill guard)', () => {
   })
 })
 
-describe('columnWidthFor', () => {
+describe.each([{ product: 'LVM' }])('$product · columnWidthFor', () => {
   it('returns the full width for one column and subtracts gaps beyond that', () => {
     expect(columnWidthFor(1000, 20, 1)).toBe(1000)
     expect(columnWidthFor(1000, 20, 2)).toBe(490)
@@ -183,7 +183,7 @@ function model(unit: number, sectionCount = 6) {
     new Array<number>(sectionCount).fill(unit * scale * (1 + 0.12 * (columns - 1)))
 }
 
-describe('planColumns tiers', () => {
+describe.each([{ product: 'LVM' }])('$product · planColumns tiers', () => {
   it('tier 1: fits with the chrome visible, at the largest scale that fits', () => {
     // 6 x 40pt sections: one column at 1.6 is 6*64 + 5*12 = 444 — fits 800.
     const { plan } = runPlanner(BASE, model(40))
@@ -238,7 +238,7 @@ describe('planColumns tiers', () => {
   })
 })
 
-describe('planColumns guards', () => {
+describe.each([{ product: 'LVM' }])('$product · planColumns guards', () => {
   it('renders a plain single column before layout reports dimensions', () => {
     const step = planColumns({ ...BASE, contentWidth: 0, samples: new Map() })
     expect(step).toEqual({
@@ -270,7 +270,7 @@ describe('planColumns guards', () => {
   })
 })
 
-describe('planColumns with a manual font size', () => {
+describe.each([{ product: 'LVM' }])('$product · planColumns with a manual font size', () => {
   it('honours the pinned scale and only searches the column count', () => {
     const { plan, asked } = runPlanner({ ...BASE, fontScale: 1.2 }, model(200))
     expect(plan.fontScale).toBe(1.2)
@@ -289,7 +289,7 @@ describe('planColumns with a manual font size', () => {
   })
 })
 
-describe('columnMeasureKey (sample-cache invalidation)', () => {
+describe.each([{ product: 'LVM' }])('$product · columnMeasureKey (sample-cache invalidation)', () => {
   const base: MeasureInputs = {
     width: 700,
     steps: 0,

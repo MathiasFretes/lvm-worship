@@ -8,7 +8,7 @@ import type { BlobStore } from './types'
 // logic layer is storage-agnostic.
 
 function seg(relPath: string): string[] {
-  return String(relPath || '')
+  return String(relPath ?? '')
     .split('/')
     .filter((p) => p && p !== '.')
 }
@@ -22,6 +22,7 @@ function dirAt(relPath: string): Directory {
 }
 
 function ensureDir(relPath: string): void {
+  if (seg(relPath).length === 0) return
   const dir = dirAt(relPath)
   if (!dir.exists) dir.create({ intermediates: true, idempotent: true })
 }
@@ -33,9 +34,7 @@ function parentRel(relPath: string): string {
 
 export const expoBlobStore: BlobStore = {
   async exists(relPath) {
-    const file = fileAt(relPath)
-    if (file.exists) return true
-    return dirAt(relPath).exists
+    return fileAt(relPath).exists || dirAt(relPath).exists
   },
 
   async readText(relPath) {

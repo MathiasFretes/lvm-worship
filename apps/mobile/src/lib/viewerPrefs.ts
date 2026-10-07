@@ -18,9 +18,7 @@ import type { ColumnCount } from './columnCapacity'
 
 export const DEFAULT_COLUMNS: ColumnCount = 1
 
-const STORAGE_KEY = 'gc.viewer.columns.v2'
-/** Superseded per-song key; read once at hydrate for migration, then removed. */
-const LEGACY_KEY = 'gc.viewer.columnMode.v1'
+const STORAGE_KEY = 'lvm.viewer.columns.v2'
 
 let columns: ColumnCount = DEFAULT_COLUMNS
 let storage: KVStorage | null = null
@@ -46,22 +44,6 @@ function parse(raw: string | null): ColumnCount {
   }
 }
 
-/**
- * v1 stored `{ default: 'single'|'double', songs: Record<slug, mode> }`. Only
- * the app-wide default carries over — per-song overrides are dropped by design
- * (the whole point of v2 is that the choice stops changing under you mid-set).
- */
-function parseLegacy(raw: string | null): ColumnCount | null {
-  if (!raw) return null
-  try {
-    const parsed = JSON.parse(raw) as unknown
-    if (!parsed || typeof parsed !== 'object') return null
-    return (parsed as Record<string, unknown>).default === 'double' ? 2 : 1
-  } catch {
-    return null
-  }
-}
-
 function persist(): void {
   if (!storage) return
   if (columns === DEFAULT_COLUMNS) {
@@ -72,25 +54,14 @@ function persist(): void {
 }
 
 /**
- * Load stored prefs into the cache and remember `store` for write-through,
- * migrating a v1 payload on first run. A bad read never crashes the app. Safe
- * to call again to re-read from the same storage (used to simulate a reload in
- * tests).
+ * Load stored prefs into the cache and remember `store` for write-through.
+ * A bad read never crashes the app. Safe to call again to re-read from the same
+ * storage (used to simulate a reload in tests).
  */
 export async function hydrateViewerPrefs(store: KVStorage): Promise<void> {
   storage = store
   try {
-    const raw = await store.getItem(STORAGE_KEY)
-    if (raw != null) {
-      columns = parse(raw)
-    } else {
-      const legacy = parseLegacy(await store.getItem(LEGACY_KEY))
-      columns = legacy ?? DEFAULT_COLUMNS
-      if (legacy != null) {
-        persist()
-        store.removeItem(LEGACY_KEY).catch(() => {})
-      }
-    }
+    columns = parse(await store.getItem(STORAGE_KEY))
   } catch {
     columns = DEFAULT_COLUMNS
   }

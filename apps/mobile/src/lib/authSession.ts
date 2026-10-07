@@ -20,10 +20,11 @@ export type StoredSessionReader = () => Promise<Session | null>
 // as "signed out" rather than a real failure.
 export function isInvalidRefreshTokenError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const e = error as { code?: string; message?: string }
-  if (e.code === 'refresh_token_not_found') return true
-  const msg = typeof e.message === 'string' ? e.message.toLowerCase() : ''
-  return msg.includes('refresh token') && (msg.includes('not found') || msg.includes('invalid'))
+  const { code, message } = error as { code?: unknown; message?: unknown }
+  if (code === 'refresh_token_not_found') return true
+  if (typeof message !== 'string') return false
+  const normalized = message.toLocaleLowerCase('en-US')
+  return /refresh token/.test(normalized) && /(not found|invalid)/.test(normalized)
 }
 
 // GoTrue's automatic init runs `_recoverAndRefresh` the moment the client is
@@ -42,7 +43,7 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
 // Idempotent per target (marks the wrapper so a second call is a no-op) and
 // returns a restore function. `target` is injectable so it unit-tests without
 // mutating the real global console.
-const REFRESH_LOG_SILENCED = '__gcRefreshTokenLogSilenced'
+const REFRESH_LOG_SILENCED = '__lvmRefreshTokenLogSilenced'
 
 type ConsoleErrorTarget = { error: (...args: unknown[]) => void }
 
@@ -78,7 +79,7 @@ export function silenceInvalidRefreshTokenLogs(
 // timeout budget reads in one place. Same number, same semantics as build 12.
 export const INITIAL_SESSION_TIMEOUT_MS = GATE_MS
 
-const TIMED_OUT = Symbol('gc.initialSessionTimeout')
+const TIMED_OUT = Symbol('lvm.initialSessionTimeout')
 
 /**
  * Fall back to the session on disk when the network could not confirm it.
@@ -133,21 +134,18 @@ export async function resolveInitialSession(
   timeoutMs: number = INITIAL_SESSION_TIMEOUT_MS,
   readStoredSession?: StoredSessionReader,
 ): Promise<Session | null> {
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let timer: ReturnType<typeof setTimeout>
   const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
-    timer = setTimeout(() => resolve(TIMED_OUT), timeoutMs)
+    timer = setTimeout(resolve, timeoutMs, TIMED_OUT)
   })
   try {
-    const result = await Promise.race([
-      readPersistedSession(auth, readStoredSession),
-      deadline,
-    ])
+    const result = await Promise.race([readPersistedSession(auth, readStoredSession), deadline])
     // A timeout is the same situation as an offline refresh — we could not
     // confirm the session, which is not the same as not having one.
     if (result !== TIMED_OUT) return result
     return await readStoredSessionSafely(readStoredSession)
   } finally {
-    clearTimeout(timer)
+    clearTimeout(timer!)
   }
 }
 

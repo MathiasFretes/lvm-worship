@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   __resetDownloadsForTest,
+  DEFAULT_DOWNLOADS_STATE,
   getDownload,
   getDownloadsSnapshot,
   hydrateDownloads,
@@ -71,7 +72,77 @@ describe('downloads manifest', () => {
   })
 
   it('ignores malformed persisted state', async () => {
-    await hydrateDownloads(memoryStorage({ 'gc.downloads.v1': '{ not json' }))
+    await hydrateDownloads(memoryStorage({ 'lvm.downloads.v1': '{ not json' }))
     expect(getDownloadsSnapshot().records).toEqual({})
+  })
+
+  it('rejects incomplete records and records whose map key disagrees with their id', async () => {
+    const incomplete = { ...recA, chapterCount: 0 }
+    const mismatched = { ...recA, id: 'niv' }
+    const raw = JSON.stringify({
+      records: { incomplete, esv: mismatched },
+      wifiOnly: true,
+    })
+
+    await hydrateDownloads(memoryStorage({ 'lvm.downloads.v1': raw }))
+
+    expect(getDownloadsSnapshot()).toEqual({ records: {}, wifiOnly: true })
+  })
+
+  it('persists rapid changes in order even when an older write is slow', async () => {
+    const persisted = new Map<string, string>()
+    let releaseFirstWrite!: () => void
+    const firstWriteGate = new Promise<void>((resolve) => {
+      releaseFirstWrite = resolve
+    })
+    let writes = 0
+    const store = {
+      getItem: async (key: string) => persisted.get(key) ?? null,
+      setItem: async (key: string, value: string) => {
+        writes++
+        if (writes === 1) await firstWriteGate
+        persisted.set(key, value)
+      },
+      removeItem: async (key: string) => void persisted.delete(key),
+    }
+
+    await hydrateDownloads(store)
+    upsertDownload(recA)
+    // Let the first write start, then queue the removal behind it.
+    await Promise.resolve()
+    removeDownload(recA.id)
+    releaseFirstWrite()
+
+    // Rehydration waits for all same-process writes before reading.
+    await hydrateDownloads(store)
+    expect(getDownloadsSnapshot().records).toEqual({})
+    expect(writes).toBe(2)
+  })
+
+  it('does not let a slow hydration overwrite a newer in-memory change', async () => {
+    let releaseRead!: (value: string | null) => void
+    const pendingRead = new Promise<string | null>((resolve) => {
+      releaseRead = resolve
+    })
+    let readStarted!: () => void
+    const started = new Promise<void>((resolve) => {
+      readStarted = resolve
+    })
+    const store = {
+      getItem: async () => {
+        readStarted()
+        return pendingRead
+      },
+      setItem: async () => {},
+      removeItem: async () => {},
+    }
+
+    const hydration = hydrateDownloads(store)
+    await started
+    setWifiOnly(true)
+    releaseRead(JSON.stringify(DEFAULT_DOWNLOADS_STATE))
+    await hydration
+
+    expect(getDownloadsSnapshot().wifiOnly).toBe(true)
   })
 })

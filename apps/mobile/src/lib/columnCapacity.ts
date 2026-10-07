@@ -46,9 +46,13 @@ export function maxColumnsFor(
   contentWidth: number,
   gap: number,
 ): ColumnCount {
-  if (minDimension < TABLET_MIN_DIMENSION) return 1
-  const tier: ColumnCount = minDimension < THREE_COLUMN_MIN_DIMENSION ? 2 : 3
+  const safeDimension = Number.isFinite(minDimension) ? Math.max(0, minDimension) : 0
+  if (safeDimension < TABLET_MIN_DIMENSION) return 1
+  const tier: ColumnCount = safeDimension < THREE_COLUMN_MIN_DIMENSION ? 2 : 3
   if (contentWidth <= 0) return tier
-  const byWidth = Math.floor((contentWidth + gap) / (MIN_COLUMN_WIDTH + gap))
-  return Math.max(1, Math.min(tier, byWidth)) as ColumnCount
+  const safeGap = Number.isFinite(gap) ? Math.max(0, gap) : 0
+  const byWidth = Math.floor((contentWidth + safeGap) / (MIN_COLUMN_WIDTH + safeGap))
+  if (byWidth <= 1) return 1
+  if (tier === 2 || byWidth === 2) return 2
+  return 3
 }

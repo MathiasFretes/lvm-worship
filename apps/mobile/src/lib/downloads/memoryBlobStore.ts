@@ -34,8 +34,7 @@ export function createMemoryBlobStore(): MemoryBlobStore {
       const n = norm(relPath)
       if (files.has(n)) return true
       const prefix = dirPrefix(relPath)
-      for (const k of files.keys()) if (k.startsWith(prefix)) return true
-      return false
+      return Array.from(files.keys()).some((key) => key.startsWith(prefix))
     },
 
     async readText(relPath) {
@@ -62,11 +61,10 @@ export function createMemoryBlobStore(): MemoryBlobStore {
       const toPrefix = dirPrefix(toRel)
       // Replace any existing destination tree first (atomic finalize semantics).
       await store.deleteDir(toRel)
-      for (const [k, v] of Array.from(files.entries())) {
-        if (k.startsWith(fromPrefix)) {
-          files.set(toPrefix + k.slice(fromPrefix.length), v)
-          files.delete(k)
-        }
+      const moved = Array.from(files.entries()).filter(([key]) => key.startsWith(fromPrefix))
+      for (const [key] of moved) files.delete(key)
+      for (const [key, value] of moved) {
+        files.set(toPrefix + key.slice(fromPrefix.length), value)
       }
     },
 
@@ -86,14 +84,12 @@ export function createMemoryBlobStore(): MemoryBlobStore {
 function byteLength(s: string): number {
   // UTF-8 byte length without relying on Buffer/TextEncoder availability.
   let bytes = 0
-  for (let i = 0; i < s.length; i++) {
-    const code = s.charCodeAt(i)
-    if (code < 0x80) bytes += 1
-    else if (code < 0x800) bytes += 2
-    else if (code >= 0xd800 && code <= 0xdbff) {
-      bytes += 4
-      i++
-    } else bytes += 3
+  for (const character of s) {
+    const code = character.codePointAt(0) ?? 0
+    if (code <= 0x7f) bytes += 1
+    else if (code <= 0x7ff) bytes += 2
+    else if (code <= 0xffff) bytes += 3
+    else bytes += 4
   }
   return bytes
 }

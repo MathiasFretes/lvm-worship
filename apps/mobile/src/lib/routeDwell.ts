@@ -84,6 +84,21 @@ function toEvent(visit: Visit, now: number): DwellEvent {
   }
 }
 
+function beginVisit(
+  routeKey: string,
+  pathname: string,
+  now: number,
+  foreground: boolean,
+): Visit {
+  return {
+    routeKey,
+    pathname,
+    bankedMs: 0,
+    segmentStart: foreground ? now : null,
+    covered: false,
+  }
+}
+
 /**
  * Create an independent tracker. The app uses a single module-level instance
  * (see reviewService.ts); tests get their own so state cannot leak between them.
@@ -110,13 +125,7 @@ export function createRouteDwellTracker(): RouteDwellTracker {
       }
 
       if (!visit) {
-        visit = {
-          routeKey,
-          pathname,
-          bankedMs: 0,
-          segmentStart: foreground ? now : null,
-          covered: false,
-        }
+        visit = beginVisit(routeKey, pathname, now, foreground)
         return null
       }
 
@@ -133,13 +142,7 @@ export function createRouteDwellTracker(): RouteDwellTracker {
       // A genuine departure — including "sheet dismissed straight into a
       // different route", where the visit being left is the frozen one.
       const departed = toEvent(visit, now)
-      visit = {
-        routeKey,
-        pathname,
-        bankedMs: 0,
-        segmentStart: foreground ? now : null,
-        covered: false,
-      }
+      visit = beginVisit(routeKey, pathname, now, foreground)
       return departed
     },
 

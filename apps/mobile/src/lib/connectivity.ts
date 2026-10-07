@@ -27,16 +27,19 @@ function setOnline(next: boolean) {
   emit()
 }
 
+let probeGeneration = 0
+
 async function probe(): Promise<void> {
+  const generation = ++probeGeneration
   try {
     const state = await Network.getNetworkStateAsync()
     // `isInternetReachable` is undefined on some platforms/versions; fall back to
     // isConnected so an unknown value never reads as offline. Being wrong in the
     // optimistic direction just means no banner, which is the safer mistake.
     const reachable = state.isInternetReachable ?? state.isConnected ?? true
-    setOnline(Boolean(reachable))
+    if (generation === probeGeneration) setOnline(Boolean(reachable))
   } catch {
-    setOnline(true)
+    if (generation === probeGeneration) setOnline(true)
   }
 }
 
@@ -66,6 +69,7 @@ export function startConnectivityWatch(): () => void {
     appStateSub?.remove()
     appStateSub = null
     started = false
+    probeGeneration++
   }
 }
 
@@ -91,4 +95,5 @@ export function __resetConnectivityForTests(): void {
   appStateSub?.remove()
   appStateSub = null
   started = false
+  probeGeneration++
 }

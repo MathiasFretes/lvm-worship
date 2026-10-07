@@ -30,7 +30,7 @@ export type RecentSong = Song & { lastKey: string | null }
 
 type RecentRecord = RecentSong & { openedAt: string }
 
-const STORAGE_KEY = 'gc.recents.songs.v1'
+const STORAGE_KEY = 'lvm.recents.songs.v1'
 const MAX_RECENTS = 20
 
 let cache: RecentRecord[] = []

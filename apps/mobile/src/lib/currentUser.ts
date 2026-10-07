@@ -46,8 +46,21 @@ const UNRESOLVED: CurrentUserState = { user: null, resolved: false }
 let state: CurrentUserState = UNRESOLVED
 const listeners = new Set<() => void>()
 
-function emit() {
-  for (const l of listeners) l()
+function identityFingerprint(user: User | null): string | null {
+  if (!user) return null
+  const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
+  return JSON.stringify([
+    user.id,
+    user.email ?? null,
+    metadata.full_name ?? null,
+    metadata.name ?? null,
+    metadata.avatar_url ?? null,
+  ])
+}
+
+function publish(next: CurrentUserState): void {
+  state = next
+  listeners.forEach((listener) => listener())
 }
 
 /**
@@ -78,12 +91,7 @@ function getSnapshot(): CurrentUserState {
  * (greetings.ts) and useProfileSprite.
  */
 function sameIdentity(a: User | null, b: User | null): boolean {
-  if (a === b) return true
-  if (!a || !b) return false
-  if (a.id !== b.id || a.email !== b.email) return false
-  const am = (a.user_metadata ?? {}) as Record<string, unknown>
-  const bm = (b.user_metadata ?? {}) as Record<string, unknown>
-  return am.full_name === bm.full_name && am.name === bm.name && am.avatar_url === bm.avatar_url
+  return a === b || identityFingerprint(a) === identityFingerprint(b)
 }
 
 /**
@@ -94,8 +102,7 @@ function sameIdentity(a: User | null, b: User | null): boolean {
 export function setCurrentUserFromSession(session: Session | null): void {
   const next = session?.user ?? null
   if (state.resolved && sameIdentity(state.user, next)) return
-  state = { user: next, resolved: true }
-  emit()
+  publish({ user: next, resolved: true })
 }
 
 /** Synchronous read, safe before the root has published (returns unresolved). */

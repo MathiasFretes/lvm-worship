@@ -21,7 +21,8 @@ const Info = AccessibilityInfo as typeof AccessibilityInfo & {
   isDarkerSystemColorsEnabled?: () => Promise<boolean>
 }
 
-const backend: AccessibilityBackend = {
+function createNativeBackend(): AccessibilityBackend {
+  return {
   isReduceMotionEnabled: () => AccessibilityInfo.isReduceMotionEnabled(),
   isIncreaseContrastEnabled: () =>
     Platform.OS === 'ios' && typeof Info.isDarkerSystemColorsEnabled === 'function'
@@ -37,9 +38,10 @@ const backend: AccessibilityBackend = {
     })
     return { remove: () => sub.remove() }
   },
+  }
 }
 
 /** Wire the accessibility-flags store to the OS. Call once at the app root. */
 export function startAccessibilityFlags(): { ready: Promise<void>; stop: () => void } {
-  return initAccessibilityFlags(backend)
+  return initAccessibilityFlags(createNativeBackend())
 }

@@ -66,7 +66,7 @@ describe.each(MODES)('$name mode', ({ colors, boost }) => {
   })
 
   // What the 19 accent-as-text sites were promoted to. It is also the web app's
-  // link colour (`--gc-link` in tokens.css), which is why it is the right token.
+  // link colour in tokens.css, which is why it is the right token.
   it.each(BACKGROUNDS)('textAccent clears normal-text contrast on %s', (bg) => {
     expect(contrastRatio(colors.textAccent, colors[bg])).toBeGreaterThanOrEqual(NORMAL_TEXT)
   })

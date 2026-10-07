@@ -12,16 +12,16 @@ import type { Progression, ProgressionSet } from './types'
 
 /** `'6 – 5/7 – 1 /// 2 – 4 – 5'` → phrases of parsed chords. */
 function phrases(source: string) {
-  return source
-    .split('///')
-    .map((phrase) => ({
-      chords: phrase
-        .split('–')
-        .map((token) => token.trim())
-        .filter(Boolean)
-        .map(parseChordToken),
-    }))
-    .filter((p) => p.chords.length > 0)
+  const result: Progression['phrases'][number][] = []
+  for (const section of source.split('///')) {
+    const chords = section
+      .split('–')
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0)
+      .map(parseChordToken)
+    if (chords.length) result.push({ chords })
+  }
+  return result
 }
 
 function progression(
@@ -43,7 +43,7 @@ function progression(
  * different chord tone underneath — so "Descending bass" belongs in this set
  * even though every other General entry is in root position.
  */
-export const GENERAL_PROGRESSIONS: Progression[] = [
+export const GENERAL_PROGRESSIONS: readonly Progression[] = [
   progression('general', 'g1564', '1 – 5 – 6 – 4'),
   progression('general', 'g145', '1 – 4 – 5'),
   progression('general', 'g6415', '6 – 4 – 1 – 5'),
@@ -81,7 +81,7 @@ export const GENERAL_PROGRESSIONS: Progression[] = [
  * the player, not chords, so they are `noteKey`s surfaced through the note sheet
  * rather than extra data in the sequence.
  */
-export const PRAYER_PROGRESSIONS: Progression[] = [
+export const PRAYER_PROGRESSIONS: readonly Progression[] = [
   progression('prayer', 'pTopics', '1/3 – 4 – 6 – 5 – 4 – 1/3 – 2 – 5'),
   progression('prayer', 'pTopicsAlt', '1/3 – 4 – 6 – 5 – 2 – 1/3 – 4 – 5'),
   progression('prayer', 'pBasic', '4 – 1/3 – 2 – 1/4 – 1/3 – 2 – 5'),
@@ -103,7 +103,7 @@ export const PRAYER_PROGRESSIONS: Progression[] = [
   progression('prayer', 'pIntense', '6 – 4 – 1 /// 6 – 4 – 1 /// 6 – 4 – 1 – 2 – 4 – 5'),
 ]
 
-export const ALL_PROGRESSIONS: Progression[] = [...GENERAL_PROGRESSIONS, ...PRAYER_PROGRESSIONS]
+export const ALL_PROGRESSIONS: readonly Progression[] = [...GENERAL_PROGRESSIONS, ...PRAYER_PROGRESSIONS]
 
 const BY_ID = new Map(ALL_PROGRESSIONS.map((p) => [p.id, p]))
 
@@ -117,5 +117,5 @@ export const DEFAULT_PROGRESSION_ID = 'g1564'
 
 /** Every chord in a progression, phrase boundaries flattened away. */
 export function flatChords(progression: Progression) {
-  return progression.phrases.flatMap((p) => p.chords)
+  return progression.phrases.flatMap(({ chords }) => [...chords])
 }

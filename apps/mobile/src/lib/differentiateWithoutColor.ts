@@ -20,14 +20,16 @@ type NativeDifferentiate = {
 }
 
 const Native = requireOptionalNativeModule<NativeDifferentiate>('DifferentiateWithoutColor')
+const NOOP_SUBSCRIPTION = { remove() {} }
 
 export type DifferentiateSubscription = { remove: () => void }
 
 /** Current OS "Differentiate Without Color" state (false when unavailable). */
 export async function getShouldDifferentiateWithoutColor(): Promise<boolean> {
-  if (!Native) return false
+  const module = Native
+  if (!module) return false
   try {
-    return await Native.getShouldDifferentiateWithoutColor()
+    return Boolean(await module.getShouldDifferentiateWithoutColor())
   } catch {
     return false
   }
@@ -37,11 +39,12 @@ export async function getShouldDifferentiateWithoutColor(): Promise<boolean> {
 export function addDifferentiateWithoutColorListener(
   cb: (value: boolean) => void,
 ): DifferentiateSubscription {
-  if (!Native) return { remove: () => {} }
+  const module = Native
+  if (!module) return NOOP_SUBSCRIPTION
   try {
-    const sub = Native.addListener('onChange', (payload) => cb(!!payload?.value))
-    return { remove: () => sub.remove() }
+    const subscription = module.addListener('onChange', ({ value }) => cb(Boolean(value)))
+    return { remove: () => subscription.remove() }
   } catch {
-    return { remove: () => {} }
+    return NOOP_SUBSCRIPTION
   }
 }

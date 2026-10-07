@@ -21,7 +21,7 @@ function memoryStorage(initial: Record<string, string> = {}): KVStorage & { stor
 const songA = { id: 'a', slug: 'song-a', title: 'Song A', artist: 'X', default_key: 'G' }
 const songB = { id: 'b', slug: 'song-b', title: 'Song B', artist: null, default_key: null }
 
-describe('recently-opened history (getRecentlyOpened seam)', () => {
+describe.each([{ product: 'LVM' }])('$product · recently-opened history (getRecentlyOpened seam)', () => {
   beforeEach(() => __resetRecentsForTest())
 
   it('returns [] before anything is opened (unchanged contract)', async () => {
@@ -100,13 +100,13 @@ describe('recently-opened history (getRecentlyOpened seam)', () => {
     expect(getRecentlyOpened()[0]?.lastKey).toBe('D')
 
     // Entries written before the field existed normalize to null.
-    const legacy = memoryStorage({
-      'gc.recents.songs.v1': JSON.stringify([
+    const olderPayload = memoryStorage({
+      'lvm.recents.songs.v1': JSON.stringify([
         { ...songA, time_signature: null, tempo: null, tags: null, created_at: null, openedAt: '2026-01-01T00:00:00.000Z' },
       ]),
     })
     __resetRecentsForTest()
-    await hydrateRecents(legacy)
+    await hydrateRecents(olderPayload)
     expect(getRecentlyOpened()[0]?.lastKey).toBe(null)
   })
 

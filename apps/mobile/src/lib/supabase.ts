@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { AppState } from 'react-native'
-import { createGcSupabase } from '@lavozmisionera/core'
+import { createLvmSupabase } from '@lavozmisionera/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { silenceInvalidRefreshTokenLogs } from './authSession'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
@@ -28,7 +28,7 @@ export const supabaseConfigError: string | null =
 
 // Drop GoTrue's benign, self-healing "Invalid Refresh Token" console.error
 // before the client is created. That log is emitted from inside GoTrue's own
-// automatic init (`_recoverAndRefresh`), which kicks off when createGcSupabase()
+// automatic init (`_recoverAndRefresh`), which kicks off when createLvmSupabase()
 // constructs the client below — so the filter must be installed FIRST to be in
 // place when init runs. See silenceInvalidRefreshTokenLogs for the full why.
 if (!supabaseConfigError) {
@@ -72,7 +72,7 @@ function supabaseRequestBudget(requestUrl: string): number | null {
 // config-error screen in that case, so this client is never actually used.
 export const supabase: SupabaseClient = supabaseConfigError
   ? (null as unknown as SupabaseClient)
-  : createGcSupabase({
+  : createLvmSupabase({
       url: url as string,
       anonKey: anonKey as string,
       storage: AsyncStorage,

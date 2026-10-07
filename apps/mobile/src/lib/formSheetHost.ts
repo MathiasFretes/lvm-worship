@@ -14,6 +14,7 @@ import { router } from 'expo-router'
 // time UX (iOS can't present two sheets anyway).
 
 type Entry = {
+  id: number
   render: () => ReactNode
   /** Fires when the route unmounts (native swipe-dismiss or programmatic close). */
   onRouteClosed: () => void
@@ -21,6 +22,7 @@ type Entry = {
 
 let entry: Entry | null = null
 let version = 0
+let nextId = 1
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -44,6 +46,7 @@ export function useFormSheetContent(): ReactNode {
 /** Route-side: called when the sheet route unmounts. */
 export function notifyFormSheetRouteClosed() {
   const closed = entry
+  if (!closed) return
   entry = null
   emit()
   closed?.onRouteClosed()
@@ -61,13 +64,19 @@ export function useFormSheet(visible: boolean, render: () => ReactNode, onDismis
   const dismissedRef = useRef(onDismissed)
   dismissedRef.current = onDismissed
   const openRef = useRef(false)
+  const entryIdRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (visible && !openRef.current) {
       openRef.current = true
+      const id = nextId++
+      entryIdRef.current = id
       entry = {
+        id,
         render: () => renderRef.current(),
         onRouteClosed: () => {
+          if (entryIdRef.current !== id) return
+          entryIdRef.current = null
           if (openRef.current) {
             openRef.current = false
             dismissedRef.current()
@@ -87,7 +96,7 @@ export function useFormSheet(visible: boolean, render: () => ReactNode, onDismis
   // While open, re-publish on every owner render so the sheet reflects the
   // owner's latest state (switch flips, segment changes, live counts).
   useEffect(() => {
-    if (openRef.current) emit()
+    if (openRef.current && entry?.id === entryIdRef.current) emit()
   })
 
   // Owner unmounting with the sheet still up: dismiss the route.
@@ -95,6 +104,7 @@ export function useFormSheet(visible: boolean, render: () => ReactNode, onDismis
     () => () => {
       if (openRef.current) {
         openRef.current = false
+        entryIdRef.current = null
         if (router.canGoBack()) router.back()
       }
     },

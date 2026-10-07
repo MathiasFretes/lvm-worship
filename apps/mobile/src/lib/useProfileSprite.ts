@@ -9,7 +9,7 @@ import {
   readCachedSprite,
   writeCachedSprite,
 } from './profile'
-import { SPRITE_SOURCES, type SpriteId } from './sprites'
+import { isSpriteId, SPRITE_SOURCES, type SpriteId } from './sprites'
 
 // The current user's chosen sprite, resolved to a static image source. Backed by
 // a tiny in-memory store so a save (setLocalSprite) updates every consumer at
@@ -33,7 +33,7 @@ const listeners = new Set<() => void>()
 // on the first frame and stays correct offline. The remote read still wins when
 // it lands, so a change made on the web still propagates.
 let fetchedUserId: string | null = null
-let inFlight: Promise<void> | null = null
+const requests = new Map<string, Promise<void>>()
 
 function emit() {
   for (const l of listeners) l()
@@ -67,7 +67,6 @@ export function useProfileSprite(): { spriteId: SpriteId | null; source: ImageSo
     if (uid !== cachedUserId) {
       cachedUserId = uid
       fetchedUserId = null
-      inFlight = null
       setLocalSprite(null)
     }
     if (!uid) {
@@ -76,7 +75,7 @@ export function useProfileSprite(): { spriteId: SpriteId | null; source: ImageSo
       return
     }
     if (fetchedUserId === uid) return
-    if (!inFlight) {
+    if (!requests.has(uid)) {
       // Paint from disk first. Deliberately does NOT set `fetchedUserId`: the
       // cache is a head start, not a substitute for the read below.
       void readCachedSprite(AsyncStorage, uid).then((id) => {
@@ -84,14 +83,14 @@ export function useProfileSprite(): { spriteId: SpriteId | null; source: ImageSo
         // A remote read that already landed wins — this is the slower path only
         // when the network is fast, and it must not overwrite a fresher value.
         if (fetchedUserId === uid) return
-        if (id && id in SPRITE_SOURCES) setLocalSprite(id as SpriteId)
+        if (isSpriteId(id)) setLocalSprite(id)
       })
-      inFlight = fetchSpritePreference(supabase, uid)
+      const request = fetchSpritePreference(supabase, uid)
         .then((id) => {
           // Ignore a late result for an account we have since switched away from.
           if (cachedUserId !== uid) return
           fetchedUserId = uid
-          const next = id && id in SPRITE_SOURCES ? (id as SpriteId) : null
+          const next = isSpriteId(id) ? id : null
           setLocalSprite(next)
           void writeCachedSprite(AsyncStorage, uid, next)
         })
@@ -102,8 +101,9 @@ export function useProfileSprite(): { spriteId: SpriteId | null; source: ImageSo
           // Not marked as fetched, so the next mount retries.
         })
         .finally(() => {
-          inFlight = null
+          requests.delete(uid)
         })
+      requests.set(uid, request)
     }
   }, [user?.id, resolved])
 

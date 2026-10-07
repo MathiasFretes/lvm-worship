@@ -24,6 +24,13 @@ describe('sessionError', () => {
     expect(hasSessionError()).toBe(true)
     expect(sessionErrorScope()).toBe('useSong')
   })
+
+  it('reset restores both the flag and its diagnostic scope', () => {
+    markSessionError('AuthScreen')
+    __resetSessionErrorForTest()
+    expect(hasSessionError()).toBe(false)
+    expect(sessionErrorScope()).toBeNull()
+  })
 })
 
 describe('errors.ts marks the session', () => {

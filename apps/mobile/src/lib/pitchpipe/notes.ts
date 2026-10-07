@@ -21,6 +21,10 @@ export const CHROMATIC_NOTES = [
 export const MIN_OCTAVE = 2
 export const MAX_OCTAVE = 6
 export const DEFAULT_OCTAVE = 4
+const NOTES_PER_OCTAVE = CHROMATIC_NOTES.length
+const MIDI_C0 = 12
+const MIDI_A4 = 69
+const CONCERT_A_HZ = 440
 
 export function clampOctave(octave: number): number {
   if (!Number.isFinite(octave)) return DEFAULT_OCTAVE
@@ -29,10 +33,11 @@ export function clampOctave(octave: number): number {
 
 /** MIDI note number for a chromatic index (0 = C) at an octave (C4 = 60). */
 export function midiNote(noteIndex: number, octave: number): number {
-  return 12 * (octave + 1) + noteIndex
+  return MIDI_C0 + NOTES_PER_OCTAVE * octave + noteIndex
 }
 
 /** Equal-temperament frequency in Hz (A4 = 440). */
 export function noteFrequency(noteIndex: number, octave: number): number {
-  return 440 * Math.pow(2, (midiNote(noteIndex, octave) - 69) / 12)
+  const semitonesFromA4 = midiNote(noteIndex, octave) - MIDI_A4
+  return CONCERT_A_HZ * 2 ** (semitonesFromA4 / NOTES_PER_OCTAVE)
 }

@@ -12,8 +12,10 @@ import { markSessionError } from './sessionError'
 // caller's own localized copy instead — see reportFailure.
 export function errMessage(err: unknown): string {
   if (err instanceof Error) return err.message
-  if (err && typeof err === 'object' && 'message' in err) {
-    return String((err as { message: unknown }).message)
+  if (typeof err === 'string') return err
+  if (err && typeof err === 'object') {
+    const message = Reflect.get(err, 'message')
+    if (message != null) return String(message)
   }
   return String(err)
 }
@@ -62,8 +64,8 @@ export class UserFacingError extends Error {
 function isUserFacingError(err: unknown): boolean {
   if (err instanceof UserFacingError) return true
   if (!err || typeof err !== 'object') return false
-  const e = err as { name?: unknown; message?: unknown }
-  return e.name === 'UserFacingError' || errMessage(err).startsWith('UserFacingError:')
+  return Reflect.get(err, 'name') === 'UserFacingError' ||
+    errMessage(err).startsWith('UserFacingError:')
 }
 
 /**
@@ -75,10 +77,8 @@ function isUserFacingError(err: unknown): boolean {
  */
 function isNetworkFailure(err: unknown): boolean {
   const message = errMessage(err).toLowerCase()
-  return (
-    message.includes('network request failed') ||
-    message.includes('failed to fetch') ||
-    message.includes('network error')
+  return ['network request failed', 'failed to fetch', 'network error'].some((needle) =>
+    message.includes(needle),
   )
 }
 

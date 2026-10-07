@@ -22,7 +22,7 @@ function memoryStorage(initial: Record<string, string> = {}): KVStorage & { stor
 
 const d = (iso: string) => new Date(`${iso}T12:00:00`)
 
-describe('reading streak', () => {
+describe.each([{ product: 'LVM' }])('$product · reading streak', () => {
   beforeEach(() => __resetReadingStreakForTest())
 
   it('is disabled by default and marking is a no-op while disabled', async () => {
@@ -91,7 +91,7 @@ describe('reading streak', () => {
   })
 
   it('falls back to the disabled default on a corrupt read', async () => {
-    const s = memoryStorage({ 'gc.readingStreak.v1': '{not json' })
+    const s = memoryStorage({ 'lvm.readingStreak.v1': '{not json' })
     await hydrateReadingStreak(s)
     expect(getReadingStreak()).toEqual({ enabled: false, count: 0, lastReadDate: null })
   })

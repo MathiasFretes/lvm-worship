@@ -10,7 +10,13 @@ import { TABLET_MIN_DIMENSION } from './columnCapacity'
 // unit-tested) and is re-exported here for existing importers.
 export { TABLET_MIN_DIMENSION }
 
+function isTabletViewport(width: number, height: number): boolean {
+  return Number.isFinite(width) &&
+    Number.isFinite(height) &&
+    Math.min(width, height) >= TABLET_MIN_DIMENSION
+}
+
 export function useIsTabletWidth(): boolean {
   const { width, height } = useWindowDimensions()
-  return Math.min(width, height) >= TABLET_MIN_DIMENSION
+  return isTabletViewport(width, height)
 }

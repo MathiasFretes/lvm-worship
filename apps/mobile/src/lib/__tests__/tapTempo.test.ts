@@ -26,7 +26,7 @@ function tapSeries2(
   return bpm
 }
 
-describe('createTapTempo', () => {
+describe.each([{ product: 'LVM' }])('$product · createTapTempo', () => {
   it('returns null on the first tap', () => {
     expect(createTapTempo().tap(1000)).toBeNull()
   })

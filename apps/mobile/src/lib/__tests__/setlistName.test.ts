@@ -8,7 +8,7 @@ const SEP_12 = new Date(2026, 8, 12)
 const t = (key: string, opts: { date: string }) =>
   key === 'defaultName' ? `${opts.date} Worship` : key
 
-describe('formatSetDate', () => {
+describe.each([{ product: 'LVM' }])('$product · formatSetDate', () => {
   it('orders month/day per locale', () => {
     expect(formatSetDate(SEP_12, 'en-US')).toBe('9/12')
     // es puts the day first; the exact separator is the platform's business.
@@ -20,7 +20,7 @@ describe('formatSetDate', () => {
   })
 })
 
-describe('defaultSetlistName', () => {
+describe.each([{ product: 'LVM' }])('$product · defaultSetlistName', () => {
   it('names the first set of the day cleanly', () => {
     expect(defaultSetlistName(t, 'en-US', [], SEP_12)).toBe('9/12 Worship')
   })

@@ -141,6 +141,10 @@ describe('rmsLevel', () => {
     expect(rmsLevel(new Float32Array(512))).toBe(0)
     expect(rmsLevel(sine(440, 48000, 4800))).toBeCloseTo(Math.SQRT1_2, 2)
   })
+
+  it('treats an empty capture buffer as silence', () => {
+    expect(rmsLevel(new Float32Array())).toBe(0)
+  })
 })
 
 describe('createCentsSmoother', () => {
@@ -159,5 +163,11 @@ describe('createCentsSmoother', () => {
     let value = 0
     for (let i = 0; i < 20; i++) value = smoother.push(5)
     expect(value).toBeCloseTo(5, 1)
+  })
+
+  it('normalizes invalid smoothing options to safe limits', () => {
+    const smoother = createCentsSmoother({ medianWindow: 0, emaAlpha: 4 })
+    expect(smoother.push(10)).toBe(10)
+    expect(smoother.push(20)).toBe(20)
   })
 })

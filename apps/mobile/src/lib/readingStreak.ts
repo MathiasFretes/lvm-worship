@@ -24,7 +24,7 @@ export const DEFAULT_READING_STREAK: ReadingStreak = {
   lastReadDate: null,
 }
 
-const STORAGE_KEY = 'gc.readingStreak.v1'
+const STORAGE_KEY = 'lvm.readingStreak.v1'
 
 let cache: ReadingStreak = DEFAULT_READING_STREAK
 let storage: KVStorage | null = null
@@ -56,7 +56,8 @@ function isReadingStreak(v: unknown): v is ReadingStreak {
   const r = v as Record<string, unknown>
   return (
     typeof r.enabled === 'boolean' &&
-    typeof r.count === 'number' &&
+    Number.isInteger(r.count) &&
+    (r.count as number) >= 0 &&
     (r.lastReadDate === null || typeof r.lastReadDate === 'string')
   )
 }

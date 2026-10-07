@@ -25,11 +25,15 @@ export const DETENT_DEG = 360 / DETENT_COUNT
 /** Below this radius a touch is too close to the center for angle tracking to be stable. */
 export const MIN_DRAG_RADIUS = 70
 
+function wrapIndex(index: number): number {
+  return ((index % DETENT_COUNT) + DETENT_COUNT) % DETENT_COUNT
+}
+
 /** The key `steps` fifths from `key`, wrapping the circle. */
 export function keyAtOffset(key: string, steps: number): WheelKey {
   const base = FIFTHS.indexOf(key as WheelKey)
   const from = base === -1 ? 0 : base
-  return FIFTHS[(((from + steps) % DETENT_COUNT) + DETENT_COUNT) % DETENT_COUNT]
+  return FIFTHS[wrapIndex(from + steps)]
 }
 
 /** Wheel slot for a key name, or 0 if unrecognized. */
@@ -45,7 +49,7 @@ export function keySlot(key: string): number {
  */
 export function slotOffset(slot: number, tonicSlot: number): number {
   'worklet'
-  const raw = ((((slot - tonicSlot) % DETENT_COUNT) + DETENT_COUNT) % DETENT_COUNT)
+  const raw = ((slot - tonicSlot) % DETENT_COUNT + DETENT_COUNT) % DETENT_COUNT
   return raw > DETENT_COUNT / 2 - 1 ? raw - DETENT_COUNT : raw
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { chunkRows } from '../gridRows'
 
-describe('chunkRows', () => {
+describe.each([{ product: 'LVM' }])('$product · chunkRows', () => {
   it('chunks row-major into full rows of N', () => {
     expect(chunkRows([1, 2, 3, 4, 5, 6], 3)).toEqual([
       [1, 2, 3],

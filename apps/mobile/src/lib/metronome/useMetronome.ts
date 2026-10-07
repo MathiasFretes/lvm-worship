@@ -45,6 +45,16 @@ function scheduleClick(ctx: AudioContext, at: number, emphasis: BeatEmphasis) {
   osc.stop(at + CLICK_DECAY_S + 0.02)
 }
 
+type ScheduledBeat = { beat: number; time: number }
+
+function dequeueSounding(queue: ScheduledBeat[], currentTime: number): number | null {
+  let beat: number | null = null
+  while (queue.length > 0 && queue[0].time <= currentTime) {
+    beat = queue.shift()!.beat
+  }
+  return beat
+}
+
 export interface Metronome {
   running: boolean
   start: () => Promise<void>
@@ -77,7 +87,7 @@ export function useMetronome(initialBpm = 100): Metronome {
   const accentRef = useRef(accentEnabled)
   const nextTimeRef = useRef(0)
   const beatRef = useRef(0)
-  const queueRef = useRef<{ beat: number; time: number }[]>([])
+  const queueRef = useRef<ScheduledBeat[]>([])
 
   const tick = useCallback(() => {
     const ctx = ctxRef.current
@@ -91,11 +101,8 @@ export function useMetronome(initialBpm = 100): Metronome {
       beatRef.current = beat + 1
     }
     // Advance the visual indicator to the newest beat the clock has passed.
-    let sounding: { beat: number } | null = null
-    while (queueRef.current.length > 0 && queueRef.current[0].time <= ctx.currentTime) {
-      sounding = queueRef.current.shift()!
-    }
-    if (sounding) setCurrentBeat(sounding.beat)
+    const sounding = dequeueSounding(queueRef.current, ctx.currentTime)
+    if (sounding !== null) setCurrentBeat(sounding)
   }, [])
 
   const stop = useCallback(() => {

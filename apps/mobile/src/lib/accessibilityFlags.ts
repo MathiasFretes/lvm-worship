@@ -55,16 +55,17 @@ function emit() {
 }
 
 function patch(next: Partial<AccessibilityFlags>): void {
-  let changed = false
-  const merged = { ...cache }
-  for (const key of Object.keys(next) as (keyof AccessibilityFlags)[]) {
-    const value = next[key]
-    if (value !== undefined && merged[key] !== value) {
-      merged[key] = value
-      changed = true
-    }
+  const merged: AccessibilityFlags = {
+    reduceMotion: next.reduceMotion ?? cache.reduceMotion,
+    increaseContrast: next.increaseContrast ?? cache.increaseContrast,
+    differentiateWithoutColor:
+      next.differentiateWithoutColor ?? cache.differentiateWithoutColor,
   }
-  if (!changed) return
+  if (
+    merged.reduceMotion === cache.reduceMotion &&
+    merged.increaseContrast === cache.increaseContrast &&
+    merged.differentiateWithoutColor === cache.differentiateWithoutColor
+  ) return
   cache = merged
   emit()
 }
@@ -97,15 +98,23 @@ export function initAccessibilityFlags(backend: AccessibilityBackend): {
 } {
   let alive = true
 
+  const query = async (read: () => Promise<boolean>) => {
+    try {
+      return Boolean(await read())
+    } catch {
+      return false
+    }
+  }
   const ready = Promise.all([
-    backend.isReduceMotionEnabled().catch(() => false),
-    backend.isIncreaseContrastEnabled().catch(() => false),
-    backend.isDifferentiateWithoutColorEnabled().catch(() => false),
+    query(backend.isReduceMotionEnabled),
+    query(backend.isIncreaseContrastEnabled),
+    query(backend.isDifferentiateWithoutColorEnabled),
   ]).then(([reduceMotion, increaseContrast, differentiateWithoutColor]) => {
-    if (alive) patch({ reduceMotion, increaseContrast, differentiateWithoutColor })
+    if (!alive) return
+    patch({ reduceMotion, increaseContrast, differentiateWithoutColor })
   })
 
-  const subs: FlagSubscription[] = [
+  const subs = [
     backend.onReduceMotionChanged((value) => {
       if (alive) patch({ reduceMotion: value })
     }),
@@ -120,13 +129,13 @@ export function initAccessibilityFlags(backend: AccessibilityBackend): {
         })
         .catch(() => {})
     }),
-  ]
+  ].filter((sub): sub is FlagSubscription => Boolean(sub))
 
   return {
     ready,
     stop: () => {
       alive = false
-      for (const sub of subs) sub.remove()
+      while (subs.length) subs.pop()?.remove()
     },
   }
 }

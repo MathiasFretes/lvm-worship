@@ -14,8 +14,9 @@
 // RN-free and dependency-free so the modules that mark it (errors.ts, api.ts)
 // stay unit-testable headless, exactly as they are today.
 
-let errored = false
-let firstScope: string | null = null
+type SessionHealth = { firstErrorScope: string | null }
+
+const health: SessionHealth = { firstErrorScope: null }
 
 /**
  * Record that something visibly failed. `scope` is the same caller identifier
@@ -28,23 +29,21 @@ let firstScope: string | null = null
  * isAbortError check in errors.ts.
  */
 export function markSessionError(scope: string): void {
-  if (errored) return
-  errored = true
-  firstScope = scope
+  if (health.firstErrorScope !== null) return
+  health.firstErrorScope = scope
 }
 
 /** Whether any failure has been recorded this session. */
 export function hasSessionError(): boolean {
-  return errored
+  return health.firstErrorScope !== null
 }
 
 /** The scope of the first failure this session, for dev logging only. */
 export function sessionErrorScope(): string | null {
-  return firstScope
+  return health.firstErrorScope
 }
 
 /** Test-only reset so each test starts from a clean module state. */
 export function __resetSessionErrorForTest(): void {
-  errored = false
-  firstScope = null
+  health.firstErrorScope = null
 }

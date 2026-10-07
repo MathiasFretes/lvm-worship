@@ -150,6 +150,28 @@ function ringSize(v: ArcVariant, ring: ArcRing): number {
   return ring === 'major' ? v.majorSize : v.minorSize
 }
 
+function nodeFor(
+  variant: ArcVariant,
+  centerX: number,
+  centerY: number,
+  ring: ArcRing,
+  slot: number,
+): ArcNode {
+  const angle = slotAngle(variant, ring, slot)
+  const { x, y } = polar(variant, ring, angle)
+  const size = ringSize(variant, ring)
+  return {
+    ring,
+    slot,
+    size,
+    angle,
+    x,
+    y,
+    left: centerX + x - size / 2,
+    top: centerY + y - size / 2,
+  }
+}
+
 /** Bubble centre for a ring/angle pair, relative to the circle centre. */
 export function polar(v: ArcVariant, ring: ArcRing, angle: number): { x: number; y: number } {
   const r = ringRadius(v, ring)
@@ -174,24 +196,9 @@ export function arcLayout(v: ArcVariant, width: number, extraBottom = 0): ArcLay
   const centerX = width / 2
   const centerY = contentHeight + v.centerDrop
 
-  const nodes = [
-    ...v.majorSlots.map((slot) => ({ ring: 'major' as const, slot })),
-    ...v.minorSlots.map((slot) => ({ ring: 'minor' as const, slot })),
-  ].map(({ ring, slot }) => {
-    const angle = slotAngle(v, ring, slot)
-    const { x, y } = polar(v, ring, angle)
-    const size = ringSize(v, ring)
-    return {
-      ring,
-      slot,
-      size,
-      angle,
-      x,
-      y,
-      left: centerX + x - size / 2,
-      top: centerY + y - size / 2,
-    }
-  })
+  const nodes = v.majorSlots
+    .map((slot) => nodeFor(v, centerX, centerY, 'major', slot))
+    .concat(v.minorSlots.map((slot) => nodeFor(v, centerX, centerY, 'minor', slot)))
 
   return { width, height: contentHeight + extraBottom, centerX, centerY, nodes }
 }

@@ -91,19 +91,27 @@ export function buildSectionListLayout<S extends { data: readonly unknown[] }>(
 ): CellLayout[] {
   const cells: CellLayout[] = []
   let offset = 0
-  const push = (length: number) => {
-    cells.push({ length, offset, index: cells.length })
+  const append = (measured: number) => {
+    const length = Number.isFinite(measured) ? Math.max(0, measured) : 0
+    const index = cells.length
+    cells.push({ length, offset, index })
     offset += length
   }
-  sections.forEach((section, sectionIndex) => {
-    push(measure.header(section, sectionIndex))
-    section.data.forEach((item, itemIndex) => push(measure.item(item, sectionIndex, itemIndex)))
-    push(0) // section footer
-  })
+  for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+    const section = sections[sectionIndex]
+    append(measure.header(section, sectionIndex))
+    for (let itemIndex = 0; itemIndex < section.data.length; itemIndex++) {
+      append(measure.item(section.data[itemIndex], sectionIndex, itemIndex))
+    }
+    append(0) // section footer
+  }
   return cells
 }
 
 /** `getItemLayout` reader that tolerates an index past the end of the table. */
 export function cellLayoutAt(cells: readonly CellLayout[], index: number): CellLayout {
-  return cells[index] ?? { length: 0, offset: cells[cells.length - 1]?.offset ?? 0, index }
+  const found = cells[index]
+  if (found) return found
+  const last = cells[cells.length - 1]
+  return { length: 0, offset: last?.offset ?? 0, index }
 }

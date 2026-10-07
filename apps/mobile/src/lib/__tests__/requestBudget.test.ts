@@ -31,7 +31,7 @@ function hangingFetch(): FetchFn {
 
 const okResponse = () => ({ ok: true, status: 200 }) as unknown as Response
 
-describe('budgets', () => {
+describe.each([{ product: 'LVM' }])('$product · budgets', () => {
   it('orders the three budgets by how much the user is waiting', () => {
     // The gate is the only budget the user experiences as "not launched", so it
     // is the tightest; background work must yield to foreground work.
@@ -44,7 +44,7 @@ describe('budgets', () => {
   })
 })
 
-describe('withRequestBudget', () => {
+describe.each([{ product: 'LVM' }])('$product · withRequestBudget', () => {
   it('rejects with RequestTimeoutError once the budget lapses', async () => {
     vi.useFakeTimers()
     try {
@@ -120,7 +120,7 @@ describe('withRequestBudget', () => {
   })
 })
 
-describe('RequestTimeoutError shape', () => {
+describe.each([{ product: 'LVM' }])('$product · RequestTimeoutError shape', () => {
   // These are not cosmetic. postgrest-js short-circuits its retry loop only for
   // name 'AbortError' or code 'ABORT_ERR'; every read this app makes is a GET,
   // which postgrest retries 3x with 1s/2s/4s backoff by default. Without
@@ -141,7 +141,7 @@ describe('RequestTimeoutError shape', () => {
   })
 })
 
-describe('classification through a Supabase query', () => {
+describe.each([{ product: 'LVM' }])('$product · classification through a Supabase query', () => {
   // postgrest-js discards `code` for client-side network errors and reshapes the
   // failure as { message: '<name>: <message>' }, so the message prefix is the
   // only surviving evidence. If this ever regresses, every error branch silently
@@ -190,7 +190,7 @@ describe('classification through a Supabase query', () => {
   })
 })
 
-describe('withDeadline', () => {
+describe.each([{ product: 'LVM' }])('$product · withDeadline', () => {
   it('stops waiting at the deadline without cancelling the work', async () => {
     vi.useFakeTimers()
     try {

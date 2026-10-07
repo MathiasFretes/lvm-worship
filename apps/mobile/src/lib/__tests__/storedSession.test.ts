@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { authStorageKey, parseStoredSession } from '../storedSession'
+import { describe, expect, it, vi } from 'vitest'
+import { authStorageKey, makeStoredSessionReader, parseStoredSession } from '../storedSession'
 
 describe('authStorageKey', () => {
   // Must match auth-js's own default exactly — a different key points at an
@@ -13,6 +13,10 @@ describe('authStorageKey', () => {
   it('does not throw on an empty or malformed URL', () => {
     expect(() => authStorageKey('')).not.toThrow()
     expect(() => authStorageKey('not a url')).not.toThrow()
+  })
+
+  it('accepts uppercase URL schemes', () => {
+    expect(authStorageKey('HTTPS://abcdefgh.supabase.co/path')).toBe('sb-abcdefgh-auth-token')
   })
 })
 
@@ -39,5 +43,21 @@ describe('parseStoredSession', () => {
     expect(parseStoredSession('')).toBeNull()
     expect(parseStoredSession('{not json')).toBeNull()
     expect(parseStoredSession('"a string"')).toBeNull()
+  })
+})
+
+describe('makeStoredSessionReader', () => {
+  it('reads auth-js storage through the injected adapter', async () => {
+    const raw = JSON.stringify({ access_token: 'a', refresh_token: 'r', user: { id: 'u' } })
+    const storage = { getItem: vi.fn().mockResolvedValue(raw) }
+    const read = makeStoredSessionReader('https://project.supabase.co', storage)
+
+    await expect(read()).resolves.toMatchObject({ user: { id: 'u' } })
+    expect(storage.getItem).toHaveBeenCalledWith('sb-project-auth-token')
+  })
+
+  it('treats storage failures as an unavailable offline session', async () => {
+    const storage = { getItem: vi.fn().mockRejectedValue(new Error('unavailable')) }
+    await expect(makeStoredSessionReader('https://project.supabase.co', storage)()).resolves.toBeNull()
   })
 })

@@ -14,6 +14,12 @@ function centre(ring: 'major' | 'minor', slot: number) {
 }
 
 describe('the arc at 375pt', () => {
+  it('builds every configured node exactly once', () => {
+    expect(layout.nodes).toHaveLength(PHONE_ARC.majorSlots.length + PHONE_ARC.minorSlots.length)
+    expect(new Set(layout.nodes.map(({ ring, slot }) => `${ring}:${slot}`)).size)
+      .toBe(layout.nodes.length)
+  })
+
   it('keeps a real margin at the widest bubbles', () => {
     const widest = Math.max(...layout.nodes.map((n) => Math.abs(n.x) + n.size / 2))
     expect(widest).toBeCloseTo(179.0, 1)

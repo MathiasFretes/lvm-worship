@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { capoChipValues, capoFret, capoHint } from '../capo'
 
-describe('capoFret', () => {
+describe.each([{ product: 'LVM' }])('$product · capoFret', () => {
   it('has no capo at zero or upward transpose', () => {
     expect(capoFret(0)).toBeNull()
     expect(capoFret(1)).toBeNull()
@@ -25,7 +25,7 @@ describe('capoFret', () => {
   })
 })
 
-describe('capoHint / capoChipValues', () => {
+describe.each([{ product: 'LVM' }])('$product · capoHint / capoChipValues', () => {
   it('computes fret + sounding key for several keys', () => {
     // Chart shows G after 2 down from A: capo 2 sounds A.
     expect(capoHint(-2, 'G')).toEqual({ fret: 2, soundingKey: 'A' })

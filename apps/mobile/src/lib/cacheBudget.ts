@@ -35,19 +35,27 @@ export function planEviction(
   keep: readonly string[] = [],
 ): string[] {
   const protectedPaths = new Set(keep)
-  const total = entries.reduce((sum, e) => sum + Math.max(0, e.bytes), 0)
+  const sized = entries.map((entry, index) => ({
+    entry,
+    index,
+    bytes: Number.isFinite(entry.bytes) ? Math.max(0, entry.bytes) : 0,
+  }))
+  const total = sized.reduce((sum, item) => sum + item.bytes, 0)
   if (total <= budgetBytes) return []
 
-  const evictable = entries
-    .filter((e) => !protectedPaths.has(e.path))
-    .sort((a, b) => a.lastUsedMs - b.lastUsedMs)
+  const evictable = sized
+    .filter(({ entry }) => !protectedPaths.has(entry.path))
+    .sort((a, b) => {
+      const age = a.entry.lastUsedMs - b.entry.lastUsedMs
+      return Number.isNaN(age) || age === 0 ? a.index - b.index : age
+    })
 
   const evicted: string[] = []
   let remaining = total
-  for (const entry of evictable) {
+  for (const { entry, bytes } of evictable) {
     if (remaining <= budgetBytes) break
     evicted.push(entry.path)
-    remaining -= Math.max(0, entry.bytes)
+    remaining -= bytes
   }
   return evicted
 }

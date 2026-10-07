@@ -7,10 +7,9 @@ import type { User } from '@supabase/supabase-js'
 
 /** Time-of-day greeting key under home:greeting.*, e.g. 'greeting.morning'. */
 export function timeGreetingKey(date: Date = new Date()): string {
-  const h = date.getHours()
-  if (h < 12) return 'greeting.morning'
-  if (h < 18) return 'greeting.afternoon'
-  return 'greeting.evening'
+  const hour = date.getHours()
+  const period = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+  return `greeting.${period}`
 }
 
 /**
@@ -33,9 +32,12 @@ export function pickSubGreetingIndex(): number {
  */
 export function getDisplayName(user: User | null): string | null {
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
-  const full = (meta.full_name ?? meta.name) as string | undefined
-  if (full && full.trim()) return full.trim().split(/\s+/)[0]
-  const email = user?.email
-  if (email) return email.split('@')[0]
+  const providerName = [meta.full_name, meta.name].find(
+    (value): value is string => typeof value === 'string' && value.trim().length > 0,
+  )
+  if (providerName) return providerName.trim().split(/\s+/, 1)[0]
+
+  const emailName = user?.email?.split('@', 1)[0]?.trim()
+  if (emailName) return emailName
   return null
 }

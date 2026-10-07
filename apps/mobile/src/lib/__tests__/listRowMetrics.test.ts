@@ -9,7 +9,7 @@ import {
 
 const ROW_CHROME = 11 * 2 + 0.5
 
-describe('listRowHeight', () => {
+describe.each([{ product: 'LVM' }])('$product · listRowHeight', () => {
   it('measures a title-only row from the title line plus the row chrome', () => {
     expect(listRowHeight({ subtitle: false, key: false, meta: false })).toBe(
       ROW_CHROME + LINE_HEIGHTS.rowTitle,
@@ -49,14 +49,14 @@ describe('listRowHeight', () => {
   })
 })
 
-describe('sectionHeaderHeight', () => {
+describe.each([{ product: 'LVM' }])('$product · sectionHeaderHeight', () => {
   it('is the label line plus its paddings', () => {
     expect(sectionHeaderHeight()).toBe(7 + 4 + LINE_HEIGHTS.sectionHeader)
     expect(sectionHeaderHeight(1.5)).toBe(7 + 4 + LINE_HEIGHTS.sectionHeader * 1.5)
   })
 })
 
-describe('buildSectionListLayout', () => {
+describe.each([{ product: 'LVM' }])('$product · buildSectionListLayout', () => {
   const sections = [
     { title: 'A', data: ['a1', 'a2'] },
     { title: 'B', data: ['b1'] },
@@ -94,7 +94,7 @@ describe('buildSectionListLayout', () => {
   })
 })
 
-describe('cellLayoutAt', () => {
+describe.each([{ product: 'LVM' }])('$product · cellLayoutAt', () => {
   const cells = buildSectionListLayout([{ title: 'A', data: ['a1'] }], {
     header: () => 30,
     item: () => 60,

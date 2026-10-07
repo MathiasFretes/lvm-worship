@@ -73,4 +73,14 @@ describe('a drag', () => {
     c.advance(5)
     expect(h.lock()).toBe('lock')
   })
+
+  it('measures suppression from the most recent tick', () => {
+    const c = clock()
+    const h = createWheelHaptics(c.now)
+    h.tick()
+    c.advance(LOCK_SUPPRESS_MS + 10)
+    h.tick()
+    c.advance(LOCK_SUPPRESS_MS - 1)
+    expect(h.lock()).toBe('none')
+  })
 })

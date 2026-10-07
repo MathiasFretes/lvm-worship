@@ -7,7 +7,7 @@ import { streakDateKey } from './readingStreak'
 // INSTALL, not this account: the OS enforces its review quota per device, so a
 // user signing in on a second phone genuinely starts fresh, and syncing would
 // mean a schema change for data the server has no use for. Same reasoning as
-// gc.intro.seen.v1 (introSeen.ts).
+// the intro-seen state.
 //
 // Follows the defaults.ts pattern — storage is INJECTED so the module is RN-free
 // and unit-testable headless. Unlike the stores in the splash gate, hydration
@@ -44,7 +44,7 @@ export const DEFAULT_REVIEW_STATE: ReviewState = {
   requestCount: 0,
 }
 
-export const REVIEW_STORAGE_KEY = 'gc.review.v1'
+export const REVIEW_STORAGE_KEY = 'lvm.review.v1'
 
 let cache: ReviewState = DEFAULT_REVIEW_STATE
 let storage: KVStorage | null = null
@@ -58,10 +58,13 @@ function isReviewState(v: unknown): v is ReviewState {
   const r = v as Record<string, unknown>
   return (
     (r.firstLaunchDate === null || typeof r.firstLaunchDate === 'string') &&
-    typeof r.openDays === 'number' &&
+    Number.isInteger(r.openDays) &&
+    (r.openDays as number) >= 0 &&
     (r.lastOpenDate === null || typeof r.lastOpenDate === 'string') &&
-    (r.lastRequestAt === null || typeof r.lastRequestAt === 'number') &&
-    typeof r.requestCount === 'number'
+    (r.lastRequestAt === null ||
+      (typeof r.lastRequestAt === 'number' && Number.isFinite(r.lastRequestAt))) &&
+    Number.isInteger(r.requestCount) &&
+    (r.requestCount as number) >= 0
   )
 }
 

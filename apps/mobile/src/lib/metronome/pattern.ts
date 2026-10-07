@@ -4,15 +4,18 @@
 
 export type TimeSignatureId = '4/4' | '2/4' | '3/4' | '6/8'
 
-export const TIME_SIGNATURES: readonly { id: TimeSignatureId; beats: number }[] = [
-  { id: '4/4', beats: 4 },
-  { id: '2/4', beats: 2 },
-  { id: '3/4', beats: 3 },
-  { id: '6/8', beats: 6 },
-]
+const SIGNATURE_BEATS: Record<TimeSignatureId, number> = {
+  '4/4': 4,
+  '2/4': 2,
+  '3/4': 3,
+  '6/8': 6,
+}
+
+export const TIME_SIGNATURES = (Object.entries(SIGNATURE_BEATS) as [TimeSignatureId, number][])
+  .map(([id, beats]) => ({ id, beats }))
 
 export function beatsInMeasure(sig: TimeSignatureId): number {
-  return TIME_SIGNATURES.find((s) => s.id === sig)!.beats
+  return SIGNATURE_BEATS[sig]
 }
 
 export type BeatEmphasis = 'primary' | 'secondary' | 'normal'
@@ -29,8 +32,8 @@ export function beatEmphasis(
   accentEnabled: boolean
 ): BeatEmphasis {
   if (!accentEnabled) return 'normal'
-  const beats = beatsInMeasure(sig)
-  const beat = ((beatIndex % beats) + beats) % beats
+  const length = beatsInMeasure(sig)
+  const beat = ((beatIndex % length) + length) % length
   if (beat === 0) return 'primary'
   if (sig === '6/8' && beat === 3) return 'secondary'
   return 'normal'
@@ -40,8 +43,8 @@ export const MIN_BPM = 30
 export const MAX_BPM = 260
 
 export function clampBpm(bpm: number): number {
-  if (!Number.isFinite(bpm)) return MIN_BPM
-  return Math.min(MAX_BPM, Math.max(MIN_BPM, Math.round(bpm)))
+  const rounded = Number.isFinite(bpm) ? Math.round(bpm) : MIN_BPM
+  return Math.max(MIN_BPM, Math.min(MAX_BPM, rounded))
 }
 
 /** Seconds between clicks at a given tempo (one click per beat). */

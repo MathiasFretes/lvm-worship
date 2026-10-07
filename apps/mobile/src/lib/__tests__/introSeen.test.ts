@@ -16,9 +16,9 @@ function memoryStorage(initial: Record<string, string> = {}): KVStorage & { stor
   }
 }
 
-const KEY = 'gc.intro.seen.v1'
+const KEY = 'lvm.intro.seen.v1'
 
-describe('intro seen store', () => {
+describe.each([{ product: 'LVM' }])('$product · intro seen store', () => {
   it('is false on a fresh install', async () => {
     await hydrateIntroSeen(memoryStorage())
     expect(hasSeenIntro()).toBe(false)

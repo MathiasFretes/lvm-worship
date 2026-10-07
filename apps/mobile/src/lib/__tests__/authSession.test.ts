@@ -32,6 +32,10 @@ describe('isInvalidRefreshTokenError', () => {
     expect(isInvalidRefreshTokenError({ message: 'invalid refresh token' })).toBe(true)
   })
 
+  it('matches provider wording without depending on letter case', () => {
+    expect(isInvalidRefreshTokenError({ message: 'REFRESH TOKEN was NOT FOUND' })).toBe(true)
+  })
+
   it('ignores unrelated errors and non-objects', () => {
     expect(isInvalidRefreshTokenError({ code: 'over_email_send_rate_limit' })).toBe(false)
     expect(isInvalidRefreshTokenError({ message: 'Network request failed' })).toBe(false)
@@ -107,6 +111,16 @@ describe('silenceInvalidRefreshTokenLogs', () => {
     expect(target.error).not.toBe(original)
     restore()
     expect(target.error).toBe(original)
+  })
+
+  it('does not overwrite a wrapper installed after its own', () => {
+    const original = vi.fn() as unknown as (...args: unknown[]) => void
+    const target = { error: original }
+    const restore = silenceInvalidRefreshTokenLogs(target)
+    const laterWrapper = vi.fn() as unknown as (...args: unknown[]) => void
+    target.error = laterWrapper
+    restore()
+    expect(target.error).toBe(laterWrapper)
   })
 
   it('defaults to the global console when no target is given', () => {

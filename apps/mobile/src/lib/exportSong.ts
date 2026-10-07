@@ -1,6 +1,13 @@
 import { File, Paths } from 'expo-file-system'
 import { apiError, apiPost } from './api'
 import { markSessionError } from './sessionError'
+import {
+  responseFilename,
+  setlistExportPayload,
+  songbookExportPayload,
+  songExportPayload,
+  type ExportItem,
+} from './exportPayloads'
 
 // Server-side song export. Calls the web app's Pages Function
 // POST /api/export/song, which renders with the same pure pdf_mvp engine the
@@ -17,11 +24,7 @@ export async function exportSong(opts: {
   format?: ExportFormat
 }): Promise<string> {
   const format = opts.format ?? 'pdf'
-  const res = await apiPost('/api/export/song', {
-    song_id: opts.songId,
-    key: opts.key || '',
-    format,
-  })
+  const res = await apiPost('/api/export/song', songExportPayload(opts))
 
   // 501 = server rasteriser unavailable; caller should offer PDF instead. It is
   // the one export failure that does not pass through apiError, so it marks the
@@ -34,14 +37,10 @@ export async function exportSong(opts: {
 
   const contentType = res.headers.get('content-type') || ''
   const ext = contentType.includes('pdf') ? 'pdf' : 'png'
-  const disposition = res.headers.get('content-disposition') || ''
-  const nameMatch = disposition.match(/filename="([^"]+)"/)
-  const filename = nameMatch?.[1] || `song-export.${ext}`
-
-  const file = new File(Paths.cache, filename)
-  if (file.exists) file.delete()
-  file.write(new Uint8Array(await res.arrayBuffer()))
-  return file.uri
+  return cacheResponse(res, responseFilename(
+    res.headers.get('content-disposition'),
+    `song-export.${ext}`,
+  ))
 }
 
 // Songbook export: renders the selected songs to one PDF via the web app's
@@ -50,30 +49,19 @@ export async function exportSong(opts: {
 // in their default key. Writes the bytes to the app cache and returns the local
 // URI for expo-sharing.
 export async function exportSongbook(opts: {
-  items: Array<{ songId: string; key?: string | null }>
+  items: ExportItem[]
   title?: string
   subtitle?: string
   includeTOC?: boolean
   coverImageDataUrl?: string | null
 }): Promise<string> {
-  const res = await apiPost('/api/export/songbook', {
-    items: opts.items.map((it) => ({ song_id: it.songId, key: it.key || '' })),
-    title: opts.title || '',
-    subtitle: opts.subtitle || '',
-    include_toc: opts.includeTOC !== false,
-    cover_image: opts.coverImageDataUrl || undefined,
-  })
+  const res = await apiPost('/api/export/songbook', songbookExportPayload(opts))
 
   if (!res.ok) throw await apiError(res, 'export_failed')
-
-  const disposition = res.headers.get('content-disposition') || ''
-  const nameMatch = disposition.match(/filename="([^"]+)"/)
-  const filename = nameMatch?.[1] || 'songbook.pdf'
-
-  const file = new File(Paths.cache, filename)
-  if (file.exists) file.delete()
-  file.write(new Uint8Array(await res.arrayBuffer()))
-  return file.uri
+  return cacheResponse(
+    res,
+    responseFilename(res.headers.get('content-disposition'), 'songbook.pdf'),
+  )
 }
 
 // Whole-set export: renders the ordered setlist to one combined PDF via the
@@ -81,18 +69,18 @@ export async function exportSongbook(opts: {
 // /api/export/song), writes the bytes to the app cache, and returns the local
 // URI for expo-sharing. PDF only — sets have no image scope.
 export async function exportSetlist(
-  items: Array<{ songId: string; key?: string | null }>,
+  items: ExportItem[],
 ): Promise<string> {
-  const res = await apiPost('/api/export/setlist', {
-    items: items.map((it) => ({ song_id: it.songId, key: it.key || '' })),
-  })
+  const res = await apiPost('/api/export/setlist', setlistExportPayload(items))
 
   if (!res.ok) throw await apiError(res, 'export_failed')
+  return cacheResponse(
+    res,
+    responseFilename(res.headers.get('content-disposition'), 'setlist.pdf'),
+  )
+}
 
-  const disposition = res.headers.get('content-disposition') || ''
-  const nameMatch = disposition.match(/filename="([^"]+)"/)
-  const filename = nameMatch?.[1] || 'setlist.pdf'
-
+async function cacheResponse(res: Response, filename: string): Promise<string> {
   const file = new File(Paths.cache, filename)
   if (file.exists) file.delete()
   file.write(new Uint8Array(await res.arrayBuffer()))

@@ -1,13 +1,13 @@
 import { apiBase } from './api'
+import {
+  buildSetlistSharePath,
+  type ShareableSetlistItem,
+} from './setlistSharePath'
 
-// Build the web setlist share URL that the Builder and Performer both copy.
-// The web catalog is keyed by SLUG (normaliseSong maps id -> slug), so the
-// link carries slugs — not the Supabase uuids — with each entry's key_override
-// in the parallel `toKeys` list.
-export function buildSetlistShareUrl(items: Array<{ song: { slug: string }; toKey: string | null }>): string {
-  const ids = items.map((item) => encodeURIComponent(item.song.slug)).join(',')
-  const keys = items.map((item) => encodeURIComponent(item.toKey || '')).join(',')
-  return `${apiBase()}/setlist/${ids}?toKeys=${keys}`
+export { buildSetlistSharePath } from './setlistSharePath'
+
+export function buildSetlistShareUrl(items: readonly ShareableSetlistItem[]): string {
+  return `${apiBase()}${buildSetlistSharePath(items)}`
 }
 
 // Build the live-session follower link shared when a leader starts a session.

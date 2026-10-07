@@ -38,7 +38,7 @@ function makeBackend(initial: { rm?: boolean; ic?: boolean; dwc?: boolean } = {}
   return { backend, cbs, removed, setContrast: (v: boolean) => void (ic = v) }
 }
 
-describe('accessibility flags store', () => {
+describe.each([{ product: 'LVM' }])('$product · accessibility flags store', () => {
   afterEach(() => __resetAccessibilityFlagsForTest())
 
   it('is all-false before init (vanilla device behavior)', () => {

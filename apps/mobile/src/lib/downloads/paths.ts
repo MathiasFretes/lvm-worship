@@ -6,23 +6,26 @@
 /** Root under which in-progress downloads are staged before the atomic move. */
 export const TMP_ROOT = '.downloads-tmp'
 
-function trimSlashes(s: string): string {
-  return String(s || '').replace(/^\/+|\/+$/g, '')
+function cleanPath(value: string): string {
+  return String(value ?? '')
+    .split('/')
+    .filter(Boolean)
+    .join('/')
 }
 
 /** Final relative path of one chapter file within its translation tree. */
 export function chapterRelPath(dataRoot: string, bookNumber: number, chapter: number): string {
-  return `${trimSlashes(dataRoot)}/${bookNumber}/${chapter}.json`
+  return [cleanPath(dataRoot), bookNumber, `${chapter}.json`].join('/')
 }
 
 /** Final relative directory for a whole translation (its dataRoot). */
 export function translationDirRel(dataRoot: string): string {
-  return trimSlashes(dataRoot)
+  return cleanPath(dataRoot)
 }
 
 /** Staging directory for an in-progress translation download, keyed by id. */
 export function tmpDirRel(id: string): string {
-  return `${TMP_ROOT}/${trimSlashes(id)}`
+  return `${TMP_ROOT}/${cleanPath(id)}`
 }
 
 /** Chapter path inside the staging directory (mirrors book/chapter structure). */

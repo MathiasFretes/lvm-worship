@@ -11,12 +11,12 @@
 // 'session/[code]'). useSegments() yields the route pattern, not resolved params, so
 // two different songs both read as 'viewer/[slug]' — which is exactly the comparison
 // the deep-link hook needs.
-let focusedRouteKey: string | null = null
+const routeState: { focused: string | null } = { focused: null }
 
 export function setFocusedRouteKey(key: string | null): void {
-  focusedRouteKey = key
+  routeState.focused = key
 }
 
 export function getFocusedRouteKey(): string | null {
-  return focusedRouteKey
+  return routeState.focused
 }

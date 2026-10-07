@@ -26,7 +26,7 @@ export const DEFAULT_READER_REMINDER: ReaderReminder = {
   minute: 0,
 }
 
-const STORAGE_KEY = 'gc.readerReminder.v1'
+const STORAGE_KEY = 'lvm.readerReminder.v1'
 
 /** Stable identifier for our single scheduled daily notification, so it can be
  * cancelled/replaced without disturbing anything else the OS has scheduled. */
@@ -60,14 +60,22 @@ function isReaderReminder(v: unknown): v is ReaderReminder {
   return typeof r.enabled === 'boolean' && typeof r.hour === 'number' && typeof r.minute === 'number'
 }
 
+function parseReminder(raw: string | null): ReaderReminder {
+  if (!raw) return DEFAULT_READER_REMINDER
+  const parsed = JSON.parse(raw) as unknown
+  if (!isReaderReminder(parsed)) return DEFAULT_READER_REMINDER
+  return {
+    enabled: parsed.enabled,
+    hour: clampHour(parsed.hour),
+    minute: clampMinute(parsed.minute),
+  }
+}
+
 /** Load the stored reminder; a bad read falls back to the (disabled) default. */
 export async function hydrateReaderReminder(store: KVStorage): Promise<ReaderReminder> {
   storage = store
   try {
-    const parsed = JSON.parse((await store.getItem(STORAGE_KEY)) ?? 'null') as unknown
-    cache = isReaderReminder(parsed)
-      ? { enabled: parsed.enabled, hour: clampHour(parsed.hour), minute: clampMinute(parsed.minute) }
-      : DEFAULT_READER_REMINDER
+    cache = parseReminder(await store.getItem(STORAGE_KEY))
   } catch {
     cache = DEFAULT_READER_REMINDER
   }

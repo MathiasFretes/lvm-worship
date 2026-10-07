@@ -5,16 +5,8 @@
 // AsyncStorage-shaped store are injected so vitest can run this headless.
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export const PENDING_SPRITE_KEY = 'gc.pendingSprite'
-
-// The last sprite we successfully READ for an account, cached so the avatar is
-// right on the first frame of the next launch.
-//
-// Without it the sprite came from a network read on every cold launch and was
-// persisted nowhere, so every launch showed the generic `person` glyph until the
-// read landed — and offline it never landed at all. That is the "user icon
-// sometimes doesn't display" report: not random, just usually too fast to catch.
-export const CACHED_SPRITE_KEY = 'gc.cachedSprite'
+export const PENDING_SPRITE_KEY = 'lvm.profile.pendingSprite.v1'
+export const CACHED_SPRITE_KEY = 'lvm.profile.cachedSprite.v1'
 
 export type KVStorage = {
   getItem(key: string): Promise<string | null>
@@ -168,8 +160,11 @@ export async function writeCachedSprite(
   sprite: string | null,
 ): Promise<void> {
   try {
-    if (sprite) await storage.setItem(CACHED_SPRITE_KEY, `${userId}:${sprite}`)
-    else await storage.removeItem(CACHED_SPRITE_KEY)
+    if (sprite) {
+      await storage.setItem(CACHED_SPRITE_KEY, `${userId}:${sprite}`)
+    } else {
+      await storage.removeItem(CACHED_SPRITE_KEY)
+    }
   } catch {
     // Best-effort: a cosmetic preference must never surface an error.
   }
@@ -200,7 +195,9 @@ export async function flushPendingSprite(
     const sprite = await storage.getItem(PENDING_SPRITE_KEY)
     if (!sprite) return
     const { error } = await saveSpritePreference(client, userId, sprite)
-    if (!error) await storage.removeItem(PENDING_SPRITE_KEY)
+    if (!error) {
+      await storage.removeItem(PENDING_SPRITE_KEY)
+    }
   } catch {
     // Best-effort by design.
   }

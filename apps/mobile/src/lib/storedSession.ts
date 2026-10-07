@@ -22,10 +22,14 @@ import type { Session } from '@supabase/supabase-js'
  * the moment they updated. So it is mirrored, not set.
  */
 export function authStorageKey(supabaseUrl: string): string {
-  const host = String(supabaseUrl || '')
-    .replace(/^https?:\/\//, '')
-    .split('/')[0]
-  const ref = host.split('.')[0]
+  const value = String(supabaseUrl ?? '').trim()
+  let host = value.replace(/^https?:\/\//i, '').split('/')[0]
+  try {
+    host = new URL(value).hostname || host
+  } catch {
+    // Keep auth-js's permissive string derivation for malformed configuration.
+  }
+  const [ref = ''] = host.split('.')
   return `sb-${ref}-auth-token`
 }
 
@@ -33,23 +37,39 @@ export function authStorageKey(supabaseUrl: string): string {
 export function parseStoredSession(raw: string | null): Session | null {
   if (!raw) return null
   try {
-    const parsed = JSON.parse(raw)
+    const parsed: unknown = JSON.parse(raw)
     // auth-js has stored both the bare session and a { currentSession } wrapper
     // across versions; accept either rather than pinning to today's shape.
-    const session = parsed?.currentSession ?? parsed
+    const session =
+      parsed && typeof parsed === 'object' && 'currentSession' in parsed
+        ? (parsed as { currentSession?: unknown }).currentSession
+        : parsed
     if (!session || typeof session !== 'object') return null
-    if (!session.access_token || !session.refresh_token) return null
+    const candidate = session as Record<string, unknown>
+    if (
+      typeof candidate.access_token !== 'string' ||
+      typeof candidate.refresh_token !== 'string' ||
+      !candidate.access_token ||
+      !candidate.refresh_token
+    ) {
+      return null
+    }
     return session as Session
   } catch {
     return null
   }
 }
 
-export function makeStoredSessionReader(supabaseUrl: string) {
+type SessionStorage = Pick<typeof AsyncStorage, 'getItem'>
+
+export function makeStoredSessionReader(
+  supabaseUrl: string,
+  storage: SessionStorage = AsyncStorage,
+) {
   const key = authStorageKey(supabaseUrl)
   return async (): Promise<Session | null> => {
     try {
-      return parseStoredSession(await AsyncStorage.getItem(key))
+      return parseStoredSession(await storage.getItem(key))
     } catch {
       return null
     }

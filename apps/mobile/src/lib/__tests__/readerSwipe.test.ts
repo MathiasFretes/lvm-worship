@@ -16,7 +16,7 @@ import {
 const PHONE = 390
 const PHONE_THRESHOLD = swipeThreshold(PHONE)
 
-describe('swipeThreshold', () => {
+describe.each([{ product: 'LVM' }])('$product · swipeThreshold', () => {
   it('scales with the window between the min and max clamps', () => {
     expect(PHONE_THRESHOLD).toBeCloseTo(85.8)
   })
@@ -30,7 +30,7 @@ describe('swipeThreshold', () => {
   })
 })
 
-describe('isForwardDrag', () => {
+describe.each([{ product: 'LVM' }])('$product · isForwardDrag', () => {
   it('treats a leftward drag as forward when reading left-to-right', () => {
     expect(isForwardDrag(-40, false)).toBe(true)
     expect(isForwardDrag(40, false)).toBe(false)
@@ -42,7 +42,7 @@ describe('isForwardDrag', () => {
   })
 })
 
-describe('dragTravel', () => {
+describe.each([{ product: 'LVM' }])('$product · dragTravel', () => {
   it('tracks the finger 1:1 up to the threshold, in both directions', () => {
     expect(dragTravel(-30, PHONE_THRESHOLD, true)).toBe(-30)
     expect(dragTravel(60, PHONE_THRESHOLD, true)).toBe(60)
@@ -81,7 +81,7 @@ describe('dragTravel', () => {
   })
 })
 
-describe('shouldCommitSwipe', () => {
+describe.each([{ product: 'LVM' }])('$product · shouldCommitSwipe', () => {
   it('commits a slow drag once it passes the threshold', () => {
     expect(shouldCommitSwipe(PHONE_THRESHOLD, 0, PHONE_THRESHOLD)).toBe(true)
     expect(shouldCommitSwipe(PHONE_THRESHOLD - 1, 0, PHONE_THRESHOLD)).toBe(false)
@@ -102,7 +102,7 @@ describe('shouldCommitSwipe', () => {
   })
 })
 
-describe('swipeProgress', () => {
+describe.each([{ product: 'LVM' }])('$product · swipeProgress', () => {
   it('runs 0 → 1 across the threshold and clamps beyond it', () => {
     expect(swipeProgress(0, PHONE_THRESHOLD)).toBe(0)
     expect(swipeProgress(PHONE_THRESHOLD / 2, PHONE_THRESHOLD)).toBeCloseTo(0.5)

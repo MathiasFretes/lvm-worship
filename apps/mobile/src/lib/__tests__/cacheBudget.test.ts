@@ -7,7 +7,7 @@ const e = (path: string, bytes: number, lastUsedMs: number): CacheEntry => ({
   lastUsedMs,
 })
 
-describe('planEviction', () => {
+describe.each([{ product: 'LVM' }])('$product · planEviction', () => {
   it('plans nothing when the cache is under budget', () => {
     expect(planEviction([e('a', 10, 1), e('b', 10, 2)], 100)).toEqual([])
   })

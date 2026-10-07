@@ -80,6 +80,10 @@ export class RequestTimeoutError extends Error {
   }
 }
 
+function errorField(err: unknown, field: 'name' | 'message'): unknown {
+  return err && typeof err === 'object' ? Reflect.get(err, field) : undefined
+}
+
 /**
  * True when a failure was our deadline, whether or not the Error survived.
  *
@@ -92,9 +96,9 @@ export class RequestTimeoutError extends Error {
 export function isRequestTimeout(err: unknown): boolean {
   if (err instanceof RequestTimeoutError) return true
   if (!err || typeof err !== 'object') return false
-  const e = err as { name?: unknown; message?: unknown }
-  if (e.name === 'RequestTimeoutError') return true
-  return typeof e.message === 'string' && e.message.startsWith('RequestTimeoutError:')
+  if (errorField(err, 'name') === 'RequestTimeoutError') return true
+  const message = errorField(err, 'message')
+  return typeof message === 'string' && message.startsWith('RequestTimeoutError:')
 }
 
 /**
@@ -111,11 +115,11 @@ export function isRequestTimeout(err: unknown): boolean {
 export function isAbortError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
   if (isRequestTimeout(err)) return false
-  const e = err as { name?: unknown; message?: unknown }
-  if (e.name === 'AbortError') return true
+  if (errorField(err, 'name') === 'AbortError') return true
   // Same flattening caveat as isRequestTimeout: a Supabase query keeps only the
   // message, with the original error's name prefixed onto it.
-  return typeof e.message === 'string' && e.message.startsWith('AbortError:')
+  const message = errorField(err, 'message')
+  return typeof message === 'string' && message.startsWith('AbortError:')
 }
 
 /**
@@ -149,8 +153,9 @@ export function withRequestBudget(
   budgetFor: (url: string) => number | null,
 ): FetchFn {
   return async (input, init) => {
-    const budgetMs = budgetFor(urlOf(input))
-    if (budgetMs == null) return fetchImpl(input, init)
+    const requestedBudget = budgetFor(urlOf(input))
+    if (requestedBudget == null) return fetchImpl(input, init)
+    const budgetMs = Math.max(0, requestedBudget)
 
     const controller = new AbortController()
     let timedOut = false
