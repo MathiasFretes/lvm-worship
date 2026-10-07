@@ -633,11 +633,17 @@ export async function buildCombinedPptxData(buffers, JSZip) {
 
 function saveBlob(blob, filename) {
   const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
+  const objectUrl = URL.createObjectURL(blob)
+  link.href = objectUrl
   link.download = filename
   link.rel = 'noopener'
+  link.style.display = 'none'
+  document.body?.appendChild(link)
   link.click()
-  URL.revokeObjectURL(link.href)
+  link.remove()
+  // Revoking synchronously can cancel a download in Safari before it consumes
+  // the object URL.
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
 }
 
 export async function combinePptxFiles(songFileUrls = [], setlistName = 'Setlist') {

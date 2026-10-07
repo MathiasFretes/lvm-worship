@@ -78,6 +78,16 @@ Chorus
     expect(line.chords.map(c => c.sym)).toEqual(['G','C','D']);
   });
 
+  it('round-trips chord offsets as UTF-16 textarea positions', () => {
+    const source = 'A😀[G]men';
+    const parsed = parseChordProOrLegacy(source);
+    expect(parsed.sections[0].lines[0].chords[0].index).toBe(3);
+
+    const output = serializeChordPro(parsed, { includeMeta: false });
+    expect(output).toContain('A😀[G]men');
+    expect(parseChordProOrLegacy(output).sections[0].lines[0].chords[0].index).toBe(3);
+  });
+
   it('can emit legacy header style if directives disabled', () => {
     const doc = parseChordProOrLegacy(sample);
     const out = serializeChordPro(doc, { useDirectives: false, includeMeta: false });

@@ -28,7 +28,6 @@ banner at all.
 | `/songbook` | `songbook` |
 | `/about` | `about` |
 | `/profile` | `settings` (the app has no `/profile` route) |
-| `/posts`, `/posts/*` | home tab (blog — no app parallel) |
 | `/app/reset-password` | `reset-password` (app-requested recovery only) |
 | `/app/auth/callback` | `auth/callback` (app-requested sign-up confirmation only) |
 

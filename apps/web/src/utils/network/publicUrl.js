@@ -1,9 +1,12 @@
 export function publicUrl(input = '') {
   const raw = String(input ?? '').trim()
   if (!raw) return '/'
-  if (/^https?:\/\//i.test(raw)) return raw
+  if (/^(?:https?:)?\/\//i.test(raw) || /^(?:data|blob):/i.test(raw)) return raw
 
-  let cleaned = raw.replace(/^\.\/+/, '')
+  const suffixAt = raw.search(/[?#]/)
+  const path = suffixAt >= 0 ? raw.slice(0, suffixAt) : raw
+  const suffix = suffixAt >= 0 ? raw.slice(suffixAt) : ''
+  let cleaned = path.replace(/^\.\/+/, '')
   if (!cleaned.startsWith('/')) cleaned = `/${cleaned}`
   cleaned = cleaned.replace(/\/{2,}/g, '/')
 
@@ -13,5 +16,5 @@ export function publicUrl(input = '') {
     }
   }
 
-  return cleaned
+  return `${cleaned}${suffix}`
 }

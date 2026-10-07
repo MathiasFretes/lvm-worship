@@ -15,16 +15,22 @@ function songToSlug(song) {
   return ''
 }
 
+function isAvailable(availablePptxMap, slug){
+  if (!availablePptxMap) return true
+  if (availablePptxMap instanceof Map) return Boolean(availablePptxMap.get(slug))
+  return Boolean(availablePptxMap[slug])
+}
+
 export async function downloadSetlistAsPptx(setlist = {}, options = {}) {
   const { name = 'Setlist', songs = [] } = setlist || {}
   const { availablePptxMap = null, onEmpty } = options
 
   const songUrls = []
 
-  for (const entry of songs) {
+  for (const entry of Array.isArray(songs) ? songs : []) {
     const slug = songToSlug(entry)
     if (!slug) continue
-    if (availablePptxMap && !availablePptxMap[slug]) continue
+    if (!isAvailable(availablePptxMap, slug)) continue
     songUrls.push(publicUrl(`pptx/${slug}.pptx`))
   }
 

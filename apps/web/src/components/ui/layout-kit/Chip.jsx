@@ -11,8 +11,8 @@ export default function Chip({
   const isTag = variant === 'tag'
   const Component = as || (isTag ? 'span' : 'button')
   const cls = [
-    'gc-chip',
-    `gc-chip--${variant}`,
+    'lvm-chip',
+    `lvm-chip--${variant}`,
     selected ? 'is-selected' : '',
     className,
   ].filter(Boolean).join(' ')

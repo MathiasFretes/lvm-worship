@@ -1,29 +1,6 @@
-const RTL_LANGUAGE_CODES = new Set([
-  'ar',
-  'arc',
-  'ckb',
-  'dv',
-  'fa',
-  'he',
-  'iw',
-  'ku',
-  'ps',
-  'sd',
-  'ug',
-  'ur',
-  'yi',
-])
-
-export function normalizeBibleLanguageCode(raw: unknown){
-  return String(raw || '')
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, '-')
-}
-
-export function isRtlBibleLanguage(raw: unknown){
-  const normalized = normalizeBibleLanguageCode(raw)
-  if (!normalized) return false
-  const base = normalized.split('-')[0]
-  return RTL_LANGUAGE_CODES.has(base)
-}
+// Compatibility entry point for existing web imports. Direction is pure domain
+// logic and belongs to the shared package used by web and mobile.
+export {
+  isRtlBibleLanguage,
+  normalizeBibleLanguageCode,
+} from '@lavozmisionera/core'

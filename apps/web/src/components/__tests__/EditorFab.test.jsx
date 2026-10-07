@@ -26,7 +26,7 @@ describe('EditorFab', () => {
     const link = screen.getByRole('link', { name: /edit this song/i })
     expect(link).toBeInTheDocument()
     expect(link).toHaveAttribute('href', '/portal/editor/determined-to-die')
-    expect(link).toHaveClass('gc-editor-fab')
+    expect(link).toHaveClass('lvm-editor-fab')
   })
 
   test('also matches the /songs/:slug route', () => {

@@ -1,19 +1,5 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "posts": {
-    "title": "Publicaciones",
-    "subtitle": "Noticias, anuncios y recursos de adoración",
-    "refresh": "Actualizar",
-    "refreshAria": "Actualizar publicaciones",
-    "updated": "Actualizado {{time}}",
-    "searchPlaceholder": "Buscar publicaciones…",
-    "searchAria": "Buscar publicaciones",
-    "filterAria": "Filtrar por etiqueta",
-    "tagsAria": "Etiquetas",
-    "all": "Todas",
-    "loading": "Cargando…",
-    "empty": "No se encontraron publicaciones."
-  },
   "songs": {
     "title": "Canciones",
     "titleTooltip": "Explorar canciones",

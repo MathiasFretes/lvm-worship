@@ -10,9 +10,20 @@ import NotoMonoRegularURL     from "../../assets/fonts/NotoSansMono-Regular.ttf?
 import NotoMonoBoldURL        from "../../assets/fonts/NotoSansMono-Bold.ttf?url";
 
 let registeredOnce = false;
+const fontData = new Map();
 
 // Fetch the emitted font URL and convert to a clean base64 string.
 async function fetchUrlAsBase64(url) {
+  if (fontData.has(url)) return fontData.get(url);
+  const pending = fetchUrlAsBase64Uncached(url).catch((error) => {
+    fontData.delete(url);
+    throw error;
+  });
+  fontData.set(url, pending);
+  return pending;
+}
+
+async function fetchUrlAsBase64Uncached(url) {
   const res = await fetch(url, { cache: "force-cache" });
   if (!res.ok) throw new Error(`Font fetch failed: ${url} (${res.status})`);
   const blob = await res.blob();
@@ -46,17 +57,19 @@ export async function registerPdfFonts(doc) {
     [NotoMonoBoldURL,       "NotoSansMono-Bold.ttf",    "NotoSansMono", "bold"],
   ];
 
-  for (const [url, vfsName, family, style] of manifest) {
+  const results = await Promise.all(manifest.map(async ([url, vfsName, family, style]) => {
     try {
       const b64 = await fetchUrlAsBase64(url);
       doc.addFileToVFS(vfsName, b64);
       doc.addFont(vfsName, family, style);
+      return true;
     } catch (e) {
       console.warn(`[pdf/fonts] Failed to load/register ${vfsName}:`, e?.message || e);
+      return false;
     }
-  }
+  }));
 
-  registeredOnce = true;
+  registeredOnce = results.every(Boolean);
 
   try {
     if (localStorage.getItem("pdfFontTrace") === "1") {

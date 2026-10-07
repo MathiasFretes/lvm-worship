@@ -7,7 +7,7 @@ export function Card({
   ...rest
 }){
   return (
-    <Component className={`gc-card ${className}`.trim()} {...rest}>
+    <Component className={`lvm-card ${className}`.trim()} {...rest}>
       {children}
     </Component>
   )
@@ -20,7 +20,7 @@ export function InsetCard({
   ...rest
 }){
   return (
-    <Component className={`gc-inset-card ${className}`.trim()} {...rest}>
+    <Component className={`lvm-inset-card ${className}`.trim()} {...rest}>
       {children}
     </Component>
   )
@@ -38,23 +38,23 @@ export const SongCard = React.forwardRef(function SongCard({
   to,
   ...rest
 }, ref){
-  const props = { className: `gc-card gc-song-card ${className}`.trim(), onClick, ref, ...rest }
+  const props = { className: `lvm-card lvm-song-card ${className}`.trim(), onClick, ref, ...rest }
   if (to) props.to = to
   return (
     <Component {...props}>
       {leftSlot}
-      <div className="gc-card__body">
-        <div className="gc-card__title">{title}</div>
-        {subtitle ? <div className="gc-card__meta">{subtitle}</div> : null}
+      <div className="lvm-card__body">
+        <div className="lvm-card__title">{title}</div>
+        {subtitle ? <div className="lvm-card__meta">{subtitle}</div> : null}
         {tags.length ? (
-          <div className="gc-card__tags">
+          <div className="lvm-card__tags">
             {tags.map((t) => (
-              <span key={t} className="gc-tag gc-tag--gray">{t}</span>
+              <span key={t} className="lvm-tag lvm-tag--gray">{t}</span>
             ))}
           </div>
         ) : null}
       </div>
-      <div className="gc-card__spacer" />
+      <div className="lvm-card__spacer" />
       {rightSlot}
     </Component>
   )

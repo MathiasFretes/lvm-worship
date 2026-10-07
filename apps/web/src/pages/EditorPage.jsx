@@ -9,26 +9,23 @@ export default function EditorPage() {
   const { profile, role } = useAuth()
 
   return (
-    <div className="gc-portal-page container">
+    <div className="lvm-portal-page container">
       <Helmet><title>Editor Portal – La Voz Misionera</title></Helmet>
 
       <h1>Editor Portal</h1>
-      <p className="gc-portal-page__subtitle">
-        Welcome, {profile?.display_name || 'Editor'}. Use this portal to manage songs and content.
+      <p className="lvm-portal-page__subtitle">
+        Welcome, {profile?.display_name || 'Editor'}. Use this portal to manage songs.
       </p>
 
-      <section className="gc-portal-section">
+      <section className="lvm-portal-section">
         <h2>Editor Tools</h2>
-        <p style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)', margin: 0 }}>
-          As an <strong>Editor</strong>, you can add and edit songs &amp; posts directly,
+        <p style={{ color: 'var(--lvm-text-secondary)', fontSize: 'var(--lvm-font-sub)', margin: 0 }}>
+          As an <strong>Editor</strong>, you can add and edit songs directly,
           approve or reject submitted suggestions, and request deletions.
         </p>
         <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <Link to="/songs" className="gc-btn gc-btn--primary">
+          <Link to="/songs" className="lvm-btn lvm-btn--primary">
             Browse Songs
-          </Link>
-          <Link to="/posts" className="gc-btn gc-btn--secondary">
-            Blog Posts
           </Link>
         </div>
       </section>

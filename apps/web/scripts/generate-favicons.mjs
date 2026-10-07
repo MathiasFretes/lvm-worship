@@ -21,7 +21,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const webRoot = resolve(here, '..')
 const repoRoot = resolve(webRoot, '..', '..')
 
-const MASTER = resolve(repoRoot, 'NEW ASSETS', 'gc-light.svg')
+const MASTER = resolve(repoRoot, 'NEW ASSETS', 'lvm-light.svg')
 const OUT = resolve(webRoot, 'public', 'icons', 'v2')
 const BG = '#F5F7F9' // Signal Blue light page background — apple-touch/maskable need a solid field
 
@@ -57,8 +57,8 @@ const svgR = Math.round(512 * RADIUS_RATIO)
 writeFileSync(
   resolve(OUT, 'favicon.svg'),
   `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512" height="512">` +
-    `<defs><clipPath id="gc-round"><rect width="512" height="512" rx="${svgR}" ry="${svgR}"/></clipPath></defs>` +
-    `<image width="512" height="512" clip-path="url(#gc-round)" href="data:image/svg+xml;base64,${svgB64}" xlink:href="data:image/svg+xml;base64,${svgB64}"/>` +
+    `<defs><clipPath id="lvm-round"><rect width="512" height="512" rx="${svgR}" ry="${svgR}"/></clipPath></defs>` +
+    `<image width="512" height="512" clip-path="url(#lvm-round)" href="data:image/svg+xml;base64,${svgB64}" xlink:href="data:image/svg+xml;base64,${svgB64}"/>` +
     `</svg>\n`
 )
 

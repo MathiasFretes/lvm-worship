@@ -31,14 +31,12 @@ function bootstrapRouteFromQuery(){
   }
   if (pathname && pathname !== '/' && pathname !== '/index.html') return
   const song = params.get('song')
-  const resource = params.get('resource')
   const view = params.get('view') || params.get('page')
   let target = ''
   if (song) target = `/songs/${encodeURIComponent(song)}`
-  else if (resource) target = `/posts/${encodeURIComponent(resource)}`
   else if (view) {
     const v = view.toLowerCase()
-    const allowed = new Set(['about','songs','setlist','songbook','posts','bundle'])
+    const allowed = new Set(['about','songs','setlist','songbook','bundle'])
     if (allowed.has(v)) target = `/${v}`
   }
   if (target) {
@@ -91,7 +89,7 @@ function recoverFromMissingStylesheets(){
     if (!stylesheets.length) return
     const missingStylesheet = stylesheets.some((node) => node.sheet == null)
     const rootStyles = window.getComputedStyle(document.documentElement)
-    const missingThemeTokens = !String(rootStyles.getPropertyValue('--gc-primary') || '').trim()
+    const missingThemeTokens = !String(rootStyles.getPropertyValue('--lvm-primary') || '').trim()
     const shouldRecover = missingStylesheet || missingThemeTokens
     if (shouldRecover && !alreadyRetried) {
       url.searchParams.set('css_retry', '1')

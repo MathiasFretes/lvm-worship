@@ -364,7 +364,7 @@ function widthOverflows(song, cols, pt, oBase, makeMeasureLyricAt, makeMeasureCh
  */
 export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
-  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt }
   const SIZE_STEPS = [16, 15, 14, 13, 12]
   const prefer2 = song.layoutHints?.requestedColumns === 2
 
@@ -527,7 +527,7 @@ function fitsWithinTwoPages(plan) {
 export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measureChord = (t) => 0) {
   const song = normalizeSongInput(songIn)
   const sections = Array.isArray(song.sections) ? song.sections : []
-  const o = { ...DEFAULT_LAYOUT_OPT, ...opt, gutter: DEFAULT_LAYOUT_OPT.gutter }
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
   const lineGap = 4
 
   const margin = o.margin

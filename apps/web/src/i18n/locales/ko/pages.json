@@ -1,19 +1,5 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "posts": {
-    "title": "게시글",
-    "subtitle": "소식, 공지 및 예배 자료",
-    "refresh": "새로고침",
-    "refreshAria": "게시글 새로고침",
-    "updated": "업데이트 {{time}}",
-    "searchPlaceholder": "게시글 검색…",
-    "searchAria": "게시글 검색",
-    "filterAria": "태그로 필터",
-    "tagsAria": "태그",
-    "all": "전체",
-    "loading": "불러오는 중…",
-    "empty": "게시글이 없습니다."
-  },
   "songs": {
     "title": "찬양곡",
     "titleTooltip": "찬양곡 둘러보기",

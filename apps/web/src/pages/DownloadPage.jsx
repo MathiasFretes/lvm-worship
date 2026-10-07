@@ -14,7 +14,7 @@ export default function DownloadPage(){
   const { t } = useTranslation('pages')
 
   return (
-    <div className="container gc-download">
+    <div className="container lvm-download">
       <Helmet>
         <title>{t('download.metaTitle')}</title>
         <meta name="description" content={t('download.metaDescription')} />
@@ -22,26 +22,26 @@ export default function DownloadPage(){
       </Helmet>
 
       <h1>{t('download.title')}</h1>
-      <p className="gc-download__lede">{t('download.lede')}</p>
+      <p className="lvm-download__lede">{t('download.lede')}</p>
 
-      <div className="gc-download__platforms">
-        <section className="gc-download__card" aria-labelledby="gc-download-ios">
-          <h2 id="gc-download-ios" className="gc-download__cardTitle">
+      <div className="lvm-download__platforms">
+        <section className="lvm-download__card" aria-labelledby="lvm-download-ios">
+          <h2 id="lvm-download-ios" className="lvm-download__cardTitle">
             <AppleIcon />
             {t('download.ios.title')}
           </h2>
-          <p className="gc-download__cardBody">{t('download.ios.body')}</p>
+          <p className="lvm-download__cardBody">{t('download.ios.body')}</p>
           {/* Apple requires the unmodified official badge artwork, so it is an
               <img> rather than a token-styled button. Self-hosted from
               public/badges/ — no third-party request. */}
           <a
-            className="gc-download__badgeLink"
+            className="lvm-download__badgeLink"
             href={APP_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
             <img
-              className="gc-download__badge"
+              className="lvm-download__badge"
               src={APP_STORE_BADGE}
               alt={t('download.ios.badgeAlt')}
               width="120"
@@ -53,29 +53,29 @@ export default function DownloadPage(){
         {/* Android is deliberately inert: no <a>, no href. A disabled link is
             still a dead link. */}
         <section
-          className="gc-download__card gc-download__card--pending"
-          aria-labelledby="gc-download-android"
+          className="lvm-download__card lvm-download__card--pending"
+          aria-labelledby="lvm-download-android"
         >
-          <h2 id="gc-download-android" className="gc-download__cardTitle">
+          <h2 id="lvm-download-android" className="lvm-download__cardTitle">
             {t('download.android.title')}
           </h2>
-          <p className="gc-download__cardBody">{t('download.android.body')}</p>
-          <p className="gc-download__pendingChip">{t('download.android.comingSoon')}</p>
+          <p className="lvm-download__cardBody">{t('download.android.body')}</p>
+          <p className="lvm-download__pendingChip">{t('download.android.comingSoon')}</p>
         </section>
       </div>
 
-      <section className="gc-download__qr" aria-labelledby="gc-download-qr">
-        <h2 id="gc-download-qr" className="gc-download__cardTitle">
+      <section className="lvm-download__qr" aria-labelledby="lvm-download-qr">
+        <h2 id="lvm-download-qr" className="lvm-download__cardTitle">
           <QrCodeIcon />
           {t('download.qr.title')}
         </h2>
-        <p className="gc-download__cardBody">{t('download.qr.body')}</p>
+        <p className="lvm-download__cardBody">{t('download.qr.body')}</p>
         {/* Encodes /download rather than the App Store listing, so the same
             code keeps working when Android ships. Regenerate with:
             npx qrcode -t svg -o public/badges/download-qr.svg -w 512 --qzone 2 \
               "https://lavozmisionera.com/download" */}
         <img
-          className="gc-download__qrImage"
+          className="lvm-download__qrImage"
           src={DOWNLOAD_QR}
           alt={t('download.qr.alt')}
           width="176"

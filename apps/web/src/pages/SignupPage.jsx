@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { supabase } from '../lib/supabase'
@@ -25,17 +25,6 @@ export default function SignupPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
-
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.dataset.theme === 'dark'
-  )
-  React.useEffect(() => {
-    const observer = new MutationObserver(() =>
-      setIsDark(document.documentElement.dataset.theme === 'dark')
-    )
-    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
 
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -94,28 +83,28 @@ export default function SignupPage() {
 
   if (signUpSuccess) {
     return (
-      <div className="gc-auth-page">
-        <div className="gc-auth-card" style={{ maxWidth: 480 }}>
+      <div className="lvm-auth-page">
+        <div className="lvm-auth-card" style={{ maxWidth: 480 }}>
           <img
-            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+            src="/lvm-mark.svg"
             alt="La Voz Misionera"
-            className="gc-auth-card__wordmark"
+            className="lvm-auth-card__wordmark"
           />
-          <div className="gc-signup-confirm">
-            <div className="gc-signup-confirm__icon" aria-hidden="true">✉️</div>
-            <h1 className="gc-auth-card__title">{t('checkYourEmail')}</h1>
-            <p className="gc-signup-confirm__body">
+          <div className="lvm-signup-confirm">
+            <div className="lvm-signup-confirm__icon" aria-hidden="true">✉️</div>
+            <h1 className="lvm-auth-card__title">{t('checkYourEmail')}</h1>
+            <p className="lvm-signup-confirm__body">
               <Trans
                 i18nKey="auth:verificationSent"
                 values={{ email }}
-                components={{ strong: <strong className="gc-signup-confirm__email" /> }}
+                components={{ strong: <strong className="lvm-signup-confirm__email" /> }}
               />
             </p>
-            <p className="gc-signup-confirm__note">
+            <p className="lvm-signup-confirm__note">
               {t('verificationResend')}
             </p>
           </div>
-          <p className="gc-auth-card__footer">
+          <p className="lvm-auth-card__footer">
             <Link to="/login">{t('backToSignIn')}</Link>
           </p>
         </div>
@@ -124,25 +113,25 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="gc-auth-page">
-      <div className="gc-auth-card" style={{ maxWidth: 480 }}>
+    <div className="lvm-auth-page">
+      <div className="lvm-auth-card" style={{ maxWidth: 480 }}>
         <img
-          src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+          src="/lvm-mark.svg"
           alt="La Voz Misionera"
-          className="gc-auth-card__wordmark"
+          className="lvm-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">{t('joinLaVozMisionera')}</h1>
-        <p className="gc-auth-card__subtitle">{t('createYourAccount')}</p>
+        <h1 className="lvm-auth-card__title">{t('joinLaVozMisionera')}</h1>
+        <p className="lvm-auth-card__subtitle">{t('createYourAccount')}</p>
 
-        <form onSubmit={handleSubmit} className="gc-auth-form">
+        <form onSubmit={handleSubmit} className="lvm-auth-form">
           {isDuplicateEmail && (
-            <div className="gc-auth-error">
+            <div className="lvm-auth-error">
               {t('duplicateEmail')}{' '}
               <Link to="/login">{t('signInInstead')}</Link>
             </div>
           )}
-          {error && <div className="gc-auth-error">{error}</div>}
-          <div className="gc-form-field">
+          {error && <div className="lvm-auth-error">{error}</div>}
+          <div className="lvm-form-field">
             <label htmlFor="displayName">{t('displayName')}</label>
             <input
               id="displayName"
@@ -154,7 +143,7 @@ export default function SignupPage() {
               placeholder={t('displayNamePlaceholder')}
             />
           </div>
-          <div className="gc-form-field">
+          <div className="lvm-form-field">
             <label htmlFor="email">{t('email')}</label>
             <input
               id="email"
@@ -166,7 +155,7 @@ export default function SignupPage() {
               disabled={submitting}
             />
           </div>
-          <div className="gc-form-field gc-pw-field-wrapper">
+          <div className="lvm-form-field lvm-pw-field-wrapper">
             <label htmlFor="password">{t('password')}</label>
             <input
               id="password"
@@ -188,16 +177,16 @@ export default function SignupPage() {
             />
             {passwordFocused && <PasswordStrengthPopover password={password} />}
           </div>
-          <div className="gc-form-field">
+          <div className="lvm-form-field">
             <label>{t('chooseYourIcon')}</label>
-            <p style={{ fontSize: 13, color: 'var(--gc-text-secondary)', margin: '2px 0 8px' }}>
+            <p style={{ fontSize: 13, color: 'var(--lvm-text-secondary)', margin: '2px 0 8px' }}>
               {t('chooseIconHelper')}
             </p>
             <SpritePicker value={sprite} onChange={setSprite} />
           </div>
           <button
             type="submit"
-            className="gc-btn gc-btn--primary"
+            className="lvm-btn lvm-btn--primary"
             disabled={submitting || !sprite}
             style={{ width: '100%', justifyContent: 'center' }}
           >
@@ -205,10 +194,10 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <div className="gc-auth-divider">{t('common:or')}</div>
+        <div className="lvm-auth-divider">{t('common:or')}</div>
         <button
           type="button"
-          className="gc-btn gc-btn--secondary"
+          className="lvm-btn lvm-btn--secondary"
           onClick={handleGoogleSignIn}
           style={{ width: '100%', justifyContent: 'center', gap: '10px' }}
         >
@@ -216,7 +205,7 @@ export default function SignupPage() {
           {t('common:continueWithGoogle')}
         </button>
 
-        <p className="gc-auth-card__footer">
+        <p className="lvm-auth-card__footer">
           {t('alreadyHaveAccount')} <Link to="/login">{t('signIn')}</Link>
         </p>
       </div>

@@ -22,7 +22,7 @@ const ASSIGNABLE_ROLES = ROLES_BY_RANK_DESC.filter(r => r !== 'owner')
 
 function RolePill({ role }) {
   return (
-    <span className={`gc-role-pill gc-role-pill--${role}`}>
+    <span className={`lvm-role-pill lvm-role-pill--${role}`}>
       {role.charAt(0).toUpperCase() + role.slice(1)}
     </span>
   )
@@ -161,14 +161,14 @@ export default function AdminPage() {
   const currentUserId = session?.user?.id
 
   return (
-    <div className="gc-portal-page container">
+    <div className="lvm-portal-page container">
       <Helmet><title>Admin Portal – La Voz Misionera</title></Helmet>
 
       <h1>Admin Portal</h1>
-      <p className="gc-portal-page__subtitle">
+      <p className="lvm-portal-page__subtitle">
         Manage users and roles, and export the song library.
       </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginBottom: 'var(--gc-space-4)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--lvm-space-3)', marginBottom: 'var(--lvm-space-4)' }}>
         <Button
           size="sm"
           variant="secondary"
@@ -179,29 +179,29 @@ export default function AdminPage() {
           Refresh
         </Button>
         {lastUpdated && (
-          <span style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-text-sm)' }}>
+          <span style={{ color: 'var(--lvm-text-secondary)', fontSize: 'var(--lvm-text-sm)' }}>
             Updated {formatTime(lastUpdated)}
           </span>
         )}
       </div>
 
       {/* ── 4a. User Management Table ─────────────────────────────── */}
-      <section className="gc-portal-section">
+      <section className="lvm-portal-section">
         <h2>User Management</h2>
         {usersLoading ? (
-          <p className="gc-portal-empty">Loading users…</p>
+          <p className="lvm-portal-empty">Loading users…</p>
         ) : users.length === 0 ? (
-          <p className="gc-portal-empty">No users found.</p>
+          <p className="lvm-portal-empty">No users found.</p>
         ) : (
-          <div className="gc-user-table-wrap">
-            <table className="gc-user-table">
+          <div className="lvm-user-table-wrap">
+            <table className="lvm-user-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Role</th>
-                  <th className="gc-user-table__col--desktop">Account Age</th>
-                  <th className="gc-user-table__col--desktop">Actions</th>
-                  <th className="gc-user-table__col--mobile" aria-hidden="true"></th>
+                  <th className="lvm-user-table__col--desktop">Account Age</th>
+                  <th className="lvm-user-table__col--desktop">Actions</th>
+                  <th className="lvm-user-table__col--mobile" aria-hidden="true"></th>
                 </tr>
               </thead>
               <tbody>
@@ -214,9 +214,9 @@ export default function AdminPage() {
                   const isExpanded = expandedUserId === user.id
 
                   const actionButtons = (
-                    <div className="gc-user-actions">
+                    <div className="lvm-user-actions">
                       <select
-                        className="gc-role-select"
+                        className="lvm-role-select"
                         value={user.role || 'user'}
                         disabled={!canChangeRole || isChanging}
                         onChange={e => handleRoleChange(user.id, e.target.value)}
@@ -230,15 +230,15 @@ export default function AdminPage() {
                       </select>
                       {isOwner && !isSelf && (
                         <button
-                          className="gc-btn gc-btn--danger gc-btn--sm"
+                          className="lvm-btn lvm-btn--danger lvm-btn--sm"
                           onClick={e => { e.stopPropagation(); setDeleteTarget(user) }}
-                          style={{ fontSize: 'var(--gc-font-cap)', padding: '4px 10px' }}
+                          style={{ fontSize: 'var(--lvm-font-cap)', padding: '4px 10px' }}
                         >
                           Delete
                         </button>
                       )}
                       {isSelf && (
-                        <span style={{ color: 'var(--gc-text-tertiary)', fontSize: 'var(--gc-font-cap)' }}>
+                        <span style={{ color: 'var(--lvm-text-tertiary)', fontSize: 'var(--lvm-font-cap)' }}>
                           (you)
                         </span>
                       )}
@@ -248,27 +248,27 @@ export default function AdminPage() {
                   return (
                     <React.Fragment key={user.id}>
                       <tr
-                        className="gc-user-table__row"
+                        className="lvm-user-table__row"
                         onClick={() => setExpandedUserId(isExpanded ? null : user.id)}
                       >
-                        <td>{user.display_name || <span style={{ color: 'var(--gc-text-tertiary)' }}>—</span>}</td>
+                        <td>{user.display_name || <span style={{ color: 'var(--lvm-text-tertiary)' }}>—</span>}</td>
                         <td><RolePill role={user.role || 'user'} /></td>
-                        <td className="gc-user-table__col--desktop">
-                          <span className="gc-account-age">
+                        <td className="lvm-user-table__col--desktop">
+                          <span className="lvm-account-age">
                             {formatAccountAge(user.account_created_at)}
                           </span>
                         </td>
-                        <td className="gc-user-table__col--desktop" onClick={e => e.stopPropagation()}>
+                        <td className="lvm-user-table__col--desktop" onClick={e => e.stopPropagation()}>
                           {actionButtons}
                         </td>
-                        <td className="gc-user-table__col--mobile" aria-hidden="true">
-                          <span className={`gc-chevron${isExpanded ? ' gc-chevron--open' : ''}`} />
+                        <td className="lvm-user-table__col--mobile" aria-hidden="true">
+                          <span className={`lvm-chevron${isExpanded ? ' lvm-chevron--open' : ''}`} />
                         </td>
                       </tr>
-                      <tr className={`gc-user-table__expand-row${isExpanded ? ' gc-user-table__expand-row--open' : ''}`}>
+                      <tr className={`lvm-user-table__expand-row${isExpanded ? ' lvm-user-table__expand-row--open' : ''}`}>
                         <td colSpan={5}>
-                          <div className="gc-user-table__expand-panel">
-                            <span className="gc-account-age">
+                          <div className="lvm-user-table__expand-panel">
+                            <span className="lvm-account-age">
                               {formatAccountAge(user.account_created_at)}
                             </span>
                             {actionButtons}
@@ -285,9 +285,9 @@ export default function AdminPage() {
       </section>
 
       {/* ── Song Library Export ───────────────────────────────────── */}
-      <section className="gc-portal-section">
+      <section className="lvm-portal-section">
         <h2>Song Library</h2>
-        <p className="gc-portal-page__subtitle">
+        <p className="lvm-portal-page__subtitle">
           Download every published song as a ZIP of <code>slug.pro</code> ChordPro
           files, each opening with its <code>{'{title: …}'}</code> line.
         </p>
@@ -303,10 +303,10 @@ export default function AdminPage() {
       </section>
 
       {/* ── 4b. Role & Privilege Matrix ───────────────────────────── */}
-      <section className="gc-portal-section">
+      <section className="lvm-portal-section">
         <h2>Role & Privilege Matrix</h2>
-        <div className="gc-matrix-wrap">
-          <table className="gc-matrix-table">
+        <div className="lvm-matrix-wrap">
+          <table className="lvm-matrix-table">
             <thead>
               <tr>
                 <th>Capability</th>
@@ -319,8 +319,8 @@ export default function AdminPage() {
             <tbody>
               {MATRIX_ROWS.map(row => {
                 const cell = (val) => typeof val === 'string'
-                  ? <span className="gc-matrix-yes">{val}</span>
-                  : <span className={val ? 'gc-matrix-yes' : 'gc-matrix-no'}>{val ? '✓' : '—'}</span>
+                  ? <span className="lvm-matrix-yes">{val}</span>
+                  : <span className={val ? 'lvm-matrix-yes' : 'lvm-matrix-no'}>{val ? '✓' : '—'}</span>
                 return (
                   <tr key={row.label}>
                     <td>{row.label}</td>
@@ -334,29 +334,29 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
-        <p className="gc-matrix-scroll-hint">Scroll →</p>
+        <p className="lvm-matrix-scroll-hint">Scroll →</p>
       </section>
 
       {/* ── Delete confirm dialog ──────────────────────────────────── */}
       {deleteTarget && (
-        <div className="gc-confirm-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
-          <div className="gc-confirm-dialog" onClick={e => e.stopPropagation()}>
+        <div className="lvm-confirm-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="lvm-confirm-dialog" onClick={e => e.stopPropagation()}>
             <h3>Delete account</h3>
             <p>
               Permanently delete{' '}
               <strong>{deleteTarget.display_name || 'this user'}</strong>
               ? This cannot be undone. All their data will be removed.
             </p>
-            <div className="gc-confirm-dialog__actions">
+            <div className="lvm-confirm-dialog__actions">
               <button
-                className="gc-btn gc-btn--ghost"
+                className="lvm-btn lvm-btn--ghost"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
               >
                 Cancel
               </button>
               <button
-                className="gc-btn gc-btn--danger"
+                className="lvm-btn lvm-btn--danger"
                 onClick={handleDeleteUser}
                 disabled={deleting}
               >

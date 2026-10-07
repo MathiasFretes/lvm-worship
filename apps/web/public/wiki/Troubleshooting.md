@@ -7,9 +7,6 @@ Solve common issues when running or using La Voz Misionera.
 - Open browser DevTools → Network and look for failed Supabase API calls.
 - Confirm RLS policies allow the anon role to `SELECT` from `public.songs`.
 
-**Posts not loading**
-- Same as above but for `public.posts`.
-
 **Search returns no results**
 - Confirm songs exist in the `public.songs` Supabase table with `is_deleted = false`.
 

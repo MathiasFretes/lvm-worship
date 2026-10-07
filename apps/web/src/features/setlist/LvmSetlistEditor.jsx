@@ -62,7 +62,7 @@ export default function LvmSetlistEditor({
             const song = item.song || {}
             const verse = Boolean(song.verse)
             return (
-              <li key={item.entryKey} className={`lvm-set-editor__item gc-set-row${selectedKey === item.entryKey ? ' is-selected' : ''}`} tabIndex={0} onFocus={() => onSelect(item.entryKey)}>
+              <li key={item.entryKey} className={`lvm-set-editor__item lvm-set-row${selectedKey === item.entryKey ? ' is-selected' : ''}`} tabIndex={0} onFocus={() => onSelect(item.entryKey)}>
                 <span className="lvm-set-editor__number" aria-hidden="true">{index + 1}</span>
                 <div className="lvm-set-editor__song">
                   <strong>{song.title || t('setlist.scripture')}</strong>

@@ -14,11 +14,11 @@ export default function IconButton({
   }
   const resolvedVariant = variantMap[variant] || variant
   const cls = [
-    'gc-btn',
-    'gc-btn--icon',
-    resolvedVariant ? `gc-btn--${resolvedVariant}` : '',
-    resolvedVariant ? `gc-iconbtn--${resolvedVariant}` : '',
-    'gc-iconbtn',
+    'lvm-btn',
+    'lvm-btn--icon',
+    resolvedVariant ? `lvm-btn--${resolvedVariant}` : '',
+    resolvedVariant ? `lvm-iconbtn--${resolvedVariant}` : '',
+    'lvm-iconbtn',
     className,
   ].filter(Boolean).join(' ')
   const props = { ...rest }

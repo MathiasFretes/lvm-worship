@@ -1,19 +1,5 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
-  "posts": {
-    "title": "Posts",
-    "subtitle": "News, announcements and worship resources",
-    "refresh": "Refresh",
-    "refreshAria": "Refresh posts",
-    "updated": "Updated {{time}}",
-    "searchPlaceholder": "Search posts…",
-    "searchAria": "Search posts",
-    "filterAria": "Filter by tag",
-    "tagsAria": "Tags",
-    "all": "All",
-    "loading": "Loading…",
-    "empty": "No posts found."
-  },
   "songs": {
     "title": "Songs",
     "titleTooltip": "Browse Songs",

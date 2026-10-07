@@ -28,20 +28,20 @@ function MetadataDiff({ oldPayload, newPayload }) {
   if (diffs.length === 0) return null
 
   return (
-    <div className="gc-suggestion-card__diff-section">
-      <div className="gc-suggestion-card__diff-title">Metadata changes</div>
+    <div className="lvm-suggestion-card__diff-section">
+      <div className="lvm-suggestion-card__diff-title">Metadata changes</div>
       {diffs.map(f => (
-        <div key={f} className="gc-suggestion-card__diff-row">
-          <span className="gc-suggestion-card__diff-key">{f}</span>
+        <div key={f} className="lvm-suggestion-card__diff-row">
+          <span className="lvm-suggestion-card__diff-key">{f}</span>
           {oldPayload && (
             <>
-              <span className="gc-suggestion-card__diff-old">
+              <span className="lvm-suggestion-card__diff-old">
                 {JSON.stringify(oldPayload[f] ?? '')}
               </span>
-              <span className="gc-suggestion-card__diff-arrow">→</span>
+              <span className="lvm-suggestion-card__diff-arrow">→</span>
             </>
           )}
-          <span className="gc-suggestion-card__diff-new">
+          <span className="lvm-suggestion-card__diff-new">
             {JSON.stringify(newPayload?.[f] ?? '')}
           </span>
         </div>
@@ -74,15 +74,15 @@ function ContentDiff({ oldContent, newContent }) {
   if (!hasDiff) return null
 
   return (
-    <div className="gc-suggestion-card__diff-section">
-      <div className="gc-suggestion-card__diff-title">Content changes</div>
-      <div className="gc-suggestion-card__content-diff">
+    <div className="lvm-suggestion-card__diff-section">
+      <div className="lvm-suggestion-card__diff-title">Content changes</div>
+      <div className="lvm-suggestion-card__content-diff">
         {rows.map((row, i) => (
           <div
             key={i}
             className={
-              row.type === 'added' ? 'gc-suggestion-card__diff-line--added' :
-              row.type === 'removed' ? 'gc-suggestion-card__diff-line--removed' :
+              row.type === 'added' ? 'lvm-suggestion-card__diff-line--added' :
+              row.type === 'removed' ? 'lvm-suggestion-card__diff-line--removed' :
               undefined
             }
           >
@@ -99,24 +99,24 @@ function RejectionForm({ onSubmit, onCancel }) {
   const [reason, setReason] = useState('')
 
   return (
-    <div className="gc-rejection-form">
+    <div className="lvm-rejection-form">
       <textarea
-        className="gc-rejection-form__textarea"
+        className="lvm-rejection-form__textarea"
         placeholder="Reason for rejection (optional)..."
         value={reason}
         onChange={e => setReason(e.target.value)}
       />
-      <div className="gc-rejection-form__actions">
+      <div className="lvm-rejection-form__actions">
         <button
           type="button"
-          className="gc-btn gc-btn--destructive gc-btn--sm"
+          className="lvm-btn lvm-btn--destructive lvm-btn--sm"
           onClick={() => onSubmit(reason)}
         >
           Confirm Rejection
         </button>
         <button
           type="button"
-          className="gc-btn gc-btn--secondary gc-btn--sm"
+          className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={onCancel}
         >
           Cancel
@@ -164,26 +164,26 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
   const isDeletion = suggestion.type === 'deletion'
 
   return (
-    <div className={`gc-suggestion-card${isDeletion ? ' gc-suggestion-card--deletion' : ''}`}>
-      <div className={`gc-suggestion-card__header${isDeletion ? ' gc-suggestion-card__header--deletion' : ''}`}>
-        <span className="gc-suggestion-card__proposer">
+    <div className={`lvm-suggestion-card${isDeletion ? ' lvm-suggestion-card--deletion' : ''}`}>
+      <div className={`lvm-suggestion-card__header${isDeletion ? ' lvm-suggestion-card__header--deletion' : ''}`}>
+        <span className="lvm-suggestion-card__proposer">
           {suggestion.users?.display_name || 'Unknown user'}
         </span>
-        <span className="gc-suggestion-card__meta">{formatDate(suggestion.created_at)}</span>
-        <span className={`gc-suggestion-card__badge gc-suggestion-card__badge--${suggestion.type}`}>
+        <span className="lvm-suggestion-card__meta">{formatDate(suggestion.created_at)}</span>
+        <span className={`lvm-suggestion-card__badge lvm-suggestion-card__badge--${suggestion.type}`}>
           {suggestion.type}
         </span>
       </div>
 
-      <div className="gc-suggestion-card__body">
+      <div className="lvm-suggestion-card__body">
         {isDeletion && (
-          <div className="gc-suggestion-card__deletion-warning">
+          <div className="lvm-suggestion-card__deletion-warning">
             ⚠ This suggestion requests deletion of this song. Admin approval required.
           </div>
         )}
 
         {suggestion.proposer_note && (
-          <div className="gc-suggestion-card__note">
+          <div className="lvm-suggestion-card__note">
             "{suggestion.proposer_note}"
           </div>
         )}
@@ -198,11 +198,11 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
         />
       </div>
 
-      <div className="gc-suggestion-card__actions">
+      <div className="lvm-suggestion-card__actions">
         {(!isDeletion || canDirectDelete) && (
           <button
             type="button"
-            className="gc-btn gc-btn--primary gc-btn--sm"
+            className="lvm-btn lvm-btn--primary lvm-btn--sm"
             onClick={handleApprove}
             disabled={loading}
           >
@@ -211,7 +211,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
         )}
         <button
           type="button"
-          className="gc-btn gc-btn--secondary gc-btn--sm"
+          className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={() => onTouchUp(suggestion)}
           disabled={loading}
         >
@@ -219,7 +219,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
         </button>
         <button
           type="button"
-          className="gc-btn gc-btn--destructive gc-btn--sm"
+          className="lvm-btn lvm-btn--destructive lvm-btn--sm"
           onClick={() => setRejecting(true)}
           disabled={loading}
         >
@@ -282,17 +282,17 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
   const canDirectDelete = isAtLeast('admin')
 
   return (
-    <div className="gc-suggestion-review gc-portal-section">
+    <div className="lvm-suggestion-review lvm-portal-section">
       <h2>Pending Suggestions</h2>
 
       {error && (
-        <p style={{ color: 'var(--gc-danger)' }}>Error loading suggestions: {error}</p>
+        <p style={{ color: 'var(--lvm-danger)' }}>Error loading suggestions: {error}</p>
       )}
 
-      {loading && <p className="gc-suggestion-review__empty">Loading suggestions…</p>}
+      {loading && <p className="lvm-suggestion-review__empty">Loading suggestions…</p>}
 
       {!loading && !error && suggestions.length === 0 && (
-        <p className="gc-suggestion-review__empty">No suggestions to review</p>
+        <p className="lvm-suggestion-review__empty">No suggestions to review</p>
       )}
 
       {suggestions.map(s => (

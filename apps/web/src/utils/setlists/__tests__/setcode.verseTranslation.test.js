@@ -2,20 +2,24 @@ import { describe, expect, it } from 'vitest'
 import { decodeSet, encodeSet } from '../setcode'
 import { parseVerseReference } from '../../songs/verseRef'
 
-describe('setcode verse translation support', () => {
-  it('round-trips translation-aware verse ids', () => {
-    const parsed = parseVerseReference('John 3:16', { translation: 'kjv' })
-    // encodeSet/decodeSet take (songs, list) — verse entries don't need the
-    // song-code map, so pass an empty songs array.
+describe('LVM set-code Scripture entries', () => {
+  it.each([
+    ['John 3:16', 'kjv'],
+    ['Matthew 28:19-20', 'esv'],
+    ['Acts 1:8', 'rvr1960'],
+  ])('round-trips %s in %s for a worship plan', (reference, translation) => {
+    const parsed = parseVerseReference(reference, { translation })
     const code = encodeSet([], [{ id: parsed.id, toKey: '' }])
-    expect(code.startsWith('V_')).toBe(true)
-
     const decoded = decodeSet([], code)
+
+    expect(code).toMatch(/^V_/)
     expect(decoded.error).toBeUndefined()
-    expect(decoded.entries).toEqual([{ id: 'v:kjv|John 3:16', toKey: '' }])
+    expect(decoded.entries).toEqual([
+      { id: `v:${translation}|${reference}`, toKey: '' },
+    ])
   })
 
-  it('decodes legacy verse codes as ESV', () => {
+  it('opens a legacy verse entry using the historical ESV default', () => {
     const legacy = `V${encodeLegacyVerse('John', '3:16')}`
     const decoded = decodeSet([], legacy)
     expect(decoded.error).toBeUndefined()

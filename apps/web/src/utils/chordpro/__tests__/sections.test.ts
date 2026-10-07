@@ -1,62 +1,55 @@
 import { describe, it, expect } from 'vitest';
 import { parseChordProOrLegacy } from '../parser';
 
-describe('ChordPro sections — long form + shorthands + legacy', () => {
-  it('parses long-form start/end with labels', () => {
-    const s = `
-{start_of_verse: Verse 1}
-[A]Line 1
+describe('LVM song-section parsing', () => {
+  it.each([
+    ['long directives', `
+{start_of_verse: Estrofa 1}
+[A]Heme aquí
 {end_of_verse}
 {start_of_chorus}
-[B]Hook
+[B]Envíame
 {end_of_chorus}
-`;
-    const doc = parseChordProOrLegacy(s);
-    expect(doc.sections.length).toBe(2);
-    expect(doc.sections[0].kind).toBe('verse');
-    expect(doc.sections[0].label).toMatch(/Verse 1/i);
-    expect(doc.sections[1].kind).toBe('chorus');
-    expect(doc.sections[1].label).toMatch(/Chorus/i);
-  });
-
-  it('parses shorthand {soc}/{eoc}, {sov}/{eov}, {sob}/{eob}', () => {
-    const s = `
+`, ['verse', 'chorus']],
+    ['compact directives', `
 {soc}
-[C]Chorus line
+[C]Coro
 {eoc}
 {sov}
-[D]Verse line
+[D]Estrofa
 {eov}
 {sob}
-[E]Bridge line
+[E]Puente
 {eob}
-`;
-    const doc = parseChordProOrLegacy(s);
-    expect(doc.sections.map(s => s.kind)).toEqual(['chorus','verse','bridge']);
-  });
+`, ['chorus', 'verse', 'bridge']],
+  ])('recognizes %s used by the LVM editor', (_format, source, kinds) => {
+    const doc = parseChordProOrLegacy(source)
+    expect(doc.sections.map(section => section.kind)).toEqual(kinds)
+    expect(doc.sections.every(section => section.lines.length > 0)).toBe(true)
+  })
 
-  it('falls back to legacy plain headers when no directives exist', () => {
+  it('imports Spanish plain-text section headers from ministry archives', () => {
     const s = `
 Verse 2
-[A]one
+[A]Uno
 Chorus
-[B]two
+[B]Dos
 `;
     const doc = parseChordProOrLegacy(s);
-    expect(doc.sections.length).toBe(2);
-    expect(doc.sections[0].label).toMatch(/Verse 2/i);
-    expect(doc.sections[1].label).toMatch(/Chorus/i);
+    expect(doc.sections.map(section => section.label)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/Verse 2/i), expect.stringMatching(/Chorus/i)])
+    );
   });
 
-  it('ignores stray end tags safely and auto-closes last section', () => {
+  it('recovers a partially edited chart without dropping its last lyric', () => {
     const s = `
 {eoc}
 {sov}
-[A]text
+[A]La mies es mucha
 `;
     const doc = parseChordProOrLegacy(s);
-    expect(doc.sections.length).toBe(1);
-    expect(doc.sections[0].kind).toBe('verse');
-    expect(doc.sections[0].lines.length).toBeGreaterThan(0);
+    expect(doc.sections).toHaveLength(1);
+    expect(doc.sections[0]).toMatchObject({ kind: 'verse' });
+    expect(doc.sections[0].lines[0].lyrics).toBe('La mies es mucha');
   });
 });

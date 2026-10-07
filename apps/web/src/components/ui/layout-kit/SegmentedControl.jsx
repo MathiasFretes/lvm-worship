@@ -47,7 +47,7 @@ export default function SegmentedControl({
 
   return (
     <div
-      className={`gc-segmented ${className}`.trim()}
+      className={`lvm-segmented ${className}`.trim()}
       role="radiogroup"
       aria-label={ariaLabel}
       aria-labelledby={ariaLabelledBy}
@@ -63,7 +63,7 @@ export default function SegmentedControl({
             role="radio"
             aria-checked={selected}
             disabled={opt.disabled}
-            className={`gc-segmented__item ${selected ? 'is-selected' : ''}`.trim()}
+            className={`lvm-segmented__item ${selected ? 'is-selected' : ''}`.trim()}
             tabIndex={selected ? 0 : -1}
             onClick={() => setValue(opt.value)}
             onKeyDown={(e) => handleKeyDown(e, idx)}

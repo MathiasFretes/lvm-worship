@@ -6,7 +6,7 @@ import termsMarkdown from '../content/terms-of-use.md?raw'
 import '../styles/posts.css'
 
 // Renders the hosted Terms of Use at /terms from the final markdown source in
-// src/content/. Same markdown → HTML (marked) → sanitize (DOMPurify) → .gc-prose
+// src/content/. Same markdown → HTML (marked) → sanitize (DOMPurify) → .lvm-prose
 // pipeline as PrivacyPage. Edit the .md to update.
 export default function TermsPage() {
   const html = useMemo(
@@ -15,13 +15,13 @@ export default function TermsPage() {
   )
 
   return (
-    <div className="container gc-post-detail">
+    <div className="container lvm-post-detail">
       <Helmet>
         <title>Terms of Use · La Voz Misionera</title>
         <meta name="description" content="The terms governing use of La Voz Misionera." />
       </Helmet>
       <div
-        className="gc-post-detail__content gc-prose"
+        className="lvm-post-detail__content lvm-prose"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

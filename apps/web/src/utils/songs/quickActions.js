@@ -6,8 +6,7 @@ export function normalizeTag(tag){
 export function hasTag(song, tag){
   const needle = normalizeTag(tag)
   if (!needle) return false
-  const tags = Array.isArray(song?.tags) ? song.tags.map(normalizeTag) : []
-  return tags.includes(needle)
+  return Array.isArray(song?.tags) && song.tags.some((value) => normalizeTag(value) === needle)
 }
 
 export function filterByTag(songs = [], tag){
@@ -18,18 +17,23 @@ export function filterByTag(songs = [], tag){
 
 export function pickRandom(list = []){
   if (!Array.isArray(list) || !list.length) return null
-  const idx = Math.floor(Math.random() * list.length)
+  const idx = randomIndex(list.length)
   return list[idx] ?? null
 }
 
 export function pickManyRandom(list = [], count = 0){
-  const pool = Array.isArray(list) ? list.slice() : []
+  const pool = Array.isArray(list) ? list.filter(Boolean) : []
   const out = []
-  if (count <= 0 || !pool.length) return out
-  while (out.length < count && pool.length){
-    const idx = Math.floor(Math.random() * pool.length)
+  const target = Math.min(pool.length, Math.max(0, Math.trunc(Number(count) || 0)))
+  while (out.length < target){
+    const idx = randomIndex(pool.length)
     const [chosen] = pool.splice(idx, 1)
-    if (chosen) out.push(chosen)
+    out.push(chosen)
   }
   return out
+}
+
+function randomIndex(length){
+  if (length <= 1) return 0
+  return Math.min(length - 1, Math.floor(Math.random() * length))
 }

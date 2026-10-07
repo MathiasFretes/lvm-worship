@@ -1,16 +1,9 @@
 // Cookie-backed storage adapter for the Supabase auth client.
 //
-// By default supabase-js persists the session in localStorage, which is
-// isolated per-origin — so a login on lavozmisionera.com is invisible to
-// tracks.lavozmisionera.com and vice-versa. Storing the session in a cookie
-// scoped to the parent domain (`.lavozmisionera.com`) instead makes it visible to
-// every subdomain, giving single sign-on across both sites (and shared
-// sign-out). Supabase sessions can exceed the ~4KB per-cookie limit, so values
-// are split across numbered chunk cookies and reassembled on read.
-//
-// IMPORTANT: this file must stay byte-for-byte equivalent in the GraceTracks
-// repo (src/lib/cookieStorage.js). Both apps share the Supabase project ref, so
-// they derive the same default storage key and read the same cookie.
+// Production cookies are scoped to `.lavozmisionera.com`; local and preview
+// deployments use host-only cookies. Supabase sessions can exceed the ~4KB
+// per-cookie limit, so values are split across numbered cookies and reassembled
+// on read.
 //
 // Security note: like localStorage, these cookies are readable by page JS
 // (not httpOnly) — there is no shared backend to issue httpOnly cookies for a

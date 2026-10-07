@@ -21,11 +21,7 @@ const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./features/song-editor/LvmSongEditorPage'))
 const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
 const DownloadPage = lazyRoute(() => import('./pages/DownloadPage'))
-const PostsPage = lazyRoute(() => import('./pages/PostsPage'))
-const PostDetailPage = lazyRoute(() => import('./pages/PostDetailPage'))
 const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
-const ManagePostsPage = lazyRoute(() => import('./pages/portal/ManagePostsPage'))
-const EditPostPage = lazyRoute(() => import('./pages/portal/EditPostPage'))
 import WorshipNavigation from './components/ui/WorshipNavigation'
 import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
@@ -63,11 +59,6 @@ export default function App(){
             <Route path="/portal/editor" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/editor/:slug" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/audit" element={<RoleGuard minRole="admin"><AuditLogPage /></RoleGuard>} />
-            <Route path="/portal/posts" element={<RoleGuard minRole="editor"><ManagePostsPage /></RoleGuard>} />
-            <Route path="/portal/posts/new" element={<RoleGuard minRole="editor"><EditPostPage /></RoleGuard>} />
-            <Route path="/portal/posts/:id/edit" element={<RoleGuard minRole="editor"><EditPostPage /></RoleGuard>} />
-            <Route path="/posts" element={<PostsPage />} />
-            <Route path="/posts/:slug" element={<PostDetailPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

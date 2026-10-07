@@ -24,8 +24,8 @@ function makeMockCanvasFactory() {
   }
 }
 
-describe('planSongForJpg', () => {
-  it('uses PDF-style wrapping fit and avoids false multi-page blocking', () => {
+describe('LVM worship-chart image planning', () => {
+  it('fits a dense congregational chart on one shareable page after wrapping', () => {
     const createCanvas = makeMockCanvasFactory()
     const measureCtx = createCanvas(1, 1).getContext('2d')
     const makeLyric = (pt) => (text) => {
@@ -37,25 +37,25 @@ describe('planSongForJpg', () => {
       return measureCtx.measureText(text || '').width
     }
 
-    const longLine = 'Creation is awaiting the return of the Lord and the nations are awaiting the coming of the King in glory and majesty forever'
+    const longLine = 'La mies es mucha y los obreros pocos envíanos Señor a proclamar tu esperanza entre todas las naciones'
     const song = normalizeSongInput({
-      title: 'Creation is Awaiting',
+      title: 'La Voz Misionera',
       key: 'A',
       lyricsBlocks: [
         {
-          section: 'VERSE 1',
+          section: 'ESTROFA 1',
           lines: Array.from({ length: 8 }, () => ({ plain: longLine, chordPositions: [] })),
         },
       ],
     })
 
-    const legacy = chooseBestLayout(
+    const unwrappedPlan = chooseBestLayout(
       song,
       { lyricFamily: 'NotoSans', chordFamily: 'NotoSansMono' },
       makeLyric,
       makeChord
     )
-    expect(legacy.plan.layout.pages.length).toBeGreaterThan(1)
+    expect(unwrappedPlan.plan.layout.pages.length).toBeGreaterThan(1)
 
     const planned = planSongForJpg(song, {
       createCanvas,
@@ -63,7 +63,8 @@ describe('planSongForJpg', () => {
       chordFamily: 'NotoSansMono',
     })
     expect(planned.error).toBeUndefined()
-    expect(planned.summary.pages).toBe(1)
-    expect(planned.plan.layout.pages.length).toBe(1)
+    expect(planned.summary).toMatchObject({ pages: 1 })
+    expect(planned.plan.layout.pages).toHaveLength(1)
+    expect(planned.plan.title).toBe('La Voz Misionera')
   })
 })

@@ -64,18 +64,14 @@ if (songsError) {
   process.exit(1)
 }
 
-const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
-
 const template = await fs.readFile(templatePath, 'utf8')
 
 const genericDescription = 'La Voz Misionera provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in La Voz Misionera for the full experience.'
 
 await buildSongPages(songs || [])
-await buildResourcePages(resourcesData?.items || [])
 await buildShellPages([
   { path: '/about', label: 'About' },
   { path: '/songs', label: 'Songs' },
-  { path: '/resources', label: 'Resources' },
   { path: '/songbook', label: 'Songbook' },
   { path: '/setlist', label: 'Setlist' },
   { path: '/reading', label: 'Daily Word' },
@@ -235,7 +231,7 @@ function absolutizeAssetPaths(html){
 function buildLyricsBody(title, text){
   const safeTitle = escapeHtml(title || 'La Voz Misionera')
   const safeText = escapeHtml(text || '')
-  return `\n      <main>\n        <h1>${safeTitle}</h1>\n        <pre class="gc-seo-lyrics">${safeText}</pre>\n        <p><a href="/">Open La Voz Misionera</a></p>\n      </main>\n    `
+  return `\n      <main>\n        <h1>${safeTitle}</h1>\n        <pre class="lvm-seo-lyrics">${safeText}</pre>\n        <p><a href="/">Open La Voz Misionera</a></p>\n      </main>\n    `
 }
 
 function buildDescription(text, fallback){

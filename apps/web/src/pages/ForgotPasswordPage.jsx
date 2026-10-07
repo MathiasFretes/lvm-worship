@@ -1,20 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import '../styles/auth.css'
 
 export default function ForgotPasswordPage() {
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.dataset.theme === 'dark'
-  )
-  useEffect(() => {
-    const observer = new MutationObserver(() =>
-      setIsDark(document.documentElement.dataset.theme === 'dark')
-    )
-    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
-
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -34,19 +23,19 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="gc-auth-page">
-        <div className="gc-auth-card">
+      <div className="lvm-auth-page">
+        <div className="lvm-auth-card">
           <img
-            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+            src="/lvm-mark.svg"
             alt="La Voz Misionera"
-            className="gc-auth-card__wordmark"
+            className="lvm-auth-card__wordmark"
           />
-          <h1 className="gc-auth-card__title">Check your email</h1>
-          <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
+          <h1 className="lvm-auth-card__title">Check your email</h1>
+          <p className="lvm-auth-card__subtitle" style={{ marginBottom: 0 }}>
             If an account exists with that email, you'll receive a reset link shortly.
             Check your spam folder if it doesn't arrive within a few minutes.
           </p>
-          <p className="gc-auth-card__footer">
+          <p className="lvm-auth-card__footer">
             <Link to="/login">Back to sign in</Link>
           </p>
         </div>
@@ -55,20 +44,20 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="gc-auth-page">
-      <div className="gc-auth-card">
+    <div className="lvm-auth-page">
+      <div className="lvm-auth-card">
         <img
-          src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+          src="/lvm-mark.svg"
           alt="La Voz Misionera"
-          className="gc-auth-card__wordmark"
+          className="lvm-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">Forgot password</h1>
-        <p className="gc-auth-card__subtitle">
+        <h1 className="lvm-auth-card__title">Forgot password</h1>
+        <p className="lvm-auth-card__subtitle">
           Enter your email and we'll send you a reset link.
         </p>
 
-        <form onSubmit={handleSubmit} className="gc-auth-form">
-          <div className="gc-form-field">
+        <form onSubmit={handleSubmit} className="lvm-auth-form">
+          <div className="lvm-form-field">
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -82,7 +71,7 @@ export default function ForgotPasswordPage() {
           </div>
           <button
             type="submit"
-            className="gc-btn gc-btn--primary"
+            className="lvm-btn lvm-btn--primary"
             disabled={submitting}
             style={{ width: '100%', justifyContent: 'center' }}
           >
@@ -90,7 +79,7 @@ export default function ForgotPasswordPage() {
           </button>
         </form>
 
-        <p className="gc-auth-card__footer">
+        <p className="lvm-auth-card__footer">
           <Link to="/login">Back to sign in</Link>
         </p>
       </div>

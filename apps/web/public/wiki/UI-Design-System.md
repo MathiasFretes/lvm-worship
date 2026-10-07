@@ -4,7 +4,7 @@ UIKit-inspired design system for La Voz Misionera.
 - Source of truth: `packages/tokens/tokens.css` (the `@lavozmisionera/tokens` package), imported into the web app via `apps/web/src/styles/index.css`.
 - Light and dark palettes use Apple system colors.
 - Spacing, radii, typography, and motion are tokenized.
-- Use `--gc-*` tokens in CSS instead of hardcoded hex values.
+- Use `--lvm-*` tokens in CSS instead of hardcoded hex values.
 
 ## Layout kit
 Reusable primitives live in `apps/web/src/components/ui/layout-kit/` and are styled by `layout-kit.css`.

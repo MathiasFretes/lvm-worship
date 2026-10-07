@@ -17,14 +17,12 @@ full-screen worship mode, and daily Bible readings.
 - [[Setlists]] · [[Songbook-Builder]] · [[Bundle]]
 - [[Slides-(PPTX)]]
 - [[Daily-Word]]
-- [[Resources-Library]]
 - [[Offline-Support]]
 - [[Troubleshooting]]
 
 ## Editing & Admin
 - [[Roles-and-Access]]
 - [[Adding-and-Editing-Songs]] · [[ChordPro-Guide]]
-- [[Admin-Resources]] (blog posts)
 - [[Admin-Portal]]
 
 ## Developer & Infrastructure

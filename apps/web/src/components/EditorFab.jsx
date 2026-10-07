@@ -25,7 +25,7 @@ export default function EditorFab() {
   return (
     <Link
       to={`/portal/editor/${slug}`}
-      className="gc-editor-fab"
+      className="lvm-editor-fab"
       aria-label="Edit this song"
       title="Edit this song"
     >

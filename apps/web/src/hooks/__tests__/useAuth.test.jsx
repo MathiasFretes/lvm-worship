@@ -3,14 +3,17 @@ import { renderHook, act } from '@testing-library/react'
 import React from 'react'
 import { AuthProvider, useAuth } from '../useAuth'
 
-// Mock the supabase module
+const { authListener, unsubscribe } = vi.hoisted(() => ({
+  authListener: vi.fn(),
+  unsubscribe: vi.fn(),
+}))
+
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      onAuthStateChange: vi.fn().mockImplementation((cb) => {
-        // Simulate INITIAL_SESSION with null (not logged in)
-        Promise.resolve().then(() => cb('INITIAL_SESSION', null))
-        return { data: { subscription: { unsubscribe: vi.fn() } } }
+      onAuthStateChange: vi.fn((callback) => {
+        authListener.mockImplementation(callback)
+        return { data: { subscription: { unsubscribe } } }
       }),
     },
     from: vi.fn().mockReturnValue({
@@ -21,20 +24,24 @@ vi.mock('../../lib/supabase', () => ({
   }
 }))
 
-describe('useAuth', () => {
-  it('starts in loading state', () => {
-    const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>
-    const { result } = renderHook(() => useAuth(), { wrapper })
-    // Before INITIAL_SESSION fires, session is undefined = loading
-    expect(result.current.loading).toBe(true)
+const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>
+
+describe('LVM authentication state contract', () => {
+  it('keeps protected worship routes pending until Supabase reports a session', () => {
+    const { result } = renderHook(useAuth, { wrapper })
+
+    expect(result.current).toMatchObject({ loading: true, isLoggedIn: false })
   })
 
-  it('resolves to not logged in when session is null', async () => {
-    const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>
-    const { result } = renderHook(() => useAuth(), { wrapper })
-    await act(async () => {})
+  it.each([
+    ['a visitor', null, false],
+    ['a worship-team member', { user: { id: 'lvm-musician' } }, true],
+  ])('resolves %s from INITIAL_SESSION', async (_scenario, session, loggedIn) => {
+    const { result } = renderHook(useAuth, { wrapper })
+    await act(async () => authListener('INITIAL_SESSION', session))
+
     expect(result.current.loading).toBe(false)
-    expect(result.current.isLoggedIn).toBe(false)
-    expect(result.current.session).toBe(null)
+    expect(result.current.isLoggedIn).toBe(loggedIn)
+    expect(result.current.session).toBe(session)
   })
 })

@@ -20,7 +20,7 @@ export default function LvmSongPicker({
     <section className="lvm-set-picker" aria-label={t('setlist.addSongs')}>
       <header><p className="lvm-set-editor__eyebrow">{t('setlist.search')}</p><h2>{t('setlist.addSongs')}</h2></header>
       <div className="lvm-set-picker__filters">
-        <input ref={searchRef} id="gc-library-search" type="search" value={query} placeholder={t('setlist.search')} aria-label={t('setlist.search')} onChange={event => onQuery(event.target.value)} />
+        <input ref={searchRef} id="lvm-library-search" type="search" value={query} placeholder={t('setlist.search')} aria-label={t('setlist.search')} onChange={event => onQuery(event.target.value)} />
         <label><input type="checkbox" checked={communityOnly} onChange={event => onCommunityOnly(event.target.checked)} /> {t('setlist.communitySetlist')}</label>
         {languages.length > 1 ? <div className="lvm-set-picker__languages">{languages.map(code => <button type="button" key={code} aria-pressed={language === code} onClick={() => onLanguage(code)}>{getLanguageChipLabel(code)}</button>)}</div> : null}
       </div>

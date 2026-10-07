@@ -16,7 +16,6 @@ development conventions, see [`AGENTS.md`](AGENTS.md) in this directory.
 - **Setlist builder** — reorder and transpose multiple songs, named cloud saves, shareable links, and multi-song PDF/PPTX export.
 - **Songbook builder** — predefined song groups with a table of contents and optional cover.
 - **Daily Word** — M'Cheyne Bible reading plan with local scripture text, verse selection, and copy.
-- **Resources** — blog-style posts with search, tags, and a rich-text admin editor.
 - **Admin & Editor portals** — user/role management and content editing.
 - **Roles** — user → editor → admin → owner, enforced by `RoleGuard`.
 - **Offline support** — a service worker caches core assets; cache is busted per deploy.
@@ -70,10 +69,6 @@ VITE_PPTX_WORKER_URL=https://lavozmisionera-pptx-upload.your-subdomain.workers.d
 # R2 public base URL (Bible JSON under /bible/, PPTX under /pptx/)
 VITE_R2_PUBLIC_URL=https://assets.lavozmisionera.com
 
-# Cloudinary image hosting
-VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
-VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
-
 # Public-reflections moderation — server-side only (Pages Function, never bundled)
 OPENAI_API_KEY=your-openai-api-key
 
@@ -94,7 +89,6 @@ root) in order. Key tables:
 
 - `public.users` — profiles with a `role` column (`user`, `editor`, `admin`, `owner`)
 - `public.songs` — full song catalog (ChordPro content, metadata, star counts)
-- `public.posts` — blog-style resources (title, slug, rich content, tags, status, author)
 - `public.user_starred_songs` — per-user song stars
 - `public.saved_sets` — cloud-saved setlists for logged-in users
 - `public.reflections` — per-user Daily Word reflections, a **private journal only**. The anonymous public-posts feature was removed under App Review Guideline 1.2 (PR 469 for the clients, migration `20260805000000_retire_public_reflections_age_gate.sql` for the backend: kill switch off, `public_feed_read` policy dropped). Its moderation tables — `reflection_hearts`, `reports`, `banned_users`, `feature_flags` — are retained but inert, because the still-deployed `submit`/`report` Pages Functions read them and should refuse cleanly rather than error.
@@ -118,7 +112,7 @@ npm run build:bible -- --xml ./BIBLE_XML/EnglishNLTBible.xml   # ingest Bible XM
 ## Building & deployment
 
 `npm run build` runs Vite, then generates static SEO HTML pages for `/songs/:id`
-and `/resources/:slug` (querying Supabase with the service-role key) and a
+(querying Supabase with the service-role key) and a
 sitemap, emitting everything to **`apps/web/dist/`** (gitignored).
 
 Production is deployed by **Cloudflare Pages**, which builds from this

@@ -13,7 +13,7 @@ const LocaleContext = createContext(null)
 
 function normalize(code) {
   if (!code) return null
-  const lower = String(code).toLowerCase()
+  const lower = String(code).trim().toLowerCase().replace(/_/g, '-')
   if (isSupportedLocale(lower)) return lower
   // Accept regional variants like "ko-KR" or "tr-TR" by matching the base tag.
   const base = lower.split('-')[0]
@@ -47,6 +47,7 @@ export function LocaleProvider({ children }) {
 
   const setLanguage = useCallback(async (code) => {
     const next = normalize(code) || DEFAULT_LOCALE
+    if (next === language && profile?.preferences?.ui_language === next) return
     await i18n.changeLanguage(next)
     try { localStorage.setItem(LOCALE_STORAGE_KEY, next) } catch {}
 
@@ -65,7 +66,7 @@ export function LocaleProvider({ children }) {
         console.warn('Failed to persist ui_language preference', error)
       }
     }
-  }, [session, profile])
+  }, [session, profile, language])
 
   const value = useMemo(() => ({
     language,

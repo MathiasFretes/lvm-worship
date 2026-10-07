@@ -10,15 +10,15 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 ## Build output
 `npm run build` runs three steps:
 1. `vite build` → `dist/`
-2. `node scripts/generate-seo-pages.mjs` → static HTML shells for every song and post
+2. `node scripts/generate-seo-pages.mjs` → static HTML shells for every song
 3. `node scripts/generate-sitemap.mjs` → `public/sitemap.xml`
 
-Steps 2 and 3 require `SUPABASE_SERVICE_ROLE_KEY` to be set (they query songs and posts from Supabase).
+Steps 2 and 3 require `SUPABASE_SERVICE_ROLE_KEY` to be set (they query songs from Supabase).
 
 ## Deployment
 Cloudflare Pages is connected to this repository and triggers a build on every push to `main`. This is a monorepo, so the Pages **root directory** is `apps/web`, the build command installs from the repo root and builds the web workspace, and the output directory is `dist/` (→ `apps/web/dist`). The exact CF settings and rationale are in [`MONOREPO_MIGRATION.md`](https://github.com/rwm6857/La Voz Misionera/blob/main/MONOREPO_MIGRATION.md). No GitHub Actions workflow is needed for deployment.
 
-Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc.) are configured in the Cloudflare Pages dashboard under **Settings → Variables and Secrets**.
+Environment variables (Supabase URL, anon key, service role key, etc.) are configured in the Cloudflare Pages dashboard under **Settings → Variables and Secrets**.
 
 ## GitHub Actions workflows
 

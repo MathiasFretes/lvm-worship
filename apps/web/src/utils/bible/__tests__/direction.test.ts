@@ -1,23 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { isRtlBibleLanguage, normalizeBibleLanguageCode } from '../direction'
 
-describe('bible RTL language detection', () => {
-  it('normalizes language tags', () => {
-    expect(normalizeBibleLanguageCode(' FA_IR ')).toBe('fa-ir')
-    expect(normalizeBibleLanguageCode('ar')).toBe('ar')
+describe('LVM Scripture reading direction', () => {
+  it.each([
+    [' FA_IR ', 'fa-ir'],
+    ['AR', 'ar'],
+    ['he_IL', 'he-il'],
+  ])('normalizes translation language %j to %j', (input, normalized) => {
+    expect(normalizeBibleLanguageCode(input)).toBe(normalized)
   })
 
-  it('detects rtl languages by base tag', () => {
-    expect(isRtlBibleLanguage('ar')).toBe(true)
-    expect(isRtlBibleLanguage('fa-IR')).toBe(true)
-    expect(isRtlBibleLanguage('he')).toBe(true)
-    expect(isRtlBibleLanguage('iw')).toBe(true)
-  })
-
-  it('does not mark ltr languages as rtl', () => {
-    expect(isRtlBibleLanguage('en')).toBe(false)
-    expect(isRtlBibleLanguage('tr')).toBe(false)
-    expect(isRtlBibleLanguage('ko')).toBe(false)
-    expect(isRtlBibleLanguage('')).toBe(false)
+  it.each([
+    ['Arabic', 'ar', true],
+    ['Persian regional tag', 'fa-IR', true],
+    ['Hebrew', 'he', true],
+    ['legacy Hebrew', 'iw', true],
+    ['English', 'en', false],
+    ['Spanish', 'es', false],
+    ['Turkish', 'tr', false],
+    ['Korean', 'ko', false],
+    ['unspecified', '', false],
+  ])('renders %s passages right-to-left: %s', (_label, language, rtl) => {
+    expect(isRtlBibleLanguage(language)).toBe(rtl)
   })
 })

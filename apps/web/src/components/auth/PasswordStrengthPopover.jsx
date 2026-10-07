@@ -29,11 +29,11 @@ function CircleIcon({ filled }) {
 export default function PasswordStrengthPopover({ password }) {
   const checks = checkPassword(password)
   return (
-    <div className="gc-pw-strength-popover" role="status" aria-label="Password requirements">
-      <p className="gc-pw-strength-popover__title">Password requirements</p>
-      <ul className="gc-pw-strength-popover__list">
+    <div className="lvm-pw-strength-popover" role="status" aria-label="Password requirements">
+      <p className="lvm-pw-strength-popover__title">Password requirements</p>
+      <ul className="lvm-pw-strength-popover__list">
         {PW_REQUIREMENTS.map(({ key, label }) => (
-          <li key={key} className={`gc-pw-strength-req${checks[key] ? ' gc-pw-strength-req--met' : ''}`}>
+          <li key={key} className={`lvm-pw-strength-req${checks[key] ? ' lvm-pw-strength-req--met' : ''}`}>
             <CircleIcon filled={checks[key]} />
             {label}
           </li>

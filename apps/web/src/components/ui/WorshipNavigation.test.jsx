@@ -25,9 +25,10 @@ describe('LVM Worship navigation', () => {
     const desktop = screen.getByRole('navigation', { name: 'Main navigation' })
     expect(within(desktop).getByRole('link', { name: 'Setlist' })).toHaveAttribute('href', '/setlist')
     expect(within(desktop).getByRole('link', { name: 'Setlist' })).toHaveAttribute('aria-current', 'page')
-    for (const destination of ['Home', 'Songs', 'Songbook', 'Daily Word', 'Blog']) {
+    for (const destination of ['Home', 'Songs', 'Songbook', 'Daily Word']) {
       expect(within(desktop).getByRole('link', { name: destination })).toBeInTheDocument()
     }
+    expect(within(desktop).queryByRole('link', { name: 'Blog' })).not.toBeInTheDocument()
   })
 
   test('opens the mobile drawer and restores focus and scroll on Escape', async () => {
@@ -58,6 +59,7 @@ describe('LVM Worship navigation', () => {
     expect(within(desktop).getByRole('link', { name: 'Editor Portal' })).toHaveAttribute('aria-current', 'page')
     fireEvent.click(screen.getByRole('button', { name: 'User menu' }))
     expect(screen.getByRole('link', { name: 'Song Editor' })).toHaveAttribute('href', '/portal/editor')
+    expect(screen.queryByRole('link', { name: 'Post Editor' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Admin Portal' })).not.toBeInTheDocument()
   })
 })

@@ -10,20 +10,20 @@ export default function MobileActionSheet({
   if (!open) return null
 
   return (
-    <div className={`gc-mobile-actionsheet ${className}`.trim()} role="dialog" aria-modal="true" aria-label={title}>
+    <div className={`lvm-mobile-actionsheet ${className}`.trim()} role="dialog" aria-modal="true" aria-label={title}>
       <button
         type="button"
-        className="gc-mobile-actionsheet__overlay"
+        className="lvm-mobile-actionsheet__overlay"
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="gc-mobile-actionsheet__panel">
-        <div className="gc-mobile-actionsheet__grab" aria-hidden />
-        <div className="gc-mobile-actionsheet__head">
-          <strong className="gc-mobile-actionsheet__title">{title}</strong>
-          <button type="button" className="gc-btn gc-btn--sm" onClick={onClose}>Done</button>
+      <div className="lvm-mobile-actionsheet__panel">
+        <div className="lvm-mobile-actionsheet__grab" aria-hidden />
+        <div className="lvm-mobile-actionsheet__head">
+          <strong className="lvm-mobile-actionsheet__title">{title}</strong>
+          <button type="button" className="lvm-btn lvm-btn--sm" onClick={onClose}>Done</button>
         </div>
-        <div className="gc-mobile-actionsheet__body">
+        <div className="lvm-mobile-actionsheet__body">
           {children}
         </div>
       </div>

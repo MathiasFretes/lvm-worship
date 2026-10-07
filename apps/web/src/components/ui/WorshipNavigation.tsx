@@ -37,7 +37,6 @@ export default function WorshipNavigation() {
     { to: setlistHome, label: t('setlist'), active: path => matches(path, '/setlist') || matches(path, '/setlists') || matches(path, '/set') },
     { to: '/songbook', label: t('songbook'), active: path => matches(path, '/songbook') },
     { to: '/reading', label: t('dailyWord'), active: path => matches(path, '/reading') },
-    { to: '/posts', label: t('blog'), active: path => matches(path, '/posts') },
   ]
 
   useEffect(() => {
@@ -160,7 +159,6 @@ export default function WorshipNavigation() {
                   <p>{profile?.display_name || session?.user?.email}</p>
                   <Link to="/profile" onClick={() => setPopover(null)}>{t('profile')}</Link>
                   {hasMinRole('user') && <Link to="/portal/editor" onClick={() => setPopover(null)}>{t('songEditor')}</Link>}
-                  {hasMinRole('editor') && <Link to="/portal/posts" onClick={() => setPopover(null)}>{t('postEditor')}</Link>}
                   {hasMinRole('admin') && <Link to="/admin" onClick={() => setPopover(null)}>{t('adminPortal')}</Link>}
                   <button type="button" onClick={signOut}><LogOutIcon />{t('signOut')}</button>
                 </div>}

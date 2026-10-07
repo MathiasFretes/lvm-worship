@@ -285,7 +285,7 @@ export default function ReadingsPage(){
           />
         </>
       ) : (
-        <div className="gc-card readings-status readings-status--error">{t('readings.noPassages')}</div>
+        <div className="lvm-card readings-status readings-status--error">{t('readings.noPassages')}</div>
       )}
 
       <button

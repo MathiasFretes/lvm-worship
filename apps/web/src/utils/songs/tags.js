@@ -32,7 +32,8 @@ export function canonicalizeTags(tags = [], tagMap) {
   const seen = new Set()
   const keys = []
   const labels = []
-  for (const raw of tags) {
+  const source = Array.isArray(tags) ? tags : [tags]
+  for (const raw of source) {
     const key = normalizeTagKey(raw)
     if (!key || seen.has(key)) continue
     seen.add(key)
@@ -44,16 +45,17 @@ export function canonicalizeTags(tags = [], tagMap) {
 
 export function buildTagMap(items = []) {
   const keys = new Set()
-  for (const item of items) {
-    for (const raw of item?.tags || []) {
+  for (const item of Array.isArray(items) ? items : []) {
+    const tags = Array.isArray(item?.tags) ? item.tags : [item?.tags]
+    for (const raw of tags) {
       const key = normalizeTagKey(raw)
       if (key) keys.add(key)
     }
   }
-  const map = new Map()
-  for (const key of keys) {
-    map.set(key, tagLabelFromKey(key))
-  }
-  return map
+  return new Map(
+    [...keys]
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .map((key) => [key, tagLabelFromKey(key)])
+  )
 }
 

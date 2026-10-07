@@ -13,7 +13,7 @@ export default function LanguageSelector({ id, className, style, compact = false
   return (
     <select
       id={id}
-      className={className || 'gc-language-selector'}
+      className={className || 'lvm-language-selector'}
       style={style}
       value={language}
       onChange={onChange}

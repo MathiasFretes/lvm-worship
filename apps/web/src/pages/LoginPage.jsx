@@ -12,17 +12,6 @@ export default function LoginPage() {
   const location = useLocation()
   const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
 
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.dataset.theme === 'dark'
-  )
-  useEffect(() => {
-    const observer = new MutationObserver(() =>
-      setIsDark(document.documentElement.dataset.theme === 'dark')
-    )
-    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -56,19 +45,19 @@ export default function LoginPage() {
   if (loading) return null
 
   return (
-    <div className="gc-auth-page">
-      <div className="gc-auth-card">
+    <div className="lvm-auth-page">
+      <div className="lvm-auth-card">
         <img
-          src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
-           alt="La Voz Misionera"
-          className="gc-auth-card__wordmark"
+          src="/lvm-mark.svg"
+          alt="La Voz Misionera"
+          className="lvm-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">{t('welcomeBack')}</h1>
-        <p className="gc-auth-card__subtitle">{t('signInToAccount')}</p>
+        <h1 className="lvm-auth-card__title">{t('welcomeBack')}</h1>
+        <p className="lvm-auth-card__subtitle">{t('signInToAccount')}</p>
 
-        <form onSubmit={handleSubmit} className="gc-auth-form">
-          {error && <div className="gc-auth-error">{error}</div>}
-          <div className="gc-form-field">
+        <form onSubmit={handleSubmit} className="lvm-auth-form">
+          {error && <div className="lvm-auth-error">{error}</div>}
+          <div className="lvm-form-field">
             <label htmlFor="email">{t('email')}</label>
             <input
               id="email"
@@ -81,7 +70,7 @@ export default function LoginPage() {
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <div className="gc-form-field">
+            <div className="lvm-form-field">
               <label htmlFor="password">{t('password')}</label>
               <input
                 id="password"
@@ -97,8 +86,8 @@ export default function LoginPage() {
               <Link
                 to="/forgot-password"
                 style={{
-                  color: 'var(--gc-primary)',
-                  fontSize: 'var(--gc-font-sub)',
+                  color: 'var(--lvm-primary)',
+                  fontSize: 'var(--lvm-font-sub)',
                   fontWeight: 500,
                   textDecoration: 'none',
                 }}
@@ -110,7 +99,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="gc-btn gc-btn--primary"
+            className="lvm-btn lvm-btn--primary"
             disabled={submitting}
             style={{ width: '100%', justifyContent: 'center' }}
           >
@@ -118,10 +107,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="gc-auth-divider">{t('common:or')}</div>
+        <div className="lvm-auth-divider">{t('common:or')}</div>
         <button
           type="button"
-          className="gc-btn gc-btn--secondary"
+          className="lvm-btn lvm-btn--secondary"
           onClick={handleGoogleSignIn}
           style={{ width: '100%', justifyContent: 'center', gap: '10px' }}
         >
@@ -129,7 +118,7 @@ export default function LoginPage() {
           {t('common:continueWithGoogle')}
         </button>
 
-        <p className="gc-auth-card__footer">
+        <p className="lvm-auth-card__footer">
           {t('noAccountYet')}{' '}
           <Link to={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}>
             {t('signUp')}

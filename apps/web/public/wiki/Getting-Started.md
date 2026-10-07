@@ -3,7 +3,7 @@ Set up a local environment to develop or preview La Voz Misionera.
 ## Prerequisites
 - [Node.js LTS](https://nodejs.org/) (20+)
 - Git
-- A Supabase project (for auth, songs, and posts)
+- A Supabase project (for auth and songs)
 
 ## Install and run
 ```bash
@@ -30,10 +30,6 @@ VITE_PPTX_WORKER_URL=https://lvm-pptx-upload.your-subdomain.workers.dev
 # R2 Public URL — base URL for Bible JSON and PPTX assets
 VITE_R2_PUBLIC_URL=https://assets.lavozmisionera.com
 
-# Cloudinary — image hosting for song/post covers
-VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
-VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
-
 # Optional
 VITE_ENABLE_DISCLAIMER=1       # set to 0 to hide footer/PDF disclaimers
 VITE_CONTACT_EMAIL=you@example.com
@@ -50,7 +46,6 @@ VITE_CONTACT_EMAIL=you@example.com
 Apply all migrations under `supabase/migrations/` in order. Key tables:
 - `public.users` — user profiles with `role`
 - `public.songs` — ChordPro song catalog
-- `public.posts` — blog-style posts
 - `public.user_starred_songs`, `public.saved_sets`
 
 ## Build for production

@@ -15,7 +15,7 @@ export default function MobilePaneTabs({
     ...(savedLabel ? [{ value: 'saved', label: savedLabel }] : []),
   ]
   return (
-    <div className={`gc-mobile-pane-tabs ${className}`.trim()}>
+    <div className={`lvm-mobile-pane-tabs ${className}`.trim()}>
       <SegmentedControl
         ariaLabel="Builder pane"
         value={value}

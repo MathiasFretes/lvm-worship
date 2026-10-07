@@ -15,14 +15,13 @@ Paths in this file are relative to `apps/web/` unless prefixed. `src/` means
   - `src/pages/` — route-level screens (`*Page.jsx`). `AdminPage.jsx` (admin portal), `EditorPage.jsx` (editor portal).
   - `src/features/` — feature-internal modules (e.g. `features/readings/` for Daily Word).
   - `src/components/` — reusable cross-route UI. `components/auth/RoleGuard.jsx` gates routes by minimum role.
-  - `src/components/ui/layout-kit/` — reusable UI primitives (`gc-*` classes).
+  - `src/components/ui/layout-kit/` — reusable UI primitives (`lvm-*` classes).
   - `src/components/ui/mobile/` — mobile-responsive primitives for the **web** UI (`MobileActionSheet`, `MobileDock`, `MobilePaneTabs`, `MobileSheet`). Distinct from the native app.
   - `src/hooks/useAuth.jsx` — auth context: `session`, `user`, `profile`, `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`.
-  - `src/lib/supabase.js` — the **web** Supabase client (thin wrapper over `@lavozmisionera/core`'s `createGcSupabase`, injecting Vite env + `cookieStorage`). Import this singleton everywhere; never create a second client.
+  - `src/lib/supabase.js` — the **web** Supabase client (thin wrapper over `@lavozmisionera/core`'s `createLvmSupabase`, injecting Vite env + `cookieStorage`). Import this singleton everywhere; never create a second client.
   - `src/utils/` — pure utilities grouped by domain (`app`, `network`, `songs`, `setlists`, `media`, `content`, `archive`, `chordpro`, `pdf`, `pdf_mvp`).
   - `src/utils/chordpro/` — re-export **shims**; the real parser/serializer/normalization live in `../../packages/core/src/chordpro/`. `disclaimer.ts` stays here (depends on web config).
   - `src/i18n/` — UI translations (see [i18n](#internationalization-i18n)).
-  - `src/data/resources.json` — generated posts index (legacy static fallback); do not hand-edit.
   - `src/assets/fonts/` — PDF fonts (Noto Sans/Mono). Must exist locally for PDF export.
   - `src/styles/index.css` — global style entry; imports `@lavozmisionera/tokens/tokens.css`.
 - `public/` — static assets: `wiki/` (wiki source), `bible/` (translation manifest + chapter JSON), `fonts/` (UI fonts), `resources/`, `pptx/`.
@@ -51,7 +50,7 @@ Run from the repo root (delegates via `-w @lavozmisionera/web`) or from inside `
 Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the service-worker cache.
 
 ### Known baselines
-- **Tests:** the suite is fully green (`npm test` should report zero failures). Any failure is a real regression — investigate, don't wave it through. Do **not** reintroduce a "failures expected" baseline. (History: an older "2 setcode + 11 supabase-load" baseline no longer applies — the vitest config injects `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` and the client moved behind `createGcSupabase`.)
+- **Tests:** the suite is fully green (`npm test` should report zero failures). Any failure is a real regression — investigate, don't wave it through. Do **not** reintroduce a "failures expected" baseline. (History: an older "2 setcode + 11 supabase-load" baseline no longer applies — the vitest config injects `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` and the client moved behind `createLvmSupabase`.)
 - **Lint:** clean — 0 warnings, 0 errors. Fix new `react-hooks/exhaustive-deps` warnings as you introduce them.
 
 ## Coding style & naming
@@ -62,7 +61,7 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 - ESLint flat config at `eslint.config.js`; `js.configs.recommended` is intentionally off. Add new rules sparingly so the hook signal stays loud.
 
 ## Design system (tokens + layout kit)
-- **Tokens** live in `../../packages/tokens/tokens.css` (the warm-brown `--gc-*` palette), imported via `src/styles/index.css`. Always use `--gc-*` tokens for colors, spacing, radii, type scale, and motion. **Never** introduce hardcoded hex values, `px` sizes, or timing literals.
+- **Tokens** live in `../../packages/tokens/tokens.css` (the warm-brown `--lvm-*` palette), imported via `src/styles/index.css`. Always use `--lvm-*` tokens for colors, spacing, radii, type scale, and motion. **Never** introduce hardcoded hex values, `px` sizes, or timing literals.
 - Light/dark theming scopes token overrides under `[data-theme="dark"]`. `applyTheme()`/`toggleTheme()` in `src/utils/app/theme.js` set the attribute on `<html>` and persist to `localStorage`.
 - **Layout kit** primitives live in `src/components/ui/layout-kit/`: `Button`, `Card`, `InsetCard`, `Chip`, `Field`, `IconButton`, `PageHeader`, `Panel`, `SegmentedControl`, `Toolbar`, `Input`, `SongCard`. Prefer these for all new UI; don't add one-off styled wrappers unless the kit genuinely can't express it.
 - Legacy back-compat classes (`.btn`, `.card`, `.iconbtn`, `.container`) remain stable and map to kit styles via aliases in `src/styles.css`. Do not remove them.
@@ -81,8 +80,8 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 - `SUPABASE_SERVICE_ROLE_KEY` is used **only** by Node build scripts (`generate-seo-pages.mjs`, `generate-sitemap.mjs`). Never bundle it into the frontend.
 
 ## Data flow & search
-- Songs and posts are served directly from Supabase at runtime (`useSongs.jsx`, `usePosts.jsx`), cached per session; `SongsPage` feeds results to Fuse.js for in-memory fuzzy search. There is no required local JSON index.
-- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id` and `/resources/:slug`, plus fully pre-rendered `/privacy`, `/terms` and `/delete-account` (from `src/content/*.md`). Any route **without** a file in `dist/` is served by Pages as `404.html` with HTTP 404 (the SPA still renders it via the redirect script), so a URL that external systems check — e.g. the Google Play privacy-policy and account-deletion links — must be emitted here. `generate-sitemap.mjs` writes `public/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`.
+- Songs are served directly from Supabase at runtime (`useSongs.jsx`), cached per session; `SongsPage` feeds results to Fuse.js for in-memory fuzzy search. There is no required local JSON index.
+- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id`, plus fully pre-rendered `/privacy`, `/terms` and `/delete-account` (from `src/content/*.md`). Any route **without** a file in `dist/` is served by Pages as `404.html` with HTTP 404 (the SPA still renders it via the redirect script), so a URL that external systems check — e.g. the Google Play privacy-policy and account-deletion links — must be emitted here. `generate-sitemap.mjs` writes `public/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`.
 - Sorting: numeric titles first; otherwise case-insensitive, ignoring leading punctuation (`'Tis` sorts under `T`); translation-aware (selected-language variants first). Songs group by `song_id`.
 
 ## PDF engine
@@ -111,14 +110,8 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 - **Kill switch + moderation state** were created by migration `20260719000100_public_reflections_backend.sql`: `feature_flags` (`public_reflections`), `banned_users`, `reports`, `reflection_hearts` (+ `heart_count` trigger), and `reflections.removed_at/removed_reason`. The public-feed read policy was gated today-only + not-removed + not-banned + feature-on, via SECURITY DEFINER helpers `is_user_banned` / `feature_enabled` (needed because `banned_users` has no client select). **Current state:** `20260719000300_enable_public_reflections.sql` turned the flag on, then `20260805000000_retire_public_reflections_age_gate.sql` turned it **off** and dropped `public_feed_read` outright, so there is no public read path even if the flag is flipped back. Everything else in that list is **deliberately retained** — `submit.js:68,76` reads `feature_flags` and `banned_users` and `report.js` writes `reports`, so dropping the tables would turn those deployed endpoints into 502s instead of clean refusals. The own-row policies (`own_select`/`own_insert`/`own_delete`, plus `own_update_private` from `20260719000400`) are untouched.
 - **Report record** (`functions/api/reflections/report.js`): validates and writes a row into `reports` for moderator review; with the retired pipeline off it refuses at its own flag check instead of notifying anyone.
 
-## Cloudinary
-- Unsigned browser uploads via `VITE_CLOUDINARY_CLOUD_NAME` + `VITE_CLOUDINARY_UPLOAD_PRESET`. No server-side SDK — all uploads are direct from the browser. Returned URLs go into `songs.featured_image_url` / `posts.featured_image_url`. Follow the existing song/post editor pattern to add uploads elsewhere.
-
 ## Resend
 - Transactional email. `RESEND_API_KEY` is **server-side only** — never expose it to the Vite bundle. Add new email triggers in a Worker/Pages Function, never in frontend code.
-
-## GraceTracks
-- Songs optionally link practice stem tracks via `has_stems` (bool), `stem_slug` (text), `gracetracks_url` (text) on `public.songs`. Check `has_stems` before showing any GraceTracks affordance.
 
 ## Environment variables
 - Production values live in **Cloudflare Pages → Settings → Variables** — don't add/change/remove them. The full list is in [`.env.example`](../../.env.example).

@@ -3,6 +3,7 @@ import { chooseBestLayout, normalizeSongInput } from './jpgPlanner.js'
 import { ensureCanvasFonts } from './canvasFonts.js'
 import { formatInstrumental } from '../songs/instrumental.js'
 import { resolveChordCollisions } from '../songs/chords.js'
+import { splitTextRowsByWidth } from '../songs/chordLineLayout.js'
 export { ensureCanvasFonts } from './canvasFonts.js'
 
 const PAGE_DEFAULT = { w: 612, h: 792 }
@@ -61,51 +62,6 @@ function getMeasureCtx(createCanvas) {
     throw new Error('Canvas 2D context unavailable for JPG planning.')
   }
   return measureCtx
-}
-
-function splitTextRowsByWidth(text = '', width = 0, measure = () => 0) {
-  const source = String(text || '')
-  if (!source.length) return [{ text: '', start: 0, end: 0 }]
-
-  const rows = []
-  const safeWidth = Math.max(1, width)
-  let cursor = 0
-
-  while (cursor < source.length) {
-    while (cursor < source.length && source[cursor] === ' ') cursor += 1
-    if (cursor >= source.length) break
-
-    let lo = cursor + 1
-    let hi = source.length
-    let best = cursor + 1
-    while (lo <= hi) {
-      const mid = Math.floor((lo + hi) / 2)
-      const chunk = source.slice(cursor, mid)
-      if (measure(chunk) <= safeWidth || mid === cursor + 1) {
-        best = mid
-        lo = mid + 1
-      } else {
-        hi = mid - 1
-      }
-    }
-
-    let end = best
-    if (end < source.length) {
-      const space = source.lastIndexOf(' ', end - 1)
-      if (space > cursor) end = space
-    }
-
-    let rowText = source.slice(cursor, end).replace(/\s+$/g, '')
-    if (!rowText) {
-      end = Math.min(source.length, cursor + 1)
-      rowText = source.slice(cursor, end)
-    }
-
-    rows.push({ text: rowText, start: cursor, end })
-    cursor = end
-  }
-
-  return rows.length ? rows : [{ text: '', start: 0, end: 0 }]
 }
 
 function splitLyricWithChordsRows(text = '', chords = [], width = 0, measureLyric = () => 0) {

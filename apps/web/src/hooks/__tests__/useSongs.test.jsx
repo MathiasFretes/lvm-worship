@@ -35,9 +35,6 @@ const fullRow = {
   star_count: 3,
   song_group_id: 'group-1',
   is_deleted: false,
-  has_stems: true,
-  stem_slug: 'abba-stems',
-  gracetracks_url: 'https://tracks.example/abba',
 }
 
 describe('useSongs', () => {
@@ -64,9 +61,6 @@ describe('useSongs', () => {
       filename: 'abba_song.chordpro', // source_filename + .chordpro
       star_count: 3,
       song_group_id: 'group-1',
-      has_stems: true,
-      stem_slug: 'abba-stems',
-      gracetracks_url: 'https://tracks.example/abba',
     })
   })
 
@@ -94,9 +88,6 @@ describe('useSongs', () => {
       tags: [],
       youtube: null,
       originalKey: '',
-      has_stems: false,
-      stem_slug: null,
-      gracetracks_url: null,
     })
   })
 

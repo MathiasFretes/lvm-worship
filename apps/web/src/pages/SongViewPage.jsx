@@ -511,8 +511,8 @@ export default function SongView(){
   const editHref = personalParam ? `/portal/editor?p=${personalParam}` : null
 
   const desktopToolbar = !isNarrow ? (
-    <Toolbar className="gc-song-toolbar">
-      <div className="gc-toolbar__group">
+    <Toolbar className="lvm-song-toolbar">
+      <div className="lvm-toolbar__group">
         <KeySelector
           baseKey={baseKey}
           valueKey={toKey}
@@ -536,13 +536,13 @@ export default function SongView(){
           <EyeIcon />
         </IconButton>
       </div>
-      <div className="gc-toolbar__actions">
+      <div className="lvm-toolbar__actions">
         {isPersonal ? (
           <Button variant="primary" as={Link} to={editHref} leftIcon={<EyeIcon />} title="Edit song">
             Edit
           </Button>
         ) : (<>
-        <div className="gc-download-menu">
+        <div className="lvm-download-menu">
           <Button
             variant="primary"
             leftIcon={<DownloadIcon />}
@@ -560,16 +560,16 @@ export default function SongView(){
             <>
               <button
                 type="button"
-                className="gc-download-menu__backdrop"
+                className="lvm-download-menu__backdrop"
                 aria-hidden="true"
                 tabIndex={-1}
                 onClick={() => setDownloadMenuOpen(false)}
               />
-              <div className="gc-download-menu__panel" role="menu" aria-label="Download options">
+              <div className="lvm-download-menu__panel" role="menu" aria-label="Download options">
                 <button
                   type="button"
                   role="menuitem"
-                  className="gc-download-menu__item"
+                  className="lvm-download-menu__item"
                   onClick={(e) => { e.preventDefault(); handleDownloadPdf(); setDownloadMenuOpen(false) }}
                   onMouseEnter={prefetchPdf}
                 >
@@ -578,7 +578,7 @@ export default function SongView(){
                 <button
                   type="button"
                   role="menuitem"
-                  className="gc-download-menu__item"
+                  className="lvm-download-menu__item"
                   disabled={jpgDisabled}
                   title={jpgDisabled ? 'JPG only supports single-page songs' : undefined}
                   onClick={(e) => { e.preventDefault(); handleDownloadJpg(); setDownloadMenuOpen(false) }}
@@ -590,7 +590,7 @@ export default function SongView(){
                   <button
                     type="button"
                     role="menuitem"
-                    className="gc-download-menu__item"
+                    className="lvm-download-menu__item"
                     onClick={(e) => { e.preventDefault(); handleDownloadPptx(); setDownloadMenuOpen(false) }}
                   >
                     <DownloadIcon /> PPTX
@@ -599,7 +599,7 @@ export default function SongView(){
                 <button
                   type="button"
                   role="menuitem"
-                  className="gc-download-menu__item"
+                  className="lvm-download-menu__item"
                   onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setDownloadMenuOpen(false) }}
                 >
                   <DownloadIcon /> ChordPro
@@ -628,10 +628,10 @@ export default function SongView(){
       <Busy busy={busy} />
       <PageHeader
         title={
-          <div className="gc-song-title-row">
+          <div className="lvm-song-title-row">
             <span>{title}</span>
             {translationLanguages.length > 1 ? (
-              <span className="gc-song-language-chips" aria-label="Song language">
+              <span className="lvm-song-language-chips" aria-label="Song language">
                 {translationLanguages.map((code) => (
                   <Chip
                     key={code}
@@ -646,7 +646,7 @@ export default function SongView(){
               </span>
             ) : null}
             {isPersonal ? (
-              <span className="gc-tag gc-tag--gray">
+              <span className="lvm-tag lvm-tag--gray">
                 {entry.reviewStatus === 'submitted' ? 'Pending review' : 'Personal draft'}
               </span>
             ) : (
@@ -660,7 +660,7 @@ export default function SongView(){
           const visibleTags = filterDisplayTags(entry?.tags)
           if (!visibleTags.length) return null
           return (
-            <div className="gc-song-tags">
+            <div className="lvm-song-tags">
               {visibleTags.map(t => (
                 <Chip key={t} variant="tag">{t}</Chip>
               ))}
@@ -718,7 +718,7 @@ export default function SongView(){
         const ytId = mediaYoutube ? extractYouTubeId(mediaYoutube) : null
         if (!ytId) return null
         return (
-          <div className="gc-ref-video">
+          <div className="lvm-ref-video">
             <div className="media__label">Reference Video</div>
             <div className="media__frame">
               <iframe
@@ -754,7 +754,7 @@ export default function SongView(){
         onClose={() => setMobileActionsOpen(false)}
         title="Download"
       >
-        <div className="gc-mobile-actions">
+        <div className="lvm-mobile-actions">
           <Button
             variant="primary"
             leftIcon={<DownloadIcon />}
@@ -853,7 +853,7 @@ function InstrumentalLine({ spec, steps, split, preferFlat }) {
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: 'var(--gc-font-chords)',
+            fontFamily: 'var(--lvm-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -897,7 +897,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle
     const hostW = hostRef.current.getBoundingClientRect().width || 0
 
     // Measure pixel offsets for each chord and resolve collisions
-    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--lvm-font-chords')
     const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize // match lyric size
     const chordFont = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
@@ -958,7 +958,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle
                 <span key={i} style={{
                   position:'absolute',
                   left: `${c.left}px`,
-                  fontFamily: 'var(--gc-font-chords)',
+                  fontFamily: 'var(--lvm-font-chords)',
                   fontWeight: 700
                 }}>{c.sym}</span>
               ))}

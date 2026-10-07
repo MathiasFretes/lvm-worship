@@ -93,7 +93,7 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   return (
     <div
       ref={readerRef}
-      className={`gc-card readings-reader ${rtl ? 'is-rtl' : ''}`.trim()}
+      className={`lvm-card readings-reader ${rtl ? 'is-rtl' : ''}`.trim()}
       dir={rtl ? 'rtl' : 'ltr'}
       tabIndex={0}
       onKeyDown={onKeyDown}

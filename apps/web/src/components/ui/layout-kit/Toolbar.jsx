@@ -8,7 +8,7 @@ export default function Toolbar({
   ...rest
 }){
   const cls = [
-    'gc-toolbar',
+    'lvm-toolbar',
     sticky ? 'is-sticky' : '',
     className,
   ].filter(Boolean).join(' ')

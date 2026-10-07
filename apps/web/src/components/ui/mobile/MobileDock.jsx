@@ -9,10 +9,10 @@ const MobileDock = React.forwardRef(function MobileDock({
   return (
     <div
       ref={ref}
-      className={`gc-mobile-dock ${dimmed ? 'is-dimmed' : ''} ${className}`.trim()}
+      className={`lvm-mobile-dock ${dimmed ? 'is-dimmed' : ''} ${className}`.trim()}
       {...rest}
     >
-      <div className="gc-mobile-dock__inner">
+      <div className="lvm-mobile-dock__inner">
         {children}
       </div>
     </div>

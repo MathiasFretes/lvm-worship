@@ -374,25 +374,25 @@ export default function SessionViewer() {
 // route with no NavBar, like Worship Mode). ---
 const SHELL = {
   position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
-  background: 'var(--gc-bg, #fff)', color: 'var(--gc-text, #111)',
+  background: 'var(--lvm-bg, #fff)', color: 'var(--lvm-text, #111)',
 }
 const HEADER = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '10px 16px', borderBottom: '1px solid var(--gc-separator, rgba(0,0,0,.1))', gap: 12,
+  padding: '10px 16px', borderBottom: '1px solid var(--lvm-separator, rgba(0,0,0,.1))', gap: 12,
 }
 const CONTENT = { flex: 1, overflowY: 'auto', padding: '16px 18px 96px' }
 const CENTER = { minHeight: '60%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24 }
 const SECTION = { fontWeight: 700, opacity: 0.7, margin: '10px 0 4px' }
 const COMMENT = { fontStyle: 'italic', opacity: 0.75, marginBottom: 8 }
-const KEY_PILL = { background: 'var(--gc-surface-2, rgba(0,0,0,.06))', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }
+const KEY_PILL = { background: 'var(--lvm-surface-2, rgba(0,0,0,.06))', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }
 const LIVE_DOT = { width: 9, height: 9, borderRadius: 999, background: '#e0245e', flexShrink: 0 }
-const RECONNECT = { textAlign: 'center', padding: '6px 12px', fontSize: 13, background: 'var(--gc-surface-2, rgba(0,0,0,.06))', opacity: 0.85 }
+const RECONNECT = { textAlign: 'center', padding: '6px 12px', fontSize: 13, background: 'var(--lvm-surface-2, rgba(0,0,0,.06))', opacity: 0.85 }
 const PILL = {
   position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)',
-  background: 'var(--gc-primary, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
+  background: 'var(--lvm-primary, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
   padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,.25)',
 }
-const LINK = { color: 'var(--gc-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }
+const LINK = { color: 'var(--lvm-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }
 // Reader controls: deliberately quiet (they sit beside a LIVE badge and must not
 // compete with the lyrics), but still a 36px touch target.
 const CTRL = {

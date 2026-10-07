@@ -51,7 +51,13 @@ const GENERATED_AT = process.env.DEVOTIONAL_GENERATED_AT || null
 
 const schedule = JSON.parse(await readFile(join(OUT, 'schedule.json'), 'utf8'))
 const devotionals = JSON.parse(await readFile(join(OUT, 'devotionals.json'), 'utf8'))
-const plan = JSON.parse(await readFile(join(HERE, '../packages/core/src/bible/mcheyne.plan.json'), 'utf8'))
+const planDocument = JSON.parse(
+  await readFile(join(HERE, '../packages/core/src/bible/mcheyne.plan.json'), 'utf8'),
+)
+const plan = Array.isArray(planDocument) ? planDocument : planDocument.entries
+if (!Array.isArray(plan)) {
+  throw new TypeError('mcheyne.plan.json must contain an entries array')
+}
 const devByKey = new Map(devotionals.map((d) => [d.key, d]))
 
 const pad = (n) => String(n).padStart(2, '0')

@@ -25,9 +25,9 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--gc-separator);
+  border: 1px solid var(--lvm-separator);
   border-radius: var(--radius-lg);
-  background: var(--gc-surface-1);
+  background: var(--lvm-surface-1);
 }
 .lvm-song-library__toggles,
 .lvm-song-library__toggles label {
@@ -45,9 +45,9 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--gc-separator);
+  border: 1px solid var(--lvm-separator);
   border-radius: var(--radius-lg);
-  background: var(--gc-surface-1);
+  background: var(--lvm-surface-1);
 }
 .lvm-song-library__feedback p { margin: 0; }
 .lvm-song-library__retry {
@@ -74,14 +74,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-sub);
+  color: var(--lvm-text-secondary);
+  font-size: var(--lvm-font-sub);
 }
 .lvm-song-library__divider::before,
 .lvm-song-library__divider::after {
   content: '';
   height: 1px;
-  background: var(--gc-separator);
+  background: var(--lvm-separator);
   flex: 1;
 }
 
@@ -92,17 +92,17 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-3);
-  border: 1px solid var(--gc-separator);
+  border: 1px solid var(--lvm-separator);
   border-radius: var(--radius-lg);
-  background: var(--gc-surface-1);
-  color: var(--gc-text);
+  background: var(--lvm-surface-1);
+  color: var(--lvm-text);
   text-decoration: none;
 }
 
 .lvm-song-library-card:hover,
 .lvm-song-library-card.is-active {
   border-color: var(--lvm-brand-gold);
-  background: var(--gc-surface-2);
+  background: var(--lvm-surface-2);
 }
 
 .lvm-song-library-card:focus-visible {
@@ -112,12 +112,12 @@
 
 .lvm-song-library-card__body { display: grid; gap: var(--space-1); min-width: 0; }
 .lvm-song-library-card__body strong { overflow-wrap: anywhere; }
-.lvm-song-library-card__meta { color: var(--gc-text-secondary); font-size: var(--gc-font-sub); }
+.lvm-song-library-card__meta { color: var(--lvm-text-secondary); font-size: var(--lvm-font-sub); }
 .lvm-song-library-card__badge {
   flex: none;
   border-radius: var(--radius-pill);
   padding: var(--space-1) var(--space-2);
-  background: var(--gc-surface-2);
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-cap);
+  background: var(--lvm-surface-2);
+  color: var(--lvm-text-secondary);
+  font-size: var(--lvm-font-cap);
 }
