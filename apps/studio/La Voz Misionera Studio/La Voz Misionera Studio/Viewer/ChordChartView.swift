@@ -32,11 +32,11 @@ struct ChartRenderOptions: Equatable {
 
 /// Chart body metrics, from apps/mobile's ChordChart.
 ///
-/// These are NOT run through `GCTypeScale.macOS` like the chrome ramp is: the
+/// These are NOT run through `LVMTypeScale.macOS` like the chrome ramp is: the
 /// chart is content rather than interface, and a chord chart is read at arm's
 /// length while playing, so it keeps mobile's sizes and the same song reads the
 /// same in both apps. The font-size control scales all of them together.
-enum GCChartMetrics {
+enum LVMChartMetrics {
     static let lyricSize: CGFloat = 17
     static let lineHeight: CGFloat = 24
     static let chordSize: CGFloat = 14
@@ -55,7 +55,7 @@ struct ChordChartView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
             ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
                 ChartSectionView(section: section, options: options)
             }
@@ -75,9 +75,9 @@ struct ChartSectionView: View {
                 // `overline` is the ramp's uppercase group label — the rung that
                 // matches this the way `sectionHeader` matches "Key of X".
                 Text(label.uppercased())
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.textAccent)
-                    .padding(.bottom, GCSpacing.xs)
+                    .lvmTextStyle(.overline)
+                    .foregroundStyle(LVMColor.textAccent)
+                    .padding(.bottom, LVMSpacing.xs)
             }
             ForEach(Array(section.lines.enumerated()), id: \.offset) { _, line in
                 ChartLineView(line: line, options: options)
@@ -91,11 +91,11 @@ private struct ChartLineView: View {
     let options: ChartRenderOptions
 
     private var scale: CGFloat { CGFloat(options.fontScale) }
-    private var lyricFont: Font { .system(size: GCChartMetrics.lyricSize * scale, weight: .medium) }
+    private var lyricFont: Font { .system(size: LVMChartMetrics.lyricSize * scale, weight: .medium) }
     private var chordFont: Font {
-        .system(size: GCChartMetrics.chordSize * scale, weight: .bold, design: .monospaced)
+        .system(size: LVMChartMetrics.chordSize * scale, weight: .bold, design: .monospaced)
     }
-    private var lineHeight: CGFloat { (GCChartMetrics.lineHeight * scale).rounded() }
+    private var lineHeight: CGFloat { (LVMChartMetrics.lineHeight * scale).rounded() }
 
     /// Whether this line draws a chord row. Mirrors mobile's `hasChords`.
     private var hasChords: Bool { options.showChords && !line.chords.isEmpty }
@@ -113,7 +113,7 @@ private struct ChartLineView: View {
                         ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                             Text(row)
                                 .font(chordFont)
-                                .foregroundStyle(GCColor.textAccent)
+                                .foregroundStyle(LVMColor.textAccent)
                         }
                     }
                     .padding(.bottom, 2)
@@ -121,8 +121,8 @@ private struct ChartLineView: View {
             }
         } else if let comment = line.comment, !comment.isEmpty {
             Text(comment)
-                .font(.system(size: GCChartMetrics.commentSize * scale).italic())
-                .foregroundStyle(GCColor.sec)
+                .font(.system(size: LVMChartMetrics.commentSize * scale).italic())
+                .foregroundStyle(LVMColor.sec)
         } else if line.lyrics.isEmpty && !hasChords {
             // A chords-only line vanishes when chords are hidden; a genuinely
             // blank line keeps its vertical space.
@@ -132,17 +132,17 @@ private struct ChartLineView: View {
         } else if !hasChords {
             Text(line.lyrics.isEmpty ? " " : line.lyrics)
                 .font(lyricFont)
-                .foregroundStyle(GCColor.ink)
+                .foregroundStyle(LVMColor.ink)
         } else {
-            FlowLayout(horizontalSpacing: GCChartMetrics.lyricSize * scale * 0.28, verticalSpacing: 2) {
+            FlowLayout(horizontalSpacing: LVMChartMetrics.lyricSize * scale * 0.28, verticalSpacing: 2) {
                 ForEach(Array(ChordChartFormat.wordCells(for: line).enumerated()), id: \.offset) { _, cell in
                     VStack(alignment: .leading, spacing: 0) {
                         Text(cell.chords.isEmpty ? " " : cell.chords.joined(separator: " "))
                             .font(chordFont)
-                            .foregroundStyle(GCColor.textAccent)
+                            .foregroundStyle(LVMColor.textAccent)
                         Text(cell.text.isEmpty ? " " : cell.text)
                             .font(lyricFont)
-                            .foregroundStyle(GCColor.ink)
+                            .foregroundStyle(LVMColor.ink)
                     }
                 }
             }

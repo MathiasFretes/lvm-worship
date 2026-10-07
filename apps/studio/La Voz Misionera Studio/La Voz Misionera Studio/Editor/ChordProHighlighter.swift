@@ -88,11 +88,6 @@ struct ChordProHighlighter {
     // against the trimmed span of the line and the result offset back — see
     // `highlight(_:in:)`.
 
-    /// `parser.ts` RX_CHORD — `/\[([^\]]+)\]/g`. Unanchored: chords sit inline,
-    /// anywhere in a lyric. Note it requires at least one character inside, so `[]`
-    /// is not a chord to the parser and is not coloured as one here.
-    private static let chord = try! NSRegularExpression(pattern: "\\[([^\\]]+)\\]")
-
     /// `parser.ts` RX_PLAIN_HEADER — a bare `Verse 2` line, which the parser
     /// promotes to a section heading without any braces.
     private static let plainHeader = try! NSRegularExpression(
@@ -199,11 +194,12 @@ struct ChordProHighlighter {
             return
         }
 
-        // Lyrics with inline chords.
-        Self.chord.enumerateMatches(in: line as String, range: whole) { match, _, _ in
-            guard let match = match, match.numberOfRanges > 1 else { return }
-            let bracketed = Self.offset(match.range, by: content.location)
-            let symbol = Self.offset(match.range(at: 1), by: content.location)
+        // Lyrics with inline chords. A small UTF-16 scanner mirrors
+        // RX_CHORD (`[`, one-or-more non-`]`, `]`) without running a regex for every
+        // lyric line on each keystroke.
+        for token in Self.chordTokens(in: line) {
+            let bracketed = Self.offset(token.whole, by: content.location)
+            let symbol = Self.offset(token.symbol, by: content.location)
             storage.addAttribute(.foregroundColor, value: palette.punctuation, range: bracketed)
             storage.addAttribute(.foregroundColor, value: palette.chord, range: symbol)
             storage.addAttribute(.font, value: chordFont, range: symbol)
@@ -230,5 +226,36 @@ struct ChordProHighlighter {
 
     private static func offset(_ range: NSRange, by delta: Int) -> NSRange {
         NSRange(location: range.location + delta, length: range.length)
+    }
+
+    private struct ChordToken {
+        let whole: NSRange
+        let symbol: NSRange
+    }
+
+    private static func chordTokens(in line: NSString) -> [ChordToken] {
+        var result: [ChordToken] = []
+        var cursor = 0
+        while cursor < line.length {
+            guard line.character(at: cursor) == 0x5B else {
+                cursor += 1
+                continue
+            }
+            let opening = cursor
+            cursor += 1
+            let symbolStart = cursor
+            while cursor < line.length, line.character(at: cursor) != 0x5D {
+                cursor += 1
+            }
+            guard cursor < line.length else { break }
+            if cursor > symbolStart {
+                result.append(ChordToken(
+                    whole: NSRange(location: opening, length: cursor - opening + 1),
+                    symbol: NSRange(location: symbolStart, length: cursor - symbolStart)
+                ))
+            }
+            cursor += 1
+        }
+        return result
     }
 }

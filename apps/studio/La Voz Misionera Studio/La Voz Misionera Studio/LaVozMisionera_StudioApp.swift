@@ -12,7 +12,7 @@ struct LaVozMisionera_StudioApp: App {
                 // selection, and focus rings all read as Signal blue. The
                 // AccentColor asset — generated from the same tokens — covers the
                 // AppKit chrome the SwiftUI environment does not reach.
-                .tint(GCColor.accent)
+                .tint(LVMColor.accent)
                 // The appearance override. Declarative, so it applies at launch as
                 // well as when the View menu changes it.
                 .preferredColorScheme(defaults.theme.colorScheme)

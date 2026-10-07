@@ -36,8 +36,7 @@ enum Accidental: String, CaseIterable, Sendable {
 
     /// ♭ when the key is already spelled with a flat (Bb, Eb…), else ♯.
     static func `default`(for key: String?) -> Accidental {
-        guard let key = key, key.contains("b") else { return .sharp }
-        return .flat
+        key?.contains("b") == true ? .flat : .sharp
     }
 
     /// The boolean core's transpose helpers expect.
@@ -61,7 +60,8 @@ enum Capo {
     /// which is what the Viewer's ± taps accumulate.
     static func fret(delta: Int) -> Int? {
         guard delta < 0 else { return nil }
-        let fret = -delta % 12
+        let normalized = ((delta % 12) + 12) % 12
+        let fret = (12 - normalized) % 12
         return fret == 0 ? nil : fret
     }
 }

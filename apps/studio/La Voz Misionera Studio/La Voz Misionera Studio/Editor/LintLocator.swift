@@ -48,22 +48,17 @@ enum LintLocator {
     /// body whose lyrics begin before any header, a directive the parser treats as an
     /// opener and this does not — by noticing them rather than by handling them.
     static func bodyLine(for warning: LintWarning, in body: String, sectionCount: Int) -> Int? {
+        let map = LineMap(body)
         switch warning.location {
         case .song:
             return nil
         case .bodyLine(let line):
-            return (0..<lineRanges(in: body).count).contains(line) ? line : nil
+            return map.ranges.indices.contains(line) ? line : nil
         case .section(let index):
-            return sectionOpener(index, in: body, sectionCount: sectionCount)
+            return map.sectionLine(at: index, expectedCount: sectionCount)
         case .sectionLine(let index, _):
-            return sectionOpener(index, in: body, sectionCount: sectionCount)
+            return map.sectionLine(at: index, expectedCount: sectionCount)
         }
-    }
-
-    private static func sectionOpener(_ index: Int, in body: String, sectionCount: Int) -> Int? {
-        let openers = sectionOpenerLines(in: body)
-        guard openers.count == sectionCount, openers.indices.contains(index) else { return nil }
-        return openers[index]
     }
 
     /// The caret range for a warning: the whole of the line it points at.
@@ -72,25 +67,14 @@ enum LintLocator {
     /// meant — a bare caret in a long song is easy to lose.
     static func range(for warning: LintWarning, in body: String, sectionCount: Int) -> NSRange? {
         guard let line = bodyLine(for: warning, in: body, sectionCount: sectionCount) else { return nil }
-        let ranges = lineRanges(in: body)
-        return ranges.indices.contains(line) ? ranges[line] : nil
+        return LineMap(body).range(at: line)
     }
 
     // MARK: - Lines
 
     /// Zero-based indices of the lines that open a section.
     static func sectionOpenerLines(in body: String) -> [Int] {
-        let text = body as NSString
-        var result: [Int] = []
-        for (index, range) in lineRanges(in: body).enumerated() {
-            let trimmed = text.substring(with: range).trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty else { continue }
-            let whole = NSRange(location: 0, length: (trimmed as NSString).length)
-            if sectionOpener.firstMatch(in: trimmed, range: whole) != nil {
-                result.append(index)
-            }
-        }
-        return result
+        LineMap(body).sectionOpeners
     }
 
     /// Every line's range, terminators excluded.
@@ -101,22 +85,48 @@ enum LintLocator {
     /// different here than it did where it was produced is the whole bug this file
     /// exists to avoid.
     static func lineRanges(in body: String) -> [NSRange] {
-        let text = body as NSString
-        var ranges: [NSRange] = []
-        var start = 0
-        var index = 0
-        while index < text.length {
-            if text.character(at: index) == 0x0A {
-                var end = index
-                if end > start, text.character(at: end - 1) == 0x0D { end -= 1 }
-                ranges.append(NSRange(location: start, length: end - start))
-                start = index + 1
+        LineMap(body).ranges
+    }
+
+    private struct LineMap {
+        let source: NSString
+        let ranges: [NSRange]
+        let sectionOpeners: [Int]
+
+        init(_ body: String) {
+            source = body as NSString
+            ranges = Self.split(source)
+            sectionOpeners = ranges.indices.filter { lineIndex in
+                let raw = source.substring(with: ranges[lineIndex])
+                let candidate = raw.trimmingCharacters(in: .whitespaces)
+                guard !candidate.isEmpty else { return false }
+                let span = NSRange(location: 0, length: (candidate as NSString).length)
+                return LintLocator.sectionOpener.firstMatch(in: candidate, range: span) != nil
             }
-            index += 1
         }
-        // The text after the last terminator is a line too — empty, when the body ends
-        // in a newline, which is what `split` produces there as well.
-        ranges.append(NSRange(location: start, length: text.length - start))
-        return ranges
+
+        func range(at line: Int) -> NSRange? {
+            ranges.indices.contains(line) ? ranges[line] : nil
+        }
+
+        func sectionLine(at index: Int, expectedCount: Int) -> Int? {
+            guard sectionOpeners.count == expectedCount,
+                  sectionOpeners.indices.contains(index) else { return nil }
+            return sectionOpeners[index]
+        }
+
+        private static func split(_ text: NSString) -> [NSRange] {
+            var result: [NSRange] = []
+            var lineStart = 0
+            for cursor in 0..<text.length where text.character(at: cursor) == 0x0A {
+                let contentEnd = cursor > lineStart && text.character(at: cursor - 1) == 0x0D
+                    ? cursor - 1
+                    : cursor
+                result.append(NSRange(location: lineStart, length: contentEnd - lineStart))
+                lineStart = cursor + 1
+            }
+            result.append(NSRange(location: lineStart, length: text.length - lineStart))
+            return result
+        }
     }
 }

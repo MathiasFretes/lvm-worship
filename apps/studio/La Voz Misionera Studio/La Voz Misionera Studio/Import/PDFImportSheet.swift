@@ -25,21 +25,21 @@ struct PDFImportSheet: View {
     @State private var showsFileImporter = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
-            Text("Import from PDF").gcTextStyle(.rowTitle).foregroundStyle(GCColor.ink)
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
+            Text("Import from PDF").lvmTextStyle(.rowTitle).foregroundStyle(LVMColor.ink)
             Text("Chord sheets whose text can be selected. Scans and photos of charts cannot be read.")
-                .gcTextStyle(.rowMeta)
-                .foregroundStyle(GCColor.sec)
+                .lvmTextStyle(.rowMeta)
+                .foregroundStyle(LVMColor.sec)
                 .fixedSize(horizontal: false, vertical: true)
 
             dropZone
 
             if let error = model.importError {
-                HStack(alignment: .top, spacing: GCSpacing.sm) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(GCColor.danger)
+                HStack(alignment: .top, spacing: LVMSpacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(LVMColor.danger)
                     Text(error)
-                        .gcTextStyle(.rowMeta)
-                        .foregroundStyle(GCColor.ink)
+                        .lvmTextStyle(.rowMeta)
+                        .foregroundStyle(LVMColor.ink)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -53,7 +53,7 @@ struct PDFImportSheet: View {
                     .disabled(model.isImporting)
             }
         }
-        .padding(GCSpacing.lg)
+        .padding(LVMSpacing.lg)
         .frame(width: 420)
         // The panel is what grants sandbox access to the file — the entitlement only
         // says the app MAY read user-selected files, not which ones.
@@ -67,30 +67,30 @@ struct PDFImportSheet: View {
 
     @ViewBuilder
     private var dropZone: some View {
-        VStack(spacing: GCSpacing.sm) {
+        VStack(spacing: LVMSpacing.sm) {
             if model.isImporting {
                 ProgressView()
                 Text(model.importingFilename ?? "Reading…")
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.sec)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.sec)
                     .lineLimit(1)
                     .truncationMode(.middle)
             } else {
                 Image(systemName: "arrow.down.document")
                     .font(.system(size: 28, weight: .light))
-                    .foregroundStyle(isTargeted ? GCColor.accent : GCColor.muted)
+                    .foregroundStyle(isTargeted ? LVMColor.accent : LVMColor.muted)
                 Text("Drop a PDF here")
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(isTargeted ? GCColor.accent : GCColor.sec)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(isTargeted ? LVMColor.accent : LVMColor.sec)
             }
         }
         .frame(maxWidth: .infinity)
         .frame(height: 116)
-        .background(GCColor.bg, in: RoundedRectangle(cornerRadius: GCRadius.sm))
+        .background(LVMColor.bg, in: RoundedRectangle(cornerRadius: LVMRadius.sm))
         .overlay {
-            RoundedRectangle(cornerRadius: GCRadius.sm)
+            RoundedRectangle(cornerRadius: LVMRadius.sm)
                 .strokeBorder(
-                    isTargeted ? GCColor.accent : GCColor.border,
+                    isTargeted ? LVMColor.accent : LVMColor.border,
                     style: StrokeStyle(lineWidth: isTargeted ? 2 : 1, dash: [6, 4])
                 )
         }

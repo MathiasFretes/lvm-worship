@@ -50,20 +50,23 @@ final class MacroStore: ObservableObject {
     @Published private(set) var macros: [SongMacro] = []
 
     private let defaults: UserDefaults
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        load()
+        self.macros = Self.decode(defaults.data(forKey: Self.key), with: decoder)
     }
 
     func add(name: String, body: String) {
         let trimmedName = name.trimmed
         let trimmedBody = body.trimmed
         guard !trimmedName.isEmpty, !trimmedBody.isEmpty else { return }
-        // Same name replaces rather than duplicates: re-saving a macro after tweaking
-        // it is the common case, and two identically named entries are unusable.
-        if let index = macros.firstIndex(where: { $0.name.caseInsensitiveCompare(trimmedName) == .orderedSame }) {
-            macros[index].body = trimmedBody
+        let normalized = Self.identity(trimmedName)
+        if let existing = macros.firstIndex(where: { Self.identity($0.name) == normalized }) {
+            // Keep the UUID and the original display spelling so menu identity and
+            // keyboard focus remain stable while the snippet is updated.
+            macros[existing].body = trimmedBody
         } else {
             macros.append(SongMacro(name: trimmedName, body: trimmedBody))
         }
@@ -75,15 +78,28 @@ final class MacroStore: ObservableObject {
         persist()
     }
 
-    private func load() {
-        guard let data = defaults.data(forKey: Self.key) else { return }
-        // A decode failure means the stored blob is from an incompatible shape. Losing
-        // local shorthand is survivable; refusing to open the editor is not.
-        macros = (try? JSONDecoder().decode([SongMacro].self, from: data)) ?? []
+    private func persist() {
+        // Continue writing the original top-level array; this is a local persistence
+        // format used by released builds, not an opportunity for a gratuitous schema.
+        guard let data = try? encoder.encode(macros) else { return }
+        defaults.set(data, forKey: Self.key)
     }
 
-    private func persist() {
-        guard let data = try? JSONEncoder().encode(macros) else { return }
-        defaults.set(data, forKey: Self.key)
+    private static func decode(_ data: Data?, with decoder: JSONDecoder) -> [SongMacro] {
+        guard let data,
+              let decoded = try? decoder.decode([SongMacro].self, from: data) else { return [] }
+        // Reject unusable records independently rather than making one stale item
+        // prevent every valid macro from loading.
+        var names = Set<String>()
+        return decoded.filter {
+            let name = $0.name.trimmed
+            let unique = names.insert(identity(name)).inserted
+            return !name.isEmpty && !$0.body.trimmed.isEmpty && unique
+        }
+    }
+
+    private static func identity(_ name: String) -> String {
+        name.folding(options: [.caseInsensitive], locale: nil)
+            .trimmed
     }
 }

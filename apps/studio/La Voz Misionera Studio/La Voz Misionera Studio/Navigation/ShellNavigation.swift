@@ -32,9 +32,23 @@ final class ShellNavigation: ObservableObject {
     }
 
     @Published var section: Section = .library
+    /// Menu commands publish an intent instead of mutating `section` directly.
+    /// The shell can then apply its unsaved-edit guard before committing it.
+    @Published private(set) var requestedSection: Section?
 
     /// Whether the Manage section exists for this account at all, so the View menu can
     /// disable its item rather than offering a section that would bounce straight back.
     /// Mirrored from the shell's role check so the menu and the toolbar agree.
     @Published var canManage = false
+
+    func request(_ destination: Section) {
+        guard destination != section else { return }
+        guard destination != .manage || canManage else { return }
+        requestedSection = destination
+    }
+
+    func consumeRequest() -> Section? {
+        defer { requestedSection = nil }
+        return requestedSection
+    }
 }

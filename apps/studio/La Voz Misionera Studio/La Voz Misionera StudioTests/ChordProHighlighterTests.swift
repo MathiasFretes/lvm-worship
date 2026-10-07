@@ -83,6 +83,24 @@ struct ChordProHighlighterTests {
         #expect(Set(Self.roles("[]")) == ["body"])
     }
 
+    @Test("the scanner handles several chords and incomplete input")
+    func scannerBoundaries() {
+        let roles = Self.roles("[G]one [C/E]two")
+        #expect(roles[1] == "chord")
+        #expect(roles[8] == "chord")
+        #expect(Set(Self.roles("lyric [G")) == ["body"])
+    }
+
+    @Test("UTF-16 chord symbols stay in one highlighted token")
+    func unicodeChordToken() {
+        let body = "[도♯] 주님"
+        let roles = Self.roles(body)
+        #expect(roles[0] == "punct")
+        #expect(roles[1] == "chord")
+        #expect(roles[2] == "chord")
+        #expect(roles[3] == "punct")
+    }
+
     @Test("section directives are bold and metadata directives are not")
     func sectionDirectivesAreBold() {
         func isBold(_ body: String) -> Bool {

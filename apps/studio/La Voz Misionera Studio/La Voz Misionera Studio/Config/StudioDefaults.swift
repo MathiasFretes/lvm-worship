@@ -56,10 +56,10 @@ final class StudioDefaults: ObservableObject {
     static let shared = StudioDefaults()
 
     private enum Key {
-        static let theme = "gc.defaults.theme"
-        static let chordStyle = "gc.defaults.chordStyle"
-        static let keepAwake = "gc.defaults.keepAwake"
-        static let autoHideChrome = "gc.viewer.autoHideChrome"
+        static let theme = "lvm.defaults.theme"
+        static let chordStyle = "lvm.defaults.chordStyle"
+        static let keepAwake = "lvm.defaults.keepAwake"
+        static let autoHideChrome = "lvm.viewer.autoHideChrome"
     }
 
     /// Appearance override, applied by the root view through `.preferredColorScheme`.
@@ -92,10 +92,10 @@ final class StudioDefaults: ObservableObject {
         self.store = store
         // A missing or unrecognised stored value falls back to the default rather
         // than failing — a preferences file is not a contract we control.
-        self.theme = (store.string(forKey: Key.theme)
-            .flatMap(ThemePreference.init(rawValue:))) ?? .system
-        self.chordStyle = (store.string(forKey: Key.chordStyle)
-            .flatMap(ChordStyle.init(rawValue:))) ?? .letters
+        self.theme = store.string(forKey: Key.theme)
+            .flatMap(ThemePreference.init(rawValue:)) ?? .system
+        self.chordStyle = store.string(forKey: Key.chordStyle)
+            .flatMap(ChordStyle.init(rawValue:)) ?? .letters
         self.keepAwake = store.bool(forKey: Key.keepAwake)
         self.autoHideChrome = store.bool(forKey: Key.autoHideChrome)
     }

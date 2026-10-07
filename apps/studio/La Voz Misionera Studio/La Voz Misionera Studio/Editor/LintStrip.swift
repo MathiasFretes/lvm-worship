@@ -55,7 +55,7 @@ struct LintStrip: View {
                     .frame(maxHeight: 132)
                 }
             }
-            .background(GCColor.surfaceAlt)
+            .background(LVMColor.surfaceAlt)
         }
     }
 
@@ -63,20 +63,20 @@ struct LintStrip: View {
         Button {
             isExpanded.toggle()
         } label: {
-            HStack(spacing: GCSpacing.sm) {
+            HStack(spacing: LVMSpacing.sm) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(GCColor.star)
+                    .foregroundStyle(LVMColor.star)
                 Text(warnings.count == 1 ? "1 warning" : "\(warnings.count) warnings")
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.sec)
+                    .lvmTextStyle(.overline)
+                    .foregroundStyle(LVMColor.sec)
                 Spacer()
                 Image(systemName: "chevron.up")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(GCColor.muted)
+                    .foregroundStyle(LVMColor.muted)
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -89,24 +89,24 @@ struct LintStrip: View {
         Button {
             onJump(warning)
         } label: {
-            HStack(alignment: .firstTextBaseline, spacing: GCSpacing.sm) {
+            HStack(alignment: .firstTextBaseline, spacing: LVMSpacing.sm) {
                 Text(warning.shortLabel)
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.muted)
+                    .lvmTextStyle(.overline)
+                    .foregroundStyle(LVMColor.muted)
                     .frame(width: 108, alignment: .leading)
                 Text(warning.message)
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: GCSpacing.sm)
+                Spacer(minLength: LVMSpacing.sm)
                 if let location = warning.locationText {
                     Text(location)
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(jumpable ? GCColor.textAccent : GCColor.muted)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(jumpable ? LVMColor.textAccent : LVMColor.muted)
                 }
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.xs)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.xs)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }

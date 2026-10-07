@@ -62,60 +62,119 @@ enum LibrarySort {
         sortKey: SortKey,
         direction: SortDirection
     ) -> [LibrarySection] {
-        let descending = direction.isDescending
-
         switch sortKey {
         case .title, .artist:
-            let pick: (SongListItem) -> String? = { sortKey == .artist ? $0.artist : $0.title }
-            var groups: [String: [SongListItem]] = [:]
-            for song in songs {
-                groups[bucketLetter(pick(song)), default: []].append(song)
-            }
-            var letters = groups.keys.sorted()
-            if descending { letters.reverse() }
-            return letters.map { letter in
-                var data = (groups[letter] ?? []).sorted { lhs, rhs in
-                    // Artist sorts by artist first, then title as the tiebreak;
-                    // title sorts by title alone.
+            return letteredSections(songs, by: sortKey, direction: direction)
+
+        case .key:
+            return keySections(songs, direction: direction)
+
+        case .recent, .tempo:
+            let data = flatSongs(songs, by: sortKey, direction: direction)
+            return data.isEmpty ? [] : [LibrarySection(id: "__flat", title: "", letter: nil, songs: data)]
+        }
+    }
+
+    private static func letteredSections(
+        _ songs: [SongListItem],
+        by sortKey: SortKey,
+        direction: SortDirection
+    ) -> [LibrarySection] {
+        let groups = Dictionary(grouping: songs) { song in
+            bucketLetter(sortKey == .artist ? song.artist : song.title)
+        }
+        return ordered(Array(groups.keys), direction: direction, using: localizedLess)
+            .map { letter in
+                let contents = ordered(groups[letter] ?? [], direction: direction) { lhs, rhs in
                     if sortKey == .artist {
-                        let comparison = (lhs.artist ?? "").localizedCompare(rhs.artist ?? "")
-                        if comparison != .orderedSame { return comparison == .orderedAscending }
+                        let artistOrder = compare(lhs.artist ?? "", rhs.artist ?? "")
+                        if artistOrder != .orderedSame { return artistOrder == .orderedAscending }
                     }
                     return byTitle(lhs, rhs)
                 }
-                if descending { data.reverse() }
-                return LibrarySection(id: letter, title: letter, letter: letter, songs: data)
+                return LibrarySection(id: letter, title: letter, letter: letter, songs: contents)
             }
+    }
 
-        case .key:
-            var groups: [String: [SongListItem]] = [:]
-            for song in songs {
-                groups[song.defaultKey ?? "", default: []].append(song)
-            }
-            var keys = groups.keys.sorted()
-            if descending { keys.reverse() }
-            return keys.map { key in
+    private static func keySections(
+        _ songs: [SongListItem],
+        direction: SortDirection
+    ) -> [LibrarySection] {
+        let groups = Dictionary(grouping: songs) { normalizedKey($0.defaultKey) }
+        return ordered(Array(groups.keys), direction: direction, using: localizedLess)
+            .map { key in
                 LibrarySection(
                     id: key.isEmpty ? "__nokey" : key,
                     title: key.isEmpty ? "No key" : "Key of \(key)",
                     letter: nil,
-                    songs: (groups[key] ?? []).sorted(by: byTitle)
+                    songs: ordered(groups[key] ?? [], direction: direction, using: byTitle)
                 )
             }
+    }
 
-        case .recent, .tempo:
-            var data = songs
-            if sortKey == .recent {
-                // Ascending shows the most recently added first — mobile's default,
-                // which reads as "newest" rather than as a date direction.
-                data.sort { ($0.createdAt ?? "") > ($1.createdAt ?? "") }
-            } else {
-                // Numeric, nulls last.
-                data.sort { ($0.tempo ?? Int.max) < ($1.tempo ?? Int.max) }
-            }
-            if descending { data.reverse() }
-            return data.isEmpty ? [] : [LibrarySection(id: "__flat", title: "", letter: nil, songs: data)]
+    private static func flatSongs(
+        _ songs: [SongListItem],
+        by sortKey: SortKey,
+        direction: SortDirection
+    ) -> [SongListItem] {
+        switch sortKey {
+        case .recent:
+            // "Ascending" means the mobile default: newest first. Missing dates
+            // remain at the end in either direction.
+            return orderedPresentValues(
+                songs,
+                value: { $0.createdAt },
+                direction: direction,
+                ascending: { $0 > $1 }
+            )
+        case .tempo:
+            return orderedPresentValues(
+                songs,
+                value: { $0.tempo },
+                direction: direction,
+                ascending: { $0 < $1 }
+            )
+        default:
+            return songs
         }
+    }
+
+    private static func orderedPresentValues<Value>(
+        _ songs: [SongListItem],
+        value: (SongListItem) -> Value?,
+        direction: SortDirection,
+        ascending: (Value, Value) -> Bool
+    ) -> [SongListItem] {
+        let withValues = songs.filter { value($0) != nil }.sorted { lhs, rhs in
+            guard let left = value(lhs), let right = value(rhs) else { return false }
+            return direction.isDescending ? ascending(right, left) : ascending(left, right)
+        }
+        let missing = songs.filter { value($0) == nil }.sorted(by: byTitle)
+        return withValues + missing
+    }
+
+    private static func ordered<Element>(
+        _ values: [Element],
+        direction: SortDirection,
+        using areInIncreasingOrder: (Element, Element) -> Bool
+    ) -> [Element] {
+        values.sorted {
+            direction.isDescending
+                ? areInIncreasingOrder($1, $0)
+                : areInIncreasingOrder($0, $1)
+        }
+    }
+
+    private static func normalizedKey(_ key: String?) -> String {
+        (key ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func compare(_ lhs: String, _ rhs: String) -> ComparisonResult {
+        lhs.localizedCaseInsensitiveCompare(rhs)
+    }
+
+    private static func localizedLess(_ lhs: String, _ rhs: String) -> Bool {
+        compare(lhs, rhs) == .orderedAscending
     }
 
     /// First letter A–Z, or "#" for anything else (digits, punctuation, other
@@ -129,6 +188,6 @@ enum LibrarySort {
     }
 
     static func byTitle(_ lhs: SongListItem, _ rhs: SongListItem) -> Bool {
-        lhs.title.localizedCompare(rhs.title) == .orderedAscending
+        compare(lhs.title, rhs.title) == .orderedAscending
     }
 }

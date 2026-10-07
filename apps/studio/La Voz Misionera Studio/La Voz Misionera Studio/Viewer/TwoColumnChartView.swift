@@ -35,8 +35,8 @@ struct TwoColumnChartView: View {
     @State private var measurementKey: MeasurementKey?
 
     /// Gap between stacked sections, matching ChordChartView's spacing.
-    private static let sectionGap = GCSpacing.md
-    private static let columnGap = GCSpacing.xl
+    private static let sectionGap = LVMSpacing.md
+    private static let columnGap = LVMSpacing.xl
 
     private struct MeasurementKey: Equatable {
         let width: CGFloat

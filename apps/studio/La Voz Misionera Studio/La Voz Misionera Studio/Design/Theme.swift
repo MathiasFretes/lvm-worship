@@ -5,10 +5,10 @@
 //  The SwiftUI layer over DesignTokens.generated.swift. This file is hand-written
 //  and holds no token *values* — only how the generated ones resolve on macOS:
 //
-//   - GCRGBA / GCDynamicColor: components → a Color that follows the system
+//   - LVMRGBA / LVMDynamicColor: components → a Color that follows the system
 //     appearance, including the Increase-Contrast variants.
-//   - GCTextSpec / GCTypeScale: the canonical iOS ramp → macOS point sizes.
-//   - GCGradient.hero(for:): stops → a drawable gradient.
+//   - LVMTextSpec / LVMTypeScale: the canonical iOS ramp → macOS point sizes.
+//   - LVMGradient.hero(for:): stops → a drawable gradient.
 //
 //  Add token values in packages/tokens/native.ts and regenerate; add *platform
 //  behavior* here.
@@ -23,7 +23,7 @@ import SwiftUI
 ///
 /// Parsing happens at generation time rather than here, so a malformed token in
 /// `native.ts` fails the build script instead of rendering a wrong color.
-struct GCRGBA {
+struct LVMRGBA {
     let red: Double
     let green: Double
     let blue: Double
@@ -45,11 +45,11 @@ struct GCRGBA {
 /// (toolbars, menus, `NSHostingView`) where the SwiftUI environment does not
 /// reach. The mobile app reaches the same four combinations through its
 /// ThemeProvider — see `getTokens(mode:increaseContrast:)` in native.ts.
-struct GCDynamicColor {
-    let light: GCRGBA
-    let dark: GCRGBA
-    let lightIncreasedContrast: GCRGBA
-    let darkIncreasedContrast: GCRGBA
+struct LVMDynamicColor {
+    let light: LVMRGBA
+    let dark: LVMRGBA
+    let lightIncreasedContrast: LVMRGBA
+    let darkIncreasedContrast: LVMRGBA
 
     /// Appearances asked of `bestMatch(from:)`, in the order AppKit should
     /// consider them. The high-contrast names are what macOS reports while
@@ -79,7 +79,7 @@ struct GCDynamicColor {
 
 // MARK: - Gradients
 
-extension GCGradient {
+extension LVMGradient {
     /// The atmospheric hero gradient, top to bottom.
     ///
     /// Read the scheme from the environment at the call site:
@@ -93,16 +93,16 @@ extension GCGradient {
 
 /// One rung of the type ramp. Sizes arrive in the iOS points `native.ts`
 /// declares and are scaled for macOS on read — never use `size` directly.
-struct GCTextSpec {
+struct LVMTextSpec {
     let size: CGFloat
     let weight: Font.Weight
     let tracking: CGFloat
 
     /// The ramp size scaled for macOS, rounded to the nearest half point.
-    var macOSSize: CGFloat { Self.roundedToHalf(size * GCTypeScale.macOS) }
+    var macOSSize: CGFloat { Self.roundedToHalf(size * LVMTypeScale.macOS) }
 
     /// Letter spacing scaled by the same factor, so tracking stays proportional.
-    var macOSTracking: CGFloat { tracking * GCTypeScale.macOS }
+    var macOSTracking: CGFloat { tracking * LVMTypeScale.macOS }
 
     var font: Font { .system(size: macOSSize, weight: weight) }
 
@@ -111,7 +111,7 @@ struct GCTextSpec {
     }
 }
 
-enum GCTypeScale {
+enum LVMTypeScale {
     /// The shared ramp is iOS-tuned (a 27pt large title against a 17pt iOS body),
     /// and macOS's system body is 13pt — porting those numbers verbatim reads as
     /// oversized in a Mac window, and `apps/mobile/AGENTS.md`'s rule is that the
@@ -127,7 +127,7 @@ enum GCTypeScale {
 
 extension View {
     /// Applies a ramp rung: the scaled font plus its letter spacing.
-    func gcTextStyle(_ spec: GCTextSpec) -> some View {
+    func lvmTextStyle(_ spec: LVMTextSpec) -> some View {
         font(spec.font).tracking(spec.macOSTracking)
     }
 }

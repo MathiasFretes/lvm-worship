@@ -1,76 +1,101 @@
-//
-//  PDFImportModels.swift
-//  La Voz Misionera Studio
-//
-//  Swift mirrors of the two ends of packages/core/src/songs/pdfImport.ts:
-//  `ExtractedDocument` going out and `SongDraft` coming back. Field names and
-//  optionality follow the TS types exactly, since these cross the bridge as JSON.
-//
-//  Keep in sync with pdfImport.ts. If a field is added there, add it here.
-//
-
 import Foundation
 
-// MARK: - Going out
+// JSON boundary shared with packages/core/src/songs/pdfImport.ts.
+// All string offsets are UTF-16 code units, matching JavaScript String indices.
 
-struct PDFExtractedWord: Codable {
+nonisolated struct PDFExtractedWord: Codable {
     let text: String
-    /// Left edge, page points.
     let x: Double
-    /// TOP edge, in a top-down space — see `PDFExtractedLine.y`.
     let y: Double
     let w: Double
     let h: Double
-    /// UTF-16 offset of this word's first character within its line's `text`.
     let start: Int
-    /// UTF-16 offset one past its last character.
     let end: Int
-    /// Left edge of each character, measured and validated. nil means the aligner
-    /// must snap to the word start rather than guess a mid-word position.
+    /// One x-origin per UTF-16 code unit. Nil means “snap to the word start”.
     let charX: [Double]?
 }
 
-struct PDFExtractedLine: Codable {
+nonisolated struct PDFExtractedLine: Codable {
     let text: String
     let words: [PDFExtractedWord]
     let x: Double
-    /// TOP edge, y increasing DOWNWARD from the top of the crop box. PDF user space
-    /// is y-up; the extractor flips it so that "above" is unambiguously "smaller y"
-    /// on both sides of the bridge.
+    /// Top edge in crop-box coordinates, increasing downward.
     let y: Double
     let w: Double
     let h: Double
     let fontSize: Double?
     let isBold: Bool?
     let page: Int
-    /// 0-based column, or nil for a line spanning the gutter (title, centered footer).
+    /// Zero-based column; nil denotes a gutter-spanning line.
     let column: Int?
-    /// First line of a page or of a column.
     let startsBlock: Bool
 }
 
-struct PDFExtractedPage: Codable {
+nonisolated struct PDFExtractedPage: Codable {
     let index: Int
     let width: Double
     let height: Double
-    /// 1 or 2 — detected per page, since a chart may change layout on page 2.
     let columnCount: Int
-    /// False when the columns could not be made sense of. Core skips chord/lyric
-    /// pairing for such a page rather than pairing across an unknown boundary.
     let layoutTrusted: Bool
 }
 
-struct PDFExtraction: Codable {
-    /// Already in reading order: page ascending, then the title band, then column-major.
+nonisolated struct PDFExtraction: Codable {
     let lines: [PDFExtractedLine]
     let pages: [PDFExtractedPage]
-    /// Self-checks that fired. Each one costs the draft confidence.
     let diagnostics: [String]
 
     var isEmpty: Bool { lines.isEmpty }
+
+    /// Refuse to bridge malformed geometry. Core deliberately trusts this native
+    /// boundary, so catching an offset or NaN here avoids plausible but wrong chords.
+    func validateContract() throws {
+        let pageIndices = Set(pages.map(\.index))
+        guard pageIndices.count == pages.count else {
+            throw PDFExtractionContractError.duplicatePage
+        }
+        let pagesByIndex = Dictionary(uniqueKeysWithValues: pages.map { ($0.index, $0) })
+        for page in pages {
+            guard page.index >= 0,
+                  page.width.isFinite, page.width > 0,
+                  page.height.isFinite, page.height > 0,
+                  (1...2).contains(page.columnCount)
+            else { throw PDFExtractionContractError.invalidPage(page.index) }
+        }
+
+        for (lineIndex, line) in lines.enumerated() {
+            let utf16 = line.text as NSString
+            guard let page = pagesByIndex[line.page],
+                  line.column.map { $0 >= 0 && $0 < page.columnCount } ?? true,
+                  [line.x, line.y, line.w, line.h].allSatisfy(\.isFinite),
+                  line.w >= 0, line.h >= 0
+            else { throw PDFExtractionContractError.invalidLine(lineIndex) }
+
+            var previousEnd = 0
+            for word in line.words {
+                guard word.start >= previousEnd,
+                      word.end >= word.start,
+                      word.end <= utf16.length,
+                      [word.x, word.y, word.w, word.h].allSatisfy(\.isFinite),
+                      word.w >= 0, word.h >= 0
+                else { throw PDFExtractionContractError.invalidWord(lineIndex) }
+
+                let range = NSRange(location: word.start, length: word.end - word.start)
+                guard utf16.substring(with: range) == word.text,
+                      (word.charX?.count ?? range.length) == range.length,
+                      (word.charX ?? []).allSatisfy(\.isFinite)
+                else { throw PDFExtractionContractError.invalidWord(lineIndex) }
+                previousEnd = word.end
+            }
+        }
+    }
 }
 
-// MARK: - Coming back
+nonisolated enum PDFExtractionContractError: Error {
+    case duplicatePage
+    case invalidPage(Int)
+    case invalidLine(Int)
+    case invalidWord(Int)
+}
 
 struct ImportWarning: Codable, Hashable, Identifiable {
     let code: String
@@ -91,21 +116,15 @@ struct SongDraft: Codable {
     let title: String?
     let key: String?
     let artist: String?
-    /// Digits only, matching `SongForm.tempo`.
     let tempo: String?
     let timeSignature: String?
-    /// The body, ready for `SongForm.chordproContent`. Never carries {title}/{key} —
-    /// those are Supabase columns, and the editor's form owns them.
     let chordpro: String
-    /// 0–100.
     let confidence: Int
     let warnings: [ImportWarning]
     let stats: SongDraftStats
 
-    /// Below this, the editor offers the diagnostics rather than just the summary.
     static let lowConfidence = 70
 
-    /// One line for the editor's status banner: what came in, then what to check.
     var summary: String {
         let name = title.map { "“\($0)”" } ?? "the chart"
         var parts = ["Imported \(name) — \(stats.sections) \(stats.sections == 1 ? "section" : "sections"), \(stats.chords) \(stats.chords == 1 ? "chord" : "chords")."]

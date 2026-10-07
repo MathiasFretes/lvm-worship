@@ -21,29 +21,30 @@ import SwiftUI
 struct ExportCommands: Commands {
     @FocusedObject private var controller: ExportController?
 
-    /// Every item needs the same three things — an open song, a configured API base,
-    /// and no export already running — so they enable and disable together.
-    private var isEnabled: Bool {
-        guard let controller = controller else { return false }
-        return controller.isAvailable && !controller.isBusy
+    private var canExport: Bool {
+        controller.map { $0.isAvailable && !$0.isBusy } ?? false
     }
 
     var body: some Commands {
         CommandGroup(after: .saveItem) {
-            Group {
-                Button("Export as PDF…") { controller?.save(.pdf) }
-                    .keyboardShortcut("e", modifiers: [.command])
-                Button("Export as JPG…") { controller?.save(.jpg) }
-                    .keyboardShortcut("e", modifiers: [.command, .shift])
+            Button("Export as PDF…") { export(.pdf) }
+                .keyboardShortcut("e", modifiers: [.command])
+                .disabled(!canExport)
 
-                Divider()
-
-                Button("Share…") { controller?.share() }
-            }
-            .disabled(!isEnabled)
+            Button("Export as JPG…") { export(.jpg) }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .disabled(!canExport)
 
             Divider()
+
+            Button("Share…") { controller?.share() }
+                .disabled(!canExport)
+            Divider()
         }
+    }
+
+    private func export(_ format: ExportFormat) {
+        controller?.save(format)
     }
 }
 
@@ -74,22 +75,26 @@ struct AppearanceCommands: Commands {
 /// what the document contains — the same reasoning that puts Appearance there.
 struct NavigationCommands: Commands {
     @FocusedObject private var navigation: ShellNavigation?
-    @FocusedObject private var session: EditorSession?
 
     var body: some Commands {
         CommandGroup(before: .toolbar) {
-            Button("Library") { navigation?.section = .library }
+            Button("Library") { navigation?.request(.library) }
                 .keyboardShortcut("1", modifiers: .command)
-                .disabled(navigation == nil)
+                .disabled(!canOpen(.library))
 
-            Button("Manage Songs") { navigation?.section = .manage }
+            Button("Manage Songs") { navigation?.request(.manage) }
                 .keyboardShortcut("2", modifiers: .command)
                 // Disabled rather than hidden here: a menu whose items appear and
                 // disappear is harder to learn than one where an item is greyed out.
-                .disabled(!(navigation?.canManage ?? false))
+                .disabled(!canOpen(.manage))
 
             Divider()
         }
+    }
+
+    private func canOpen(_ section: ShellNavigation.Section) -> Bool {
+        guard let navigation else { return false }
+        return section != .manage || navigation.canManage
     }
 }
 
@@ -102,6 +107,12 @@ struct EditorCommands: Commands {
     @FocusedObject private var session: EditorSession?
 
     private var editor: SongEditorModel? { session?.editor }
+    private var canSave: Bool {
+        editor.map { $0.form.isSavable && !$0.isSaving } ?? false
+    }
+    private var canPublish: Bool {
+        editor.map { !$0.isNew && $0.status != .published } ?? false
+    }
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
@@ -132,25 +143,39 @@ struct EditorCommands: Commands {
         CommandGroup(after: .pasteboard) {
             Divider()
             Group {
-                Button("Wrap as Verse") { editor?.wrapSection(labeled: "Verse") }
+                Button("Wrap as Verse") { wrap("Verse") }
                     .keyboardShortcut("v", modifiers: [.control, .command])
-                Button("Wrap as Chorus") { editor?.wrapSection(labeled: "Chorus") }
+                Button("Wrap as Chorus") { wrap("Chorus") }
                     .keyboardShortcut("c", modifiers: [.control, .command])
-                Button("Wrap as Bridge") { editor?.wrapSection(labeled: "Bridge") }
+                Button("Wrap as Bridge") { wrap("Bridge") }
                     .keyboardShortcut("b", modifiers: [.control, .command])
             }
             .disabled(editor == nil)
         }
 
         CommandGroup(replacing: .saveItem) {
-            Button("Save") { Task { await editor?.save() } }
+            Button("Save") { save() }
                 .keyboardShortcut("s", modifiers: .command)
-                .disabled(!(editor?.form.isSavable ?? false) || (editor?.isSaving ?? true))
+                .disabled(!canSave)
 
-            Button("Publish…") { Task { await editor?.publish() } }
-                .disabled(editor == nil || (editor?.isNew ?? true) || editor?.status == .published)
+            Button("Publish…") { publish() }
+                .disabled(!canPublish)
 
             Divider()
         }
+    }
+
+    private func wrap(_ label: String) {
+        editor?.wrapSection(labeled: label)
+    }
+
+    private func save() {
+        guard let editor else { return }
+        Task { await editor.save() }
+    }
+
+    private func publish() {
+        guard let editor else { return }
+        Task { await editor.publish() }
     }
 }

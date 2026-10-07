@@ -55,18 +55,30 @@ struct SongForm: Equatable, Sendable {
         var symbol: String { self == .sharp ? "♯" : "♭" }
     }
 
+    private struct KeySpellings {
+        let major: [String]
+        let minor: [String]
+    }
+
+    private static let keySpellings: [Accidental: KeySpellings] = [
+        .sharp: KeySpellings(
+            major: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+            minor: ["Am", "A#m", "Bm", "Cm", "C#m", "Dm", "D#m", "Em", "Fm", "F#m", "Gm", "G#m"]
+        ),
+        .flat: KeySpellings(
+            major: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
+            minor: ["Am", "Bbm", "Bm", "Cm", "Dbm", "Dm", "Ebm", "Em", "Fm", "Gbm", "Gm", "Abm"]
+        ),
+    ]
+
     /// Majors, chromatic from C, in the requested spelling.
     static func majorKeys(_ accidental: Accidental) -> [String] {
-        accidental == .sharp
-            ? ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-            : ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+        keySpellings[accidental]?.major ?? []
     }
 
     /// Minors, chromatic from A — the relative-minor order a musician scans.
     static func minorKeys(_ accidental: Accidental) -> [String] {
-        accidental == .sharp
-            ? ["Am", "A#m", "Bm", "Cm", "C#m", "Dm", "D#m", "Em", "Fm", "F#m", "Gm", "G#m"]
-            : ["Am", "Bbm", "Bm", "Cm", "Dbm", "Dm", "Ebm", "Em", "Fm", "Gbm", "Gm", "Abm"]
+        keySpellings[accidental]?.minor ?? []
     }
 
     /// The accidental a key is already written in, so opening a song in Eb does not
@@ -80,8 +92,9 @@ struct SongForm: Equatable, Sendable {
     /// key is spelled identically in both).
     static func respelled(_ key: String, as accidental: Accidental) -> String? {
         guard !key.isEmpty else { return nil }
+        let sourceAccidental: Accidental = accidental == .sharp ? .flat : .sharp
         let isMinor = key.hasSuffix("m")
-        let from = isMinor ? minorKeys(accidental == .sharp ? .flat : .sharp) : majorKeys(accidental == .sharp ? .flat : .sharp)
+        let from = isMinor ? minorKeys(sourceAccidental) : majorKeys(sourceAccidental)
         let to = isMinor ? minorKeys(accidental) : majorKeys(accidental)
         guard let index = from.firstIndex(of: key) else { return nil }
         return to[index]
@@ -105,9 +118,9 @@ struct SongForm: Equatable, Sendable {
     // MARK: - Validation (port of core's validateSongForm)
 
     struct Errors: Equatable {
-        var title: String?
-        var defaultKey: String?
-        var tags: String?
+        let title: String?
+        let defaultKey: String?
+        let tags: String?
 
         var isEmpty: Bool { title == nil && defaultKey == nil && tags == nil }
     }
@@ -117,11 +130,11 @@ struct SongForm: Equatable, Sendable {
     /// out "Key is required to publish" beneath a narrow field just wrapped onto two
     /// lines and said the same thing three times.
     var errors: Errors {
-        var errors = Errors()
-        if title.trimmed.isEmpty { errors.title = "Required" }
-        if defaultKey.isEmpty { errors.defaultKey = "Required" }
-        if tags.isEmpty { errors.tags = "Required" }
-        return errors
+        Errors(
+            title: title.trimmed.isEmpty ? "Required" : nil,
+            defaultKey: defaultKey.trimmed.isEmpty ? "Required" : nil,
+            tags: tags.isEmpty ? "Required" : nil
+        )
     }
 
     /// Complete enough to publish — core's `validateSongForm` exactly, so Studio and
@@ -143,11 +156,11 @@ struct SongForm: Equatable, Sendable {
     /// What is still missing before this song could go live, for the one summary the
     /// editor shows instead of repeating itself per field.
     var missingForPublish: [String] {
-        var missing: [String] = []
-        if errors.title != nil { missing.append("title") }
-        if errors.defaultKey != nil { missing.append("key") }
-        if errors.tags != nil { missing.append("a tag") }
-        return missing
+        [
+            errors.title == nil ? nil : "title",
+            errors.defaultKey == nil ? nil : "key",
+            errors.tags == nil ? nil : "a tag",
+        ].compactMap { $0 }
     }
 
     // MARK: - Mapping
@@ -185,8 +198,8 @@ struct SongForm: Equatable, Sendable {
     mutating func addTag(_ raw: String, knownTags: [String] = []) -> Bool {
         let typed = raw.trimmed
         guard !typed.isEmpty else { return false }
-        let tag = knownTags.first { $0.caseInsensitiveCompare(typed) == .orderedSame } ?? typed
-        guard !tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return false }
+        let tag = knownTags.first { Self.sameTag($0, typed) } ?? typed
+        guard !tags.contains(where: { Self.sameTag($0, tag) }) else { return false }
         tags.append(tag)
         return true
     }
@@ -203,6 +216,10 @@ struct SongForm: Equatable, Sendable {
         tags.removeAll { $0 == tag }
     }
 
+    private static func sameTag(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.caseInsensitiveCompare(rhs) == .orderedSame
+    }
+
     // MARK: - YouTube
 
     /// Port of core's `normalizeYoutubeInput`: a full URL or a bare id in, an
@@ -215,11 +232,20 @@ struct SongForm: Equatable, Sendable {
         if trimmed.range(of: "^[a-zA-Z0-9_-]{11}$", options: .regularExpression) != nil {
             return (trimmed, true)
         }
-        for pattern in [#"[?&]v=([a-zA-Z0-9_-]{11})"#, #"youtu\.be/([a-zA-Z0-9_-]{11})"#, #"shorts/([a-zA-Z0-9_-]{11})"#] {
-            if let range = trimmed.range(of: pattern, options: .regularExpression) {
-                let match = String(trimmed[range])
-                return (String(match.suffix(11)), true)
-            }
+        let patterns = [
+            #"(?:[?&]v=)([a-zA-Z0-9_-]{11})"#,
+            #"(?:youtu\.be/)([a-zA-Z0-9_-]{11})"#,
+            #"(?:shorts/)([a-zA-Z0-9_-]{11})"#,
+        ]
+        let source = trimmed as NSString
+        for pattern in patterns {
+            guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]),
+                  let match = expression.firstMatch(
+                    in: trimmed,
+                    range: NSRange(location: 0, length: source.length)
+                  ),
+                  match.numberOfRanges > 1 else { continue }
+            return (source.substring(with: match.range(at: 1)), true)
         }
         return (trimmed, false)
     }

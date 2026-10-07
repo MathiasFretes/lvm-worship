@@ -1,4 +1,4 @@
-// Parity harness for the JavaScriptCore spike.
+// Parity harness for the committed JavaScriptCore bundle.
 //
 //   node "apps/studio/js/verify-bundle.mjs"
 //

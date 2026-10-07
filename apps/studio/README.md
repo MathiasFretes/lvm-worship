@@ -7,8 +7,8 @@ reimplementing it in Swift, where it would drift from the JS that `apps/mobile` 
 `apps/web` both depend on.
 
 Not an npm workspace member (no `package.json`), so it does not affect the
-monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge and
-[`SPIKE-RESULTS.md`](SPIKE-RESULTS.md) for the Phase 0 gate report.
+monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge;
+its executable parity harness is the current gate for that boundary.
 
 ## Current state
 
@@ -34,7 +34,7 @@ Phase 4 is the editor's remaining rough edges plus the means to ship it: ChordPr
 can click through to, a [test target](#tests), and a
 [notarized DMG](#releasing) for direct download.
 
-Not built yet: setlists, admin/content management beyond songs, GraceTracks,
+Not built yet: setlists, admin/content management beyond songs,
 offline caching. Personal drafts (`personal_songs`, which mobile merges into its
 library) are not included — Studio reads and writes the public catalog only.
 
@@ -164,8 +164,8 @@ npm run tokens:swift:check    # verify nothing has drifted (also a PR check)
 `native.ts`, regenerate, commit both. The generator needs Node ≥ 22.18 (it imports
 the `.ts` file directly and relies on built-in type stripping).
 
-What is generated: `GCColor`, `GCGradient`, `GCSpacing`, `GCRadius`, `GCLayout`,
-the `GCTextSpec` ramp, and `Assets.xcassets/AccentColor.colorset` (so AppKit
+What is generated: `LVMColor`, `LVMGradient`, `LVMSpacing`, `LVMRadius`, `LVMLayout`,
+the `LVMTextSpec` ramp, and `Assets.xcassets/AccentColor.colorset` (so AppKit
 chrome gets the brand accent too). `Design/Theme.swift` is hand-written and holds
 no values — only the two macOS translations:
 
@@ -174,7 +174,7 @@ no values — only the two macOS translations:
   `*ContrastBoost` overlays). That reaches the same four combinations the mobile
   ThemeProvider does, and keeps working inside AppKit-backed surfaces where the
   SwiftUI environment does not.
-- **The type ramp is scaled by `GCTypeScale.macOS` (0.82).** The shared ramp is
+- **The type ramp is scaled by `LVMTypeScale.macOS` (0.82).** The shared ramp is
   iOS-tuned; macOS's system body is 13pt, and per `apps/mobile/AGENTS.md` the
   platform HIG wins over a pixel-for-pixel port. 0.82 was chosen because it lands
   `body` on exactly 13pt (largeTitle 27→22, rowTitle 16.5→13.5). Sizes are scaled,
@@ -183,7 +183,7 @@ no values — only the two macOS translations:
 Two deliberate exceptions:
 
 - **`SongRow` keeps SwiftUI's semantic foreground styles** (`.primary` /
-  `.secondary`) instead of `GCColor.ink` / `GCColor.sec`. The library `List` is
+  `.secondary`) instead of `LVMColor.ink` / `LVMColor.sec`. The library `List` is
   selectable and macOS inverts a selected row's text to read against the accent
   fill — only automatic styles participate, so pinning token colors there would
   leave dark text on a Signal-blue selection. The row still takes its *sizes* from
@@ -515,65 +515,19 @@ same function from pdf.js later; they are covered by
 as ASCII art and converted to geometry. (Studio now has a test target too — see
 [Tests](#tests) — but the heuristics stay in core, where both clients get them.)
 
-**`PDFPage.characterBounds(at:)` is deliberately not the geometry source.** It has
-regressed twice — [FB14843671](https://developer.apple.com/forums/thread/762788) is
-still open, and [FB12951475](https://developer.apple.com/forums/thread/735598) hit
-`characterIndex(at:)` in shipping iOS 17 with "accuracy worsening further down the
-page" — and it fails *silently*, returning plausible rects from the wrong row, which
-for a chord sheet means chords landing confidently in the wrong place. Line and word
-geometry come from `PDFSelection` instead. Per-character bounds is used only to
-resolve a mid-word chord split inside a word already located, is measured only for
-words long enough to be eligible, and every rect is checked against its enclosing
-word before it is trusted — so a bad measurement costs precision, never correctness.
+Geometry comes from `PDFSelection`; fragments are regrouped by visual baseline and
+columns by clustered line starts. Character origins are optional and validated
+inside their word bounds. The JSON boundary uses UTF-16 offsets to match JavaScript,
+including surrogate pairs.
 
-**The bias everywhere is refuse-and-warn over guess.** A chord line may only pair
-with lyrics in the same column whose x-range overlaps it by half; failing that it
-stays on its own line, spacing intact, with a warning. A block opening a column or a
-page continues the section it was torn from rather than starting a new one, which
-keeps a straddling verse in one piece at the cost of a genuine break that lands
-exactly on the boundary — named in a warning, not silent. A page whose columns cannot
-be read has pairing switched off wholesale. A chord line standing above its lyrics is
-obvious and one keystroke to fix; a chord silently stamped on the wrong line is
-neither.
+The importer prefers an explicit warning over a speculative match. Chord/lyric
+pairing requires trusted same-column geometry, and uncertain lines remain visible in
+the generated body. **Copy Diagnostics** exports the complete extraction JSON for
+replay on any Node platform:
 
-There is **no review step** — the result goes into the editor, which is where it
-would be edited anyway. What the importer was unsure about appears in the editor's
-status banner, and below a confidence threshold the banner offers **Copy
-Diagnostics**: the complete extraction JSON, which
-`node "apps/studio/js/pdf-draft.mjs" <file>.json` replays through the heuristics
-without Xcode. That is the loop for tuning against a chart that came out wrong.
-
-**Fragments are the thing real charts do that nothing else prepares you for.** A
-PraiseCharts or OnSong PDF does not store a lyric line as one text run — it emits a
-separate positioned run under each chord, and `selectionsByLine()` hands each of those
-back as its own "line" (43 of 77 lines on one chart, 78 of 129 on another). So words
-are collected page-wide and regrouped into visual lines by baseline here, not taken
-from PDFKit's line model. Before that, no chord line had a lyric line beneath it to
-pair with and every chart imported with 45–80 unpaired chord lines.
-
-Because a full-width credits or footer line fills the gutter in any horizontal
-measurement, **columns are found by clustering where body lines start** rather than by
-looking for a gap in an x-projection profile. A line is cut in two only when it has no
-word in the gutter itself; a wide line that merely reaches across it stays whole. Gap
-*width* alone is not sufficient, and getting that wrong cut one chart's title in half.
-
-Five rules were tried, disproved against real PDFs, and are documented at their sites
-so they are not re-added:
-
-- a median-based stanza-gap threshold — chord-sheet pitches form two clusters, so the
-  median lands in the valley between them;
-- dropping lines repeated across pages — a chart whose every line sits under an `A`
-  loses one chord per section, silently, since the lyrics survive;
-- splitting a section at every vertical gap — real charts space stanzas generously, so
-  this turned one eight-line verse into three sections with invented labels. Once a
-  heading has been seen, only a heading starts a section;
-- letting this file decide what is a header or footer — on a real chart the key and
-  tempo share a line with the publisher's URL, so dropping it as furniture threw the
-  song's key away before core could read it. Core strips furniture from the body; this
-  file only keeps it out of the column evidence, and removes nothing but text far
-  smaller than the body (fingering diagrams);
-- requiring a gutter to run most of the way down the page — a right column often holds
-  one short section and occupies only the top third.
+```powershell
+node "apps/studio/js/pdf-draft.mjs" <extraction.json>
+```
 
 ### Search
 

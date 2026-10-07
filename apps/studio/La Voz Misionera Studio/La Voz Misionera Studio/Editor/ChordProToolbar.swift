@@ -38,13 +38,13 @@ struct ChordProToolbar: View {
     @State private var macroName = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.xs) {
+        VStack(alignment: .leading, spacing: LVMSpacing.xs) {
             chordRow
             sectionRow
         }
-        .padding(.horizontal, GCSpacing.md)
-        .padding(.vertical, GCSpacing.sm)
-        .background(GCColor.surface)
+        .padding(.horizontal, LVMSpacing.md)
+        .padding(.vertical, LVMSpacing.sm)
+        .background(LVMColor.surface)
         .overlay(alignment: .bottom) { Divider() }
         .sheet(isPresented: $showsMacroSheet) { macroSheet }
     }
@@ -68,8 +68,8 @@ struct ChordProToolbar: View {
             // No key, or one core does not recognise. Saying so beats showing the
             // wrong seven chords.
             Text(key.isEmpty ? "Choose a key to get its chords" : "No chords for “\(key)”")
-                .gcTextStyle(.overline)
-                .foregroundStyle(GCColor.muted)
+                .lvmTextStyle(.overline)
+                .foregroundStyle(LVMColor.muted)
                 .frame(height: 22)
         } else {
             // FlowLayout, not HStack: eight section buttons plus a menu do not fit one
@@ -77,7 +77,7 @@ struct ChordProToolbar: View {
             // label to "Cho…" / "Brid…" / "Pre-…". Wrapping to a second row keeps them
             // readable, which for a button whose whole job is to be recognised at a
             // glance is the difference between useful and decorative.
-            FlowLayout(horizontalSpacing: GCSpacing.xs, verticalSpacing: GCSpacing.xs) {
+            FlowLayout(horizontalSpacing: LVMSpacing.xs, verticalSpacing: LVMSpacing.xs) {
                 ForEach(chords) { chord in
                     Button {
                         insertChord(chord)
@@ -90,7 +90,7 @@ struct ChordProToolbar: View {
                             // chord" can find it without translating.
                             Text(chord.degree)
                                 .font(.system(size: 8, weight: .regular))
-                                .foregroundStyle(GCColor.muted)
+                                .foregroundStyle(LVMColor.muted)
                         }
                         .frame(minWidth: 40)
                         .padding(.vertical, 3)
@@ -130,7 +130,7 @@ struct ChordProToolbar: View {
     }
 
     private var sectionRow: some View {
-        FlowLayout(horizontalSpacing: GCSpacing.xs, verticalSpacing: GCSpacing.xs) {
+        FlowLayout(horizontalSpacing: LVMSpacing.xs, verticalSpacing: LVMSpacing.xs) {
             ForEach(presets) { preset in
                 Button {
                     onWrap(preset)
@@ -200,8 +200,8 @@ struct ChordProToolbar: View {
     }
 
     private var macroSheet: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
-            Text("Save as macro").gcTextStyle(.rowTitle).foregroundStyle(GCColor.ink)
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
+            Text("Save as macro").lvmTextStyle(.rowTitle).foregroundStyle(LVMColor.ink)
             TextField("Name, e.g. “House intro”", text: $macroName)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit(saveMacro)
@@ -211,13 +211,13 @@ struct ChordProToolbar: View {
             ScrollView {
                 Text(macroSource())
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(GCColor.sec)
+                    .foregroundStyle(LVMColor.sec)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
             }
             .frame(height: 120)
-            .padding(GCSpacing.sm)
-            .background(GCColor.bg, in: RoundedRectangle(cornerRadius: GCRadius.sm))
+            .padding(LVMSpacing.sm)
+            .background(LVMColor.bg, in: RoundedRectangle(cornerRadius: LVMRadius.sm))
 
             HStack {
                 Spacer()
@@ -227,7 +227,7 @@ struct ChordProToolbar: View {
                     .disabled(macroName.trimmed.isEmpty)
             }
         }
-        .padding(GCSpacing.lg)
+        .padding(LVMSpacing.lg)
         .frame(width: 380)
     }
 

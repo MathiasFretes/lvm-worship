@@ -33,7 +33,7 @@ final class ViewerPrefs: ObservableObject {
 
     /// v1 in the key because the stored shape is a dictionary of overrides; a
     /// future shape change gets a new key rather than a migration.
-    private static let storageKey = "gc.viewer.columnMode.v1"
+    private static let storageKey = "lvm.viewer.columnMode.v1"
 
     static let defaultColumnMode: ColumnMode = .single
 

@@ -15,6 +15,7 @@ import Supabase
 final class AppServices {
     let client: SupabaseClient
     let songs: SongsRepository
+    let stars: StarsRepository
     let users: UserRepository
     let export: ExportService
     let bridge: CoreBridge?
@@ -36,24 +37,34 @@ final class AppServices {
         // The storage argument is omitted deliberately: this initializer defaults it
         // to `AuthClient.Configuration.defaultLocalStorage`, the same Keychain store
         // the no-options initializer used, so session persistence is unchanged.
-        let client = SupabaseClient(
+        let client = Self.makeClient(config: config)
+        self.client = client
+        self.songs = SongsRepository(client: client)
+        self.stars = StarsRepository(client: client)
+        self.users = UserRepository(client: client)
+        self.export = ExportService(client: client, apiBaseURL: config.apiBaseURL)
+
+        let loadedBridge = Self.loadBridge()
+        self.bridge = loadedBridge.0
+        self.bridgeErrorText = loadedBridge.1
+    }
+
+    private static func makeClient(config: StudioConfig) -> SupabaseClient {
+        SupabaseClient(
             supabaseURL: config.supabaseURL,
             supabaseKey: config.supabaseAnonKey,
             options: SupabaseClientOptions(
                 auth: SupabaseClientOptions.AuthOptions(emitLocalSessionAsInitialSession: true)
             )
         )
-        self.client = client
-        self.songs = SongsRepository(client: client)
-        self.users = UserRepository(client: client)
-        self.export = ExportService(client: client, apiBaseURL: config.apiBaseURL)
+    }
 
+    private static func loadBridge() -> (CoreBridge?, String?) {
         do {
-            self.bridge = try CoreBridge()
-            self.bridgeErrorText = nil
+            return (try CoreBridge(), nil)
         } catch {
-            self.bridge = nil
-            self.bridgeErrorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+            let message = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+            return (nil, message)
         }
     }
 }

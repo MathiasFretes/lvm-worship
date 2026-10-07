@@ -36,6 +36,62 @@ struct StudioConfig {
     /// second piece of setup.
     let apiBaseURL: URL?
 
+    private enum Key: String {
+        case supabaseURL = "SUPABASE_URL"
+        case supabaseAnonKey = "SUPABASE_ANON_KEY"
+        case apiBaseURL = "API_BASE_URL"
+    }
+
+    private struct Values {
+        let supabaseURL: String
+        let supabaseAnonKey: String
+        let apiBaseURL: String
+
+        init(environment: [String: String], info: [String: Any]) {
+            supabaseURL = Self.resolve(
+                .supabaseURL,
+                environment: environment,
+                info: info,
+                fallback: StudioConfig.fallbackSupabaseURL
+            )
+            supabaseAnonKey = Self.resolve(
+                .supabaseAnonKey,
+                environment: environment,
+                info: info,
+                fallback: StudioConfig.fallbackSupabaseAnonKey
+            )
+            apiBaseURL = Self.resolve(
+                .apiBaseURL,
+                environment: environment,
+                info: info,
+                fallback: StudioConfig.fallbackAPIBaseURL
+            )
+        }
+
+        var missingRequiredKeys: [String] {
+            [
+                supabaseURL.isEmpty ? Key.supabaseURL.rawValue : nil,
+                supabaseAnonKey.isEmpty ? Key.supabaseAnonKey.rawValue : nil,
+            ].compactMap { $0 }
+        }
+
+        private static func resolve(
+            _ key: Key,
+            environment: [String: String],
+            info: [String: Any],
+            fallback: String
+        ) -> String {
+            let candidates = [
+                environment[key.rawValue],
+                info[key.rawValue] as? String,
+                fallback,
+            ]
+            return candidates
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .first(where: { !$0.isEmpty }) ?? ""
+        }
+    }
+
     enum ConfigError: LocalizedError {
         case missingValues([String])
         case invalidURL(String)
@@ -61,39 +117,39 @@ struct StudioConfig {
     }
 
     static func resolve() -> Result<StudioConfig, ConfigError> {
-        let urlString = value(for: "SUPABASE_URL", fallback: fallbackSupabaseURL)
-        let anonKey = value(for: "SUPABASE_ANON_KEY", fallback: fallbackSupabaseAnonKey)
-
-        var missing: [String] = []
-        if urlString.isEmpty { missing.append("SUPABASE_URL") }
-        if anonKey.isEmpty { missing.append("SUPABASE_ANON_KEY") }
-        if !missing.isEmpty { return .failure(.missingValues(missing)) }
-
-        guard let url = URL(string: urlString), url.scheme != nil, url.host != nil else {
-            return .failure(.invalidURL(urlString))
+        let values = Values(
+            environment: ProcessInfo.processInfo.environment,
+            info: Bundle.main.infoDictionary ?? [:]
+        )
+        if !values.missingRequiredKeys.isEmpty {
+            return .failure(.missingValues(values.missingRequiredKeys))
         }
 
-        // Trailing slash trimmed the way mobile's apiBase() does, so paths append
-        // cleanly. An unparseable value is treated as absent rather than fatal.
-        let apiBase = value(for: "API_BASE_URL", fallback: fallbackAPIBaseURL)
-        let trimmedAPIBase = apiBase.hasSuffix("/") ? String(apiBase.dropLast()) : apiBase
-        let apiBaseURL = trimmedAPIBase.isEmpty ? nil : URL(string: trimmedAPIBase)
+        guard let supabaseURL = absoluteURL(from: values.supabaseURL) else {
+            return .failure(.invalidURL(values.supabaseURL))
+        }
 
         return .success(
-            StudioConfig(supabaseURL: url, supabaseAnonKey: anonKey, apiBaseURL: apiBaseURL)
+            StudioConfig(
+                supabaseURL: supabaseURL,
+                supabaseAnonKey: values.supabaseAnonKey,
+                apiBaseURL: optionalAPIURL(from: values.apiBaseURL)
+            )
         )
     }
 
-    private static func value(for name: String, fallback: String) -> String {
-        if let fromEnvironment = ProcessInfo.processInfo.environment[name],
-           !fromEnvironment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return fromEnvironment.trimmingCharacters(in: .whitespacesAndNewlines)
+    private static func absoluteURL(from value: String) -> URL? {
+        guard let url = URL(string: value), url.scheme != nil, url.host != nil else {
+            return nil
         }
-        if let fromPlist = Bundle.main.object(forInfoDictionaryKey: name) as? String,
-           !fromPlist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return fromPlist.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        return fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+        return url
+    }
+
+    private static func optionalAPIURL(from value: String) -> URL? {
+        // Keep mobile's one-trailing-slash normalization and its fail-open export
+        // contract: malformed optional configuration disables Export only.
+        let normalized = value.hasSuffix("/") ? String(value.dropLast()) : value
+        return normalized.isEmpty ? nil : URL(string: normalized)
     }
 
     // MARK: - Local fallbacks (do not commit real values)

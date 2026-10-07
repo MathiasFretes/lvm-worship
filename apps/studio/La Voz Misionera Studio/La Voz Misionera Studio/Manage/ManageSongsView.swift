@@ -132,25 +132,25 @@ struct ManageSongsView: View {
 
     private var sidebar: some View {
         VStack(spacing: 0) {
-            HStack(spacing: GCSpacing.sm) {
-                Image(systemName: "magnifyingglass").foregroundStyle(GCColor.muted)
+            HStack(spacing: LVMSpacing.sm) {
+                Image(systemName: "magnifyingglass").foregroundStyle(LVMColor.muted)
                 TextField("Search songs…", text: $query)
                     .textFieldStyle(.plain)
-                    .gcTextStyle(.body)
+                    .lvmTextStyle(.body)
                 if !query.isEmpty {
                     Button {
                         query = ""
                     } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(GCColor.muted)
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(LVMColor.muted)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Clear search")
                 }
             }
-            .padding(.horizontal, GCSpacing.sm)
+            .padding(.horizontal, LVMSpacing.sm)
             .padding(.vertical, 5)
-            .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: GCRadius.sm))
-            .padding(GCSpacing.sm)
+            .background(LVMColor.surfaceAlt, in: RoundedRectangle(cornerRadius: LVMRadius.sm))
+            .padding(LVMSpacing.sm)
 
             Divider()
             list
@@ -163,11 +163,11 @@ struct ManageSongsView: View {
         if library.isLoading, library.songs.isEmpty {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let errorText = library.errorText, library.songs.isEmpty {
-            VStack(alignment: .leading, spacing: GCSpacing.sm) {
-                Text(errorText).gcTextStyle(.rowMeta).foregroundStyle(GCColor.sec)
+            VStack(alignment: .leading, spacing: LVMSpacing.sm) {
+                Text(errorText).lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.sec)
                 Button("Try Again") { Task { await library.load() } }
             }
-            .padding(GCSpacing.lg)
+            .padding(LVMSpacing.lg)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
             List(selection: selectionBinding) {
@@ -239,10 +239,10 @@ struct ManageSongsView: View {
             // previous song's over.
             .id(target.id)
         } else {
-            VStack(spacing: GCSpacing.md) {
+            VStack(spacing: LVMSpacing.md) {
                 Text("Select a song to edit")
-                    .gcTextStyle(.body)
-                    .foregroundStyle(GCColor.sec)
+                    .lvmTextStyle(.body)
+                    .foregroundStyle(LVMColor.sec)
                 Button {
                     requestNavigation(to: .new)
                 } label: {
@@ -260,19 +260,19 @@ private struct ManageRow: View {
     let song: SongListItem
 
     var body: some View {
-        HStack(spacing: GCSpacing.sm) {
+        HStack(spacing: LVMSpacing.sm) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title).gcTextStyle(.rowTitle).lineLimit(1)
+                Text(song.title).lvmTextStyle(.rowTitle).lineLimit(1)
                 if let artist = song.artist, !artist.isEmpty {
                     Text(artist)
-                        .gcTextStyle(.rowSubtitle)
+                        .lvmTextStyle(.rowSubtitle)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
-            Spacer(minLength: GCSpacing.xs)
+            Spacer(minLength: LVMSpacing.xs)
             if let key = song.defaultKey, !key.isEmpty {
-                Text(key).gcTextStyle(.rowKey).foregroundStyle(.secondary)
+                Text(key).lvmTextStyle(.rowKey).foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)

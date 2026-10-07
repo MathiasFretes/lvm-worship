@@ -34,7 +34,7 @@ struct ViewOptionsView: View {
                 Toggle("Section labels", isOn: $model.showSections)
 
                 LabeledContent("Font size") {
-                    HStack(spacing: GCSpacing.sm) {
+                    HStack(spacing: LVMSpacing.sm) {
                         Text(model.fontScalePercentLabel)
                             .monospacedDigit()
                             .foregroundStyle(.secondary)

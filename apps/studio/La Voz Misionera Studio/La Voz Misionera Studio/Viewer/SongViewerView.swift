@@ -133,13 +133,13 @@ struct SongViewerView: View {
         GeometryReader { geometry in
             ZStack(alignment: .bottom) {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: GCSpacing.lg) {
+                    VStack(alignment: .leading, spacing: LVMSpacing.lg) {
                         header(for: song)
                         Divider()
                         chart(for: song, viewportHeight: geometry.size.height)
                     }
-                    .frame(maxWidth: GCLayout.MaxWidth.content, alignment: .leading)
-                    .padding(GCSpacing.xl)
+                    .frame(maxWidth: LVMLayout.MaxWidth.content, alignment: .leading)
+                    .padding(LVMSpacing.xl)
                     // Room for the last lines to clear the floating bar.
                     .padding(.bottom, model.showsTransposeBar ? 96 : 0)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -166,37 +166,37 @@ struct SongViewerView: View {
 
     @ViewBuilder
     private func header(for song: SongDetail) -> some View {
-        VStack(alignment: .leading, spacing: GCSpacing.xs) {
-            HStack(alignment: .firstTextBaseline, spacing: GCSpacing.sm) {
+        VStack(alignment: .leading, spacing: LVMSpacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: LVMSpacing.sm) {
                 Text(song.title)
-                    .gcTextStyle(.largeTitle)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.largeTitle)
+                    .foregroundStyle(LVMColor.ink)
                     .lineLimit(2)
                 StarButton(songID: song.id, services: services)
             }
             // Subtitle row: artist · Key pill · time signature · BPM.
-            HStack(spacing: GCSpacing.sm) {
+            HStack(spacing: LVMSpacing.sm) {
                 if let artist = song.artist, !artist.isEmpty {
                     Text(artist)
-                        .gcTextStyle(.rowSubtitle)
-                        .foregroundStyle(GCColor.sec)
+                        .lvmTextStyle(.rowSubtitle)
+                        .foregroundStyle(LVMColor.sec)
                     if !model.keyLabel.isEmpty {
-                        Circle().fill(GCColor.muted).frame(width: 3, height: 3)
+                        Circle().fill(LVMColor.muted).frame(width: 3, height: 3)
                     }
                 }
                 if !model.keyLabel.isEmpty {
                     Text("Key of \(model.keyLabel)")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(GCColor.textAccent)
+                        .foregroundStyle(LVMColor.textAccent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(GCColor.accentSoft, in: Capsule())
+                        .background(LVMColor.accentSoft, in: Capsule())
                 }
                 if let timeSignature = song.timeSignature, !timeSignature.isEmpty {
-                    Text(timeSignature).gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
+                    Text(timeSignature).lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.muted)
                 }
                 if let tempo = song.tempo {
-                    Text("\(tempo) bpm").gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
+                    Text("\(tempo) bpm").lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.muted)
                 }
             }
         }
@@ -215,10 +215,10 @@ struct SongViewerView: View {
         } else if let parseErrorText = model.parseErrorText {
             rawFallback(song, note: parseErrorText)
         } else if (song.chordproContent ?? "").isEmpty {
-            VStack(alignment: .leading, spacing: GCSpacing.xs) {
-                Text("No chart available").gcTextStyle(.body).foregroundStyle(GCColor.ink)
+            VStack(alignment: .leading, spacing: LVMSpacing.xs) {
+                Text("No chart available").lvmTextStyle(.body).foregroundStyle(LVMColor.ink)
                 Text("This song has no ChordPro content yet.")
-                    .gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
+                    .lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.muted)
             }
         } else {
             rawFallback(song, note: nil)
@@ -233,21 +233,21 @@ struct SongViewerView: View {
         VStack(alignment: .leading, spacing: 0) {
             if note != nil {
                 Text("Chords unavailable — showing raw text")
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.muted)
-                    .padding(.bottom, GCSpacing.md)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.muted)
+                    .padding(.bottom, LVMSpacing.md)
             }
             if lines.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     Text(line.isEmpty ? " " : line)
-                        .font(.system(size: GCChartMetrics.lyricSize * model.fontScale))
-                        .foregroundStyle(GCColor.ink)
+                        .font(.system(size: LVMChartMetrics.lyricSize * model.fontScale))
+                        .foregroundStyle(LVMColor.ink)
                         .textSelection(.enabled)
                 }
             } else {
-                Text("No chart available").gcTextStyle(.body).foregroundStyle(GCColor.ink)
+                Text("No chart available").lvmTextStyle(.body).foregroundStyle(LVMColor.ink)
                 Text("This song has no ChordPro content yet.")
-                    .gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
+                    .lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.muted)
             }
         }
     }
@@ -326,16 +326,16 @@ struct SongViewerView: View {
 
     @ViewBuilder
     private func message(_ text: String, retry: Bool) -> some View {
-        VStack(alignment: .leading, spacing: GCSpacing.sm) {
+        VStack(alignment: .leading, spacing: LVMSpacing.sm) {
             Text(text)
-                .gcTextStyle(.body)
-                .foregroundStyle(GCColor.sec)
+                .lvmTextStyle(.body)
+                .foregroundStyle(LVMColor.sec)
                 .fixedSize(horizontal: false, vertical: true)
             if retry {
                 Button("Try Again") { Task { await model.load() } }
             }
         }
-        .padding(GCSpacing.xl)
+        .padding(LVMSpacing.xl)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

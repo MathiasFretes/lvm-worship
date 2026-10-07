@@ -16,23 +16,23 @@ struct FilterSortView: View {
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
             HStack {
                 Text("Filter & sort")
-                    .gcTextStyle(.sectionHeader)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.sectionHeader)
+                    .foregroundStyle(LVMColor.ink)
                 Spacer()
                 if model.isFilterActive {
                     Button("Reset") { model.clearFilters() }
                         .buttonStyle(.plain)
-                        .foregroundStyle(GCColor.accent)
-                        .gcTextStyle(.rowMeta)
+                        .foregroundStyle(LVMColor.accent)
+                        .lvmTextStyle(.rowMeta)
                 }
             }
 
             Text("SORT BY")
-                .gcTextStyle(.overline)
-                .foregroundStyle(GCColor.muted)
+                .lvmTextStyle(.overline)
+                .foregroundStyle(LVMColor.muted)
 
             VStack(spacing: 0) {
                 ForEach(SortKey.allCases) { key in
@@ -43,11 +43,11 @@ struct FilterSortView: View {
             if !model.availableTags.isEmpty {
                 Divider()
                 Text("FILTER BY TAG")
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.muted)
+                    .lvmTextStyle(.overline)
+                    .foregroundStyle(LVMColor.muted)
                 // Wraps like mobile's chip cloud; FlowLayout is already the app's
                 // wrapping row.
-                FlowLayout(horizontalSpacing: GCSpacing.sm, verticalSpacing: GCSpacing.sm) {
+                FlowLayout(horizontalSpacing: LVMSpacing.sm, verticalSpacing: LVMSpacing.sm) {
                     ForEach(model.availableTags, id: \.self) { tag in
                         tagChip(tag)
                     }
@@ -63,8 +63,8 @@ struct FilterSortView: View {
             }
             .keyboardShortcut(.defaultAction)
         }
-        .gcTextStyle(.body)
-        .padding(GCSpacing.lg)
+        .lvmTextStyle(.body)
+        .padding(LVMSpacing.lg)
         .frame(width: 320)
     }
 
@@ -76,15 +76,15 @@ struct FilterSortView: View {
         } label: {
             HStack {
                 Text(key.label)
-                    .foregroundStyle(selected ? GCColor.accent : GCColor.ink)
+                    .foregroundStyle(selected ? LVMColor.accent : LVMColor.ink)
                 Spacer()
                 if selected {
                     Image(systemName: model.sortDirection.systemImage)
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(GCColor.accent)
+                        .foregroundStyle(LVMColor.accent)
                 }
             }
-            .padding(.vertical, GCSpacing.xs)
+            .padding(.vertical, LVMSpacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -99,11 +99,11 @@ struct FilterSortView: View {
         } label: {
             Text(tag)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(selected ? GCColor.onAccent : GCColor.sec)
+                .foregroundStyle(selected ? LVMColor.onAccent : LVMColor.sec)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(
-                    selected ? GCColor.accent : GCColor.surfaceAlt,
+                    selected ? LVMColor.accent : LVMColor.surfaceAlt,
                     in: Capsule()
                 )
                 .contentShape(Capsule())

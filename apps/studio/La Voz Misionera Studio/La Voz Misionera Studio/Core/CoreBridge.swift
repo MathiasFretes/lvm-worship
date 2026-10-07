@@ -59,6 +59,24 @@ final class CoreBridge {
     private static let resourceName = "LaVozMisioneraCore"
     private static let globalName = "LaVozMisioneraCore"
 
+    private enum Export: String, CaseIterable {
+        case transpose
+        case parse = "parseToJSON"
+        case render = "renderToJSON"
+        case stepsBetween
+        case formatKey
+        case lint = "lintToJSON"
+        case hasMinRole
+        case slugify
+        case insertAtCursor = "insertAtCursorJSON"
+        case wrapSection = "wrapSectionJSON"
+        case sectionPresets = "sectionPresetsJSON"
+        case diatonicChords = "diatonicChordsJSON"
+        case chordVariants = "chordVariantsJSON"
+        case chordToken
+        case pdfDraft = "pdfDraftJSON"
+    }
+
     /// Collects the last uncaught JS exception. A reference box rather than a
     /// stored property so `init` can install the handler before `self` exists.
     private final class ExceptionSink {
@@ -71,21 +89,7 @@ final class CoreBridge {
     }
 
     private let context: JSContext
-    private let transposeFunction: JSValue
-    private let parseFunction: JSValue
-    private let renderFunction: JSValue
-    private let stepsBetweenFunction: JSValue
-    private let formatKeyFunction: JSValue
-    private let lintFunction: JSValue
-    private let hasMinRoleFunction: JSValue
-    private let slugifyFunction: JSValue
-    private let insertAtCursorFunction: JSValue
-    private let wrapSectionFunction: JSValue
-    private let sectionPresetsFunction: JSValue
-    private let diatonicChordsFunction: JSValue
-    private let chordVariantsFunction: JSValue
-    private let chordTokenFunction: JSValue
-    private let pdfDraftFunction: JSValue
+    private let functions: [Export: JSValue]
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -130,22 +134,17 @@ final class CoreBridge {
         }
         self.bundleURL = url
         self.context = context
-        self.transposeFunction = try Self.requireFunction(named: "transpose", on: namespace)
-        self.parseFunction = try Self.requireFunction(named: "parseToJSON", on: namespace)
-        self.renderFunction = try Self.requireFunction(named: "renderToJSON", on: namespace)
-        self.stepsBetweenFunction = try Self.requireFunction(named: "stepsBetween", on: namespace)
-        self.formatKeyFunction = try Self.requireFunction(named: "formatKey", on: namespace)
-        self.lintFunction = try Self.requireFunction(named: "lintToJSON", on: namespace)
-        self.hasMinRoleFunction = try Self.requireFunction(named: "hasMinRole", on: namespace)
-        self.slugifyFunction = try Self.requireFunction(named: "slugify", on: namespace)
-        self.insertAtCursorFunction = try Self.requireFunction(named: "insertAtCursorJSON", on: namespace)
-        self.wrapSectionFunction = try Self.requireFunction(named: "wrapSectionJSON", on: namespace)
-        self.sectionPresetsFunction = try Self.requireFunction(named: "sectionPresetsJSON", on: namespace)
-        self.diatonicChordsFunction = try Self.requireFunction(named: "diatonicChordsJSON", on: namespace)
-        self.chordVariantsFunction = try Self.requireFunction(named: "chordVariantsJSON", on: namespace)
-        self.chordTokenFunction = try Self.requireFunction(named: "chordToken", on: namespace)
-        self.pdfDraftFunction = try Self.requireFunction(named: "pdfDraftJSON", on: namespace)
+        self.functions = try Dictionary(
+            uniqueKeysWithValues: Export.allCases.map {
+                ($0, try Self.requireFunction(named: $0.rawValue, on: namespace))
+            }
+        )
         self.sink = sink
+    }
+
+    private func function(_ export: Export) -> JSValue {
+        // Every case is populated atomically during init.
+        functions[export]!
     }
 
     private static func requireFunction(named name: String, on namespace: JSValue) throws -> JSValue {
@@ -167,7 +166,7 @@ final class CoreBridge {
             .number(Double(steps)),
             .boolean(preferFlat),
         ])
-        return try callReturningString(transposeFunction, named: "transpose", arguments: arguments)
+        return try callReturningString(function(.transpose), named: Export.transpose.rawValue, arguments: arguments)
     }
 
     /// Parse a ChordPro body through `packages/core`'s `parseChordProOrLegacy`.
@@ -177,7 +176,7 @@ final class CoreBridge {
     /// An empty body is valid and yields a document with no sections.
     func parse(_ chordpro: String) throws -> SongDoc {
         let arguments = try jsValues([.string(chordpro)])
-        let json = try callReturningString(parseFunction, named: "parseToJSON", arguments: arguments)
+        let json = try callReturningString(function(.parse), named: Export.parse.rawValue, arguments: arguments)
         return try decodeDoc(from: json)
     }
 
@@ -204,7 +203,7 @@ final class CoreBridge {
             .boolean(preferFlat),
             .string(style.rawValue),
         ])
-        let json = try callReturningString(renderFunction, named: "renderToJSON", arguments: arguments)
+        let json = try callReturningString(function(.render), named: Export.render.rawValue, arguments: arguments)
         return try decodeDoc(from: json)
     }
 
@@ -214,14 +213,14 @@ final class CoreBridge {
     /// Viewer seed a transpose before the song's key is known.
     func stepsBetween(from fromKey: String, to toKey: String) throws -> Int {
         let arguments = try jsValues([.string(fromKey), .string(toKey)])
-        return try callReturningInt(stepsBetweenFunction, named: "stepsBetween", arguments: arguments)
+        return try callReturningInt(function(.stepsBetween), named: Export.stepsBetween.rawValue, arguments: arguments)
     }
 
     /// A key as it should be displayed — passed through for `.letters`, converted
     /// to solfège syllables for `.solfege`.
     func formatKey(_ key: String, style: ChordStyle) throws -> String {
         let arguments = try jsValues([.string(key), .string(style.rawValue)])
-        return try callReturningString(formatKeyFunction, named: "formatKey", arguments: arguments)
+        return try callReturningString(function(.formatKey), named: Export.formatKey.rawValue, arguments: arguments)
     }
 
     /// Lint a ChordPro body through `packages/core`'s `lintChordPro`.
@@ -237,7 +236,7 @@ final class CoreBridge {
     /// editor's buffer catches strictly more than linting its parse would.
     func lint(_ chordpro: String) throws -> [LintWarning] {
         let arguments = try jsValues([.string(chordpro)])
-        let json = try callReturningString(lintFunction, named: "lintToJSON", arguments: arguments)
+        let json = try callReturningString(function(.lint), named: Export.lint.rawValue, arguments: arguments)
         return try decodeJSON([LintWarning].self, from: json, describedAs: "lint warnings")
     }
 
@@ -253,7 +252,7 @@ final class CoreBridge {
     /// loaded and get the closed answer.
     func hasMinRole(_ role: String, atLeast minimum: String) throws -> Bool {
         let arguments = try jsValues([.string(role), .string(minimum)])
-        return try callReturningBool(hasMinRoleFunction, named: "hasMinRole", arguments: arguments)
+        return try callReturningBool(function(.hasMinRole), named: Export.hasMinRole.rawValue, arguments: arguments)
     }
 
     /// Title → URL-safe slug through `packages/core`'s `slugify`.
@@ -263,7 +262,7 @@ final class CoreBridge {
     /// "" must refuse the write rather than pass it along.
     func slugify(_ title: String) throws -> String {
         let arguments = try jsValues([.string(title)])
-        return try callReturningString(slugifyFunction, named: "slugify", arguments: arguments)
+        return try callReturningString(function(.slugify), named: Export.slugify.rawValue, arguments: arguments)
     }
 
     // MARK: - Quick insert
@@ -274,7 +273,7 @@ final class CoreBridge {
         let arguments = try jsValues([
             .string(value), .number(Double(start)), .number(Double(end)), .string(text),
         ])
-        let json = try callReturningString(insertAtCursorFunction, named: "insertAtCursorJSON", arguments: arguments)
+        let json = try callReturningString(function(.insertAtCursor), named: Export.insertAtCursor.rawValue, arguments: arguments)
         return try decodeJSON(ChordProEdit.self, from: json, describedAs: "the edited text")
     }
 
@@ -292,14 +291,14 @@ final class CoreBridge {
             .string(value), .number(Double(start)), .number(Double(end)),
             .string(directive), .string(label),
         ])
-        let json = try callReturningString(wrapSectionFunction, named: "wrapSectionJSON", arguments: arguments)
+        let json = try callReturningString(function(.wrapSection), named: Export.wrapSection.rawValue, arguments: arguments)
         return try decodeJSON(ChordProEdit.self, from: json, describedAs: "the wrapped text")
     }
 
     /// The section buttons, from core, including its rule that Pre-Chorus and
     /// Interlude are named choruses rather than directives the parser would drop.
     func sectionPresets() throws -> [SectionPreset] {
-        let json = try callReturningString(sectionPresetsFunction, named: "sectionPresetsJSON", arguments: [])
+        let json = try callReturningString(function(.sectionPresets), named: Export.sectionPresets.rawValue, arguments: [])
         return try decodeJSON([SectionPreset].self, from: json, describedAs: "the section presets")
     }
 
@@ -307,20 +306,20 @@ final class CoreBridge {
     /// which is the signal to hide the chord bar rather than show a wrong one.
     func diatonicChords(for key: String) throws -> [DiatonicChord]? {
         let arguments = try jsValues([.string(key)])
-        let json = try callReturningString(diatonicChordsFunction, named: "diatonicChordsJSON", arguments: arguments)
+        let json = try callReturningString(function(.diatonicChords), named: Export.diatonicChords.rawValue, arguments: arguments)
         return try decodeJSON([DiatonicChord]?.self, from: json, describedAs: "the diatonic chords")
     }
 
     /// Suffixes offered on a chord button — core's CHORD_VARIANTS.
     func chordVariants() throws -> [String] {
-        let json = try callReturningString(chordVariantsFunction, named: "chordVariantsJSON", arguments: [])
+        let json = try callReturningString(function(.chordVariants), named: Export.chordVariants.rawValue, arguments: [])
         return try decodeJSON([String].self, from: json, describedAs: "the chord variants")
     }
 
     /// `"G"` → `"[G]"`, through core, so the token shape lives in one place.
     func chordToken(_ symbol: String) throws -> String {
         let arguments = try jsValues([.string(symbol)])
-        return try callReturningString(chordTokenFunction, named: "chordToken", arguments: arguments)
+        return try callReturningString(function(.chordToken), named: Export.chordToken.rawValue, arguments: arguments)
     }
 
     // MARK: - PDF import
@@ -351,7 +350,7 @@ final class CoreBridge {
             throw CoreBridgeError.unexpectedResult("the extracted text was not valid UTF-8")
         }
         let arguments = try jsValues([.string(json)])
-        let result = try callReturningString(pdfDraftFunction, named: "pdfDraftJSON", arguments: arguments)
+        let result = try callReturningString(function(.pdfDraft), named: Export.pdfDraft.rawValue, arguments: arguments)
         return try decodeJSON(SongDraft.self, from: result, describedAs: "the imported song")
     }
 
