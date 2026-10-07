@@ -31,7 +31,7 @@ export type DraftsState = {
 
 export const DEFAULT_DRAFTS_STATE: DraftsState = { drafts: {} }
 
-const STORAGE_KEY = 'gc.songdrafts.v1'
+const STORAGE_KEY = 'lvm.songdrafts.v1'
 const PERSIST_DELAY_MS = 600
 
 let cache: DraftsState = DEFAULT_DRAFTS_STATE

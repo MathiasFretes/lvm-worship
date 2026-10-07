@@ -1,13 +1,16 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
   "library": {
     "title": "Song Library",
     "addSong": "Add song",
     "filterAndSort": "Filter and sort",
     "searchPlaceholder": "Search songs, artists, themes…",
-    "empty": "Your library is empty.",
-    "noMatchesForQuery": "No songs match “{{query}}”.",
-    "noMatchesFilters": "No songs match your filters.",
+    "empty": "Your LVM song library is ready for its first song.",
+    "noMatchesForQuery": "We couldn’t find a song for “{{query}}”.",
+    "noMatchesFilters": "No songs fit those filters. Try widening your selection.",
     "results_one": "{{count}} result",
     "results_other": "{{count}} results",
     "noKey": "No key"
@@ -26,14 +29,50 @@
     "show_one": "Show {{count}} song",
     "show_other": "Show {{count}} songs"
   },
+  "editor": {
+    "newSong": "New song",
+    "edit": "Edit",
+    "preview": "Preview",
+    "emptyPreview": "Nothing to preview yet.",
+    "invalidPreview": "This ChordPro chart could not be previewed. Check its syntax.",
+    "title": "Title",
+    "titlePlaceholder": "Song title",
+    "titleRequired": "Title is required",
+    "key": "Key",
+    "keyRequired": "Key is required",
+    "artist": "Artist",
+    "artistPlaceholder": "Artist / composer",
+    "tags": "Tags",
+    "tagsPlaceholder": "Type a tag and press return",
+    "tagsRequired": "Add at least one tag",
+    "timeSignature": "Time signature",
+    "tempo": "Tempo",
+    "tempoInvalid": "Tempo must be a whole number between 20 and 400 BPM",
+    "language": "Language",
+    "country": "Country",
+    "countryPlaceholder": "e.g. Paraguay",
+    "youtube": "YouTube ID or URL",
+    "youtubeInvalid": "Enter a valid YouTube ID or URL",
+    "chart": "Chart (ChordPro)",
+    "chartPlaceholder": "{start_of_verse: Verse 1}\n[G]Amazing [D]grace\n{end_of_verse}",
+    "keyHint": "Set a key to enable quick chords.",
+    "publish": "Publish",
+    "submitForReview": "Submit for review",
+    "saveDraft": "Save draft",
+    "working": "Working…",
+    "published": "Song published.",
+    "submitted": "Submitted for review.",
+    "draftSaved": "Draft saved.",
+    "actionFailed": "Could not save song"
+  },
   "viewer": {
     "viewOptions": "View options",
     "exportAndShare": "Export and share",
     "editSong": "Edit song",
     "noChart": "No chart available",
-    "noChartBody": "This song has no ChordPro content yet.",
+    "noChartBody": "A ChordPro chart hasn’t been added to this song yet.",
     "chordsUnavailable": "Chords unavailable",
-    "rawFallback": "Chords unavailable — showing raw text",
+    "rawFallback": "The chord view isn’t available, so we’re showing the original text.",
     "capo": "Capo {{fret}} for {{key}}",
     "couldNotOpenEditorTitle": "Couldn't open the editor"
   },
@@ -57,7 +96,7 @@
     "down": "Transpose down",
     "up": "Transpose up",
     "chooseKey": "Choose key",
-    "chooseKeyHint": "Opens the key selector"
+    "chooseKeyHint": "Open the key picker"
   },
   "accidentals": {
     "sharps": "Sharps",

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import {
   CHROMATIC_KEYS,
   TIME_SIGNATURES,
@@ -29,6 +30,7 @@ import ChordChart from '../components/ChordChart'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSongDraft } from '../lib/useSongDraft'
 import { useUserRole } from '../lib/useUserRole'
+import { actionFailureMessage } from '../lib/errors'
 
 // Mobile song editor at parity with the web editor: metadata fields + a ChordPro
 // body with chord/section insert bars (both driven by the shared core helpers,
@@ -36,10 +38,12 @@ import { useUserRole } from '../lib/useUserRole'
 // actions (Save draft, Submit for review, or Publish for editor+).
 export default function SongEditorScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['song', 'common'])
   const router = useRouter()
-  const { draftId } = useLocalSearchParams<{ draftId: string }>()
+  const params = useLocalSearchParams<{ draftId: string | string[] }>()
+  const draftId = Array.isArray(params.draftId) ? params.draftId[0] : params.draftId
   const { role } = useUserRole()
-  const draft = useSongDraft(draftId as string, role)
+  const draft = useSongDraft(draftId ?? '', role)
   const { form, setField, errors, hasErrors, busy, canPublish } = draft
 
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
@@ -51,12 +55,12 @@ export default function SongEditorScreen() {
     [form.default_key],
   )
 
-  const previewDoc = useMemo<SongDoc | null>(() => {
-    if (mode !== 'preview' || !form.chordpro_content.trim()) return null
+  const preview = useMemo<{ doc: SongDoc | null; invalid: boolean }>(() => {
+    if (mode !== 'preview' || !form.chordpro_content.trim()) return { doc: null, invalid: false }
     try {
-      return parseChordProOrLegacy(form.chordpro_content)
+      return { doc: parseChordProOrLegacy(form.chordpro_content), invalid: false }
     } catch {
-      return null
+      return { doc: null, invalid: true }
     }
   }, [mode, form.chordpro_content])
 
@@ -90,17 +94,20 @@ export default function SongEditorScreen() {
   async function run(action: () => Promise<unknown>, successMsg: string) {
     try {
       await action()
-      Alert.alert('Done', successMsg)
+      Alert.alert(tx('common:done'), successMsg)
       router.back()
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : String(err))
+      Alert.alert(
+        tx('editor.actionFailed'),
+        actionFailureMessage('SongEditor.save', err, (key) => tx(key)),
+      )
     }
   }
 
-  const primaryLabel = canPublish ? 'Publish' : 'Submit for review'
+  const primaryLabel = canPublish ? tx('editor.publish') : tx('editor.submitForReview')
   const primaryAction = canPublish
-    ? () => run(draft.publish, 'Song published.')
-    : () => run(draft.submitForReview, 'Submitted for review.')
+    ? () => run(draft.publish, tx('editor.published'))
+    : () => run(draft.submitForReview, tx('editor.submitted'))
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
@@ -117,10 +124,10 @@ export default function SongEditorScreen() {
         }}
       >
         <Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8}>
-          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Cancel</Text>
+          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>{tx('common:cancel')}</Text>
         </Pressable>
         <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.ink }}>
-          {form.title || 'New Song'}
+          {form.title || tx('editor.newSong')}
         </Text>
         <Pressable
           onPress={() => setMode((m) => (m === 'edit' ? 'preview' : 'edit'))}
@@ -128,17 +135,19 @@ export default function SongEditorScreen() {
           hitSlop={8}
         >
           <Text style={{ fontSize: 16, color: t.colors.textAccent }}>
-            {mode === 'edit' ? 'Preview' : 'Edit'}
+            {mode === 'edit' ? tx('editor.preview') : tx('editor.edit')}
           </Text>
         </Pressable>
       </View>
 
       {mode === 'preview' ? (
         <ScrollView contentContainerStyle={{ padding: t.spacing.lg }}>
-          {previewDoc ? (
-            <ChordChart doc={previewDoc} steps={0} preferFlat={false} />
+          {preview.doc ? (
+            <ChordChart doc={preview.doc} steps={0} preferFlat={false} />
           ) : (
-            <Text style={{ color: t.colors.sec }}>Nothing to preview yet.</Text>
+            <Text style={{ color: preview.invalid ? t.colors.danger : t.colors.sec }}>
+              {tx(preview.invalid ? 'editor.invalidPreview' : 'editor.emptyPreview')}
+            </Text>
           )}
         </ScrollView>
       ) : (
@@ -150,11 +159,11 @@ export default function SongEditorScreen() {
             contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl }}
             keyboardShouldPersistTaps="handled"
           >
-            <Field label="Title" error={errors.title}>
-              <PlainInput value={form.title} onChangeText={(v) => setField('title', v)} placeholder="Song title" />
+            <Field label={tx('editor.title')} error={errors.title && tx('editor.titleRequired')}>
+              <PlainInput value={form.title} onChangeText={(v) => setField('title', v)} placeholder={tx('editor.titlePlaceholder')} />
             </Field>
 
-            <Field label="Key" error={errors.default_key}>
+            <Field label={tx('editor.key')} error={errors.default_key && tx('editor.keyRequired')}>
               <ChipRow
                 options={CHROMATIC_KEYS}
                 selected={form.default_key}
@@ -162,16 +171,16 @@ export default function SongEditorScreen() {
               />
             </Field>
 
-            <Field label="Artist">
-              <PlainInput value={form.artist} onChangeText={(v) => setField('artist', v)} placeholder="Artist / composer" />
+            <Field label={tx('editor.artist')}>
+              <PlainInput value={form.artist} onChangeText={(v) => setField('artist', v)} placeholder={tx('editor.artistPlaceholder')} />
             </Field>
 
-            <Field label="Tags" error={errors.tags}>
+            <Field label={tx('editor.tags')} error={errors.tags && tx('editor.tagsRequired')}>
               <PlainInput
                 value={tagInput}
                 onChangeText={setTagInput}
                 onSubmitEditing={() => addTag(tagInput)}
-                placeholder="Type a tag and press return"
+                placeholder={tx('editor.tagsPlaceholder')}
               />
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                 {form.tags.map((tag) => (
@@ -197,7 +206,7 @@ export default function SongEditorScreen() {
 
             <View style={{ flexDirection: 'row', gap: t.spacing.md }}>
               <View style={{ flex: 1 }}>
-                <Field label="Time signature">
+                <Field label={tx('editor.timeSignature')}>
                   <ChipRow
                     options={TIME_SIGNATURES}
                     selected={form.time_signature}
@@ -206,7 +215,7 @@ export default function SongEditorScreen() {
                 </Field>
               </View>
               <View style={{ width: 110 }}>
-                <Field label="Tempo">
+                <Field label={tx('editor.tempo')} error={errors.tempo && tx('editor.tempoInvalid')}>
                   <PlainInput
                     value={form.tempo ? String(form.tempo) : ''}
                     onChangeText={(v) => setField('tempo', v ? parseInt(v, 10) || '' : '')}
@@ -217,7 +226,7 @@ export default function SongEditorScreen() {
               </View>
             </View>
 
-            <Field label="Language">
+            <Field label={tx('editor.language')}>
               <ChipRow
                 options={LANGUAGE_OPTIONS.filter(Boolean)}
                 selected={form.language}
@@ -225,17 +234,17 @@ export default function SongEditorScreen() {
               />
             </Field>
 
-            <Field label="Country">
-              <PlainInput value={form.country} onChangeText={(v) => setField('country', v)} placeholder="e.g. USA" />
+            <Field label={tx('editor.country')}>
+              <PlainInput value={form.country} onChangeText={(v) => setField('country', v)} placeholder={tx('editor.countryPlaceholder')} />
             </Field>
 
-            <Field label="YouTube ID or URL">
+            <Field label={tx('editor.youtube')} error={errors.youtube_id && tx('editor.youtubeInvalid')}>
               <PlainInput value={form.youtube_id} onChangeText={(v) => setField('youtube_id', v)} placeholder="dQw4w9WgXcQ" />
             </Field>
 
             {/* ChordPro body + insert bars */}
             <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.colors.sec, marginTop: t.spacing.md, marginBottom: t.spacing.sm }}>
-              Chart (ChordPro)
+              {tx('editor.chart')}
             </Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
@@ -256,7 +265,7 @@ export default function SongEditorScreen() {
               </ScrollView>
             ) : (
               <Text style={{ fontSize: 12.5, color: t.colors.sec, marginBottom: 8 }}>
-                Set a key to enable quick chords.
+                {tx('editor.keyHint')}
               </Text>
             )}
 
@@ -266,7 +275,7 @@ export default function SongEditorScreen() {
               onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
               selection={selection}
               multiline
-              placeholder={'{start_of_verse: Verse 1}\n[G]Amazing [D]grace\n{end_of_verse}'}
+              placeholder={tx('editor.chartPlaceholder')}
               placeholderTextColor={t.colors.sec}
               autoCapitalize="none"
               autoCorrect={false}
@@ -286,14 +295,14 @@ export default function SongEditorScreen() {
 
             <View style={{ gap: t.spacing.sm, marginTop: t.spacing.lg }}>
               <Button
-                title={busy ? 'Working…' : primaryLabel}
+                title={busy ? tx('editor.working') : primaryLabel}
                 onPress={primaryAction}
                 disabled={busy || hasErrors}
               />
               <Button
-                title="Save draft"
+                title={tx('editor.saveDraft')}
                 variant="secondary"
-                onPress={() => run(async () => draft.saveDraft(), 'Draft saved.')}
+                onPress={() => run(async () => draft.saveDraft(), tx('editor.draftSaved'))}
                 disabled={busy}
               />
             </View>

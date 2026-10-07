@@ -1,13 +1,17 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "library": {
     "title": "찬양곡 라이브러리",
     "addSong": "찬양곡 추가",
     "filterAndSort": "필터 및 정렬",
     "searchPlaceholder": "찬양곡, 아티스트, 주제 검색…",
-    "empty": "라이브러리가 비어 있습니다.",
-    "noMatchesForQuery": "“{{query}}”와 일치하는 찬양곡이 없습니다.",
-    "noMatchesFilters": "필터와 일치하는 찬양곡이 없습니다.",
+    "empty": "LVM 찬양 목록에 첫 곡을 담아 보세요.",
+    "noMatchesForQuery": "“{{query}}”에 맞는 찬양을 찾지 못했어요.",
+    "noMatchesFilters": "선택한 필터에 맞는 찬양이 없어요. 조건을 조금 넓혀 보세요.",
     "results_one": "결과 {{count}}개",
     "results_other": "결과 {{count}}개",
     "noKey": "키 없음"
@@ -26,14 +30,50 @@
     "show_one": "찬양곡 {{count}}곡 보기",
     "show_other": "찬양곡 {{count}}곡 보기"
   },
+  "editor": {
+    "newSong": "새 찬양곡",
+    "edit": "편집",
+    "preview": "미리보기",
+    "emptyPreview": "미리 볼 내용이 없습니다.",
+    "invalidPreview": "이 ChordPro 악보를 미리 볼 수 없습니다. 구문을 확인하세요.",
+    "title": "제목",
+    "titlePlaceholder": "찬양곡 제목",
+    "titleRequired": "제목을 입력하세요",
+    "key": "조성",
+    "keyRequired": "조성을 선택하세요",
+    "artist": "아티스트",
+    "artistPlaceholder": "아티스트 / 작곡가",
+    "tags": "태그",
+    "tagsPlaceholder": "태그를 입력하고 Enter를 누르세요",
+    "tagsRequired": "태그를 하나 이상 추가하세요",
+    "timeSignature": "박자표",
+    "tempo": "템포",
+    "tempoInvalid": "템포는 20~400 BPM 사이의 정수여야 합니다",
+    "language": "언어",
+    "country": "국가",
+    "countryPlaceholder": "예: 파라과이",
+    "youtube": "YouTube ID 또는 URL",
+    "youtubeInvalid": "올바른 YouTube ID 또는 URL을 입력하세요",
+    "chart": "악보 (ChordPro)",
+    "chartPlaceholder": "{start_of_verse: 1절}\n[G]찬양의 [D]노래\n{end_of_verse}",
+    "keyHint": "빠른 코드 입력을 사용하려면 조성을 선택하세요.",
+    "publish": "게시",
+    "submitForReview": "검토 요청",
+    "saveDraft": "초안 저장",
+    "working": "저장 중…",
+    "published": "찬양곡이 게시되었습니다.",
+    "submitted": "검토를 요청했습니다.",
+    "draftSaved": "초안이 저장되었습니다.",
+    "actionFailed": "찬양곡을 저장할 수 없습니다"
+  },
   "viewer": {
     "viewOptions": "보기 옵션",
     "exportAndShare": "내보내기 및 공유",
     "editSong": "찬양곡 편집",
     "noChart": "악보 없음",
-    "noChartBody": "이 찬양곡에는 아직 ChordPro 콘텐츠가 없습니다.",
+    "noChartBody": "이 찬양에는 아직 ChordPro 악보가 등록되지 않았어요.",
     "chordsUnavailable": "코드를 사용할 수 없음",
-    "rawFallback": "코드를 사용할 수 없음 — 원본 텍스트 표시 중",
+    "rawFallback": "코드 보기를 사용할 수 없어 원문을 그대로 보여 드립니다.",
     "capo": "카포 {{fret}}프렛, {{key}}",
     "couldNotOpenEditorTitle": "편집기를 열 수 없습니다"
   },
@@ -57,7 +97,7 @@
     "down": "조 내림",
     "up": "조 올림",
     "chooseKey": "키 선택",
-    "chooseKeyHint": "키 선택기를 엽니다"
+    "chooseKeyHint": "키 선택기 열기"
   },
   "accidentals": {
     "sharps": "샵",

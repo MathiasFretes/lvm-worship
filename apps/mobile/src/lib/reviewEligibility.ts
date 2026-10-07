@@ -27,6 +27,7 @@ export const MIN_OPEN_DAYS = 3
 export const MIN_DAYS_BETWEEN_REQUESTS = 120
 /** Hard lifetime ceiling. Once spent, this install is never asked again. */
 export const MAX_LIFETIME_REQUESTS = 3
+const DAY_MS = 86_400_000
 
 // Route patterns, as useSegments() reports them (joined by '/'). Matching is on
 // the PATTERN, so dynamic segments stay literal and no per-song logic exists.
@@ -96,8 +97,9 @@ export type EligibilityGate =
 
 /** Whether a route is one whose dwell can ever earn a request. */
 function isViewerRoute(routeKey: string): boolean {
-  return routeKey === SONG_VIEWER_ROUTE || routeKey === SET_VIEWER_ROUTE
+  return VIEWER_ROUTES.has(routeKey)
 }
+const VIEWER_ROUTES = new Set([SONG_VIEWER_ROUTE, SET_VIEWER_ROUTE])
 
 /** Whether a route was showing the M'Cheyne reader. */
 function isReaderRoute(routeKey: string, destination: 'landing' | 'reader'): boolean {
@@ -119,7 +121,7 @@ export function daysBetweenDayKeys(fromKey: string | null, toKey: string | null)
   const from = parseDayKey(fromKey)
   const to = parseDayKey(toKey)
   if (from === null || to === null) return null
-  return Math.floor((to - from) / 86_400_000)
+  return Math.floor((to - from) / DAY_MS)
 }
 
 /**
@@ -133,7 +135,7 @@ function describe(input: EligibilityInput, trigger: ReviewTrigger | null): strin
   const daysSinceRequest =
     input.state.lastRequestAt === null
       ? null
-      : Math.floor((input.now - input.state.lastRequestAt) / 86_400_000)
+      : Math.floor((input.now - input.state.lastRequestAt) / DAY_MS)
   return [
     `trigger=${trigger ?? 'none'}`,
     `route=${input.routeKey}`,
@@ -243,7 +245,7 @@ export function evaluateReviewEligibility(input: EligibilityInput): EligibilityD
     }
   }
   if (input.state.lastRequestAt !== null) {
-    const days = Math.floor((input.now - input.state.lastRequestAt) / 86_400_000)
+    const days = Math.floor((input.now - input.state.lastRequestAt) / DAY_MS)
     if (days < MIN_DAYS_BETWEEN_REQUESTS) {
       return {
         eligible: false,

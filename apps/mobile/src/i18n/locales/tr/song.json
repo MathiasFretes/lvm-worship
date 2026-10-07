@@ -1,13 +1,17 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "library": {
     "title": "İlahi Kütüphanesi",
     "addSong": "İlahi ekle",
     "filterAndSort": "Filtrele ve sırala",
     "searchPlaceholder": "İlahi, sanatçı, tema ara…",
-    "empty": "Kütüphaneniz boş.",
-    "noMatchesForQuery": "“{{query}}” ile eşleşen ilahi yok.",
-    "noMatchesFilters": "Filtrelerinizle eşleşen ilahi yok.",
+    "empty": "LVM ilahi kitaplığınız ilk ilahisini bekliyor.",
+    "noMatchesForQuery": "“{{query}}” için bir ilahi bulamadık.",
+    "noMatchesFilters": "Bu filtrelere uyan ilahi yok. Seçiminizi biraz genişletin.",
     "results_one": "{{count}} sonuç",
     "results_other": "{{count}} sonuç",
     "noKey": "Ton yok"
@@ -26,14 +30,50 @@
     "show_one": "{{count}} ilahiyi göster",
     "show_other": "{{count}} ilahiyi göster"
   },
+  "editor": {
+    "newSong": "Yeni ilahi",
+    "edit": "Düzenle",
+    "preview": "Önizleme",
+    "emptyPreview": "Henüz önizlenecek içerik yok.",
+    "invalidPreview": "Bu ChordPro çizelgesi önizlenemedi. Sözdizimini kontrol edin.",
+    "title": "Başlık",
+    "titlePlaceholder": "İlahi başlığı",
+    "titleRequired": "Başlık gerekli",
+    "key": "Ton",
+    "keyRequired": "Ton gerekli",
+    "artist": "Sanatçı",
+    "artistPlaceholder": "Sanatçı / besteci",
+    "tags": "Etiketler",
+    "tagsPlaceholder": "Etiket yazıp Enter'a basın",
+    "tagsRequired": "En az bir etiket ekleyin",
+    "timeSignature": "Ölçü",
+    "tempo": "Tempo",
+    "tempoInvalid": "Tempo 20 ile 400 BPM arasında bir tam sayı olmalıdır",
+    "language": "Dil",
+    "country": "Ülke",
+    "countryPlaceholder": "ör. Paraguay",
+    "youtube": "YouTube kimliği veya URL",
+    "youtubeInvalid": "Geçerli bir YouTube kimliği veya URL girin",
+    "chart": "Akor çizelgesi (ChordPro)",
+    "chartPlaceholder": "{start_of_verse: 1. kıta}\n[G]Övgü [D]ilahisi\n{end_of_verse}",
+    "keyHint": "Hızlı akorlar için bir ton seçin.",
+    "publish": "Yayınla",
+    "submitForReview": "İncelemeye gönder",
+    "saveDraft": "Taslağı kaydet",
+    "working": "Kaydediliyor…",
+    "published": "İlahi yayınlandı.",
+    "submitted": "İncelemeye gönderildi.",
+    "draftSaved": "Taslak kaydedildi.",
+    "actionFailed": "İlahi kaydedilemedi"
+  },
   "viewer": {
     "viewOptions": "Görüntüleme seçenekleri",
     "exportAndShare": "Dışa aktar ve paylaş",
     "editSong": "İlahiyi düzenle",
     "noChart": "Nota yok",
-    "noChartBody": "Bu ilahinin henüz ChordPro içeriği yok.",
+    "noChartBody": "Bu ilahiye henüz bir ChordPro akor şeması eklenmemiş.",
     "chordsUnavailable": "Akorlar kullanılamıyor",
-    "rawFallback": "Akorlar kullanılamıyor — ham metin gösteriliyor",
+    "rawFallback": "Akor görünümü kullanılamıyor; özgün metni gösteriyoruz.",
     "capo": "{{key}} için kapo: {{fret}}",
     "couldNotOpenEditorTitle": "Düzenleyici açılamadı"
   },
@@ -57,7 +97,7 @@
     "down": "Tonu düşür",
     "up": "Tonu yükselt",
     "chooseKey": "Ton seç",
-    "chooseKeyHint": "Ton seçiciyi açar"
+    "chooseKeyHint": "Ton seçiciyi aç"
   },
   "accidentals": {
     "sharps": "Diyezler",
