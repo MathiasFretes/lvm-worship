@@ -112,6 +112,17 @@ export default function SetlistWorkspacePage() {
   const { id: routeId, songIds: routeSongIds, code: routeCode } = useParams()
   const [searchParams] = useSearchParams()
   const location = useLocation()
+  const serviceReturnTo = useMemo(() => {
+    const candidate = searchParams.get('returnTo')
+    if (!candidate) return ''
+    try {
+      const url = new URL(candidate)
+      if (!['127.0.0.1', 'localhost'].includes(url.hostname) || !['http:', 'https:'].includes(url.protocol)) return ''
+      return url.toString()
+    } catch {
+      return ''
+    }
+  }, [searchParams])
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   const chordStyle = useChordStyle()
@@ -504,6 +515,7 @@ export default function SetlistWorkspacePage() {
     try {
       const plan = buildWorshipPlanFromSetlist({ context: worshipContext, items, songs })
       downloadJson(plan, `${plan.serviceId}-worship-plan.json`)
+      showToast(t('setlist.planDownloaded'))
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'No se pudo exportar el repertorio')
     }
@@ -549,6 +561,19 @@ export default function SetlistWorkspacePage() {
 
   const centre = (
     <div className="lvm-set-main">
+      {!routeId && worshipContext && (
+        <div className="lvm-service-handoff" role="status">
+          <div>
+            <strong>{t('setlist.preparingForService', { name: worshipContext.title })}</strong>
+            <span>{t('setlist.finishForService')}</span>
+          </div>
+          {serviceReturnTo && (
+            <a href={serviceReturnTo} rel="noopener noreferrer">
+              {t('setlist.returnToService')}
+            </a>
+          )}
+        </div>
+      )}
       {controller.loadFailed ? (
         <div className="lvm-set-notice">
           <h1 className="lvm-set-heading">{t('setlist.title')}</h1>
