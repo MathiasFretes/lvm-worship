@@ -80,7 +80,7 @@ export function clearDraft() {
 
 /** @returns {import('../utils/setlists/entries').SetlistController} */
 export function useDraftSetlist() {
-  const { songs: liveSongs, loading: songsLoading } = useSongs()
+  const { songs: liveSongs, loading: songsLoading, error: songsError, retry: retrySongs } = useSongs()
 
   const initial = useRef(null)
   if (initial.current === null) initial.current = readDraft() || { name: '', serviceDate: null, entries: [] }
@@ -120,6 +120,17 @@ export function useDraftSetlist() {
         },
       ]
     })
+  }, [])
+
+  const addSong = useCallback((song) => {
+    setEntries((prev) => [...prev, {
+      entryKey: makeEntryKey(song.id),
+      songId: song.id,
+      toKey: null,
+      sectionOrderText: '',
+      song: entrySongFromCatalog(song),
+      sourceSong: song,
+    }])
   }, [])
 
   const addVerse = useCallback((verseId) => {
@@ -193,6 +204,8 @@ export function useDraftSetlist() {
     items,
     songs,
     songsLoading,
+    songsError,
+    retrySongs,
     catalog,
     updatedAt: null,
     loading: false,
@@ -204,6 +217,7 @@ export function useDraftSetlist() {
     setName: setNameState,
     setDate: setServiceDate,
     toggleSong,
+    addSong,
     addVerse,
     removeEntry,
     duplicateEntry,

@@ -15,7 +15,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 const SONGS = [
   { dbId: 'uuid-abba', id: 'abba', songId: 'abba', title: 'Abba', authors: ['A. Writer'], originalKey: 'D', tempo: 128, tags: [], language: 'en', filename: 'abba.chordpro', chordpro_content: '' },
   { dbId: 'uuid-grace', id: 'grace', songId: 'grace', title: 'Amazing Grace', authors: ['John Newton'], originalKey: 'G', tempo: 72, tags: [], language: 'en', filename: 'amazing_grace.chordpro', chordpro_content: '' },
-  { dbId: 'uuid-dox', id: 'doxology', songId: 'doxology', title: 'Doxology', authors: ['Thomas Ken'], originalKey: 'G', tempo: 80, tags: [], language: 'en', filename: 'doxology.chordpro', chordpro_content: '' },
+  { dbId: 'uuid-dox', id: 'doxology', songId: 'doxology', title: 'Doxology', authors: ['Thomas Ken'], originalKey: 'G', tempo: 80, tags: [], language: 'en', filename: 'doxology.chordpro', chordpro_content: '{start_of_verse: Verse 1}\n[G]Praise God\n{end_of_verse}' },
 ]
 
 const SONG_BY_UUID = new Map(SONGS.map((s) => [s.dbId, s]))
@@ -278,6 +278,39 @@ describe('setlist workspace, signed in', () => {
       { setlist_id: 'set-1', position: 0, key_override: null, notes: null, song_id: 'uuid-abba' },
       { setlist_id: 'set-1', position: 1, key_override: null, notes: null, song_id: 'uuid-dox' },
     ])
+  })
+
+  it('keeps repeated songs as separate entries and removes only the chosen appearance', async () => {
+    db = newDb(SEEDED)
+    const user = renderAt('/setlists/set-1')
+    await waitFor(() => expect(screen.getByRole('heading', { name: /Sunday Morning/ })).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: /^Doxology/ }))
+    await user.click(screen.getByRole('button', { name: /^Doxology/ }))
+    await settleSave()
+    await waitFor(() => expect(lastEntryInsert()?.map(row => row.song_id)).toEqual(['uuid-abba', 'uuid-dox', 'uuid-dox']))
+
+    await user.click(screen.getAllByRole('button', { name: /Remove — Doxology/ })[0])
+    await settleSave()
+    await waitFor(() => expect(lastEntryInsert()?.map(row => row.song_id)).toEqual(['uuid-abba', 'uuid-dox']))
+  })
+
+  it('exports the draft order to WorshipPlan for the imported Service context', async () => {
+    localStorage.setItem('lvm.worship.context.v1', JSON.stringify({ schemaVersion: '0.1', serviceId: 'culto-1', title: 'Culto', startsAt: '2026-10-04T19:00:00Z', setlistId: 'set-1', name: 'Adoración' }))
+    const downloads = []
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => { downloads.push(blob); return 'blob:plan' })
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const user = renderAt('/setlist')
+
+    await user.click(screen.getByRole('button', { name: /^Doxology/ }))
+    await user.click(screen.getByRole('button', { name: /^Doxology/ }))
+    await user.click(screen.getByRole('button', { name: 'Save for Platform' }))
+
+    expect(downloads).toHaveLength(1)
+    const plan = JSON.parse(await downloads[0].text())
+    expect(plan).toMatchObject({ schemaVersion: '0.1', serviceId: 'culto-1', songs: [{ songId: 'doxology' }, { songId: 'doxology' }] })
+    expect(click).toHaveBeenCalled()
   })
 
   it('renumbers positions on reorder', async () => {

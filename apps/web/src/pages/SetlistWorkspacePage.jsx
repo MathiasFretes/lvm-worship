@@ -28,10 +28,10 @@ import { Button, Toolbar } from '../components/ui/layout-kit'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import { ListIcon, MediaIcon, PlusIcon, SearchIcon } from '../components/Icons'
-import SetlistsRail from '../features/setlist/SetlistsRail'
-import LibraryRail from '../features/setlist/LibraryRail'
-import SetHeader from '../features/setlist/SetHeader'
-import SetTable from '../features/setlist/SetTable'
+import LvmSetlistsRail from '../features/setlist/LvmSetlistsRail'
+import LvmSongPicker from '../features/setlist/LvmSongPicker'
+import LvmSetlistEditor from '../features/setlist/LvmSetlistEditor'
+import '../features/setlist/lvm-setlist.css'
 import SetActions from '../features/setlist/SetActions'
 import AddVerseDialog from '../features/setlist/AddVerseDialog'
 import PruneSetlistsModal from '../features/setlist/PruneSetlistsModal'
@@ -118,7 +118,7 @@ export default function SetlistWorkspacePage() {
   const isMobile = useIsMobile()
 
   const controller = useController(routeId)
-  const { items, catalog, songs, songsLoading } = controller
+  const { items, catalog, songs, songsLoading, songsError, retrySongs } = controller
   const sectionLabels = useMemo(() => {
     const labels = {}
     for (const song of songs) {
@@ -575,10 +575,11 @@ export default function SetlistWorkspacePage() {
         </div>
       ) : (
         <>
-          <SetHeader
+          <LvmSetlistEditor
             name={controller.name}
             items={items}
-            updatedAt={controller.updatedAt}
+            selectedKey={selectedKey}
+            onSelect={setSelectedKey}
             saving={controller.saving}
             saveFailed={controller.saveFailed}
             persisted={!!routeId}
@@ -587,40 +588,22 @@ export default function SetlistWorkspacePage() {
               controller.setName(next)
               if (routeId) lists.rename(routeId, next)
             }}
+            onMoveBy={moveBy}
+            onRemove={controller.removeEntry}
+            onDuplicate={controller.duplicateEntry}
+            onKeyChange={controller.setKeyFor}
+            onArrangementChange={!routeId ? controller.setSectionOrderFor : undefined}
+            sectionLabels={sectionLabels}
+            onAddVerse={() => setVerseOpen(true)}
+            onShortcuts={() => setShortcutsOpen(true)}
           />
-          <div className="gc-set-scroll">
-            <SetTable
-              items={items}
-              selectedKey={selectedKey}
-              onSelect={setSelectedKey}
-              onMove={controller.moveEntry}
-              onMoveBy={moveBy}
-              onRemove={controller.removeEntry}
-              onDuplicate={controller.duplicateEntry}
-              onKeyChange={controller.setKeyFor}
-              onArrangementChange={!routeId ? controller.setSectionOrderFor : undefined}
-              sectionLabels={sectionLabels}
-            />
-            <div className="gc-set-footer-actions">
-              <Button size="sm" variant="secondary" onClick={() => setVerseOpen(true)}>
-                {t('setlist.addVerse')}
-              </Button>
-              <button
-                type="button"
-                className="gc-linkbtn"
-                onClick={() => setShortcutsOpen(true)}
-              >
-                {t('setlist.shortcutsHint')}
-              </button>
-            </div>
-          </div>
         </>
       )}
     </div>
   )
 
   const setlistsRail = (
-    <SetlistsRail
+    <LvmSetlistsRail
       setlists={lists.setlists}
       loading={lists.loading}
       error={lists.error}
@@ -667,9 +650,11 @@ export default function SetlistWorkspacePage() {
   )
 
   const libraryRail = (
-    <LibraryRail
+    <LvmSongPicker
       catalog={catalog}
       songsLoading={songsLoading}
+      songsError={songsError}
+      onRetrySongs={retrySongs}
       query={query}
       onQuery={setQuery}
       communityOnly={communityOnly}
@@ -680,7 +665,7 @@ export default function SetlistWorkspacePage() {
         writeSongLanguagePreference(code)
       }}
       selectedIds={selectedIds}
-      onToggle={controller.toggleSong}
+      onAdd={controller.addSong}
       searchRef={searchRef}
     />
   )

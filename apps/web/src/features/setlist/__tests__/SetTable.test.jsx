@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SetTable from '../SetTable'
+import LvmSetlistEditor from '../LvmSetlistEditor'
 
 function item(entryKey, title, over = {}) {
   return {
@@ -32,22 +32,20 @@ function renderTable(props = {}) {
     onKeyChange: vi.fn(),
   }
   const items = props.items || [item('a', 'Abba'), item('b', 'Cornerstone')]
-  render(<SetTable items={items} selectedKey={null} {...handlers} {...props} />)
+  render(<LvmSetlistEditor name="Sunday" items={items} selectedKey={null} persisted onRename={vi.fn()} onAddVerse={vi.fn()} onShortcuts={vi.fn()} {...handlers} {...props} />)
   return { ...handlers, items }
 }
 
-describe('SetTable', () => {
-  it('shows artist, key and tempo in their own columns', () => {
+describe('LVM setlist editor', () => {
+  it('shows songs, artist and key controls', () => {
     renderTable()
-    expect(screen.getByRole('columnheader', { name: 'Artist' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'BPM' })).toBeInTheDocument()
     expect(screen.getAllByText('A. Writer')).toHaveLength(2)
-    expect(screen.getAllByText('72')).toHaveLength(2)
+    expect(screen.getAllByRole('combobox')).toHaveLength(2)
   })
 
   it('numbers rows by position', () => {
     renderTable()
-    const rows = screen.getAllByRole('row').slice(1) // drop the header
+    const rows = screen.getAllByRole('listitem')
     expect(rows[0]).toHaveTextContent('1')
     expect(rows[1]).toHaveTextContent('2')
   })
@@ -104,6 +102,18 @@ describe('SetTable', () => {
   it('points at the library when the set is empty', () => {
     renderTable({ items: [] })
     expect(screen.getByText(/No songs yet/i)).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument()
+  })
+
+  it('leaves the set name unchanged when renaming is canceled', async () => {
+    const user = userEvent.setup()
+    const onRename = vi.fn()
+    renderTable({ onRename })
+    await user.click(screen.getByRole('button', { name: /Sunday/ }))
+    const input = screen.getByRole('textbox', { name: 'Name' })
+    await user.clear(input)
+    await user.type(input, 'Discard me{Escape}')
+    expect(onRename).not.toHaveBeenCalled()
+    expect(screen.getByRole('heading', { name: /Sunday/ })).toBeInTheDocument()
   })
 })
