@@ -22,7 +22,7 @@ El trabajo de C2 reemplaza la orquestación de las pantallas principales, **no**
 - `expo export --platform android` ✅
 - `expo export --platform ios` ✅
 - Web: 436 tests, lint y build Vite ✅ (por el nuevo export de core)
-- Navegación táctil, gestos y layout en dispositivo: **pendiente**. El teléfono `ELP_NX9` aparece autorizado en `adb devices`, pero solo tiene Expo Go; no hay dev client de LVM Worship instalado. En esta PC faltan los Android build-tools y el icono configurado en `app.json`, así que no se generó APK de desarrollo. Un bundle correcto no demuestra ese comportamiento.
+- Navegación táctil, gestos y layout en dispositivo: **pendiente**. El teléfono `ELP_NX9` aparece autorizado en `adb devices`, pero solo tiene Expo Go; no hay dev client de LVM Worship instalado. Se instalaron Android SDK Platform 36 y Build Tools 36.0.0; `expo prebuild --platform android --no-install` generó el proyecto nativo ignorado por Git. `:app:assembleDebug` se detuvo antes de compilar la app porque Gradle 9.0.0 no pudo mover un directorio temporal a `C:\Users\mathi\.gradle\caches\9.0.0\transforms\...`; el fallo se repitió con un solo worker. No se generó ni instaló un APK. El icono configurado en `app.json` también sigue ausente. Un bundle correcto no demuestra el comportamiento táctil.
 
 ## Deuda explícita
 
