@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "home": "Inicio",
   "songs": "Canciones",
   "setlists": "Repertorios",
-  "dailyWord": "Palabra del día",
+  "dailyWord": "Palabra de hoy",
   "utilities": "Herramientas"
 }

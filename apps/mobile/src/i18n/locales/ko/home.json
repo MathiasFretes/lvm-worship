@@ -1,11 +1,15 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "greeting": {
     "morning": "좋은 아침이에요",
     "afternoon": "좋은 오후예요",
     "evening": "좋은 저녁이에요",
-    "hello": "{{greeting}}, {{name}}",
-    "friend": "친구"
+    "hello": "{{name}}님, {{greeting}}",
+    "friend": "예배자"
   },
   "subGreetings": [
     "모든 것이 그대로 있어요.",
@@ -24,31 +28,31 @@
     "그분의 은혜로 충분합니다.",
     "항상 기뻐하세요."
   ],
-  "profileAndSettings": "프로필 및 설정",
+  "profileAndSettings": "내 프로필과 설정",
   "lastSet": {
     "label": "최근 셋리스트",
     "meta_one": "{{count}}곡 · 약 {{min}}분",
     "meta_other": "{{count}}곡 · 약 {{min}}분",
     "keys": "키 {{keys}}",
-    "resume": "이어하기",
+    "resume": "연습 이어가기",
     "editSet": "셋리스트 편집"
   },
   "continueCard": {
-    "label": "중단한 곳부터 이어보기"
+    "label": "멈춘 곳에서 이어가기"
   },
   "starredCard": {
     "label": "즐겨찾기 찬양곡",
-    "empty": "즐겨찾기한 찬양곡이 여기에 표시됩니다."
+    "empty": "자주 부를 찬양에 별표를 달아 두세요."
   },
   "dailyWordCard": {
     "label": "오늘의 말씀",
-    "empty": "오늘의 말씀을 열어보세요.",
+    "empty": "오늘 말씀을 위한 시간을 내어 보세요.",
     "open": "오늘의 말씀 열기",
     "streak_one": "{{count}}일 연속",
     "streak_other": "{{count}}일 연속"
   },
   "recentSongsCard": {
     "label": "최근 찬양곡",
-    "empty": "열어본 찬양곡이 여기에 표시됩니다."
+    "empty": "열어 본 찬양이 여기에 모입니다."
   }
 }

@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "title": "도구",
   "sectionTools": "도구",
-  "pickTool": "시작하려면 도구를 선택하세요",
+  "pickTool": "연습이나 예배에 필요한 도구를 골라 보세요",
   "tools": {
     "tuner": "기타 튜너",
     "metronome": "탭 템포 / 메트로놈",
@@ -13,7 +17,7 @@
   },
   "tuner": {
     "title": "기타 튜너",
-    "permissionDenied": "튜너가 기타 소리를 들으려면 마이크 접근 권한이 필요합니다. 오디오는 이 기기에서만 분석되며, 절대 녹음되거나 어디에도 전송되지 않습니다.",
+    "permissionDenied": "LVM이 기타 소리를 들을 수 있도록 마이크 접근을 허용해 주세요. 소리는 이 기기에서만 분석되며 녹음하거나 전송하지 않습니다.",
     "enableInSettings": "설정에서 사용 설정",
     "inTune": "정확함",
     "cents": "{{sign}}{{cents}}¢",
@@ -30,7 +34,7 @@
     "slower": "느리게",
     "faster": "빠르게",
     "tapTempo": "탭 템포",
-    "tapTempoHint": "메트로놈 템포를 설정하려면 곡에 맞춰 탭하세요",
+    "tapTempoHint": "곡의 박자에 맞춰 두드리면 LVM이 템포를 맞춥니다",
     "metronomeStopped": "메트로놈 정지됨",
     "beatOf": "{{total}}박 중 {{current}}박",
     "accentDownbeat": "첫 박 강조",
@@ -51,7 +55,7 @@
     "addSongs": "노래 추가",
     "selectedCount_one": "{{count}}곡 선택됨",
     "selectedCount_other": "{{count}}곡 선택됨",
-    "noneSelected": "아직 선택된 노래가 없습니다. 노래를 추가해 노래책을 만드세요.",
+    "noneSelected": "찬양을 골라 팀을 위한 송북을 만들어 보세요.",
     "removeSong": "{{title}} 제거",
     "customizeExport": "맞춤 설정 및 내보내기",
     "optionsTitle": "노래책 옵션",
@@ -65,7 +69,7 @@
     "addCover": "표지 이미지 추가",
     "replaceCover": "교체",
     "removeCover": "표지 제거",
-    "coverHint": "선택 사항입니다. 텍스트 표지 페이지를 대체합니다.",
+    "coverHint": "선택 사항입니다. 이미지를 넣으면 기본 제목 표지를 대신합니다.",
     "coverTooLargeTitle": "이미지가 너무 큼",
     "coverTooLarge": "더 작은 표지 이미지를 선택하세요 (약 2MB 미만).",
     "pickCoverErrorTitle": "사진을 열 수 없음",
@@ -78,8 +82,8 @@
     "playIn": "연주할 코드 조",
     "result": "카포 {{fret}}",
     "resultNone": "카포 없음",
-    "hint": "{{key}} 조로 소리 내려면 {{shape}} 코드로 연주하세요.",
-    "hintNone": "{{key}} 조로 연주 — 카포가 필요 없습니다."
+    "hint": "{{shape}} 운지로 연주하면 {{key}} 키로 들립니다.",
+    "hintNone": "{{key}} 키 그대로 연주하세요. 카포가 필요하지 않습니다."
   },
   "keyRef": {
     "title": "조성 레퍼런스",
@@ -89,7 +93,7 @@
     "nashville": "나쉬빌",
     "setGeneral": "일반",
     "setPrayer": "기도",
-    "selectHint": "이 진행을 아크에 표시합니다",
+    "selectHint": "이 진행을 코드 휠에 표시하기",
     "showNote": "연주 노트",
     "replay": "시퀀스 다시 재생",
     "a11yPosition": "{{chord}}, {{number}}번",

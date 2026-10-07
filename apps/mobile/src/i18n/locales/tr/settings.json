@@ -75,9 +75,7 @@
   "about": {
     "title": "Hakkında",
     "version": "Sürüm {{version}}",
-    "sectionLegal": "YASAL",
-    "privacyPolicy": "Gizlilik Politikası",
-    "termsOfUse": "Kullanım Koşulları",
+    "sectionSupport": "DESTEK",
     "acknowledgements": "Teşekkürler ve Lisanslar",
     "contact": "İletişim"
   }

@@ -75,9 +75,7 @@
   "about": {
     "title": "About",
     "version": "Version {{version}}",
-    "sectionLegal": "LEGAL",
-    "privacyPolicy": "Privacy Policy",
-    "termsOfUse": "Terms of Use",
+    "sectionSupport": "SUPPORT",
     "acknowledgements": "Acknowledgements & Licenses",
     "contact": "Contact"
   }

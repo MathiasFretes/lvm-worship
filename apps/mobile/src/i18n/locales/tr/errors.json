@@ -1,15 +1,19 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "couldntLoadSong": "İlahi yüklenemedi",
-  "songNotFound": "Bu ilahi bulunamadı.",
-  "tryAgain": "Bir şeyler ters gitti. Tekrar deneyin.",
-  "saveFailed": "Son değişiklikleriniz kaydedilmedi. Bağlantınızı kontrol edip tekrar deneyin.",
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
+  "couldntLoadSong": "Bu ilahiyi açamadık",
+  "songNotFound": "Bu ilahiyi LVM kitaplığında bulamadık.",
+  "tryAgain": "İşlem tamamlanmadı. Lütfen yeniden deneyin.",
+  "saveFailed": "Son değişiklikleriniz henüz kaydedilmedi. Bağlantınızı kontrol edip yeniden deneyin.",
   "load": {
     "songs": "İlahiler yüklenemiyor",
     "setlists": "Set listeleri yüklenemiyor",
     "starred": "Yıldızlı ilahiler yüklenemiyor",
     "lastSet": "Son set yüklenemiyor",
     "reflection": "Düşünceniz yüklenemiyor",
-    "hint": "Bağlantınızı kontrol edip tekrar deneyin."
+    "hint": "Bağlantınızı kontrol edip tekrar yükleyin."
   }
 }

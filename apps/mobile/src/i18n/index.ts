@@ -21,14 +21,23 @@ export function deviceLanguageTags(): string[] {
   }
 }
 
+function refreshLvmResourceBundles(): void {
+  for (const [locale, namespaces] of Object.entries(RESOURCES)) {
+    for (const [namespace, messages] of Object.entries(namespaces)) {
+      i18n.addResourceBundle(locale, namespace, messages, true, true)
+    }
+  }
+}
+
 // Initialized at import with the device-resolved language so first render is
 // already localized; the stored Settings pick (hydrated during the splash
 // hold) is applied via applyLanguagePreference before the splash lifts, so a
 // differing stored choice never flashes. Config mirrors apps/web/src/i18n.
 if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
+  const initialLanguage = resolveLanguage(null, deviceLanguageTags(), SUPPORTED_LOCALES)
+  void i18n.use(initReactI18next).init({
     resources: RESOURCES,
-    lng: resolveLanguage(null, deviceLanguageTags(), SUPPORTED_LOCALES),
+    lng: initialLanguage,
     fallbackLng: DEFAULT_LOCALE,
     supportedLngs: SUPPORTED_LOCALES,
     ns: I18N_NAMESPACES,
@@ -45,11 +54,7 @@ if (!i18n.isInitialized) {
   // key added/changed in a locale file shows as its raw key until a full app
   // restart. addResourceBundle (deep-merge, overwrite) patches every
   // locale/namespace into the running instance so edits take effect on reload.
-  for (const locale of Object.keys(RESOURCES)) {
-    for (const ns of Object.keys(RESOURCES[locale])) {
-      i18n.addResourceBundle(locale, ns, RESOURCES[locale][ns], true, true)
-    }
-  }
+  refreshLvmResourceBundles()
 }
 
 /**

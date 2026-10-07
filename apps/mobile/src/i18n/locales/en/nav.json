@@ -1,8 +1,11 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
   "home": "Home",
   "songs": "Songs",
   "setlists": "Setlists",
-  "dailyWord": "Daily Word",
-  "utilities": "Utilities"
+  "dailyWord": "Today’s Word",
+  "utilities": "Tools"
 }

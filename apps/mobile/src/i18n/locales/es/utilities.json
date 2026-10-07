@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "title": "Herramientas",
   "sectionTools": "HERRAMIENTAS",
-  "pickTool": "Elige una herramienta para empezar",
+  "pickTool": "Elige lo que tu equipo necesita para el ensayo o la adoración",
   "tools": {
     "tuner": "Afinador de guitarra",
     "metronome": "Marca tempo / Metrónomo",
@@ -13,7 +17,7 @@
   },
   "tuner": {
     "title": "Afinador de guitarra",
-    "permissionDenied": "El afinador necesita acceso al micrófono para escuchar tu guitarra. El audio se analiza solo en este dispositivo, nunca se graba ni se envía a ningún lugar.",
+    "permissionDenied": "Permite el acceso al micrófono para que LVM escuche tu guitarra. El sonido se analiza solo en este dispositivo: no se graba ni se envía.",
     "enableInSettings": "Activar en Ajustes",
     "inTune": "Afinado",
     "cents": "{{sign}}{{cents}}¢",
@@ -30,7 +34,7 @@
     "slower": "Más lento",
     "faster": "Más rápido",
     "tapTempo": "Marca tempo",
-    "tapTempoHint": "Toca al ritmo de la canción para fijar el tempo del metrónomo",
+    "tapTempoHint": "Marca el pulso de la canción y LVM ajustará el tempo",
     "metronomeStopped": "Metrónomo detenido",
     "beatOf": "Tiempo {{current}} de {{total}}",
     "accentDownbeat": "Acentuar primer tiempo",
@@ -51,7 +55,7 @@
     "addSongs": "Añadir canciones",
     "selectedCount_one": "{{count}} canción seleccionada",
     "selectedCount_other": "{{count}} canciones seleccionadas",
-    "noneSelected": "Aún no hay canciones seleccionadas. Añade canciones para crear tu cancionero.",
+    "noneSelected": "Elige algunas canciones y arma un cancionero para tu equipo.",
     "removeSong": "Quitar {{title}}",
     "customizeExport": "Personalizar y exportar",
     "optionsTitle": "Opciones del cancionero",
@@ -65,7 +69,7 @@
     "addCover": "Añadir imagen de portada",
     "replaceCover": "Reemplazar",
     "removeCover": "Quitar portada",
-    "coverHint": "Opcional. Reemplaza la página de portada de texto.",
+    "coverHint": "Opcional. La imagen reemplaza la portada sencilla con texto.",
     "coverTooLargeTitle": "Imagen demasiado grande",
     "coverTooLarge": "Elige una imagen de portada más pequeña (menos de unos 2 MB).",
     "pickCoverErrorTitle": "No se pudieron abrir las fotos",
@@ -78,8 +82,8 @@
     "playIn": "TOCAR ACORDES EN",
     "result": "Cejilla {{fret}}",
     "resultNone": "Sin cejilla",
-    "hint": "Toca acordes de {{shape}} para sonar en {{key}}.",
-    "hintNone": "Toca en {{key}} — no hace falta cejilla."
+    "hint": "Usa posiciones de {{shape}} para sonar en {{key}}.",
+    "hintNone": "Toca en {{key}} tal como está escrita; no necesitas capo."
   },
   "keyRef": {
     "title": "Referencia de tonalidad",
@@ -89,7 +93,7 @@
     "nashville": "Nashville",
     "setGeneral": "GENERAL",
     "setPrayer": "ORACIÓN",
-    "selectHint": "Muestra esta progresión en el arco",
+    "selectHint": "Mostrar esta progresión en la rueda de acordes",
     "showNote": "Nota de interpretación",
     "replay": "Reproducir la secuencia otra vez",
     "a11yPosition": "{{chord}}, número {{number}}",

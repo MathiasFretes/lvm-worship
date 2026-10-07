@@ -1,15 +1,18 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "couldntLoadSong": "Couldn't load song",
-  "songNotFound": "This song could not be found.",
-  "tryAgain": "Something went wrong. Please try again.",
-  "saveFailed": "Your latest changes haven't been saved. Check your connection and try again.",
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
+  "couldntLoadSong": "This song isn’t ready to open",
+  "songNotFound": "We couldn’t find this song in the LVM library.",
+  "tryAgain": "That didn’t work. Please try once more.",
+  "saveFailed": "Your newest edits are still unsaved. Reconnect, then try again.",
   "load": {
     "songs": "Can't load songs",
     "setlists": "Can't load your sets",
     "starred": "Can't load starred songs",
     "lastSet": "Can't load your last set",
     "reflection": "Can't load your reflection",
-    "hint": "Check your connection and try again."
+    "hint": "Check your connection, then try loading it again."
   }
 }

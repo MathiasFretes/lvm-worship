@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "title": "Araçlar",
   "sectionTools": "ARAÇLAR",
-  "pickTool": "Başlamak için bir araç seçin",
+  "pickTool": "Prova veya ibadet için ekibinizin ihtiyaç duyduğu aracı seçin",
   "tools": {
     "tuner": "Gitar Akort Aleti",
     "metronome": "Tempo / Metronom",
@@ -13,7 +17,7 @@
   },
   "tuner": {
     "title": "Gitar Akort Aleti",
-    "permissionDenied": "Akort aleti gitarınızı duymak için mikrofon erişimine ihtiyaç duyar. Ses yalnızca bu cihazda analiz edilir — asla kaydedilmez veya bir yere gönderilmez.",
+    "permissionDenied": "LVM’nin gitarınızı duyabilmesi için mikrofon erişimine izin verin. Ses yalnızca bu cihazda analiz edilir; kaydedilmez veya gönderilmez.",
     "enableInSettings": "Ayarlar'dan etkinleştir",
     "inTune": "Akortlu",
     "cents": "{{sign}}{{cents}}¢",
@@ -30,7 +34,7 @@
     "slower": "Daha yavaş",
     "faster": "Daha hızlı",
     "tapTempo": "Tempoya vur",
-    "tapTempoHint": "Metronom temposunu ayarlamak için ilahiye eşlik ederek dokunun",
+    "tapTempoHint": "İlahiyle birlikte dokunun, LVM tempoyu eşleştirsin",
     "metronomeStopped": "Metronom durdu",
     "beatOf": "Vuruş {{current}}/{{total}}",
     "accentDownbeat": "İlk vuruşu vurgula",
@@ -51,7 +55,7 @@
     "addSongs": "Şarkı ekle",
     "selectedCount_one": "{{count}} şarkı seçildi",
     "selectedCount_other": "{{count}} şarkı seçildi",
-    "noneSelected": "Henüz şarkı seçilmedi. Şarkı kitabınızı oluşturmak için şarkı ekleyin.",
+    "noneSelected": "Birkaç ilahi seçip ekibiniz için bir ilahi kitabı hazırlayın.",
     "removeSong": "{{title}} kaldır",
     "customizeExport": "Özelleştir ve dışa aktar",
     "optionsTitle": "Şarkı kitabı seçenekleri",
@@ -65,7 +69,7 @@
     "addCover": "Kapak görseli ekle",
     "replaceCover": "Değiştir",
     "removeCover": "Kapağı kaldır",
-    "coverHint": "İsteğe bağlı. Metin kapak sayfasının yerini alır.",
+    "coverHint": "İsteğe bağlıdır. Kapak görseli sade başlık sayfasının yerini alır.",
     "coverTooLargeTitle": "Görsel çok büyük",
     "coverTooLarge": "Lütfen daha küçük bir kapak görseli seçin (yaklaşık 2 MB altında).",
     "pickCoverErrorTitle": "Fotoğraflar açılamadı",
@@ -78,8 +82,8 @@
     "playIn": "ŞU TONDA ÇAL",
     "result": "Kapo {{fret}}",
     "resultNone": "Kapo yok",
-    "hint": "{{key}} tonunda duyulması için {{shape}} akorlarını çal.",
-    "hintNone": "{{key}} tonunda çal — kapo gerekmez."
+    "hint": "{{key}} tonunda duyulması için {{shape}} şekilleriyle çalın.",
+    "hintNone": "{{key}} tonunda yazıldığı gibi çalın; kapo gerekmez."
   },
   "keyRef": {
     "title": "Ton Referansı",
@@ -89,7 +93,7 @@
     "nashville": "Nashville",
     "setGeneral": "GENEL",
     "setPrayer": "DUA",
-    "selectHint": "Bu diziyi yayda gösterir",
+    "selectHint": "Bu akor yürüyüşünü akor çarkında göster",
     "showNote": "Çalma notu",
     "replay": "Diziyi yeniden oynat",
     "a11yPosition": "{{chord}}, {{number}} numara",

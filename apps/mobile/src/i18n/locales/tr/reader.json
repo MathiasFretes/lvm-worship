@@ -1,5 +1,9 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "chooseTranslation": "Çeviri seç",
   "chooseDate": "Tarih seç",
   "readerSettings": "Okuyucu ayarları",
@@ -7,31 +11,31 @@
   "landingTitle": "Kutsal Kitap",
   "streakDays_one": "{{count}} günlük seri",
   "streakDays_other": "{{count}} günlük seri",
-  "landingReadingHeader": "{{date}} okuması · M'Cheyne",
+  "landingReadingHeader": "{{date}} okuması · M’Cheyne planı",
   "backToLanding": "Kutsal Kitap'a dön",
   "reflection": {
     "landingHeader": "Düşüncelerin",
     "composeCta": "Düşünceni yaz",
-    "composeHint": "Bugün · henüz yazılmadı",
+    "composeHint": "Bugün için henüz bir not yazmadınız",
     "viewAll": "Tüm düşünceleri gör",
     "journalTitle": "Düşünceler",
     "composeTitle": "Yeni düşünce",
     "editTitle": "Düşünceyi düzenle",
     "edit": "Düzenle",
     "editErrorTitle": "Düşünce güncellenemedi",
-    "placeholder": "Düşüncelerini, fikirlerini ya da dualarını yaz…",
+    "placeholder": "Size dokunan sözü, duanızı veya hatırlamak istediğinizi yazın…",
     "charCount": "{{count}} / {{max}}",
     "save": "Kaydet",
     "cancel": "İptal",
     "ok": "Tamam",
     "delete": "Sil",
     "deleteTitle": "Düşünce silinsin mi?",
-    "deleteMessage": "Bu geri alınamaz.",
+    "deleteMessage": "Bu düşünce kalıcı olarak silinecek.",
     "duplicateTitle": "Zaten yazıldı",
     "duplicateMessage": "Bugün için zaten bir düşünce yazdın.",
     "saveErrorTitle": "Düşünce kaydedilemedi",
     "emptyTitle": "Henüz düşünce yok",
-    "emptySubtitle": "Bir düşünce yazdığında burada görünecek."
+    "emptySubtitle": "Bir düşünce kaydettiğinizde burada bulabilirsiniz."
   },
   "journal": {
     "privateLabel": "Özel"
@@ -40,12 +44,12 @@
   "copyVerses_other": "{{count}} ayeti kopyala",
   "error": {
     "title": "Bugünün okuması yüklenemiyor",
-    "subtitle": "İnternete bağlanıp tekrar deneyin veya çevrimdışı okumak için bu çeviriyi Ayarlar → Çevrimdışı ve İndirmeler'den indirin.",
+    "subtitle": "Yeniden bağlanın veya Ayarlar → Çevrimdışı ve İndirmeler bölümünden bu çeviriyi kaydedin.",
     "retry": "Tekrar dene"
   },
   "empty": {
     "title": "Bu gün için okuma yok",
-    "subtitle": "Okumaya devam etmek için başka bir tarih seçin."
+    "subtitle": "Planda okumaya devam etmek için başka bir tarih seçin."
   },
   "translationPicker": {
     "title": "Çeviri"

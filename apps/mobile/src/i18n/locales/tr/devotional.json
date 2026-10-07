@@ -1,15 +1,15 @@
 {
   "_meta": {
-    "reviewer": "",
-    "reviewedAt": "",
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
     "needsReview": true
   },
   "card": {
     "label": "Tefekkür",
-    "open": "{{reference}} tefekkürünü aç"
+    "open": "{{reference}} için ruhsal yazıyı oku"
   },
   "placeholder": {
-    "none": "Bugünün okumaları için tefekkür yok."
+    "none": "Bugünün okumalarına eşlik eden bir ruhsal yazı yok."
   },
   "screen": {
     "back": "Geri",
@@ -18,6 +18,6 @@
   },
   "notFound": {
     "title": "Tefekkür bulunamadı",
-    "body": "Bu tefekkür kullanılamıyor. Taşınmış ya da bağlantı geçersiz olmuş olabilir."
+    "body": "Bu ruhsal yazıyı şu anda açamıyoruz. Bağlantı eskimiş veya yazı taşınmış olabilir."
   }
 }

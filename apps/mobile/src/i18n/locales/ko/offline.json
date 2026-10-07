@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "banner": "오프라인 상태입니다. 저장된 콘텐츠는 그대로 사용할 수 있습니다.",
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
+  "banner": "오프라인 상태지만 이 기기에 저장한 콘텐츠는 계속 이용할 수 있어요.",
   "title": "오프라인 및 다운로드",
-  "onThisDeviceStorage": "이 기기의 번역본",
+  "onThisDeviceStorage": "이 기기에 저장한 성경 번역본",
   "downloadedCount": "{{total}}개 번역본 중 {{count}}개 다운로드됨",
   "mb": "{{value}} MB",
   "percent": "{{value}}%",
@@ -20,15 +24,15 @@
   "deleteDownload": "다운로드 삭제",
   "download": "{{name}} 다운로드",
   "wifiOnly": "Wi-Fi에서만 다운로드",
-  "footer": "다운로드한 번역본은 연결 없이도 읽을 수 있습니다.",
+  "footer": "번역본을 기기에 저장하고 어디서든 말씀을 읽으세요.",
   "back": "설정",
   "backToSettings": "설정으로 돌아가기",
   "alerts": {
     "wifiRequiredTitle": "Wi-Fi 필요",
-    "wifiRequiredMessage": "\"Wi-Fi에서만 다운로드\"가 켜져 있습니다. Wi-Fi에 연결하거나 셀룰러 데이터로 다운로드하려면 옵션을 끄세요.",
+    "wifiRequiredMessage": "Wi-Fi에서만 다운로드하도록 설정되어 있어요. Wi-Fi에 연결하거나 옵션을 꺼서 모바일 데이터를 사용하세요.",
     "downloadFailedTitle": "다운로드 실패",
-    "downloadFailedMessage": "이 번역본을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+    "downloadFailedMessage": "번역본 다운로드를 마치지 못했어요. 연결을 확인하고 다시 시도해 주세요.",
     "deleteTitle": "다운로드 삭제",
-    "deleteMessage": "\"{{name}}\"을(를) 이 기기에서 제거할까요? 언제든지 다시 다운로드할 수 있습니다."
+    "deleteMessage": "이 기기에서 “{{name}}”을(를) 삭제할까요? 필요할 때 언제든 다시 받을 수 있어요."
   }
 }

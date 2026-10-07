@@ -1,8 +1,11 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "banner": "You're offline. Saved content still works.",
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
+  "banner": "You’re offline, but everything saved on this device is still available.",
   "title": "Offline & Downloads",
-  "onThisDeviceStorage": "Translations on this device",
+  "onThisDeviceStorage": "Bible translations saved here",
   "downloadedCount": "{{count}} of {{total}} translations downloaded",
   "mb": "{{value}} MB",
   "percent": "{{value}}%",
@@ -20,15 +23,15 @@
   "deleteDownload": "Delete download",
   "download": "Download {{name}}",
   "wifiOnly": "Download over Wi-Fi only",
-  "footer": "Downloaded translations stay readable with no connection.",
+  "footer": "Keep a translation on this device and read it wherever you are.",
   "back": "Settings",
   "backToSettings": "Back to Settings",
   "alerts": {
     "wifiRequiredTitle": "Wi-Fi required",
-    "wifiRequiredMessage": "You have \"Download over Wi-Fi only\" turned on. Connect to Wi-Fi or turn the option off to download on cellular.",
+    "wifiRequiredMessage": "Wi-Fi-only downloads are enabled. Join Wi-Fi, or turn that option off to use mobile data.",
     "downloadFailedTitle": "Download failed",
-    "downloadFailedMessage": "Could not download this translation. Check your connection and try again.",
+    "downloadFailedMessage": "This translation didn’t finish downloading. Check your connection and try again.",
     "deleteTitle": "Delete download",
-    "deleteMessage": "Remove \"{{name}}\" from this device? You can download it again anytime."
+    "deleteMessage": "Remove “{{name}}” from this device? You can download it again whenever you need it."
   }
 }

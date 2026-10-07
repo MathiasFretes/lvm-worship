@@ -78,8 +78,6 @@
             { "scheme": "https", "host": "lavozmisionera.com", "path": "/songbook" },
             { "scheme": "https", "host": "lavozmisionera.com", "path": "/about" },
             { "scheme": "https", "host": "lavozmisionera.com", "path": "/profile" },
-            { "scheme": "https", "host": "lavozmisionera.com", "path": "/posts" },
-            { "scheme": "https", "host": "lavozmisionera.com", "pathPrefix": "/posts/" },
             { "scheme": "https", "host": "lavozmisionera.com", "path": "/app/reset-password" },
             { "scheme": "https", "host": "lavozmisionera.com", "path": "/app/auth/callback" }
           ],

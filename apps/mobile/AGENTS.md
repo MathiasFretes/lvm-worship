@@ -19,15 +19,14 @@ picker, and a grouped **Settings** screen — all behind an
 primitives below — don't add one-off styles or hardcoded colors where a
 primitive/token fits.
 
-Design source: `gc-ios-design-reference/` (repo root). Follow its
-non-negotiables — HIG/UIKit over the mockups, **native design-system icons
+Follow the design non-negotiables — HIG/UIKit over the mockups, **native design-system icons
 only** (SF Symbols on iOS, Material Symbols on Android — never hand-drawn/SVG),
 and translate the visual rather than porting the HTML/CSS.
 
 ## Android design authority (Material Design 3)
 
 On Android, **Material Design 3 is the authority the same way HIG is on iOS**:
-the mockups in `gc-ios-design-reference/` were drawn iOS-first, so wherever they
+the mockups were drawn iOS-first, so wherever they
 and MD3 disagree on Android, **MD3 wins** — don't port an iOS visual
 pixel-for-pixel onto Android when Material has an established pattern for it.
 
@@ -226,7 +225,7 @@ shipping; don't "fix" them.
 
 ## Supabase
 
-- Wired through core's `createGcSupabase({ url, anonKey, storage, auth })` —
+- Wired through core's `createLvmSupabase({ url, anonKey, storage, auth })` —
   **never** call `createClient` directly here.
 - Storage adapter is `@react-native-async-storage/async-storage`;
   `detectSessionInUrl` is forced `false` (no URL redirect on native);
@@ -396,7 +395,7 @@ duplicate logic here and never edit core internals to suit mobile.
     chord, so a roman bass would read as a second chord. The dial's numerals
     follow the toggle through `numberStyleFor`.
   - The selected progression + the display mode persist in `keyRefPrefs.ts`
-    (`gc.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
+    (`lvm.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
     so it hydrates on mount and is **not** in `LAUNCH_STORAGE_KEYS`. The
     selected key is deliberately not persisted.
 - **Option sheets:** every sheet presents through the native `formSheet` route
@@ -405,11 +404,8 @@ duplicate logic here and never edit core internals to suit mobile.
   time). Phones get a native bottom sheet with grabber/detents, iPads a
   centered narrow form sheet. **There is no longer an exception — all 16 sheets
   go through it**, so a new sheet uses the `useFormSheet` + `FormSheetShell`
-  pattern. (`src/components/BottomSheet.tsx` and
-  `src/components/setlist/RowActionsSheet.tsx` are the hand-rolled `Modal`
-  sheet and its only caller; nothing imports `RowActionsSheet` any more, so both
-  are dead code awaiting deletion. This doc previously described them as the one
-  live exception.)
+  pattern. The superseded hand-rolled `BottomSheet` / `RowActionsSheet` pair was
+  removed after its final importer disappeared.
   **The bottom safe-area inset belongs to the host, not the sheet.** `app/sheet.tsx`
   pads its surface-painted wrapper by `insets.bottom` for every sheet — a
   `fitToContents` sheet is only as tall as its React content, so content that stops
@@ -460,7 +456,7 @@ duplicate logic here and never edit core internals to suit mobile.
   and card 3 carries two **real settings** — the Daily Word reminder (with the
   Settings screen's own `ReminderTimeSheet`) and the reading streak — both
   presented pre-toggled ON. The seen-flag is device-local
-  (`src/lib/introSeen.ts`, `gc.intro.seen.v1`, in the splash `multiGet` batch so
+  (`src/lib/introSeen.ts`, `lvm.intro.seen.v1`, in the splash `multiGet` batch so
   the gate can read it synchronously); it is **not** on the Supabase profile, so a
   returning user on a new device sees the intro again by design. `wantsIntro()` in
   `app/_layout.tsx` scopes the redirect to the app's own entry points (bare root /
@@ -614,7 +610,7 @@ duplicate logic here and never edit core internals to suit mobile.
   there rather than in Settings — see the first-launch intro bullet under
   "Routing, screens & auth". The
   preference (enabled + local hour/minute) is device-local in AsyncStorage
-  (`gc.readerReminder.v1`), following the `defaults.ts` injected-storage /
+  (`lvm.readerReminder.v1`), following the `defaults.ts` injected-storage /
   `useSyncExternalStore` pattern. `src/lib/readerReminder.ts` is the **pure,
   RN-free** store plus the dependency-injected `syncReminder()` reconciler (and
   a locale-aware `formatReminderTime`), unit-tested headless;
@@ -672,7 +668,7 @@ are — and why the attempt is banked *before* the native call is awaited.
   4+ day streak. Then: production build, no session error, 7+ days since first
   launch, 3+ distinct open days, intro seen before *this* launch, under 3 lifetime
   requests, 120+ days since the last.
-- `src/lib/reviewState.ts` — device-local persistence (`gc.review.v1`, joined to
+- `src/lib/reviewState.ts` — device-local persistence (`lvm.review.v1`, joined to
   the `launchStorage.ts` batch). **Bounded by construction:** distinct open days
   are a count plus one date, never a list. Nothing touches the Supabase profile.
 - `src/lib/sessionError.ts` — in-memory only, never persisted. `markSessionError`
@@ -727,7 +723,7 @@ scenarios headless.
   follows the `defaults.ts` pattern: storage is injected (`KVStorage`), hydrated
   once at splash, then `getRecentlyOpened()` is **synchronous** (Home reads it in
   render, no flash). The Viewer calls `recordSongOpened()` on load — it dedupes by
-  slug, moves the entry to the front, and caps at 20 (`gc.recents.songs.v1` in
+  slug, moves the entry to the front, and caps at 20 (`lvm.recents.songs.v1` in
   AsyncStorage, NOT Supabase-synced). Feeds Home's "Continue where you left off"
   and its Recent-songs card. Each entry also stores `lastKey` — the key showing
   in the viewer (`updateRecentKey` mirrors the effective key as it changes) —
@@ -790,7 +786,7 @@ scenarios headless.
   downloads module below) and falls back to R2 otherwise. Hooks:
   `useBibleTranslations`, `usePassageChapter` (`src/lib/useReader.ts`). Reader
   settings (size/typeface/layout/spacing) **persist device-local** in
-  `src/lib/readerSettings.ts` (`gc.reader.settings.v1`, same injected-storage /
+  `src/lib/readerSettings.ts` (`lvm.reader.settings.v1`, same injected-storage /
   `useSyncExternalStore` pattern as `defaults.ts`, hydrated in the splash
   `multiGet` batch): they are readability preferences, so they outlive the
   reader, a relaunch and an app update. The text-options sheet stays controlled —
@@ -848,7 +844,7 @@ scenarios headless.
   (`downloader`, `manifest`, `resolver`, `staleness`) is **dependency-injected**
   so it unit-tests headless with `memoryBlobStore`; `service.ts` wires the real
   `expoBlobStore` + `fetch` + `expo-network`. State lives in a manifest
-  (`gc.downloads.v1`, same injected-storage/`useSyncExternalStore` pattern as
+  (`lvm.downloads.v1`, same injected-storage/`useSyncExternalStore` pattern as
   `defaults.ts`): completed downloads keyed by translation id + a **"Wi-Fi only"**
   preference (enforced via `expo-network`, raising `WifiRequiredError`). Downloads
   report progress, can be cancelled (`AbortToken`), retry transient failures with
@@ -884,9 +880,9 @@ JSONs serve iOS now and Android later — no native `.strings`.
   namespaces). RN-free `src/lib` modules stay pure by returning locale KEYS or
   taking an injected translator (`greetings.ts`, `authValidation.ts`,
   `authFlows.ts`, `setlistImport.ts`, `relativeTime.ts`, `capo.ts`).
-- **App language** persists in `defaults.ts` (`gc.defaults.language`, `null` =
+- **App language** persists in `defaults.ts` (`lvm.defaults.language`, `null` =
   follow device), applied during the splash hold. **Bible translation** persists
-  separately in `bibleTranslationPref.ts` (`gc.bible.translation.v1`) and is
+  separately in `bibleTranslationPref.ts` (`lvm.bible.translation.v1`) and is
   INDEPENDENT of UI language: a stored pick always wins; with none,
   `defaultTranslationForLocale` seeds the first manifest translation matching the
   app locale, else ESV.
@@ -902,7 +898,7 @@ The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
 **"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
-link is an informational alert only), tablet master-detail, GraceTracks, and
+link is an informational alert only), tablet master-detail, and
 migrating web's `features/readings` onto core's `bible` module.
 
 **No longer out of scope:** EAS Build ships iOS today (`eas.json` carries a live

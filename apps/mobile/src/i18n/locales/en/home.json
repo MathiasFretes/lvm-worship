@@ -1,18 +1,21 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
   "greeting": {
     "morning": "Good morning",
     "afternoon": "Good afternoon",
     "evening": "Good evening",
     "hello": "{{greeting}}, {{name}}",
-    "friend": "friend"
+    "friend": "worshiper"
   },
   "subGreetings": [
     "Everything's where you left it.",
     "Let's get to it.",
     "Good to have you back.",
     "Glad you're here.",
-    "One song at a time.",
+    "Prepare the next song with purpose.",
     "Sing to Him a new song.",
     "Be still, and know.",
     "This is the day He has made.",
@@ -24,31 +27,31 @@
     "His grace is enough.",
     "Rejoice always."
   ],
-  "profileAndSettings": "Profile and settings",
+  "profileAndSettings": "Your profile and settings",
   "lastSet": {
     "label": "Last set",
     "meta_one": "{{count}} song · ~{{min}} min",
     "meta_other": "{{count}} songs · ~{{min}} min",
     "keys": "Keys {{keys}}",
-    "resume": "Resume",
+    "resume": "Keep rehearsing",
     "editSet": "Edit set"
   },
   "continueCard": {
-    "label": "Continue where you left off"
+    "label": "Pick up where you stopped"
   },
   "starredCard": {
     "label": "Starred songs",
-    "empty": "Songs you star will appear here."
+    "empty": "Star a song to keep it close at hand."
   },
   "dailyWordCard": {
     "label": "Daily Word",
-    "empty": "Open today's reading.",
+    "empty": "Make space for today’s reading.",
     "open": "Open today's Daily Word",
     "streak_one": "{{count}}-day streak",
     "streak_other": "{{count}}-day streak"
   },
   "recentSongsCard": {
     "label": "Recent songs",
-    "empty": "Songs you open will appear here."
+    "empty": "Songs you visit will gather here."
   }
 }
