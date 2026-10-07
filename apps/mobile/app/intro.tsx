@@ -6,7 +6,7 @@ import IntroScreen from '../src/screens/IntroScreen'
 // device-local seen-flag (src/lib/introSeen.ts) is unset. IntroScreen owns its
 // own safe-area padding, so there is no Screen wrapper here.
 
-export default function Intro() {
+function LvmIntroRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
@@ -14,3 +14,5 @@ export default function Intro() {
     </>
   )
 }
+
+export default LvmIntroRoute

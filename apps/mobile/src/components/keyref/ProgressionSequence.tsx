@@ -103,12 +103,19 @@ export default function ProgressionSequence({
   t: tx,
 }: ProgressionSequenceProps) {
   const t = useTheme()
-  let index = 0
+  const phraseStarts = progression.phrases.reduce<number[]>((starts, phrase) => {
+    const previous = starts.at(-1) ?? 0
+    const previousLength = starts.length > 0
+      ? progression.phrases[starts.length - 1].chords.length
+      : 0
+    starts.push(previous + previousLength)
+    return starts
+  }, [])
+
   return (
     <View>
       {progression.phrases.map((phrase, phraseIndex) => {
-        const start = index
-        index += phrase.chords.length
+        const start = phraseStarts[phraseIndex]
         return (
           <ScrollView
             key={phraseIndex}

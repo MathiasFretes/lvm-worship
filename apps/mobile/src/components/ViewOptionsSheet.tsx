@@ -22,6 +22,11 @@ export const FONT_SCALE_MIN = 0.8
 export const FONT_SCALE_MAX = 1.6
 export const FONT_SCALE_STEP = 0.1
 
+function nextFontScale(current: number, direction: 1 | -1) {
+  const stepped = Math.round((current + direction * FONT_SCALE_STEP) * 10) / 10
+  return Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, stepped))
+}
+
 function OverlineLabel({ children, first }: { children: string; first?: boolean }) {
   const t = useTheme()
   return (
@@ -107,8 +112,7 @@ function ViewOptionsContent({
   const { t: tx } = useTranslation('song')
 
   const stepFont = (dir: 1 | -1) => {
-    const next = Math.round((fontScale + dir * FONT_SCALE_STEP) * 10) / 10
-    onFontScale(Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, next)))
+    onFontScale(nextFontScale(fontScale, dir))
   }
   const atMin = fontScale <= FONT_SCALE_MIN
   const atMax = fontScale >= FONT_SCALE_MAX
@@ -166,6 +170,7 @@ function ViewOptionsContent({
               disabled={atMin}
               accessibilityRole="button"
               accessibilityLabel={tx('viewOptions.smallerFont')}
+              accessibilityState={{ disabled: atMin }}
               style={{
                 width: 40,
                 height: 36,
@@ -195,6 +200,7 @@ function ViewOptionsContent({
               disabled={atMax}
               accessibilityRole="button"
               accessibilityLabel={tx('viewOptions.largerFont')}
+              accessibilityState={{ disabled: atMax }}
               style={{
                 width: 40,
                 height: 36,

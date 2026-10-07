@@ -11,6 +11,10 @@ import { takePendingAuthLink } from '../lib/authLink'
 import { adoptAuthLinkSession } from '../lib/passwordReset'
 import { markSessionError } from '../lib/sessionError'
 
+type LinkState =
+  | { status: 'working' }
+  | { status: 'error'; messageKey: string }
+
 // The landing screen for an auth email opened on this device. It is a transit
 // screen: it turns the link's tokens into a session and moves on. Two links
 // arrive here, from the two paths the app claims —
@@ -32,7 +36,7 @@ export default function AuthLinkScreen() {
   const t = useTheme()
   const { t: tx } = useTranslation(['auth', 'common'])
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<LinkState>({ status: 'working' })
   // The link is consumed once. StrictMode/remount must not re-run the exchange
   // against a token that has already been spent.
   const ran = useRef(false)
@@ -49,23 +53,24 @@ export default function AuthLinkScreen() {
       return
     }
 
-    void (async () => {
+    const adopt = async () => {
       const result = await adoptAuthLinkSession(supabase, link)
       if (!result.ok) {
         markSessionError('AuthLinkScreen')
-        setError(result.error ?? 'errors.generic')
+        setState({ status: 'error', messageKey: result.error ?? 'errors.generic' })
         return
       }
       // The root layout's auth gate sees the new session on its next pass; go
       // straight to the destination this link was for.
       router.replace(link.kind === 'recovery' ? '/reset-password' : '/')
-    })()
+    }
+    void adopt()
   }, [router])
 
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.lg }}>
       <ConstrainedContent tier="form">
-        {error ? (
+        {state.status === 'error' ? (
           <View style={{ alignItems: 'center', gap: t.spacing.lg }}>
             <SymbolIcon name="exclamationmark.triangle.fill" size={34} color={t.colors.sec} />
             <Text
@@ -76,7 +81,7 @@ export default function AuthLinkScreen() {
                 color: t.colors.ink,
               }}
             >
-              {tx(error)}
+              {tx(state.messageKey)}
             </Text>
             {/* An expired link is not retryable, so the only useful action is
                 asking for a fresh one. */}

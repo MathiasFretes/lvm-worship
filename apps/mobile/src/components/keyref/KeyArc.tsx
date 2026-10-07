@@ -82,6 +82,11 @@ const TICK_OPACITY = 0.5
 const ROTATE_MS = 260
 const EASE_OUT = Easing.out(Easing.cubic)
 
+function snappedRotation(rotation: number, direction = 0): number {
+  const current = Math.round(rotation / DETENT_DEG)
+  return (current - direction) * DETENT_DEG
+}
+
 export type ArcAnnotation = {
   /** Positions used by the selected progression (positionKey of ring + offset). */
   ringed: Set<string>
@@ -365,7 +370,7 @@ export default function KeyArc({
   /** Edge-neighbour tap: turn one fifth toward that side. */
   const advance = useCallback(
     (direction: number) => {
-      const target = Math.round(rotation.value / DETENT_DEG) * DETENT_DEG - direction * DETENT_DEG
+      const target = snappedRotation(rotation.value, direction)
       publishKey(Math.round(target / DETENT_DEG))
       settle(target)
       if (hapticsEnabled) Haptics.selectionAsync().catch(() => {})

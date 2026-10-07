@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native'
+import { Alert, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Button from '../components/Button'
-import ConstrainedContent from '../components/ConstrainedContent'
-import Screen from '../components/Screen'
 import TextField from '../components/TextField'
+import AuthFormLayout from '../components/auth/AuthFormLayout'
 import { useTheme } from '../theme/ThemeProvider'
 import { supabase } from '../lib/supabase'
 import { completePasswordReset } from '../lib/passwordReset'
@@ -30,7 +28,6 @@ export default function ResetPasswordScreen() {
   const t = useTheme()
   const { t: tx } = useTranslation(['auth', 'common'])
   const router = useRouter()
-  const insets = useSafeAreaInsets()
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -65,46 +62,11 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <Screen edges={['left', 'right']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: t.spacing.lg,
-            paddingTop: insets.top + t.spacing.xl,
-            paddingBottom: insets.bottom + t.spacing.xxl,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: t.typography.largeTitle.fontSize,
-              fontWeight: t.typography.largeTitle.fontWeight,
-              letterSpacing: t.typography.largeTitle.letterSpacing,
-              color: t.colors.ink,
-              paddingHorizontal: t.spacing.xs,
-            }}
-          >
-            {tx('resetPassword.title')}
-          </Text>
-          <Text
-            style={{
-              fontSize: 15,
-              lineHeight: 22,
-              color: t.colors.sec,
-              paddingHorizontal: t.spacing.xs,
-              paddingTop: t.spacing.sm,
-              paddingBottom: t.spacing.lg,
-            }}
-          >
-            {tx('resetPassword.subtitle')}
-          </Text>
-
-          <ConstrainedContent tier="form">
-            <View style={{ gap: t.spacing.lg }}>
+    <AuthFormLayout
+      title={tx('resetPassword.title')}
+      subtitle={tx('resetPassword.subtitle')}
+    >
+      <View style={{ gap: t.spacing.lg }}>
               {/* autoComplete/textContentType mark both fields as NEW so the OS
                   offers to generate and save a password rather than autofilling
                   the old one. */}
@@ -134,10 +96,7 @@ export default function ResetPasswordScreen() {
               ) : null}
 
               <Button title={tx('resetPassword.submit')} onPress={onSubmit} disabled={busy} />
-            </View>
-          </ConstrainedContent>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+      </View>
+    </AuthFormLayout>
   )
 }

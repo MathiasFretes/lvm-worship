@@ -29,6 +29,10 @@ export function resolvePreferFlat(accidental: Accidental): boolean {
 /** MD3 segmented button: 40dp tall, so 38 between the 1dp outline. */
 const ANDROID_CELL_HEIGHT = 38
 const IOS_CELL_HEIGHT = 30
+const ACCIDENTAL_OPTIONS = [
+  { value: 'sharp', glyph: '♯', labelKey: 'accidentals.sharps' },
+  { value: 'flat', glyph: '♭', labelKey: 'accidentals.flats' },
+] as const
 
 export default function AccidentalToggle({
   value,
@@ -43,15 +47,28 @@ export default function AccidentalToggle({
   const cellHeight = isAndroid ? ANDROID_CELL_HEIGHT : IOS_CELL_HEIGHT
   const verticalSlop = isAndroid ? 5 : 7
 
-  const cell = (v: Accidental, glyph: string, label: string) => {
-    const selected = value === v
-    const first = v === 'sharp'
-    return (
-      <Pressable
-        onPress={() => onChange(v)}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityState={{ selected }}
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: isAndroid ? 'transparent' : t.colors.surfaceAlt,
+        borderRadius: isAndroid ? (ANDROID_CELL_HEIGHT + 2) / 2 : 10,
+        padding: isAndroid ? 0 : 3,
+        ...(isAndroid
+          ? { borderWidth: 1, borderColor: t.colors.border, overflow: 'hidden' as const }
+          : null),
+      }}
+    >
+      {ACCIDENTAL_OPTIONS.map((option, index) => {
+        const selected = value === option.value
+        const first = index === 0
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            accessibilityRole="button"
+            accessibilityLabel={tx(option.labelKey)}
+            accessibilityState={{ selected }}
         // Material's state layer, from the platform theme. iOS ignores it.
         android_ripple={{ borderless: false, foreground: true }}
         // Minimum touch target without changing the rendered cell. Per-edge,
@@ -66,50 +83,35 @@ export default function AccidentalToggle({
           left: first ? 12 : 0,
           right: first ? 0 : 12,
         }}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 3,
-          height: cellHeight,
-          paddingHorizontal: 12,
-          borderRadius: isAndroid ? 0 : 8,
-          backgroundColor: selected ? t.colors.accent : 'transparent',
-          ...(isAndroid && !first
-            ? { borderLeftWidth: 1, borderLeftColor: t.colors.border }
-            : null),
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 15,
-            fontWeight: '700',
-            color: selected
-              ? t.colors.onAccent
-              : isAndroid
-                ? t.colors.ink
-                : t.colors.sec,
-          }}
-        >
-          {glyph}
-        </Text>
-      </Pressable>
-    )
-  }
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: isAndroid ? 'transparent' : t.colors.surfaceAlt,
-        borderRadius: isAndroid ? (ANDROID_CELL_HEIGHT + 2) / 2 : 10,
-        padding: isAndroid ? 0 : 3,
-        ...(isAndroid
-          ? { borderWidth: 1, borderColor: t.colors.border, overflow: 'hidden' as const }
-          : null),
-      }}
-    >
-      {cell('sharp', '♯', tx('accidentals.sharps'))}
-      {cell('flat', '♭', tx('accidentals.flats'))}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+              height: cellHeight,
+              paddingHorizontal: 12,
+              borderRadius: isAndroid ? 0 : 8,
+              backgroundColor: selected ? t.colors.accent : 'transparent',
+              ...(isAndroid && !first
+                ? { borderLeftWidth: 1, borderLeftColor: t.colors.border }
+                : null),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: '700',
+                color: selected
+                  ? t.colors.onAccent
+                  : isAndroid
+                    ? t.colors.ink
+                    : t.colors.sec,
+              }}
+            >
+              {option.glyph}
+            </Text>
+          </Pressable>
+        )
+      })}
     </View>
   )
 }

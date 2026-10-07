@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 import SymbolIcon from './SymbolIcon'
@@ -26,32 +26,40 @@ export default function Chip({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: showCue ? t.spacing.xs : 0,
-        paddingVertical: t.spacing.sm,
-        paddingHorizontal: t.spacing.lg,
-        borderRadius: t.radii.pill,
-        backgroundColor: selected ? t.colors.accent : t.colors.surfaceAlt,
-        borderWidth: 1,
-        borderColor: selected ? t.colors.accent : t.colors.border,
-        opacity: pressed ? 0.85 : 1,
-      })}
+      style={({ pressed }) => [
+        styles.chip,
+        {
+          gap: showCue ? t.spacing.xs : 0,
+          paddingVertical: t.spacing.sm,
+          paddingHorizontal: t.spacing.lg,
+          borderRadius: t.radii.pill,
+          backgroundColor: selected ? t.colors.accent : t.colors.surfaceAlt,
+          borderColor: selected ? t.colors.accent : t.colors.border,
+          opacity: pressed ? 0.85 : 1,
+        },
+      ]}
     >
       {showCue ? (
         <SymbolIcon name="checkmark" size={13} color={t.colors.onAccent} />
       ) : null}
       <Text
-        style={{
-          fontSize: 14,
-          fontWeight: '600',
-          letterSpacing: -0.2,
-          color: selected ? t.colors.onAccent : t.colors.ink,
-        }}
+        style={[styles.label, { color: selected ? t.colors.onAccent : t.colors.ink }]}
       >
         {label}
       </Text>
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+})

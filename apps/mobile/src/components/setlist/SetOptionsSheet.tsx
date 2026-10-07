@@ -4,6 +4,7 @@ import FormSheetShell from '../FormSheetShell'
 import ActionSheetRow from './ActionSheetRow'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
+import type { SymbolIconProps } from '../SymbolIcon'
 
 // The setlist ••• sheet: Rename set / Saved sets… / New set / Delete set.
 // Presented via the native formSheet route (src/lib/formSheetHost.ts).
@@ -27,18 +28,33 @@ function SetOptionsContent({ onClose, onRename, onSavedSets, onNewSet, onDeleteS
   const t = useTheme()
   const { t: tx } = useTranslation('setlist')
 
-  const run = (fn: () => void) => () => {
-    onClose()
-    fn()
-  }
+  const actions: Array<{
+    icon: SymbolIconProps['name']
+    label: string
+    action: () => void
+    destructive?: boolean
+  }> = [
+    { icon: 'pencil', label: tx('options.renameSet'), action: onRename },
+    { icon: 'list.bullet', label: tx('options.savedSets'), action: onSavedSets },
+    { icon: 'plus', label: tx('options.newSet'), action: onNewSet },
+    { icon: 'trash', label: tx('options.deleteSet'), action: onDeleteSet, destructive: true },
+  ]
 
   return (
     <FormSheetShell title={tx('options.title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, gap: t.spacing.sm }}>
-        <ActionSheetRow icon="pencil" label={tx('options.renameSet')} onPress={run(onRename)} />
-        <ActionSheetRow icon="list.bullet" label={tx('options.savedSets')} onPress={run(onSavedSets)} />
-        <ActionSheetRow icon="plus" label={tx('options.newSet')} onPress={run(onNewSet)} />
-        <ActionSheetRow icon="trash" label={tx('options.deleteSet')} destructive onPress={run(onDeleteSet)} />
+        {actions.map((item) => (
+          <ActionSheetRow
+            key={item.label}
+            icon={item.icon}
+            label={item.label}
+            destructive={item.destructive}
+            onPress={() => {
+              onClose()
+              item.action()
+            }}
+          />
+        ))}
       </View>
     </FormSheetShell>
   )

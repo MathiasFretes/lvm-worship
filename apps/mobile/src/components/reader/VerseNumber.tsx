@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { verseNumberFontSize, verseNumberLift } from '../../lib/readerSettings'
 
 // The verse numeral that introduces each verse in the reader.
@@ -44,18 +44,24 @@ export default function VerseNumber({
   color: string
   fontFamily?: string
 }) {
+  const styles = StyleSheet.create({
+    anchor: { paddingBottom: verseNumberLift(fontSize) },
+    numeral: {
+      fontSize: verseNumberFontSize(fontSize),
+      fontWeight: '700',
+      fontFamily,
+      color,
+    },
+  })
   return (
-    <View pointerEvents="none" style={{ paddingBottom: verseNumberLift(fontSize) }}>
-      <Text
-        style={{
-          fontSize: verseNumberFontSize(fontSize),
-          fontWeight: '700',
-          fontFamily,
-          color,
-        }}
-      >
-        {num}
-      </Text>
+    <View
+      pointerEvents="none"
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.anchor}
+    >
+      <Text style={styles.numeral}>{num}</Text>
     </View>
   )
 }

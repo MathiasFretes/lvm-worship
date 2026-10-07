@@ -21,19 +21,21 @@ export default function ProgressionNoteSheet({
   onClose: () => void
 }) {
   const t = useTheme()
+  const contentStyle = {
+    paddingHorizontal: t.spacing.lg,
+    paddingVertical: t.spacing.lg,
+  }
+  const textStyle = {
+    fontSize: t.typography.body.fontSize,
+    lineHeight: 23,
+    color: t.colors.ink,
+  }
+
   return (
     <FormSheetShell title={title} onAction={onClose}>
       {/* The bottom safe-area inset belongs to the sheet HOST, never here. */}
-      <View style={{ paddingHorizontal: t.spacing.lg, paddingVertical: t.spacing.lg }}>
-        <Text
-          style={{
-            fontSize: t.typography.body.fontSize,
-            lineHeight: 23,
-            color: t.colors.ink,
-          }}
-        >
-          {body}
-        </Text>
+      <View style={contentStyle}>
+        <Text style={textStyle}>{body}</Text>
       </View>
     </FormSheetShell>
   )

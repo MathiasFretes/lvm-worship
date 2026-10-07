@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import Card from './Card'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -9,34 +9,45 @@ import { useTheme } from '../theme/ThemeProvider'
 // invisible to a screen reader. `hint` carries that meaning instead — pass
 // localized copy saying what the action does.
 
+type DangerCardProps = {
+  label: string
+  onPress: () => void
+  accessibilityLabel?: string
+  hint?: string
+}
+
 export default function DangerCard({
   label,
   onPress,
   accessibilityLabel,
   hint,
-}: {
-  label: string
-  onPress: () => void
-  accessibilityLabel?: string
-  hint?: string
-}) {
-  const t = useTheme()
+}: DangerCardProps) {
+  const theme = useTheme()
   return (
-    <Card style={{ marginTop: t.spacing.lg }}>
+    <Card style={{ marginTop: theme.spacing.lg }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
         accessibilityHint={hint}
         style={({ pressed }) => ({
-          paddingVertical: 13,
-          alignItems: 'center',
-          backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
+          minHeight: 48,
+          justifyContent: 'center',
+          opacity: pressed ? 0.72 : 1,
         })}
       >
-        <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.danger }}>
-          {label}
-        </Text>
+        <View style={{ alignItems: 'center', paddingHorizontal: theme.spacing.md }}>
+          <Text
+            style={{
+              fontSize: theme.typography.body.fontSize,
+              fontWeight: '600',
+              color: theme.colors.danger,
+              textAlign: 'center',
+            }}
+          >
+            {label}
+          </Text>
+        </View>
       </Pressable>
     </Card>
   )

@@ -32,7 +32,8 @@ import { useTheme } from '../theme/ThemeProvider'
 // opacity-animated performer/viewer overlays are intentionally NOT glassed yet.
 
 export function isGlassSupported(): boolean {
-  return Platform.OS === 'ios' && isLiquidGlassAvailable() && isGlassEffectAPIAvailable()
+  if (Platform.OS !== 'ios') return false
+  return isLiquidGlassAvailable() && isGlassEffectAPIAvailable()
 }
 
 export type GlassSurfaceProps = {
@@ -96,18 +97,17 @@ export default function GlassSurface({
     )
   }
 
+  const separator = fallbackHairline
+    ? {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: t.colors.border,
+      }
+    : undefined
   return (
     <View
       onLayout={onLayout}
       pointerEvents={pointerEvents}
-      style={[
-        style,
-        { backgroundColor: fallbackColor ?? t.colors.surface },
-        fallbackHairline && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: t.colors.border,
-        },
-      ]}
+      style={[style, { backgroundColor: fallbackColor ?? t.colors.surface }, separator]}
     >
       {children}
     </View>

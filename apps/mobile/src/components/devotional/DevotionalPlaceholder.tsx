@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../theme/ThemeProvider'
 
@@ -18,20 +18,20 @@ import { useTheme } from '../../theme/ThemeProvider'
 // over content that exists but is still in flight would be a lie.
 
 export default function DevotionalPlaceholder() {
-  const t = useTheme()
+  const theme = useTheme()
   const { t: tx } = useTranslation('devotional')
+  const styles = StyleSheet.create({
+    container: { paddingVertical: theme.spacing.sm },
+    message: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: theme.colors.muted,
+    },
+  })
 
   return (
-    <View style={{ paddingVertical: t.spacing.sm }}>
-      <Text
-        style={{
-          fontSize: 13.5,
-          lineHeight: 13.5 * 1.45,
-          color: t.colors.muted,
-        }}
-      >
-        {tx('placeholder.none')}
-      </Text>
+    <View style={styles.container} accessibilityRole="summary">
+      <Text style={styles.message}>{tx('placeholder.none')}</Text>
     </View>
   )
 }

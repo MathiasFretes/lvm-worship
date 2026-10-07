@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 import { LINE_HEIGHTS } from '../lib/listRowMetrics'
 
@@ -14,24 +14,35 @@ export default function SectionHeader({ label }: { label: string }) {
   const t = useTheme()
   return (
     <View
-      style={{
-        backgroundColor: t.colors.bg,
-        paddingTop: 7,
-        paddingBottom: 4,
-        paddingHorizontal: t.spacing.xl,
-      }}
+      accessibilityRole="header"
+      style={[
+        styles.container,
+        { backgroundColor: t.colors.bg, paddingHorizontal: t.spacing.xl },
+      ]}
     >
       <Text
-        style={{
-          fontSize: t.typography.sectionHeader.fontSize,
-          fontWeight: t.typography.sectionHeader.fontWeight,
-          letterSpacing: t.typography.sectionHeader.letterSpacing,
-          lineHeight: LINE_HEIGHTS.sectionHeader,
-          color: t.colors.sec,
-        }}
+        style={[
+          styles.label,
+          {
+            fontSize: t.typography.sectionHeader.fontSize,
+            fontWeight: t.typography.sectionHeader.fontWeight,
+            letterSpacing: t.typography.sectionHeader.letterSpacing,
+            color: t.colors.sec,
+          },
+        ]}
       >
         {label}
       </Text>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 7,
+    paddingBottom: 4,
+  },
+  label: {
+    lineHeight: LINE_HEIGHTS.sectionHeader,
+  },
+})

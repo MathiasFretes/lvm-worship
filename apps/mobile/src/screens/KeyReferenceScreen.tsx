@@ -52,6 +52,42 @@ import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/t
 /** One step of the walk that lights the progression's chords in order. */
 const WALK_STEP_MS = 520
 
+function useProgressionWalk(chordCount: number, reduceMotion: boolean) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const stop = useCallback(() => {
+    if (timer.current) clearInterval(timer.current)
+    timer.current = null
+  }, [])
+
+  const replay = useCallback(() => {
+    stop()
+    if (reduceMotion || chordCount === 0) {
+      setActiveIndex(null)
+      return
+    }
+    let index = 0
+    setActiveIndex(index)
+    timer.current = setInterval(() => {
+      index += 1
+      if (index >= chordCount) {
+        stop()
+        setActiveIndex(null)
+      } else {
+        setActiveIndex(index)
+      }
+    }, WALK_STEP_MS)
+  }, [chordCount, reduceMotion, stop])
+
+  useEffect(() => {
+    replay()
+    return stop
+  }, [replay, stop])
+
+  return { activeIndex, replay }
+}
+
 export default function KeyReferenceScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
@@ -66,7 +102,6 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
 
   const [tonicKey, setTonicKey] = useState('C')
   const [noteFor, setNoteFor] = useState<Progression | null>(null)
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   const selected = progressionById(prefs.selectedId)
   const chords = useMemo(() => (selected ? flatChords(selected) : []), [selected])
@@ -76,38 +111,7 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
   // Under Reduce Motion it goes straight to the settled state. The walk only
   // changes fills — it never moves accessibility focus — so it needs no separate
   // screen-reader branch.
-  const walk = useRef<ReturnType<typeof setInterval> | null>(null)
-  const stopWalk = useCallback(() => {
-    if (walk.current) clearInterval(walk.current)
-    walk.current = null
-  }, [])
-
-  const startWalk = useCallback(() => {
-    stopWalk()
-    if (chords.length === 0 || reduceMotion) {
-      setActiveIndex(null)
-      return
-    }
-    setActiveIndex(0)
-    let step = 0
-    walk.current = setInterval(() => {
-      step += 1
-      if (step >= chords.length) {
-        stopWalk()
-        setActiveIndex(null)
-        return
-      }
-      setActiveIndex(step)
-    }, WALK_STEP_MS)
-    // Keyed on the chord array, not its length: two different progressions can
-    // both be eight chords long, and depending on the length would leave the
-    // walk stale when you switched between them.
-  }, [chords, reduceMotion, stopWalk])
-
-  useEffect(() => {
-    startWalk()
-    return stopWalk
-  }, [startWalk, stopWalk])
+  const { activeIndex, replay: startWalk } = useProgressionWalk(chords.length, reduceMotion)
 
   const annotation: ArcAnnotation = useMemo(() => {
     if (!selected) return EMPTY_ANNOTATION

@@ -27,6 +27,16 @@ import { useTheme } from '../theme/ThemeProvider'
 const BUTTON_W = 88
 const FULL_SWIPE_FRACTION = 0.5
 
+function clampSwipe(value: number, rowWidth: number) {
+  'worklet'
+  return Math.min(0, Math.max(-rowWidth, value))
+}
+
+function isFullSwipe(offset: number, rowWidth: number) {
+  'worklet'
+  return -offset >= rowWidth * FULL_SWIPE_FRACTION
+}
+
 export type ConfirmDelete = { title: string; message?: string; confirmLabel?: string }
 
 /** A non-destructive action revealed beside Delete on a partial swipe. */
@@ -106,11 +116,10 @@ export default function SwipeToDelete({
     })
     .onUpdate((e) => {
       // Left-swipe only; allow dragging back to close from the open rest.
-      tx.value = Math.min(0, Math.max(-width, startX.value + e.translationX))
+      tx.value = clampSwipe(startX.value + e.translationX, width)
     })
     .onEnd(() => {
-      const full = width * FULL_SWIPE_FRACTION
-      if (-tx.value >= full) {
+      if (isFullSwipe(tx.value, width)) {
         if (hasConfirm) {
           // Rest open under the confirm dialog; commit/cancel resolves it.
           tx.value = withTiming(-restW, { duration: 140 })

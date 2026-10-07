@@ -8,6 +8,23 @@ export const ALPHABET = [
   'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ]
 
+function nearestPresentLetter(y: number, height: number, present: ReadonlySet<string>) {
+  if (height <= 0) return null
+  const boundedY = Math.max(0, Math.min(height - Number.EPSILON, y))
+  const touchedIndex = Math.min(
+    ALPHABET.length - 1,
+    Math.floor((boundedY / height) * ALPHABET.length),
+  )
+
+  for (let distance = 0; distance < ALPHABET.length; distance += 1) {
+    const after = touchedIndex + distance
+    const before = touchedIndex - distance
+    if (after < ALPHABET.length && present.has(ALPHABET[after])) return ALPHABET[after]
+    if (before >= 0 && present.has(ALPHABET[before])) return ALPHABET[before]
+  }
+  return null
+}
+
 // The right-edge A–Z index. Letters present in the list are drawn in the accent;
 // absent ones are dimmed. A pan/drag maps the finger's Y-position within the
 // strip to the matching section and asks the screen to scroll there
@@ -32,23 +49,8 @@ export default function AlphaScrubber({
   onSelectRef.current = onSelect
   const lastLetter = useRef<string | null>(null)
 
-  // Map a touch Y (relative to the strip) to the nearest present letter.
-  const resolve = (y: number): string | null => {
-    const h = heightRef.current
-    if (h <= 0) return null
-    const clamped = Math.max(0, Math.min(h - 0.001, y))
-    const idx = Math.min(ALPHABET.length - 1, Math.floor((clamped / h) * ALPHABET.length))
-    for (let d = 0; d < ALPHABET.length; d++) {
-      const hi = idx + d
-      const lo = idx - d
-      if (hi < ALPHABET.length && presentRef.current.has(ALPHABET[hi])) return ALPHABET[hi]
-      if (lo >= 0 && presentRef.current.has(ALPHABET[lo])) return ALPHABET[lo]
-    }
-    return null
-  }
-
   const handle = (y: number) => {
-    const letter = resolve(y)
+    const letter = nearestPresentLetter(y, heightRef.current, presentRef.current)
     if (letter && letter !== lastLetter.current) {
       lastLetter.current = letter
       Haptics.selectionAsync().catch(() => {})
@@ -94,7 +96,11 @@ export default function AlphaScrubber({
         hitSlop={{ top: 6, bottom: 6, left: 14, right: 8 }}
         style={{ paddingHorizontal: 3 }}
       >
-        <View pointerEvents="none">
+        <View
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {ALPHABET.map((letter) => {
             const active = present.has(letter)
             return (

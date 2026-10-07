@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Platform, Pressable, Text, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -41,23 +41,23 @@ export default function FormSheetShell({
 }) {
   const t = useTheme()
   const { t: tx } = useTranslation('common')
-  const action = actionLabel ?? tx('done')
-  const showAction = actionLabel !== undefined || Platform.OS !== 'android'
+  const isDismissOnly = actionLabel === undefined
+  const action = isDismissOnly ? tx('done') : actionLabel
+  const showAction = !isDismissOnly || Platform.OS !== 'android'
   return (
     <View style={{ backgroundColor: t.colors.surface }}>
       <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: t.spacing.lg,
-          paddingTop: t.spacing.lg,
-          paddingBottom: t.spacing.md,
-          borderBottomWidth: 1,
-          borderBottomColor: t.colors.border,
-        }}
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: t.spacing.lg,
+            paddingTop: t.spacing.lg,
+            paddingBottom: t.spacing.md,
+            borderBottomColor: t.colors.border,
+          },
+        ]}
       >
-        <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+        <Text accessibilityRole="header" style={[styles.title, { color: t.colors.ink }]}>
           {title}
         </Text>
         {showAction ? (
@@ -72,3 +72,17 @@ export default function FormSheetShell({
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+})

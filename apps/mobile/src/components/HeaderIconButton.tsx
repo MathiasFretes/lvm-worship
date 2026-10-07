@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native'
+import { Pressable, StyleSheet } from 'react-native'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -26,16 +26,25 @@ export default function HeaderIconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: t.radii.pill,
-        backgroundColor: t.colors.surfaceAlt,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      style={({ pressed }) => [
+        styles.control,
+        {
+          borderRadius: t.radii.pill,
+          backgroundColor: t.colors.surfaceAlt,
+          opacity: pressed ? 0.72 : 1,
+        },
+      ]}
     >
       <SymbolIcon name={icon} size={iconSize} color={t.colors.ink} />
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  control: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})

@@ -67,6 +67,17 @@ const PILL_H = 54
 /** Resting inset of the pill from the screen edge once fully in. */
 const PILL_INSET = 10
 
+function neighbourForDrag(
+  raw: number,
+  rtl: boolean,
+  canGoNext: boolean,
+  canGoPrev: boolean,
+): { forward: boolean; available: boolean } {
+  'worklet'
+  const forward = isForwardDrag(raw, rtl)
+  return { forward, available: forward ? canGoNext : canGoPrev }
+}
+
 export type ChapterSwipeProps = {
   /** The reading itself (spinner / error / verses — whatever the screen renders). */
   children: ReactNode
@@ -198,13 +209,12 @@ export default function ChapterSwipe({
     .onUpdate((e) => {
       if (locked.value) return
       const raw = e.translationX
-      const forward = isForwardDrag(raw, rtl)
-      const hasNeighbour = forward ? canGoNext : canGoPrev
-      dx.value = dragTravel(raw, threshold, hasNeighbour)
+      const target = neighbourForDrag(raw, rtl, canGoNext, canGoPrev)
+      dx.value = dragTravel(raw, threshold, target.available)
 
       // The threshold haptic — one tick per crossing, and it re-arms on the way
       // back so the notch can be felt in both directions. Never at a wall.
-      const nowArmed = hasNeighbour && Math.abs(dx.value) >= threshold ? 1 : 0
+      const nowArmed = target.available && Math.abs(dx.value) >= threshold ? 1 : 0
       if (nowArmed !== armed.value) {
         armed.value = nowArmed
         if (nowArmed) runOnJS(tick)()
@@ -214,10 +224,10 @@ export default function ChapterSwipe({
       if (locked.value) return
       armed.value = 0
       const travelled = Math.abs(dx.value)
-      const forward = isForwardDrag(dx.value, rtl)
+      const target = neighbourForDrag(dx.value, rtl, canGoNext, canGoPrev)
 
       if (
-        (forward ? canGoNext : canGoPrev) &&
+        target.available &&
         shouldCommitSwipe(travelled, e.velocityX, threshold)
       ) {
         locked.value = 1
@@ -229,13 +239,13 @@ export default function ChapterSwipe({
           // SplashOverlay's reduced-motion branch: run the callback synchronously.
           dx.value = 0
           pageOpacity.value = 0
-          runOnJS(advance)(forward)
+          runOnJS(advance)(target.forward)
           return
         }
         const exitTo = (dx.value < 0 ? -1 : 1) * width * EXIT_FRACTION
         pageOpacity.value = withTiming(0, { duration: EXIT_FADE_MS })
         dx.value = withTiming(exitTo, { duration: EXIT_MS, easing: EASE_OUT }, (finished) => {
-          if (finished) runOnJS(advance)(forward)
+          if (finished) runOnJS(advance)(target.forward)
         })
         return
       }
@@ -293,6 +303,7 @@ function EdgePill({
   enabled: boolean
 }) {
   const t = useTheme()
+  const icon = side === 'right' ? 'chevron.right' : 'chevron.left'
   // A right-edge pill answers a leftward (negative) drag, and vice versa.
   const sign = side === 'right' ? -1 : 1
   const offscreen = (PILL_W + PILL_INSET + 8) * -sign
@@ -345,7 +356,7 @@ function EdgePill({
       <View>
         <View style={{ ...face, backgroundColor: t.colors.surfaceAlt, borderColor: t.colors.border }}>
           <SymbolIcon
-            name={side === 'right' ? 'chevron.right' : 'chevron.left'}
+            name={icon}
             size={19}
             color={t.colors.sec}
             weight="semibold"
@@ -363,7 +374,7 @@ function EdgePill({
           ]}
         >
           <SymbolIcon
-            name={side === 'right' ? 'chevron.right' : 'chevron.left'}
+            name={icon}
             size={19}
             color={t.colors.textAccent}
             weight="semibold"

@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import SymbolIcon from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
@@ -23,14 +23,7 @@ export default function TransposeBar({
 }) {
   const t = useTheme()
   const { t: tx } = useTranslation('song')
-  const buttonStyle = {
-    width: 46,
-    height: 44,
-    borderRadius: 11,
-    backgroundColor: t.colors.surfaceAlt,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  }
+  const buttonStyle = [styles.stepButton, { backgroundColor: t.colors.surfaceAlt }]
   return (
     <View
       style={{
@@ -64,6 +57,7 @@ export default function TransposeBar({
         accessibilityRole="button"
         accessibilityLabel={tx('transpose.chooseKey')}
         accessibilityHint={tx('transpose.chooseKeyHint')}
+        accessibilityState={{ disabled: !onLongPress }}
         style={({ pressed }) => [pressed && onLongPress ? { opacity: 0.6 } : null]}
       >
         <Text
@@ -89,3 +83,13 @@ export default function TransposeBar({
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  stepButton: {
+    width: 46,
+    height: 44,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})

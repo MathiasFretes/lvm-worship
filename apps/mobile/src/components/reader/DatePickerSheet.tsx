@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
@@ -14,6 +14,19 @@ import { useTheme } from '../../theme/ThemeProvider'
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+function calendarRows(year: number, month: number): Array<Array<number | null>> {
+  const leading = new Date(year, month, 1).getDay()
+  const count = new Date(year, month + 1, 0).getDate()
+  const cells: Array<number | null> = [
+    ...Array.from({ length: leading }, () => null),
+    ...Array.from({ length: count }, (_, index) => index + 1),
+  ]
+  while (cells.length % 7) cells.push(null)
+  return Array.from({ length: cells.length / 7 }, (_, index) =>
+    cells.slice(index * 7, index * 7 + 7),
+  )
 }
 
 type DatePickerProps = {
@@ -39,14 +52,7 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
   // (formSheet route), so the initializer resets to the selected date per open.
   const [view, setView] = useState({ year: value.getFullYear(), month: value.getMonth() })
 
-  const firstDow = new Date(view.year, view.month, 1).getDay()
-  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate()
-  const cells: (number | null)[] = []
-  for (let i = 0; i < firstDow; i++) cells.push(null)
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
-  while (cells.length % 7 !== 0) cells.push(null)
-  const weeks: (number | null)[][] = []
-  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+  const weeks = useMemo(() => calendarRows(view.year, view.month), [view.year, view.month])
 
   const shiftMonth = (delta: number) => {
     const next = new Date(view.year, view.month + delta, 1)
@@ -119,6 +125,7 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
                   key={di}
                   onPress={() => pick(day)}
                   accessibilityRole="button"
+                  accessibilityLabel={`${day} ${MONTHS[view.month]} ${view.year}`}
                   accessibilityState={{ selected: isSelected }}
                   style={{ flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' }}
                 >

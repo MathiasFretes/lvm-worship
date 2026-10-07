@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 
@@ -9,16 +9,21 @@ export default function RowIcon({ name }: { name: SymbolIconProps['name'] }) {
   const t = useTheme()
   return (
     <View
-      style={{
-        width: 29,
-        height: 29,
-        borderRadius: 7,
-        backgroundColor: t.colors.accentSoft,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      accessible={false}
+      importantForAccessibility="no"
+      style={[styles.container, { backgroundColor: t.colors.accentSoft }]}
     >
       <SymbolIcon name={name} size={16} color={t.colors.accent} />
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: 29,
+    height: 29,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})

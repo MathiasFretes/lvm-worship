@@ -6,7 +6,7 @@ import SpritePickerScreen from '../src/screens/SpritePickerScreen'
 // layout's auth gate allows this route with OR without a session (signup with
 // email confirmation OFF signs in immediately, ON leaves no session yet).
 
-export default function ChooseIcon() {
+function LvmChooseIconRoute() {
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
@@ -14,3 +14,5 @@ export default function ChooseIcon() {
     </Screen>
   )
 }
+
+export default LvmChooseIconRoute

@@ -1,6 +1,7 @@
 import {
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -64,6 +65,7 @@ function FilterSortContent({
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'common'])
   const { height } = useWindowDimensions()
+  const scrollLimit = Math.round(height * 0.6)
 
   return (
     <FormSheetShell title={tx('filterSheet.title')} actionLabel={tx('common:reset')} onAction={onReset}>
@@ -71,19 +73,21 @@ function FilterSortContent({
         // The fitToContents detent doesn't bound over-tall content the way the
         // old Modal's maxHeight did, so cap the scroll area ourselves — long
         // tag lists scroll here instead of pushing the footer off screen.
-        style={{ flexGrow: 0, maxHeight: Math.round(height * 0.6) }}
+        style={[styles.scrollArea, { maxHeight: scrollLimit }]}
         contentContainerStyle={{ padding: t.spacing.lg }}
       >
         {/* Sort by */}
         <Text
-          style={{
-            fontSize: t.typography.overline.fontSize,
-            fontWeight: t.typography.overline.fontWeight,
-            letterSpacing: t.typography.overline.letterSpacing,
-            textTransform: 'uppercase',
-            color: t.colors.sec,
-            paddingBottom: t.spacing.sm,
-          }}
+          style={[
+            styles.overline,
+            {
+              fontSize: t.typography.overline.fontSize,
+              fontWeight: t.typography.overline.fontWeight,
+              letterSpacing: t.typography.overline.letterSpacing,
+              color: t.colors.sec,
+              paddingBottom: t.spacing.sm,
+            },
+          ]}
         >
           {tx('filterSheet.sortBy')}
         </Text>
@@ -167,3 +171,12 @@ function FilterSortContent({
     </FormSheetShell>
   )
 }
+
+const styles = StyleSheet.create({
+  scrollArea: {
+    flexGrow: 0,
+  },
+  overline: {
+    textTransform: 'uppercase',
+  },
+})

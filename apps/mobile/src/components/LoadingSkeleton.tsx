@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ActivityIndicator, Animated, Text, View } from 'react-native'
+import { ActivityIndicator, Animated, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 import { useAccessibilityFlags } from '../lib/accessibilityFlags'
@@ -18,6 +18,24 @@ const ROWS = [
   { title: '52%', sub: '34%' },
   { title: '62%', sub: '40%' },
 ] as const
+
+function SkeletonBar({
+  width,
+  height,
+  color,
+  opacity,
+}: {
+  width: `${number}%`
+  height: number
+  color: string
+  opacity: Animated.Value
+}) {
+  return (
+    <Animated.View
+      style={[styles.bar, { width, height, backgroundColor: color, opacity }]}
+    />
+  )
+}
 
 export default function LoadingSkeleton({ label }: { label?: string }) {
   const t = useTheme()
@@ -42,20 +60,12 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
     return () => loop.stop()
   }, [pulse, reduceMotion])
 
-  const bar = (width: string, height: number) => (
-    <Animated.View
-      style={{
-        width: width as `${number}%`,
-        height,
-        borderRadius: 4,
-        backgroundColor: t.colors.surfaceAlt,
-        opacity: pulse,
-      }}
-    />
-  )
-
   return (
-    <View style={{ paddingHorizontal: t.spacing.xl, paddingTop: t.spacing.md }}>
+    <View
+      accessibilityLabel={displayLabel}
+      accessibilityLiveRegion="polite"
+      style={{ paddingHorizontal: t.spacing.xl, paddingTop: t.spacing.md }}
+    >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: t.spacing.lg }}>
         <ActivityIndicator size="small" color={t.colors.accent} />
         <Text style={{ fontSize: 13, color: t.colors.sec }}>{displayLabel}</Text>
@@ -74,8 +84,8 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
           }}
         >
           <View style={{ flex: 1, gap: 8 }}>
-            {bar(row.title, 13)}
-            {bar(row.sub, 11)}
+            <SkeletonBar width={row.title} height={13} color={t.colors.surfaceAlt} opacity={pulse} />
+            <SkeletonBar width={row.sub} height={11} color={t.colors.surfaceAlt} opacity={pulse} />
           </View>
           <Animated.View
             style={{
@@ -91,3 +101,9 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  bar: {
+    borderRadius: 4,
+  },
+})

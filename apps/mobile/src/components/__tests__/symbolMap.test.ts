@@ -8,7 +8,7 @@ import { MATERIAL_CODEPOINTS, SF_TO_MATERIAL } from '../symbolMap'
 // icon in release). MATERIAL_CODEPOINTS is regenerated from the same run that
 // writes the .ttf files, so it is a faithful proxy for what the fonts contain.
 
-describe('symbolMap', () => {
+describe.each([{ product: 'LVM' }])('$product · symbolMap', () => {
   it('has a bundled codepoint for every mapped Material glyph', () => {
     const unbundled = Object.entries(SF_TO_MATERIAL)
       .filter(([, glyph]) => MATERIAL_CODEPOINTS[glyph.md] == null)

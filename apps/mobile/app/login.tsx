@@ -6,7 +6,7 @@ import AuthScreen from '../src/screens/AuthScreen'
 // back to the tabs once signed in. AuthScreen holds both the sign-in and
 // sign-up modes; sign-up continues to /choose-icon.
 
-export default function Login() {
+function LvmLoginRoute() {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -14,3 +14,5 @@ export default function Login() {
     </Screen>
   )
 }
+
+export default LvmLoginRoute
