@@ -2,21 +2,19 @@
 
 ## `icon.png` — the La Voz Misionera brand app icon
 
-`icon.png` is the real La Voz Misionera app icon: the interlocking "GC" brand mark
-(Signal-blue "G" over a light "C") on the dark brand background. It satisfies the
-App Store icon requirements (App Store Connect rejects builds with no icon, and
-rejects any icon with an alpha channel).
+`icon.png` is generated from the original `lvm-mark.svg`: an LVM monogram with
+voice waves on the Signal-blue/dark brand field. The same source generates the
+macOS Studio AppIcon, so Mobile and Studio remain one product family.
 
 - **Requirements:** 1024×1024, **no alpha channel** (flat RGB PNG), no rounded
   corners (iOS masks them).
-- **To swap:** drop the final 1024×1024 no-alpha PNG in as `icon.png`. It is wired
-  via `expo.icon` in `apps/mobile/app.json`; no config change needed.
-- If a replacement PNG carries an alpha channel, flatten it against the brand
-  background before committing:
+- **Regenerate Mobile + Studio:** from the repository root run:
 
   ```sh
-  npx --yes sharp-cli@^5 -i assets/icon.png -o assets/icon.png flatten --background "#1E2227"
+  npm run studio:icons
   ```
+
+  This writes the 1024×1024 RGB `icon.png` and all ten macOS AppIcon slots.
 
 ## `splash-icon*.png` — the launch-screen mark (**keeps its alpha**)
 
@@ -34,21 +32,15 @@ the icon's opaque `#1E2227` tile does not match `#14171A`/`#F5F7F9`.
   sync** — the overlay is drawn to be pixel-identical to the native splash so the
   handoff between them is invisible.
 
-### `brand/` — the vector source of truth
+### `lvm-mark.svg` — icon source of truth
 
-`brand/gc-mark.svg` (for light backgrounds) and `brand/gc-mark-dark.svg` (for dark
-backgrounds) are the traced GC mark on a **square, centred, transparent** canvas:
-`viewBox="-51 -68 1620 1620"`, chosen so the mark's real bounding box (1368×1370,
-centred at 759,742 in the original trace) sits centred *and* inside the canvas's
-inscribed circle — which is what Android 12+ clips a splash icon to. Colors are the
-`@lavozmisionera/tokens` values (`#1E2227` ink, `#1F84C9` / `#4EA6E6` accents).
+`lvm-mark.svg` is the LVM-owned square master for launcher/store icons. Keep it
+vector; do not hand-edit generated PNGs.
 
-Regenerate the PNGs after editing either SVG (reproduces the committed files
-byte-for-byte):
+Regenerate after editing the SVG:
 
 ```sh
-npx --yes sharp-cli@^5 -i assets/brand/gc-mark.svg      -o assets/splash-icon.png      resize 1024 1024
-npx --yes sharp-cli@^5 -i assets/brand/gc-mark-dark.svg -o assets/splash-icon-dark.png resize 1024 1024
+npm run studio:icons
 ```
 
 ## `sprites/` — the profile avatars (**WebP, via `expo-image` only**)
@@ -59,9 +51,10 @@ lives in `users.preferences.sprite` and is **shared with the web app**, so the
 ids here and in `apps/web/src/components/ui/SpritePicker.jsx` must match
 exactly, and both apps must show the same artwork for a given id.
 
-**The source of truth is the web copy, `apps/web/public/sprites/<id>.webp`.**
-Mobile now ships the same format, at 344KB instead of the 1.1MB the PNG set
-cost.
+The source of truth is the reproducible LVM generator,
+`apps/mobile/scripts/generate-lvm-assets.mjs`. It writes byte-identical WebP
+files to Mobile and Web, so a persisted id always resolves to the same original
+LVM artwork in both clients.
 
 **They must only ever be rendered through `expo-image`.** React Native's own
 `Image` supports WebP on Android only (see the format list in
@@ -76,17 +69,16 @@ these call sites back to RN's `Image` reintroduces that bug on iOS.
   size any screen draws them at (the picker's tiles on the widest phone);
   everything else — the 52pt profile card, the 30pt headers, the 29pt row —
   scales down from the same file.
-- Regenerate all 15 from the web originals:
+- Regenerate all 15, along with the Mobile identity images:
 
   ```sh
-  npx --yes sharp-cli@^5 -i "../web/public/sprites/*.webp" -o assets/sprites/ \
-    --format webp --quality 88 resize 384 384
+  node apps/mobile/scripts/generate-lvm-assets.mjs
   ```
 
 - Adding an avatar means adding the `.webp` to `apps/web/public/sprites/`, the
   id to **both** `SPRITE_IDS` lists, a `require` line in
-  `src/lib/sprites.ts` (Metro needs static literals), and re-running the
-  command above.
+  `src/lib/sprites.ts` (Metro needs static literals), a new declarative spec in
+  the generator, and re-running the command above.
 
 ## In-app marks — `mark.webp`, `google-g.webp`, `splash-mark*.png`
 
@@ -105,7 +97,12 @@ those same files in JS meant decoding a 1024² bitmap (~4MB) for a 28pt logo.
   sensitive, so it is deliberately not converted.
 
 ```sh
-npx --yes sharp-cli@^5 -i assets/icon.png             -o assets/mark.webp             --format webp resize 192 192
-npx --yes sharp-cli@^5 -i assets/splash-icon.png      -o assets/splash-mark.png       resize 600 600
-npx --yes sharp-cli@^5 -i assets/splash-icon-dark.png -o assets/splash-mark-dark.png  resize 600 600
+node apps/mobile/scripts/generate-lvm-assets.mjs
 ```
+
+The generator derives `icon.png`, `adaptive-icon.png`, `mark.webp`, and both
+splash image pairs from `lvm-mark.svg`. Generated splash/adaptive images retain
+alpha; `icon.png` and `mark.webp` remain opaque.
+
+See `PROVENANCE.md` for the 24-file reference comparison and the external
+provider assets intentionally retained.

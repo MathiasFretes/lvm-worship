@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">La Voz Misionera</title>
+  <desc id="desc">Monograma LVM con ondas de voz</desc>
+  <defs>
+    <linearGradient id="bg" x1="112" y1="96" x2="900" y2="928" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123458"/>
+      <stop offset="1" stop-color="#071522"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="340" y1="250" x2="692" y2="744" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#53D8FF"/>
+      <stop offset="1" stop-color="#2488FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <path d="M214 282h92v366h146v94H214V282Z" fill="#F7FBFF"/>
+  <path d="M367 282h98l67 303 67-303h98L582 742H482L367 282Z" fill="url(#signal)"/>
+  <path d="M616 742V282h91l73 151 73-151h91v460h-91V471l-73 143-73-143v271h-91Z" fill="#F7FBFF"/>
+  <path d="M138 390c-34 68-34 176 0 244M91 342c-61 101-61 239 0 340" fill="none" stroke="#53D8FF" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="512" cy="826" r="22" fill="#53D8FF"/>
+</svg>
