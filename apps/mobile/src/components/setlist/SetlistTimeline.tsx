@@ -34,6 +34,7 @@ export type TimelineCallbacks = {
   onKeyTap: (index: number) => void
   onMove: (from: number, to: number) => void
   onRemove: (index: number) => void
+  onDuplicate: (index: number) => void
 }
 
 function clampWorklet(value: number, lo: number, hi: number) {
@@ -162,7 +163,15 @@ const Row = memo(function Row({
       ]}
       layout={LinearTransition.duration(200)}
     >
-      <SwipeToDelete onDelete={() => callbacks.onRemove(index)} label={tx('remove')}>
+      <SwipeToDelete
+        onDelete={() => callbacks.onRemove(index)}
+        label={tx('remove')}
+        secondary={{
+          label: tx('rowActions.duplicate'),
+          icon: 'plus.square.on.square',
+          onPress: () => callbacks.onDuplicate(index),
+        }}
+      >
         <View
           style={{
             height: ROW_HEIGHT,

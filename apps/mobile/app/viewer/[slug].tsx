@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Animated, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Animated, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import * as Crypto from 'expo-crypto'
@@ -23,11 +23,9 @@ import {
 } from '../../src/components/ChordChart'
 // CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_LYRIC_FONT drive the raw-text fallback.
 import ExportSheet from '../../src/components/ExportSheet'
-import HeaderIconButton from '../../src/components/HeaderIconButton'
 import KeyPickerSheet from '../../src/components/setlist/KeyPickerSheet'
 import Screen from '../../src/components/Screen'
-import StarButton from '../../src/components/StarButton'
-import SymbolIcon from '../../src/components/SymbolIcon'
+import LvmViewerHeader from '../../src/components/song/LvmViewerHeader'
 import TransposeBar from '../../src/components/TransposeBar'
 import AutoFitChart from '../../src/components/AutoFitChart'
 import ViewOptionsSheet, {
@@ -41,7 +39,6 @@ import { useSong, usePersonalSong } from '../../src/lib/useSong'
 import { supabase } from '../../src/lib/supabase'
 import { upsertDraft } from '../../src/lib/drafts/draftsStore'
 import { actionFailureMessage } from '../../src/lib/errors'
-import { PersonalChip } from '../../src/components/PersonalChip'
 import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
@@ -291,77 +288,18 @@ export default function ViewerScreen() {
           paddingBottom: t.spacing.sm,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-          >
-            <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:songs')}</Text>
-          </Pressable>
-          <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-            {isPersonal ? (
-              <HeaderIconButton icon="square.and.pencil" label={tx('song:viewer.editSong')} onPress={handleEditPersonal} />
-            ) : null}
-            <HeaderIconButton icon="ellipsis" label={tx('song:viewer.viewOptions')} onPress={() => setSheet('options')} />
-            <HeaderIconButton
-              icon="square.and.arrow.up"
-              iconSize={22}
-              label={tx('export:exportAndShare')}
-              onPress={() => setSheet('export')}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: t.spacing.md, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
-          <Text
-            numberOfLines={2}
-            style={{
-              flexShrink: 1,
-              fontSize: t.typography.largeTitle.fontSize,
-              fontWeight: t.typography.largeTitle.fontWeight,
-              letterSpacing: t.typography.largeTitle.letterSpacing,
-              color: t.colors.ink,
-            }}
-          >
-            {displayTitle}
-          </Text>
-          {isPersonal ? <PersonalChip /> : <StarButton songId={song?.id} />}
-        </View>
-        {/* Subtitle row: Key pill (+ time sig / BPM). The author/artist is
-            deliberately absent — on stage the key has to be readable at a
-            glance, and a long credit line crowded the pill off the row. */}
-        <View
-          style={{
-            marginTop: 6,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: t.spacing.sm,
-          }}
-        >
-          {keyLabel ? (
-            <View
-              style={{
-                backgroundColor: t.colors.accentSoft,
-                borderRadius: t.radii.pill,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-              }}
-            >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.textAccent }}>
-                {tx('common:keyOf', { key: keyLabel })}
-              </Text>
-            </View>
-          ) : null}
-          {song?.time_signature ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{song.time_signature}</Text>
-          ) : null}
-          {song?.tempo ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{tx('common:bpm', { tempo: song.tempo })}</Text>
-          ) : null}
-        </View>
+        <LvmViewerHeader
+          title={displayTitle}
+          personal={isPersonal}
+          songId={song?.id}
+          keyLabel={keyLabel}
+          timeSignature={song?.time_signature}
+          tempo={song?.tempo}
+          onBack={() => router.back()}
+          onEdit={handleEditPersonal}
+          onOptions={() => setSheet('options')}
+          onExport={() => setSheet('export')}
+        />
       </Animated.View>
 
       {loading ? (
