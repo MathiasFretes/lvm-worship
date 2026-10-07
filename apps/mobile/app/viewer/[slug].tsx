@@ -12,7 +12,6 @@ import {
   formatKeyDisplay,
   parseChordProOrLegacy,
   stepsBetween,
-  transposeSymPrefer,
   songRowToForm,
   fetchPersonalSongById,
 } from '@lavozmisionera/core'
@@ -48,6 +47,7 @@ import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
 import { useChartAutoFit } from '../../src/lib/useChartAutoFit'
+import { resolveViewerKey } from '../../src/lib/songViewerKey'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
@@ -132,11 +132,15 @@ export default function ViewerScreen() {
   const [headerH, setHeaderH] = useState(0)
   const [chartAreaH, setChartAreaH] = useState(0)
 
-  const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
-  const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
-  const steps = (((seedSteps + delta) % 12) + 12) % 12
   const preferFlat = resolvePreferFlat(accidental)
-  const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
+  const { nativeKey, seedSteps, steps, effectiveKey } = resolveViewerKey({
+    documentKey: doc?.meta?.key,
+    songKey: song?.default_key,
+    routeKey: songKey,
+    initialKey,
+    delta,
+    preferFlat,
+  })
 
   // Mirror the displayed key into the recent-songs entry (data only — the
   // Home Recent-songs card reopens the song in this key via initialKey).

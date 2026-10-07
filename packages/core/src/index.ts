@@ -27,6 +27,7 @@ export * from './songs/instrumental'
 export * from './songs/verseRef'
 export * from './songs/songMetadata'
 export * from './songs/sort'
+export * from './songs/search'
 export * from './songs/songsRepo'
 // Shared song-authoring form model + slug helpers (web + mobile editors)
 export * from './songs/songAuthoring'

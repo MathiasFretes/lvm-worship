@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchSongList, fetchPersonalSongs } from '@lavozmisionera/core'
 import { supabase } from './supabase'
 import { reportFailure } from './errors'
+import { mergeSongCatalog } from './songCatalogModel'
 
 // i18n key for the user-facing failure. The hook owns it because the hook knows
 // which surface it feeds; the screen renders it through its own `t`. Never the
@@ -55,23 +56,6 @@ type PersonalRow = {
   created_at: string | null
 }
 
-function personalToSong(row: PersonalRow): Song {
-  return {
-    id: `personal:${row.id}`,
-    slug: row.slug ?? '',
-    title: row.title,
-    artist: row.artist,
-    default_key: row.default_key,
-    time_signature: row.time_signature,
-    tags: row.tags,
-    tempo: row.tempo,
-    created_at: row.created_at,
-    source: 'personal',
-    personalId: row.id,
-    reviewStatus: row.status,
-  }
-}
-
 // Fetch the public catalog and the user's personal drafts and merge them. A
 // personal draft that has already been published (published_song_id set) is
 // hidden — its catalog twin already appears.
@@ -92,11 +76,7 @@ export function useSongList() {
     ])
       .then(([catalog, personal]) => {
         if (!alive) return
-        const catalogSongs: Song[] = catalog.map((r) => ({ ...r, source: 'catalog' as const }))
-        const personalSongs: Song[] = personal
-          .filter((r) => !r.published_song_id)
-          .map(personalToSong)
-        setSongs([...personalSongs, ...catalogSongs])
+        setSongs(mergeSongCatalog(catalog, personal))
         setError(null)
       })
       .catch((err: unknown) => {

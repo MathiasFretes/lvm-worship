@@ -110,6 +110,13 @@ El gate de B6 incluye las pruebas existentes de Worship Mode, una prueba nueva d
 
 [El inventario y las decisiones formales](docs/m77-ownership-decisions.md) asignan User/Session/Membership/Roles/Profile a LVM Service / Identidad. Worship Web/Mobile consume esa identidad para sus operaciones musicales; no crea usuarios o permisos paralelos. Blog, posts y devocionales editoriales se asignan a LVM Service / Contenido; Web Pública publica los documentos aprobados. El plan/lector bíblico se separa del contenido redactado y las reflexiones privadas no entran en el CMS público. B7/B8 son decisiones y plan de migración: no cambian rutas, autenticación, datos ni esquema en esta rama.
 
+## M7.7B9–C2 — Núcleo compartido y Mobile
+
+- [B9: auditoría del núcleo compartido](docs/m77-b9-shared-core-audit.md) clasifica ChordPro, transposición, render, canciones, setlists, hooks y adaptadores. 49 de 55 archivos de `packages/core` coinciden exactamente con el árbol de referencia en la misma ruta; esa base no se declara reimplementada.
+- [C1: auditoría Mobile](docs/m77-c1-mobile-audit.md) cubre rutas, funciones, assets, dependencias y duplicación Web/Mobile. El layout original de cinco tabs coincide como blob; se sustituyó su capa de navegación conservando Expo NativeTabs y destinos.
+- C2 comenzó con una regla nueva de búsqueda en `packages/core/src/songs/search.ts`, consumida por Mobile, y un modelo Mobile explícito de fusión catálogo/borradores. El modelo de biblioteca agrupa, ordena y busca con pruebas, y la vista existente lo consume. El detalle de canción usa un nuevo selector puro de tonalidad. La pestaña de repertorios tiene una nueva orquestación de lista sin cambiar el repositorio ni el builder. La UI de biblioteca/detalle y el builder siguen siendo **MIXED**; C2 no se declara terminado hasta completar esas piezas y sus gates.
+- La comparación por blob es evidencia de igualdad de contenido, no una conclusión legal sobre propiedad. Los assets móviles coincidentes y el `assets/icon.png` ausente siguen como gates de independencia/release.
+
 ## Decisiones por área
 
 | Área | Dueño futuro | Decisión | Condición de cierre |

@@ -1,194 +1,118 @@
 import { useCallback, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
-import Screen from '../components/Screen'
+import { duplicateSetlist, nextCopyName, timeAgo } from '@lavozmisionera/core'
 import ConstrainedContent from '../components/ConstrainedContent'
-import ListRow from '../components/ListRow'
 import EmptyState from '../components/EmptyState'
+import ListRow from '../components/ListRow'
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import Screen from '../components/Screen'
 import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
 import PruneSetlistsModal from '../components/setlist/PruneSetlistsModal'
-import { useTheme } from '../theme/ThemeProvider'
-import { duplicateSetlist, nextCopyName, timeAgo } from '@lavozmisionera/core'
+import { actionFailureMessage, errMessage } from '../lib/errors'
 import { defaultSetlistName } from '../lib/setlistName'
 import { supabase } from '../lib/supabase'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { uuidv4 } from '../lib/uuid'
-import { actionFailureMessage, errMessage } from '../lib/errors'
+import { useTheme } from '../theme/ThemeProvider'
 
-// A refresh that resolves in 60ms reads as "nothing happened" — the spinner
-// never renders a full frame. Hold it briefly so the pull is acknowledged.
-const MIN_REFRESH_MS = 500
-
-// The Setlists tab: every personal setlist (newest-edited first), a New set
-// action, and tap-to-open into the builder.
+/** LVM's setlist home: retain the existing data contract while owning the flow. */
 export default function SetlistsScreen() {
-  const t = useTheme()
+  const theme = useTheme()
   const insets = useSafeAreaInsets()
-  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'errors'])
   const router = useRouter()
-  const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } =
-    useSetlists()
+  const { t, i18n } = useTranslation(['setlist', 'common', 'errors'])
+  const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } = useSetlists()
   const [refreshing, setRefreshing] = useState(false)
   const [creating, setCreating] = useState(false)
   const [pruneOpen, setPruneOpen] = useState(false)
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
 
-  // Refresh whenever the tab regains focus so edits made in the builder
-  // (name, songs, deletes) are reflected without a manual pull.
-  useFocusEffect(
-    useCallback(() => {
-      refresh()
-    }, [refresh]),
-  )
+  useFocusEffect(useCallback(() => { void refresh() }, [refresh]))
 
   async function onRefresh() {
     setRefreshing(true)
     const started = Date.now()
-    await refresh()
-    const held = Date.now() - started
-    if (held < MIN_REFRESH_MS) {
-      await new Promise((resolve) => setTimeout(resolve, MIN_REFRESH_MS - held))
-    }
-    setRefreshing(false)
-  }
-
-  // Shared by every branch below so the pull-to-refresh gesture is a force-sync
-  // from any state — including the empty and error states, where it used to be
-  // unreachable because only the populated list carried one.
-  function refreshControl() {
-    return (
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
-    )
+    try {
+      await refresh()
+      const remaining = 500 - (Date.now() - started)
+      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining))
+    } finally { setRefreshing(false) }
   }
 
   async function onCreate() {
     if (creating) return
-    // At the per-role cap: prune instead of navigating into a set the INSERT
-    // would reject. The DB trigger is the real gate; this just avoids a dead
-    // optimistic open.
-    if (atLimit) {
-      setPruneOpen(true)
-      return
-    }
+    if (atLimit) { setPruneOpen(true); return }
     setCreating(true)
-    // Optimistic: mint the id, open the builder instantly, insert in the
-    // background. The builder retries its initial fetch a few times to cover
-    // the in-flight INSERT.
     const id = uuidv4()
-    // Named here rather than in core's createSetlist: this is the one caller
-    // that already holds every existing name, so it is the only one that can
-    // de-duplicate a second set made on the same day without a round trip.
     const name = defaultSetlistName(
-      (key, opts) => tx(key, opts),
+      (key, options) => t(key, options),
       i18n.language,
-      setlists.map((row) => row.name),
+      setlists.map(({ name: existing }) => existing),
     )
     router.push(`/setlist/${id}`)
     try {
       await create({ id, name })
-    } catch (err: unknown) {
-      // A stale role/limit read can let an over-cap create slip through to the
-      // trigger. Surface the prune flow rather than a raw error.
-      if (errMessage(err).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
-        router.back()
+    } catch (failure) {
+      router.back()
+      if (errMessage(failure).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
         await refresh()
         setPruneOpen(true)
       } else {
-        Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('Setlists.create', err, tx))
+        Alert.alert(t('alerts.couldNotCreate'), actionFailureMessage('Setlists.create', failure, t))
       }
-    } finally {
-      setCreating(false)
-    }
+    } finally { setCreating(false) }
   }
 
-  // Duplicate from the row's swipe actions. Numbered against the names already
-  // in the list ("Sunday" → "Sunday (2)"), so the copy is distinguishable at a
-  // glance — the complaint behind QA Nº 6994's M-01 was a column of identical
-  // rows, and an unnumbered copy would recreate it.
-  async function onDuplicateSetlist(item: SetlistRow) {
+  async function onDuplicate(item: SetlistRow) {
     if (duplicatingId) return
-    // Same cap as creating: a duplicate is a new setlist and the DB trigger
-    // rejects it exactly the same way.
-    if (atLimit) {
-      setPruneOpen(true)
-      return
-    }
+    if (atLimit) { setPruneOpen(true); return }
     setDuplicatingId(item.id)
     try {
-      const name = nextCopyName(
-        item.name,
-        setlists.map((row) => row.name),
-      )
+      const name = nextCopyName(item.name, setlists.map((row) => row.name))
       await duplicateSetlist(supabase, item.id, name)
       await refresh()
-    } catch (err: unknown) {
-      if (errMessage(err).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
+    } catch (failure) {
+      if (errMessage(failure).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
         await refresh()
         setPruneOpen(true)
       } else {
-        Alert.alert(
-          tx('alerts.couldNotDuplicate'),
-          actionFailureMessage('Setlists.duplicate', err, tx),
-        )
+        Alert.alert(t('alerts.couldNotDuplicate'), actionFailureMessage('Setlists.duplicate', failure, t))
         await refresh()
       }
-    } finally {
-      setDuplicatingId(null)
+    } finally { setDuplicatingId(null) }
+  }
+
+  async function onDelete(item: SetlistRow) {
+    try { await remove(item.id) } catch (failure) {
+      Alert.alert(t('alerts.couldNotDelete'), actionFailureMessage('Setlists.delete', failure, t))
+      await refresh()
     }
   }
 
-  async function onDeleteSetlist(item: SetlistRow) {
-    try {
-      await remove(item.id)
-    } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotDelete'), actionFailureMessage('Setlists.delete', err, tx))
-      refresh()
-    }
+  function details(item: SetlistRow) {
+    const edited = timeAgo(item.updated_at, (key, options) => t(`common:${key}`, options), i18n.language)
+    return [t('common:songCount', { count: item.songCount }), edited && t('editedAgo', { time: edited })]
+      .filter(Boolean).join(' · ')
   }
 
-  function subtitle(item: SetlistRow) {
-    const edited = timeAgo(item.updated_at, (k, o) => tx(`common:${k}`, o), i18n.language)
-    return [tx('common:songCount', { count: item.songCount }), edited ? tx('editedAgo', { time: edited }) : null]
-      .filter(Boolean)
-      .join(' · ')
-  }
+  const refreshControl = <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={theme.colors.muted} />
+  const contentPadding = { paddingBottom: insets.bottom + theme.spacing.xl }
 
-  function renderBody() {
-    if (loading) {
-      return <LoadingSkeleton label={tx('syncing')} />
-    }
-    // `error` is an i18n key, not raw error text (see useSetlists / errors.ts).
-    if (error) {
+  function content() {
+    if (loading) return <LoadingSkeleton label={t('syncing')} />
+    if (error || setlists.length === 0) {
       return (
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + t.spacing.xl }}
-          refreshControl={refreshControl()}
-        >
+        <ScrollView contentContainerStyle={{ flexGrow: 1, ...contentPadding }} refreshControl={refreshControl}>
           <EmptyState
-            icon="wifi.slash"
-            title={tx(error)}
-            subtitle={tx('errors:load.hint')}
-            actionLabel={tx('common:retry')}
-            onAction={() => void refresh()}
-          />
-        </ScrollView>
-      )
-    }
-    if (setlists.length === 0) {
-      return (
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + t.spacing.xl }}
-          refreshControl={refreshControl()}
-        >
-          <EmptyState
-            icon="list.bullet"
-            title={tx('empty')}
-            actionLabel={tx('newSet')}
-            onAction={onCreate}
+            icon={error ? 'wifi.slash' : 'list.bullet'}
+            title={error ? t(error) : t('empty')}
+            subtitle={error ? t('errors:load.hint') : undefined}
+            actionLabel={error ? t('common:retry') : t('newSet')}
+            onAction={error ? () => void refresh() : () => void onCreate()}
           />
         </ScrollView>
       )
@@ -197,30 +121,17 @@ export default function SetlistsScreen() {
       <FlatList
         data={setlists}
         keyExtractor={(item) => item.id}
-        refreshControl={refreshControl()}
+        refreshControl={refreshControl}
+        contentContainerStyle={contentPadding}
         renderItem={({ item }) => (
           <SwipeToDelete
-            onDelete={() => onDeleteSetlist(item)}
-            confirm={{
-              title: tx('deleteConfirm.title', { name: item.name }),
-              message: tx('deleteConfirm.message'),
-            }}
-            secondary={{
-              label: tx('rowActions.duplicate'),
-              icon: 'plus.square.on.square',
-              onPress: () => void onDuplicateSetlist(item),
-            }}
+            onDelete={() => void onDelete(item)}
+            confirm={{ title: t('deleteConfirm.title', { name: item.name }), message: t('deleteConfirm.message') }}
+            secondary={{ label: t('rowActions.duplicate'), icon: 'plus.square.on.square', onPress: () => void onDuplicate(item) }}
           >
-            <ListRow
-              title={item.name}
-              subtitle={subtitle(item)}
-              onPress={() => router.push(`/setlist/${item.id}`)}
-            />
+            <ListRow title={item.name} subtitle={details(item)} onPress={() => router.push(`/setlist/${item.id}`)} />
           </SwipeToDelete>
         )}
-        // Clear the floating native tab bar (insets.bottom includes its height
-        // under native tabs) so the last row scrolls fully above it.
-        contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
       />
     )
   }
@@ -228,56 +139,27 @@ export default function SetlistsScreen() {
   return (
     <Screen edges={['top', 'left', 'right']}>
       <ConstrainedContent tier="content" style={{ flex: 1 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: t.spacing.lg,
-          paddingTop: t.spacing.sm,
-          paddingBottom: t.spacing.sm,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: t.typography.largeTitle.fontSize,
-            fontWeight: t.typography.largeTitle.fontWeight,
-            letterSpacing: t.typography.largeTitle.letterSpacing,
-            color: t.colors.ink,
-          }}
-        >
-          {tx('title')}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={tx('newSet')}
-          hitSlop={8}
-          onPress={onCreate}
-          disabled={creating}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: t.radii.pill,
-            backgroundColor: t.colors.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: creating ? 0.5 : 1,
-          }}
-        >
-          <SymbolIcon name="plus" size={20} color={t.colors.onAccent} weight="semibold" />
-        </Pressable>
-      </View>
-      {renderBody()}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
+          <Text style={{ ...theme.typography.largeTitle, color: theme.colors.ink }}>{t('title')}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('newSet')}
+            disabled={creating}
+            onPress={() => void onCreate()}
+            hitSlop={8}
+            style={{ width: 44, height: 44, borderRadius: theme.radii.pill, backgroundColor: theme.colors.accent, alignItems: 'center', justifyContent: 'center', opacity: creating ? 0.5 : 1 }}
+          >
+            <SymbolIcon name="plus" size={20} color={theme.colors.onAccent} weight="semibold" />
+          </Pressable>
+        </View>
+        {content()}
       </ConstrainedContent>
       <PruneSetlistsModal
         visible={pruneOpen}
         onClose={() => setPruneOpen(false)}
         setlists={setlists}
         limit={limit}
-        onConfirmDelete={async (ids) => {
-          await removeMany(ids)
-          await refresh()
-        }}
+        onConfirmDelete={async (ids) => { await removeMany(ids); await refresh() }}
       />
     </Screen>
   )

@@ -25,7 +25,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { chunkRows } from '../lib/gridRows'
 import { useSongList, type Song } from '../lib/useSongList'
-import { songMatchRank } from '../lib/songSearch'
+import { findLibrarySongs, makeLibrarySections, type LibrarySection } from '../lib/libraryPresentation'
 import {
   buildSectionListLayout,
   cellLayoutAt,
@@ -38,79 +38,7 @@ import { upsertDraft } from '../lib/drafts/draftsStore'
 // (tablet — sections are chunked N per row, so letter headers stay full-width
 // and sections never interleave across columns).
 type LibraryRow = Song | Song[]
-type Section = { key: string; title: string; letter: string | null; data: LibraryRow[] }
-
-// First-letter bucket for the A–Z index; anything not A–Z lands under "#".
-function bucketLetter(value: string | null | undefined): string {
-  const ch = (value ?? '').trim().charAt(0).toUpperCase()
-  return ch >= 'A' && ch <= 'Z' ? ch : '#'
-}
-
-function byTitle(a: Song, b: Song) {
-  return a.title.localeCompare(b.title)
-}
-
-// Group + sort the filtered songs into SectionList sections according to the
-// active sort. Title/Artist bucket by first letter (with the A–Z scrubber);
-// Key regroups into "Key of X"; Recently added / Tempo are a single flat,
-// header-less section. sortDir flips the order.
-type Translator = (key: string, options?: Record<string, unknown>) => string
-
-function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir, tx: Translator): Section[] {
-  const desc = sortDir === 'desc'
-
-  if (sortKey === 'title' || sortKey === 'artist') {
-    const pick = (s: Song) => (sortKey === 'artist' ? s.artist : s.title)
-    const groups = new Map<string, Song[]>()
-    for (const s of songs) {
-      const letter = bucketLetter(pick(s))
-      const arr = groups.get(letter)
-      if (arr) arr.push(s)
-      else groups.set(letter, [s])
-    }
-    const letters = [...groups.keys()].sort()
-    if (desc) letters.reverse()
-    return letters.map((letter) => {
-      const data = groups.get(letter)!.slice().sort((a, b) => {
-        const primary =
-          sortKey === 'artist' ? (a.artist ?? '').localeCompare(b.artist ?? '') : 0
-        return primary !== 0 ? primary : byTitle(a, b)
-      })
-      if (desc) data.reverse()
-      return { key: letter, title: letter, letter, data }
-    })
-  }
-
-  if (sortKey === 'key') {
-    const groups = new Map<string, Song[]>()
-    for (const s of songs) {
-      const k = s.default_key ?? ''
-      const arr = groups.get(k)
-      if (arr) arr.push(s)
-      else groups.set(k, [s])
-    }
-    const keys = [...groups.keys()].sort()
-    if (desc) keys.reverse()
-    return keys.map((k) => ({
-      key: k || '__nokey',
-      title: k ? tx('common:keyOf', { key: k }) : tx('library.noKey'),
-      letter: null,
-      data: groups.get(k)!.slice().sort(byTitle),
-    }))
-  }
-
-  // recent / tempo — one flat, header-less section.
-  const data = songs.slice()
-  if (sortKey === 'recent') {
-    // Default (asc) shows the most recently added first.
-    data.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
-  } else {
-    // tempo — numeric, nulls last.
-    data.sort((a, b) => (a.tempo ?? Number.POSITIVE_INFINITY) - (b.tempo ?? Number.POSITIVE_INFINITY))
-  }
-  if (desc) data.reverse()
-  return data.length ? [{ key: '__flat', title: '', letter: null, data }] : []
-}
+type DisplaySection = Omit<LibrarySection, 'data'> & { data: LibraryRow[] }
 
 export default function SongLibraryScreen() {
   const t = useTheme()
@@ -136,7 +64,7 @@ export default function SongLibraryScreen() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
 
   const inputRef = useRef<TextInput>(null)
-  const listRef = useRef<SectionList<LibraryRow, Section>>(null)
+  const listRef = useRef<SectionList<LibraryRow, DisplaySection>>(null)
 
   const availableTags = useMemo(() => {
     const set = new Set<string>()
@@ -150,7 +78,8 @@ export default function SongLibraryScreen() {
   }, [songs, selectedTags])
 
   const sections = useMemo(
-    () => buildSections(tagFiltered, sortKey, sortDir, tx),
+    () => makeLibrarySections(tagFiltered, sortKey, sortDir,
+      (key) => key ? tx('common:keyOf', { key }) : tx('library.noKey')),
     [tagFiltered, sortKey, sortDir, tx],
   )
 
@@ -158,7 +87,7 @@ export default function SongLibraryScreen() {
   // become rows of N cells. Section count and order are untouched, so the
   // scrubber's section-index jumps (and sticky full-width headers) work
   // exactly as in the single-column list.
-  const displaySections = useMemo(
+  const displaySections = useMemo<DisplaySection[]>(
     () =>
       columns === 1
         ? sections
@@ -200,16 +129,8 @@ export default function SongLibraryScreen() {
     [cellLayout],
   )
 
-  const trimmedQuery = query.trim().toLowerCase()
-  const results = useMemo(() => {
-    if (!trimmedQuery) return []
-    // Rank title matches above tag-only matches, then alphabetically within each.
-    return tagFiltered
-      .map((s) => ({ s, rank: songMatchRank(s, trimmedQuery) }))
-      .filter((x) => x.rank !== null)
-      .sort((a, b) => a.rank! - b.rank! || byTitle(a.s, b.s))
-      .map((x) => x.s)
-  }, [tagFiltered, trimmedQuery])
+  const trimmedQuery = query.trim()
+  const results = useMemo(() => findLibrarySongs(tagFiltered, query), [tagFiltered, query])
 
   const resultRows: LibraryRow[] = useMemo(
     () => (columns === 1 ? results : chunkRows(results, columns)),
