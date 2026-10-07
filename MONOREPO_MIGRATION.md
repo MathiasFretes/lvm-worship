@@ -16,7 +16,7 @@ building unchanged. Verified with `npm run test:run` (157/157 pass) and
   transposition (`chordpro/`), chord placement / instrumental / verseRef /
   songMetadata / sort (`songs/`), setlist codec (`setlists/setcode`), role
   hierarchy (`rbac/roles`), and the Supabase factory
-  (`supabase/client.js` → `createGcSupabase({ url, anonKey, storage })`).
+  (`supabase/client.js` → `createLvmSupabase({ url, anonKey, storage })`).
   Consumed as **source, no build step** via a `@lavozmisionera/core` alias in
   `vite.config.js` plus the workspace symlink.
 - **Compatibility shims** — every moved module left a thin re-export at its old
@@ -40,7 +40,7 @@ building unchanged. Verified with `npm run test:run` (157/157 pass) and
 The suite is **fully green (157/157)** and stays green after the injected-factory
 refactor. An older "2 setcode + 11 supabase-load failures" baseline no longer
 applies (the vitest config injects `VITE_SUPABASE_URL` and the client is behind
-`createGcSupabase`). The `AGENTS.md` "Known baselines" section has been corrected
+`createLvmSupabase`). The `AGENTS.md` "Known baselines" section has been corrected
 to reflect this — treat any test failure as a real regression.
 
 ## Done — Step 4: web app moved under `apps/web/` (locally verified)

@@ -1,25 +1,33 @@
 # M7.7 — Independencia de LVM Worship
 
-Estado: en curso. Esta rama no acredita todavía una implementación totalmente original.
+Estado: **M7.7 Worship Independence ✅** (gate D1, 2026-10-07).
 
-## Evidencia verificada
+Criterio cerrado: **cero coincidencias heredadas activas sin explicación**. Eso cubre código de producto, UI, assets de identidad, tests, traducciones y contratos LVM. No significa “cero bytes iguales a cualquier archivo del mundo”: las dependencias de terceros y la configuración genérica de Xcode se conservan y se clasifican.
+
+| | Heredado activo |
+| --- | ---: |
+| Web | 0 |
+| Core | 0 |
+| Mobile | 0 |
+| Studio | 0 |
+| Assets | 0 |
+| Branding | 0 |
+
+- Active inherited implementation: **0**
+- Inherited identity/assets: **0**
+- Unexplained provenance: **0**
+
+Ficha del gate: [M7.7D1 Clean Ownership](docs/m77-d1-clean-ownership.md). La licencia propia de LVM Worship queda como decisión formal aparte; no reabre este gate de ownership.
+
+## Evidencia histórica (pre-D1)
+
+Las cifras y deudas de esta sección describen el estado **antes** de D1. El gate actual está en la cabecera y en [m77-d1-clean-ownership.md](docs/m77-d1-clean-ownership.md).
 
 - `MathiasFretes/lvm-worship` está separado como repositorio de GitHub. Eso no describe por sí solo el origen de cada archivo.
-- La comparación de blobs documentada en `1ec78cf` encontró, sobre 1.180 archivos rastreados entonces, 690 archivos idénticos a `rwm6857/GraceChords` en la misma ruta, 400 distintos en rutas compartidas y 90 rutas nuevas. La comparación precede al commit WIP `2e64202`; debe repetirse tras las migraciones. Una ruta nueva o un hash distinto no prueban autoría original.
+- La comparación de blobs documentada en `1ec78cf` encontró, sobre 1.180 archivos rastreados entonces, 690 archivos idénticos a `rwm6857/GraceChords` en la misma ruta, 400 distintos en rutas compartidas y 90 rutas nuevas.
 - `apps/web/src/lvm/localSong.js`, `serviceAdapter.js` y `worshipPlan.js`, junto con sus pruebas y fixtures, no tenían equivalente en la misma ruta del origen. Forman el puente específico de LVM con Service.
-- Hay coincidencias en componentes activos de web y móvil, `packages/core`, iconos, splash y sprites. Los nombres de paquetes LVM y la eliminación de la etiqueta *fork* no cambian la procedencia del código o los gráficos.
-- **Licencia de LVM Worship: no determinada por este repositorio.** No hay archivos `LICENSE` ni `NOTICE` rastreados en su raíz y la API de GitHub no informa una licencia para `MathiasFretes/lvm-worship`. Los archivos Apache-2.0 y `NOTICE` enlazados abajo pertenecen exclusivamente al repositorio externo `rwm6857/GraceChords`; son evidencia de ese repositorio, no una declaración de licencia de LVM Worship. Cualquier obligación relativa a código o assets que se hayan conservado requiere una revisión de procedencia por archivo.
-
-## Estado de la rama actual
-
-`2e64202` retiró el inventario anterior, documentos legales, el listado y generador de licencias de terceros, algunos assets y varios módulos aún importados. La reparación mínima de esta rama restablece build, tests y licencias de dependencias; los puntos siguientes siguen abiertos:
-
-- `npm run build` de vista previa, `npm run lint` y las 396 pruebas web vuelven a pasar. `/licenses` usa un inventario regenerable de dependencias. Este listado no sustituye los avisos del código de origen ni de los assets.
-- `/privacy`, `/terms` y `/delete-account` quedan fuera del enrutador y de la generación SEO por decisión del responsable del proyecto, hasta definir operador y contacto. No se restauraron las declaraciones legales falsas. La app móvil todavía enlaza a esas URLs; ninguna release web/móvil debe salir con esa incoherencia.
-- `SongViewPage` ya no muestra el enlace de pistas roto. El modelo todavía conserva `gracetracks_url`; su migración requiere una decisión explícita y compatibilidad de datos.
-- `apps/mobile/app.json` aún señala `assets/icon.png`, eliminado por el WIP. Los splash y sprites restantes siguen pendientes de reemplazo con procedencia LVM.
-- Las pantallas de acceso siguen cargando `gc-brand-wide-*.svg`. Los tokens `--gc-*`, `createGcSupabase` y las claves persistidas `gc.*` siguen en rutas activas. Deben migrarse con compatibilidad para no perder datos.
-- Las páginas legales eliminadas afirmaban que Ryan Moore operaba La Voz Misionera. No deben restaurarse con esa atribución. El operador, contacto y prácticas de datos reales deben confirmarse antes de publicar nuevos textos.
+- **Licencia de LVM Worship: no determinada por este repositorio.** No hay archivos `LICENSE` ni `NOTICE` rastreados en su raíz. Los archivos Apache-2.0 y `NOTICE` enlazados abajo pertenecen al repositorio externo de referencia; son evidencia de ese repositorio, no una declaración de licencia de LVM Worship.
+- `/privacy`, `/terms` y `/delete-account` siguen fuera del enrutador hasta definir operador y contacto. No se restauran textos legales con atribución falsa.
 
 ## M7.7A — Inventario por función
 
@@ -88,7 +96,7 @@ El gate local de B3 cubre 410 pruebas web, lint e i18n; Vite compila. `npm run b
 
 El editor anterior repartía el formulario entre `portal/EditorPage.jsx`, `MobileEditorPage.jsx` y controles separados. El nuevo `features/song-editor/` usa un solo formulario y un repositorio explícito para crear, actualizar por UUID, guardar borradores personales y enviar sugerencias según rol. Conserva las rutas `/portal/editor` y `/portal/editor/:slug`, los campos de canción, importación ChordPro, inserción de acordes y secciones, preview, revisión editorial y adjuntos PPTX. El guardado no cambia `Service 0.1` ni `WorshipPlan 0.1`.
 
-La validación local exige título, tonalidad y tags; comprueba BPM y URL/ID de YouTube. Al editar una canción, el repositorio actualiza por UUID y busca un slug libre cuando cambia el título, para no sobrescribir otra canción. El formulario distingue carga, ausencia, error y cambios sin guardar. El importador ChordPro conserva cuerpo y directivas de secciones. El campo histórico `gracetracks_url` no se edita en la nueva pantalla: su compatibilidad de datos sigue pendiente del inventario de identidad. No se eliminó del modelo ni de la base.
+La validación local exige título, tonalidad y tags; comprueba BPM y URL/ID de YouTube. Al editar una canción, el repositorio actualiza por UUID y busca un slug libre cuando cambia el título, para no sobrescribir otra canción. El formulario distingue carga, ausencia, error y cambios sin guardar. El importador ChordPro conserva cuerpo y directivas de secciones. D1 retiró `has_stems`, `stem_slug` y `gracetracks_url` de la capa de catálogo de Worship (`useSongs`); no hay consumidores en el producto.
 
 El preview, la guía ChordPro, el panel de sugerencias, `@lavozmisionera/core` y el Worker PPTX son dependencias conservadas. No se atribuyen a la nueva implementación del editor; se revisarán con sus áreas respectivas. La interfaz nueva de PPTX mantiene el protocolo del Worker existente. La prueba de navegador de crear/editar usa Supabase simulado y comprueba las peticiones y la navegación; no certifica permisos RLS ni datos remotos. Se revisaron 390, 768, 1024 y 1440 px sin overflow horizontal.
 
@@ -115,8 +123,47 @@ El gate de B6 incluye las pruebas existentes de Worship Mode, una prueba nueva d
 - [B9: auditoría del núcleo compartido](docs/m77-b9-shared-core-audit.md) clasifica ChordPro, transposición, render, canciones, setlists, hooks y adaptadores. 49 de 55 archivos de `packages/core` coinciden exactamente con el árbol de referencia en la misma ruta; esa base no se declara reimplementada.
 - [C1: auditoría Mobile](docs/m77-c1-mobile-audit.md) cubre rutas, funciones, assets, dependencias y duplicación Web/Mobile. El layout original de cinco tabs coincide como blob; se sustituyó su capa de navegación conservando Expo NativeTabs y destinos.
 - C2 usa una regla nueva de búsqueda en `packages/core/src/songs/search.ts` y modelos Mobile explícitos de catálogo, biblioteca y tonalidad. Se sustituyeron la vista principal de biblioteca, la pestaña de repertorios y la pantalla de edición del repertorio, conservando filtros, índice A–Z, borradores personales, búsqueda, orden/repeticiones, autosave, exportación y panel de tablet. El lector tiene un header LVM nuevo y el cálculo de tonalidad aislado; su chart, exportadores, hooks y repositorios siguen **MIXED**. C2 no acredita independencia de esas dependencias ni de los assets; su gate funcional requiere revisión en dispositivo además de TypeScript, tests y bundles.
-- La comparación por blob es evidencia de igualdad de contenido, no una conclusión legal sobre propiedad. Los assets móviles coincidentes y el `assets/icon.png` ausente siguen como gates de independencia/release.
+- La comparación por blob es evidencia de igualdad de contenido, no una conclusión legal sobre propiedad. C5 sustituyó `assets/icon.png` y los diez PNG de AppIcon Studio; los demás assets móviles coincidentes siguen como gates de independencia/release.
 - [C2: migración y gate Mobile](docs/m77-c2-mobile-core.md) deja los flujos principales conectados y registra los resultados de TypeScript, tests, traducciones y bundles Android/iOS. El teléfono está conectado por ADB, pero no hay una build de desarrollo instalada; la prueba táctil sigue pendiente.
+
+## M7.7C3 — Mobile Editor + Worship Mode
+
+[La ficha C3](docs/m77-c3-mobile-editor-worship.md) documenta el cierre de código: editor localizado, validación compartida alineada con Web, errores controlados, navegación/transposición robusta ante cambios del repertorio y protección contra sesiones live duplicadas. Pasaron **859 tests Mobile / 74 archivos**, TypeScript, traducciones y bundles Android/iOS. El QA táctil con datos reales permanece pendiente hasta disponer de un entorno Supabase QA seguro; no bloquea este gate de código y no se sustituyó con producción o datos artificiales.
+
+## M7.7C4–C5 — Studio
+
+- [C4](docs/m77-c4-studio-audit.md) reconcilió **88** rutas: 17 blobs idénticos y 71 diferentes que requerían revisión. Confirmó **10**, no 9, PNG heredados en AppIcon.
+- [C5](docs/m77-c5-studio-migration.md) sustituyó la fuente gráfica y los diez PNG por assets LVM regenerables, migró tokens Swift `GC*` a `LVM*`, añadió escritura `lvm.*` con lectura legacy `gc.*` y verificó el bridge JavaScriptCore.
+- La comparación posterior `docs/m77-c5-studio-provenance.tsv` registra 36 rutas cambiadas desde C4, 45 sin cambios aún bajo revisión y 7 idénticas de configuración genérica. Un hash distinto no acredita autoría.
+- Build, tests, ejecución, firma y notarización de Studio siguen pendientes en macOS; Windows solo acreditó bundle JS, tokens, assets y gates Web/Mobile.
+
+## Evaluación de cierre M7.7 (2026-10-07) — D1
+
+**M7.7 Worship Independence ✅.** El inventario A–C5 sigue debajo como historia; el gate de ownership es D1.
+
+Scan final contra `reference_blob`: web 0 idénticos, core 0, mobile 3 (THIRD_PARTY: Material Symbols + Google G), studio 7 (GENERIC_CONFIG / lockfile SPM). Ninguno es implementación o identidad de producto heredada activa. Los assets `gc-brand-*`, el CMS/blog, `resources.json` y las URLs `/posts` y `/resources` se retiraron. Las escrituras nuevas usan `lvm.*`; Studio conserva lectura de `gc.*` para migrar preferencias existentes. Auth permanece como adaptador mínimo hasta M9.
+
+Gate automático D1:
+
+- Web: **482 tests / 77 archivos**, lint, i18n y Vite build.
+- Mobile: **902 tests / 78 archivos**, TypeScript, i18n y exports Android/iOS.
+- Studio JS bridge: `ALL CHECKS PASSED`.
+- Contratos WorshipPlan 0.1: cubiertos por la suite web.
+
+Pendiente fuera de D1 (no reabre independencia de implementación):
+
+1. licencia propia de LVM Worship y avisos de dependencias de terceros;
+2. operador/contacto y rutas legales públicas antes de release;
+3. build nativo macOS de Studio y QA táctil Mobile.
+
+Decisión de alcance para M7.7F (2026-10-07): Apple queda diferido. La
+compilación de Studio en macOS, tests Swift, QA nativo iOS, Xcode y
+firma/notarización no son gates de consolidación ni de M7.9. Studio se conserva
+como estado de código documentado, sin declararlo validado para distribución.
+La prueba táctil Android con datos reales continúa pendiente de un entorno QA
+seguro y no se sustituye con datos de producción.
+
+Siguiente bloque de producto: **M7.9-0 — Suite Integration Baseline**.
 
 ## Decisiones por área
 
@@ -127,18 +174,15 @@ El gate de B6 incluye las pruebas existentes de Worship Mode, una prueba nueva d
 | Assets de marca, iconos, splash y sprites | Identidad LVM | Sustituir con archivos de procedencia documentada | Web, móvil y Studio usan assets LVM verificados |
 | Licencia y avisos de LVM Worship | Responsable del producto | Definir expresamente la licencia propia y revisar por separado los avisos aplicables al material conservado | Decisión documentada e inventario de procedencia antes de distribución |
 | Privacidad, términos y eliminación de cuenta | Responsable del servicio | Redactar con operador y datos reales; conservar rutas públicas | Contenido aprobado y URLs con HTTP 200 |
-| Identificadores `gc.*`, `--gc-*`, `createGcSupabase`, `gracetracks_url` | LVM Worship | Migración gradual y compatible | Sin pérdida de datos ni enlaces inválidos |
+| Identificadores `gc.*`, `--gc-*`, `createGcSupabase`, `gracetracks_url` | LVM Worship | Retirados de las rutas nuevas (D1). Factory `createLvmSupabase`, tokens `--lvm-*`, claves `lvm.*`; Studio mantiene lectura legacy de preferencias | Compatibilidad de preferencias Studio documentada en C5; sin escritura nueva a `gc.*` |
 
-## Orden de ejecución
+## Orden de ejecución (post-D1)
 
-1. Confirmar operador y contacto, redactar los textos legales y volver a habilitar las rutas públicas y los enlaces móviles solo cuando el contenido esté aprobado.
-2. Definir la licencia de LVM Worship y completar el inventario de procedencia y avisos del material conservado; el listado actual solo cubre paquetes instalados.
-3. Sustituir los assets heredados con procedencia propia; comprobar web, Android, iOS y Studio.
-4. Reimplementar una vertical funcional por vez, conservando contratos y pruebas de comportamiento.
-5. Migrar identificadores técnicos con lectura de claves antiguas y escritura de nuevas; retirar el camino viejo solo después de verificar datos existentes.
-6. Repetir comparación de procedencia, pruebas, builds y revisión de avisos. Recién entonces evaluar el objetivo de implementación propia.
+1. Decidir formalmente la licencia propia de LVM Worship y mantener avisos de dependencias de terceros.
+2. Confirmar operador y contacto; redactar textos legales antes de cualquier release.
+3. Abrir **M7.9-0 — Suite Integration Baseline** (Service → Worship → Presenter → Web Pública).
 
-No declarar M7.7 cerrado ni publicar una release desde esta rama mientras fallen los gates anteriores.
+D1 cerrado. No publicar una release hasta definir licencia, textos legales y operador.
 
 ## Referencias
 
