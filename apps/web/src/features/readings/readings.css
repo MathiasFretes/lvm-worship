@@ -241,6 +241,31 @@
 
 .readings-status--error{
   color: var(--lvm-danger);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--lvm-danger) 35%, var(--lvm-separator));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--lvm-danger) 6%, var(--lvm-surface-1));
+}
+.readings-status--error p { margin: 0; }
+.readings-status--error button {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--lvm-brand-gold);
+  color: var(--lvm-brand-navy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.readings-status--error button:focus-visible {
+  outline: var(--lvm-focus-size) solid var(--lvm-focus);
+  outline-offset: var(--lvm-focus-offset);
 }
 
 .readings-status--muted{

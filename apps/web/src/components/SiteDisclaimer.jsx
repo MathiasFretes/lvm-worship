@@ -39,7 +39,7 @@ export default function SiteDisclaimer(){
         <div style={{ height: '1em' }} aria-hidden="true" />
         <div><Link to="/download">{t('footer.download')}</Link></div>
         <div style={{ height: '1em' }} aria-hidden="true" />
-        <div>{t('footer.copyright', { range })}</div>
+        <div>© {range} La Voz Misionera</div>
       </div>
     </footer>
   )

@@ -120,7 +120,7 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
         else onNavigate?.('prev')
       }}
     >
-      {loading ? <p className="readings-status">Loading passage...</p> : null}
+      {loading ? <p className="readings-status" role="status">{t('home:loading')}</p> : null}
       {error ? (
         <div role="alert" className="readings-status readings-status--error">
           <p>{t('errors:generic')}</p>

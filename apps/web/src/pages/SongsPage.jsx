@@ -22,11 +22,11 @@ import {
 
 const SITE_URL = 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
-const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | La Voz Misionera'
-const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at La Voz Misionera.'
 
 export default function Songs(){
   const { t } = useTranslation(['pages', 'home'])
+  const songsTitle = `${t('songs.titleTooltip')} | La Voz Misionera`
+  const songsDescription = t('songs.titleTooltip')
   const { songs: itemsRaw, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useSongs()
   const { personalSongs } = usePersonalSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
@@ -339,12 +339,12 @@ export default function Songs(){
   return (
     <div className="lvm-song-library">
       <Helmet>
-        <title>{SONGS_TITLE}</title>
-        <meta name="description" content={SONGS_DESCRIPTION} />
+        <title>{songsTitle}</title>
+        <meta name="description" content={songsDescription} />
         <meta name="keywords" content="worship chord sheets, worship lyrics, transposable charts, La Voz Misionera" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={SONGS_TITLE} />
-        <meta property="og:description" content={SONGS_DESCRIPTION} />
+        <meta property="og:title" content={songsTitle} />
+        <meta property="og:description" content={songsDescription} />
         <meta property="og:url" content={`${SITE_URL}/songs`} />
         <meta property="og:site_name" content="La Voz Misionera" />
         <meta property="og:image" content={OG_IMAGE_URL} />

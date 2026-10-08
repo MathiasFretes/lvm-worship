@@ -27,6 +27,8 @@ const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function ReadingsPage(){
   const { t } = useTranslation('pages')
+  const readingsTitle = `La Voz Misionera — ${t('readings.title')}`
+  const readingsDescription = t('readings.subtitle')
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>(() => ({}))
@@ -170,17 +172,11 @@ export default function ReadingsPage(){
   return (
     <div className="readings-page">
       <Helmet>
-        <title>La Voz Misionera — Daily Word</title>
-        <meta
-          name="description"
-          content="Daily Bible reading following Robert Murray M'Cheyne's plan, taking you through the whole Bible in a year. Global Alliance Prayer (GAP) invites you to read, meditate, and pray with your church and family."
-        />
+        <title>{readingsTitle}</title>
+        <meta name="description" content={readingsDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="La Voz Misionera — Daily Word" />
-        <meta
-          property="og:description"
-          content="Daily Bible reading following Robert Murray M'Cheyne's plan. Global Alliance Prayer (GAP) invites you to read, meditate, and pray together."
-        />
+        <meta property="og:title" content={readingsTitle} />
+        <meta property="og:description" content={readingsDescription} />
         <meta property="og:url" content={`${SITE_URL}/reading`} />
         <meta property="og:site_name" content="La Voz Misionera" />
         <meta property="og:image" content={OG_IMAGE_URL} />
