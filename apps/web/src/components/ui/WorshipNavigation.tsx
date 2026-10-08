@@ -133,7 +133,7 @@ export default function WorshipNavigation() {
             <span className="lvm-worship-nav__brand-mark" aria-hidden="true">LVM</span>
             <span>Worship</span>
           </Link>
-          <nav className="lvm-worship-nav__desktop" aria-label={t('mainNavigation', { defaultValue: 'Main navigation' })}>
+          <nav className="lvm-worship-nav__desktop" aria-label={t('mainNavigation')}>
             {navLinks()}
             {isLoggedIn && hasMinRole('editor') && !hasMinRole('admin') && <Link to="/editor" className="lvm-worship-nav__link" aria-current={matches(pathname, '/editor') ? 'page' : undefined}>{t('editorPortal')}</Link>}
           </nav>
@@ -142,7 +142,7 @@ export default function WorshipNavigation() {
               <button
                 type="button"
                 className="lvm-worship-nav__icon-button"
-                aria-label={t('common:settings', { defaultValue: 'Settings' })}
+                aria-label={t('common:settings')}
                 aria-expanded={popover === 'settings'}
                 onClick={() => setPopover(value => value === 'settings' ? null : 'settings')}
               >
@@ -172,11 +172,11 @@ export default function WorshipNavigation() {
       </header>
       {portalHost && drawerOpen && createPortal(
         <div className="lvm-worship-nav__drawer-layer" id="lvm-worship-mobile-nav">
-          <button type="button" className="lvm-worship-nav__backdrop" aria-label={t('closeMainMenu', { defaultValue: 'Cerrar menú' })} onClick={closeDrawer} />
+          <button type="button" className="lvm-worship-nav__backdrop" aria-label={t('closeMainMenu')} onClick={closeDrawer} />
           <aside ref={drawerRef} className="lvm-worship-nav__drawer" role="dialog" aria-modal="true" aria-label={t('mobileMenu')}>
             <div className="lvm-worship-nav__drawer-header">
               <strong>LVM Worship</strong>
-              <button type="button" onClick={closeDrawer} aria-label={t('closeMainMenu', { defaultValue: 'Cerrar menú' })}>×</button>
+              <button type="button" onClick={closeDrawer} aria-label={t('closeMainMenu')}>×</button>
             </div>
             <nav className="lvm-worship-nav__drawer-links" aria-label={t('mobileMenu')}>
               {navLinks(true)}
