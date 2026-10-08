@@ -28,8 +28,8 @@ describe('LVM song picker', () => {
   it('distinguishes an empty catalog from loading and failure', async () => {
     const user = userEvent.setup()
     const { onRetrySongs } = renderPicker({ songsError: new Error('offline') })
-    expect(screen.getByRole('alert')).toHaveTextContent('Failed to load')
-    await user.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Songs could not be loaded')
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
     expect(onRetrySongs).toHaveBeenCalledOnce()
   })
 })

@@ -305,7 +305,7 @@ describe('setlist workspace, signed in', () => {
 
     await user.click(screen.getByRole('button', { name: /^Doxology/ }))
     await user.click(screen.getByRole('button', { name: /^Doxology/ }))
-    await user.click(screen.getByRole('button', { name: 'Save for Platform' }))
+    await user.click(screen.getByRole('button', { name: 'Download for LVM Service' }))
 
     expect(downloads).toHaveLength(1)
     const plan = JSON.parse(await downloads[0].text())
