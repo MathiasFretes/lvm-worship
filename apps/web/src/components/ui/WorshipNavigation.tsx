@@ -130,8 +130,11 @@ export default function WorshipNavigation() {
       <header className="lvm-worship-nav">
         <div className="lvm-worship-nav__bar">
           <Link to="/" className="lvm-worship-nav__brand" aria-label={t('laVozMisioneraHome')}>
-            <span className="lvm-worship-nav__brand-mark" aria-hidden="true">LVM</span>
-            <span>Worship</span>
+            <span className="lvm-worship-nav__brand-mark" aria-hidden="true" />
+            <span className="lvm-worship-nav__brand-copy">
+              <strong>La Voz <span>Misionera</span></strong>
+              <small>Worship</small>
+            </span>
           </Link>
           <nav className="lvm-worship-nav__desktop" aria-label={t('mainNavigation')}>
             {navLinks()}

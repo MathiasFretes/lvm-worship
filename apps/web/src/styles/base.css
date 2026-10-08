@@ -2,7 +2,7 @@
 :root {
   /* Back-compat aliases (keeps your original naming working) */
   --primary: var(--lvm-primary);
-  --primary-text: #ffffff;
+  --primary-text: var(--lvm-brand-navy);
   --bg: var(--lvm-bg);
   --card: var(--lvm-surface-1);
   --btn: var(--lvm-surface-2);

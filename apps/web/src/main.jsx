@@ -8,6 +8,11 @@ import { LocaleProvider } from './hooks/useLocale'
 import { SettingsProvider } from './hooks/useSettings'
 import { initTheme } from './utils/app/theme'
 import { reloadOnceForStaleChunk } from './utils/app/lazyRoute'
+import '@fontsource/poppins/latin-400.css'
+import '@fontsource/poppins/latin-500.css'
+import '@fontsource/poppins/latin-600.css'
+import '@fontsource/poppins/latin-700.css'
+import '@fontsource/poppins/latin-800.css'
 import './i18n'
 
 function bootstrapRouteFromQuery(){

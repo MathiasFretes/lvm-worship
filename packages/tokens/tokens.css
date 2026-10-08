@@ -2,7 +2,7 @@
 
 :root {
   /* Typography */
-  --lvm-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  --lvm-font-family: Poppins, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --lvm-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
   --lvm-font-lyrics: "Noto Sans", "Inter 18", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --lvm-font-chords: "Noto Sans Mono", "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Roboto Mono", monospace;
@@ -69,9 +69,9 @@
   --lvm-focus-offset: 2px;
 
   /* LVM Design System 0.1 — shared brand foundation for the new web shell. */
-  --lvm-brand-navy: #0e1a2b;
+  --lvm-brand-navy: #1c2a39;
   --lvm-brand-navy-raised: #172033;
-  --lvm-brand-gold: #c89b3c;
+  --lvm-brand-gold: #c6a15b;
   --lvm-focus-ring: #b4872e;
   --lvm-space-1: 4px;
   --lvm-space-2: 8px;
@@ -86,11 +86,11 @@
   --lvm-motion-fast: 180ms;
   --lvm-motion-normal: 220ms;
   --lvm-on-dark: #ffffff;
-  --lvm-border-subtle: #e1e6ef;
+  --lvm-border-subtle: #e4e7ec;
 
   /* ===== Colors (Light) - Signal Blue palette ===== */
-  --lvm-primary: #1F84C9;
-  --lvm-primary-hover: #1A72B0;
+  --lvm-primary: #c6a15b;
+  --lvm-primary-hover: #b48f4a;
   --lvm-success: #34C759;
   --lvm-warning: #FF9500;
   --lvm-danger: #FF3B30;
@@ -102,24 +102,24 @@
   --lvm-yellow: #FFCC00;
 
   /* Neutrals / surfaces */
-  --lvm-bg: #F5F7F9;
+  --lvm-bg: #f6f7f9;
   --lvm-surface-1: #FFFFFF;
-  --lvm-surface-2: #EEF1F4;
-  --lvm-surface-3: #E3E8EC;
+  --lvm-surface-2: #f0f2f5;
+  --lvm-surface-3: #e4e7ec;
 
   /* Text */
-  --lvm-text: #1E2227;
-  --lvm-text-secondary: #5C656F;
+  --lvm-text: #2d3748;
+  --lvm-text-secondary: #596474;
   --lvm-text-tertiary: #8A929B;
 
   /* Borders / separators */
-  --lvm-separator: #E3E8EC;
+  --lvm-separator: #e4e7ec;
 
   /* Derived / common */
-  --lvm-text-accent: #15619A;
+  --lvm-text-accent: #3e6ba5;
   --lvm-link: var(--lvm-text-accent);
   --lvm-focus: var(--lvm-primary);
-  --lvm-selection-bg: color-mix(in srgb, #1F84C9 12%, #F5F7F9);
+  --lvm-selection-bg: color-mix(in srgb, #c6a15b 18%, #f6f7f9);
 
   /* Shadows */
   --lvm-shadow-1: 0 1px 4px rgba(20, 28, 38, 0.08);
@@ -133,9 +133,9 @@
 
 /* Dark theme (assumes app toggles [data-theme="dark"] on html or body) */
 [data-theme="dark"] {
-  --lvm-primary: #4EA6E6;
-  --lvm-primary-hover: #66B4EA;
-  --lvm-text-accent: #6FB6EA;
+  --lvm-primary: #e2c58a;
+  --lvm-primary-hover: #c6a15b;
+  --lvm-text-accent: #e2c58a;
   --lvm-success: #30D158;
   --lvm-warning: #FF9F0A;
   --lvm-danger: #FF453A;
@@ -145,22 +145,22 @@
   --lvm-teal: #64D2FF;
   --lvm-yellow: #FFD60A;
 
-  --lvm-bg: #14171A;
-  --lvm-surface-1: #1E2227;
-  --lvm-surface-2: #242A30;
-  --lvm-surface-3: #2A3036;
+  --lvm-bg: #0f1729;
+  --lvm-surface-1: #1c2a39;
+  --lvm-surface-2: #26394d;
+  --lvm-surface-3: #354960;
 
   --lvm-text: #E8ECF0;
   --lvm-text-secondary: #AEB6BE;
   --lvm-text-tertiary: #7C858E;
 
-  --lvm-separator: #2A3036;
+  --lvm-separator: #354960;
 
   --lvm-shadow-1: 0 1px 4px rgba(0, 0, 0, 0.35);
   --lvm-shadow-2: 0 4px 20px rgba(0, 0, 0, 0.5);
   --lvm-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.65);
 
-  --lvm-selection-bg: color-mix(in srgb, #4EA6E6 16%, #1E2227);
+  --lvm-selection-bg: color-mix(in srgb, #e2c58a 16%, #1c2a39);
 
   --lvm-overlay: rgba(0, 0, 0, 0.6);
   --lvm-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);

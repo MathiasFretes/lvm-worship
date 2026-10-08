@@ -21,23 +21,11 @@ export function applyTheme(theme, { persist = false } = {}) {
   if (persist) localStorage.setItem(STORAGE_KEY, t)
 }
 
-/** Initialize theme: use stored value or system preference (without persisting). */
+/** Default to the shared LVM light theme; a stored choice remains authoritative. */
 export function initTheme() {
   const stored = getStoredTheme()
-  const initial = stored || 'dark'
+  const initial = stored || 'light'
   applyTheme(initial, { persist: false })
-
-  // If user has NOT chosen a theme, live-update when system preference changes
-  if (!stored && window.matchMedia) {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e) => applyTheme(e.matches ? 'dark' : 'light', { persist: false })
-    try {
-      mq.addEventListener('change', handler)
-    } catch {
-      // Safari
-      mq.addListener(handler)
-    }
-  }
 }
 
 /** Toggle and persist. Returns new theme. */
