@@ -856,6 +856,14 @@ html, body, #root { height: 100%; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
 a.lvm-navlink, .lvm-navlink{
   color: var(--text) !important;
   -webkit-text-fill-color: var(--text) !important;
