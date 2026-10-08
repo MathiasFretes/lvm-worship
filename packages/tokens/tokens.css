@@ -72,6 +72,19 @@
   --lvm-brand-navy: #0e1a2b;
   --lvm-brand-navy-raised: #172033;
   --lvm-brand-gold: #c89b3c;
+  --lvm-focus-ring: #b4872e;
+  --lvm-space-1: 4px;
+  --lvm-space-2: 8px;
+  --lvm-space-3: 12px;
+  --lvm-space-4: 16px;
+  --lvm-space-6: 24px;
+  --lvm-space-8: 32px;
+  --lvm-space-12: 48px;
+  --lvm-radius-control: 8px;
+  --lvm-radius-card: 12px;
+  --lvm-radius-panel: 16px;
+  --lvm-motion-fast: 180ms;
+  --lvm-motion-normal: 220ms;
   --lvm-on-dark: #ffffff;
   --lvm-border-subtle: #e1e6ef;
 

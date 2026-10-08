@@ -40,13 +40,14 @@
 .lvm-worship-nav__brand-mark {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--lvm-worship-gold);
-  border-radius: 10px;
-  color: var(--lvm-worship-gold);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--lvm-worship-gold);
+  color: var(--lvm-worship-navy);
   font-size: 12px;
-  letter-spacing: .08em;
+  letter-spacing: -.02em;
+  font-weight: 800;
 }
 
 .lvm-worship-nav__desktop,
@@ -155,8 +156,8 @@
 
 .lvm-worship-nav :is(a, button):focus-visible,
 .lvm-worship-nav__drawer :is(a, button, select):focus-visible {
-  outline: 3px solid var(--lvm-worship-gold);
-  outline-offset: 2px;
+  outline: 3px solid var(--lvm-focus-ring);
+  outline-offset: 3px;
 }
 
 .lvm-worship-nav__drawer-layer { position: fixed; inset: 0; z-index: 1000; }
