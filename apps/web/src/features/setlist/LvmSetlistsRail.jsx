@@ -28,7 +28,7 @@ export default function LvmSetlistsRail({
       {!isLoggedIn ? <div className="lvm-set-nav__notice"><h3>{t('setlist.signInTitle')}</h3><p>{t('setlist.signInBody')}</p><Link to="/login">{t('setlist.signIn')}</Link></div> : (
         <>
           <button type="button" className="lvm-set-nav__create" onClick={onCreate}>{t('setlist.newSet')}</button>
-          {loading ? <p role="status">{t('setlist.loading')}</p> : error ? <p role="alert">{t('setlist.failedLoad')} <button type="button" onClick={onRetry}>{t('setlist.retry')}</button></p> : setlists.length === 0 ? <p>{t('setlist.noSavedSets')}</p> : (
+          {loading ? <p role="status">{t('setlist.loading')}</p> : error ? <p role="alert">{t('setlist.savedUnavailable')} <button type="button" onClick={onRetry}>{t('setlist.retry')}</button></p> : setlists.length === 0 ? <p>{t('setlist.noSavedSets')}</p> : (
             <ul className="lvm-set-nav__list">{setlists.map(row => (
               <li key={row.id} className={currentId === row.id ? 'is-current' : ''}>
                 {renaming === row.id ? (

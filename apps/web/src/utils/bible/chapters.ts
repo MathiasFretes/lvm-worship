@@ -19,6 +19,9 @@ export async function fetchBibleChapter({ translationId, book, chapter, signal }
   const url = publicUrl(`${root}/${encodeURIComponent(book)}/${chapter}.json`)
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`Failed to load passage (${res.status})`)
+  if (!res.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+    throw new Error('Bible chapter response is not JSON')
+  }
   const payload = await res.json()
   return normalizeChapterPayload(payload, { book, chapter })
 }

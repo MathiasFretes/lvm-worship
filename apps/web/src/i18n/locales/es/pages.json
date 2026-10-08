@@ -83,6 +83,7 @@
     "failedSave": "Error al guardar el repertorio.",
     "failedDelete": "Error al eliminar el repertorio.",
     "failedLoad": "Error al cargar el repertorio.",
+    "savedUnavailable": "No pudimos cargar los repertorios guardados. Podés seguir usando el borrador local.",
     "setlistSaved": "Repertorio guardado.",
     "setlistDeleted": "Repertorio eliminado.",
     "deleteConfirm": "¿Eliminar el repertorio \"{{name}}\"? Esto no se puede deshacer.",

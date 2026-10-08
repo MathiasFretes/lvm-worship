@@ -7,7 +7,7 @@ export default function LvmSongPicker({
   catalog, songsLoading, songsError, onRetrySongs, query, onQuery, communityOnly, onCommunityOnly,
   language, onLanguage, selectedIds, onAdd, searchRef,
 }) {
-  const { t } = useTranslation('pages')
+  const { t } = useTranslation(['pages', 'home'])
   const languages = catalog.translationLanguages || []
   const results = useMemo(() => {
     const pool = (catalog.groups || [])
@@ -25,7 +25,7 @@ export default function LvmSongPicker({
         {languages.length > 1 ? <div className="lvm-set-picker__languages">{languages.map(code => <button type="button" key={code} aria-pressed={language === code} onClick={() => onLanguage(code)}>{getLanguageChipLabel(code)}</button>)}</div> : null}
       </div>
       <div className="lvm-set-picker__results">
-        {songsError ? <p role="alert">{t('setlist.failedLoad')} <button type="button" onClick={onRetrySongs}>{t('setlist.retry')}</button></p> : null}
+        {songsError ? <p role="alert">{t('home:errorTitle')}. {t('home:errorDescription')} <button type="button" onClick={onRetrySongs}>{t('home:retry')}</button></p> : null}
         {songsLoading ? <p role="status">{t('setlist.loadingSearch')}</p> : !songsError && results.length === 0 ? <p>{t('setlist.noSongsMatch', { query: query.trim() })}</p> : results.map(song => {
           const alreadyAdded = selectedIds.has(song.dbId) || selectedIds.has(song.id)
           return (
