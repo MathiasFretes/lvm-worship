@@ -41,6 +41,6 @@
 .lvm-set-nav__menu, .lvm-set-nav__confirm { grid-column: 1 / -1; display: grid; gap: var(--space-1); padding: var(--space-2); border-top: 1px solid var(--lvm-separator); }
 .lvm-set-nav__menu button { text-align: left; }
 .lvm-set-nav__limit { color: var(--lvm-text-secondary); font-size: .85rem; }
-.lvm-set-editor :is(button, input, select):focus-visible, .lvm-set-picker :is(button, input):focus-visible, .lvm-set-nav :is(button, input, a):focus-visible { outline: 2px solid var(--lvm-brand-gold); outline-offset: 2px; }
+.lvm-set-editor :is(button, input, select):focus-visible, .lvm-set-picker :is(button, input):focus-visible, .lvm-set-nav :is(button, input, a):focus-visible { outline: 2px solid var(--lvm-focus-ring); outline-offset: 2px; }
 @media (max-width: 48rem) { .lvm-set-editor__item { grid-template-columns: 2rem minmax(0, 1fr); } .lvm-set-editor__key, .lvm-set-editor__item-actions { grid-column: 2; } }
 @media (max-width: 56.25rem) { .lvm-set-editor, .lvm-set-picker, .lvm-set-nav { height: auto; overflow-y: visible; } }

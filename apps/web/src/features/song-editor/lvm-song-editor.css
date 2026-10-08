@@ -50,7 +50,7 @@
 .lvm-song-editor__finder :is(input, a):focus-visible,
 .lvm-song-editor__panel :is(input, select, textarea, button):focus-visible,
 .lvm-song-editor :is(button, a):focus-visible {
-  outline: 2px solid var(--lvm-brand-gold);
+  outline: 2px solid var(--lvm-focus-ring);
   outline-offset: 2px;
 }
 .lvm-song-editor__matches { display: grid; max-height: 12rem; overflow: auto; }

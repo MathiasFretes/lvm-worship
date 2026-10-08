@@ -167,7 +167,7 @@
   background: var(--lvm-surface-2);
 }
 
-.lvm-dashboard :is(a, button, input):focus-visible { outline: var(--lvm-focus-size) solid var(--lvm-brand-gold); outline-offset: var(--lvm-focus-offset); }
+.lvm-dashboard :is(a, button, input):focus-visible { outline: var(--lvm-focus-size) solid var(--lvm-focus-ring); outline-offset: var(--lvm-focus-offset); }
 
 @media (max-width: 64rem) {
   .lvm-dashboard__hero { grid-template-columns: 1fr; }
