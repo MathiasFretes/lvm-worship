@@ -83,6 +83,7 @@
     "failedSave": "Failed to save setlist.",
     "failedDelete": "Failed to delete setlist.",
     "failedLoad": "Failed to load setlist.",
+    "savedUnavailable": "Saved setlists are unavailable right now. You can still use the local draft.",
     "setlistSaved": "Setlist saved.",
     "setlistDeleted": "Setlist deleted.",
     "deleteConfirm": "Delete set \"{{name}}\"? This cannot be undone.",

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 
 // useSongs holds a module-level cache (_cache/_promise/_listeners). Reset the
 // module registry before each test so one test's cache can't leak into the next.
@@ -118,6 +118,24 @@ describe('useSongs', () => {
     await waitFor(() => expect(result.current.songs).toHaveLength(1))
     expect(result.current.error).toBeNull()
     expect(spies.order).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves loading and offers an error when the catalog request never responds', async () => {
+    vi.useFakeTimers()
+    const { client, spies } = mockSupabase({ data: [], error: null })
+    spies.order.mockReturnValue(new Promise(() => {}))
+    vi.doMock('../../lib/supabase', () => ({ supabase: client }))
+    const { useSongs } = await import('../useSongs')
+
+    try {
+      const { result } = renderHook(() => useSongs())
+      expect(result.current.loading).toBe(true)
+      await act(async () => { await vi.advanceTimersByTimeAsync(8001) })
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeTruthy()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('serves cached data to later instances without refetching (dedupe)', async () => {

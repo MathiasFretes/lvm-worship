@@ -83,6 +83,7 @@
     "failedSave": "Set listesi kaydedilemedi.",
     "failedDelete": "Set listesi silinemedi.",
     "failedLoad": "Set listesi yüklenemedi.",
+    "savedUnavailable": "Kayıtlı set listeleri şu anda yüklenemiyor. Yerel taslağı kullanmaya devam edebilirsiniz.",
     "setlistSaved": "Set listesi kaydedildi.",
     "setlistDeleted": "Set listesi silindi.",
     "deleteConfirm": "\"{{name}}\" set listesi silinsin mi? Bu işlem geri alınamaz.",

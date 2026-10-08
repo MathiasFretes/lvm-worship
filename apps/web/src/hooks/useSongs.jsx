@@ -30,7 +30,9 @@ function publish(next) {
 async function fetchSongs() {
   if (request) return request
   publish({ ...snapshot, loading: snapshot.songs.length === 0, error: null })
-  request = supabase
+  const controller = new AbortController()
+  let timeout
+  const query = supabase
     .from('songs')
     .select(
       'id, slug, title, artist, default_key, tempo, time_signature, tags, ' +
@@ -39,6 +41,18 @@ async function fetchSongs() {
     )
     .eq('is_deleted', false)
     .order('title')
+  const cancellable = typeof query.abortSignal === 'function'
+    ? query.abortSignal(controller.signal)
+    : query
+  request = Promise.race([
+    cancellable,
+    new Promise((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort()
+        reject(new Error('Song catalog request timed out'))
+      }, 8000)
+    }),
+  ])
     .then(({ data, error }) => {
       if (error) throw error
       const songs = (data || []).map(normaliseSong)
@@ -51,7 +65,10 @@ async function fetchSongs() {
       publish({ ...snapshot, loading: false, error })
       return snapshot.songs
     })
-    .finally(() => { request = null })
+    .finally(() => {
+      clearTimeout(timeout)
+      request = null
+    })
   return request
 }
 
