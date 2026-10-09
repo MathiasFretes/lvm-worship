@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
-import { radii } from '@lavozmisionera/tokens/native'
+import { darkColors, radii } from '@lavozmisionera/tokens/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { applyLanguagePreference } from '../src/i18n'
 import { ThemeProvider, ThemedStatusBar } from '../src/theme/ThemeProvider'
@@ -217,7 +217,7 @@ function ConfigErrorScreen({ message }: { message: string }) {
     <View
       style={{
         flex: 1,
-        backgroundColor: '#14171A',
+        backgroundColor: darkColors.bg,
         alignItems: 'center',
         justifyContent: 'center',
         padding: 24,

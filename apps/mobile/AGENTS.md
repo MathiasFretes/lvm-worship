@@ -256,7 +256,7 @@ duplicate logic here and never edit core internals to suit mobile.
 ## Theme & tokens
 
 - Colors/spacing/radii/type come from `@lavozmisionera/tokens/native`
-  (`packages/tokens/native.ts`) — the iOS Signal-blue palette, light + dark.
+  (`packages/tokens/native.ts`) — the LVM navy/gold palette, light + dark.
   **Never hardcode hex values** in the app.
 - Consume via `useTheme()` from `src/theme/ThemeProvider.tsx`
   (`const t = useTheme()` → `t.colors.*`, `t.spacing.*`, `t.radii.*`,

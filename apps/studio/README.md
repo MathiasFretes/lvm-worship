@@ -148,9 +148,9 @@ ContentView.swift              config gate → auth gate → split view
 
 ### Design tokens
 
-Studio uses the **same tokens as `apps/mobile`** — the Signal-blue palette in
-[`packages/tokens/native.ts`](../../packages/tokens/native.ts), not the web's
-warm-brown `tokens.css`. Because Studio is a native target (and deliberately not
+Studio uses the **same tokens as `apps/mobile`** — the V0-derived navy/gold
+brand roles in [`packages/tokens/native.ts`](../../packages/tokens/native.ts).
+Because Studio is a native target (and deliberately not
 an npm workspace member) it cannot import the TypeScript map, so the values are
 **generated into committed Swift** — an Xcode build never needs node:
 

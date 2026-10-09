@@ -5,7 +5,7 @@
 //  GENERATED FILE — DO NOT EDIT.
 //
 //  Source of truth: packages/tokens/native.ts (the same map apps/mobile consumes,
-//  so the Signal-blue palette cannot drift between the iOS app and Studio).
+//  so the LVM navy/gold palette cannot drift between the iOS app and Studio).
 //  Regenerate with: npm run tokens:swift
 //
 //  Every color carries all four macOS appearance variants — light and dark, each
@@ -22,40 +22,40 @@ import SwiftUI
 enum LVMColor {
     /// Page background (the surface the list scrolls on).
     static let bg = LVMDynamicColor(
-        light: LVMRGBA(red: 0.960784, green: 0.968627, blue: 0.976471, alpha: 1.0),
-        dark: LVMRGBA(red: 0.078431, green: 0.090196, blue: 0.101961, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.960784, green: 0.968627, blue: 0.976471, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.078431, green: 0.090196, blue: 0.101961, alpha: 1.0)
+        light: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0),
+        dark: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0)
     ).color
 
     /// Raised surfaces: cards, tab bar, sheets.
     static let surface = LVMDynamicColor(
         light: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
-        dark: LVMRGBA(red: 0.117647, green: 0.133333, blue: 0.152941, alpha: 1.0),
+        dark: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.117647, green: 0.133333, blue: 0.152941, alpha: 1.0)
+        darkIncreasedContrast: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0)
     ).color
 
     /// Recessed surfaces: search field, icon buttons.
     static let surfaceAlt = LVMDynamicColor(
-        light: LVMRGBA(red: 0.933333, green: 0.945098, blue: 0.956863, alpha: 1.0),
-        dark: LVMRGBA(red: 0.141176, green: 0.164706, blue: 0.188235, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.933333, green: 0.945098, blue: 0.956863, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.141176, green: 0.164706, blue: 0.188235, alpha: 1.0)
+        light: LVMRGBA(red: 0.933333, green: 0.941176, blue: 0.952941, alpha: 1.0),
+        dark: LVMRGBA(red: 0.14902, green: 0.219608, blue: 0.294118, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.933333, green: 0.941176, blue: 0.952941, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.14902, green: 0.219608, blue: 0.294118, alpha: 1.0)
     ).color
 
     /// Primary text.
     static let ink = LVMDynamicColor(
-        light: LVMRGBA(red: 0.117647, green: 0.133333, blue: 0.152941, alpha: 1.0),
-        dark: LVMRGBA(red: 0.909804, green: 0.92549, blue: 0.941176, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.117647, green: 0.133333, blue: 0.152941, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.909804, green: 0.92549, blue: 0.941176, alpha: 1.0)
+        light: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0),
+        dark: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0)
     ).color
 
     /// Secondary text (e.g. artist line).
     static let sec = LVMDynamicColor(
         light: LVMRGBA(red: 0.360784, green: 0.396078, blue: 0.435294, alpha: 1.0),
-        dark: LVMRGBA(red: 0.682353, green: 0.713725, blue: 0.745098, alpha: 1.0),
+        dark: LVMRGBA(red: 0.729412, green: 0.776471, blue: 0.819608, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 0.270588, green: 0.298039, blue: 0.329412, alpha: 1.0),
         darkIncreasedContrast: LVMRGBA(red: 0.780392, green: 0.807843, blue: 0.835294, alpha: 1.0)
     ).color
@@ -63,49 +63,49 @@ enum LVMColor {
     /// Muted text (e.g. time signature, section letters).
     static let muted = LVMDynamicColor(
         light: LVMRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 1.0),
-        dark: LVMRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 1.0),
+        dark: LVMRGBA(red: 0.486275, green: 0.552941, blue: 0.611765, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 0.352941, green: 0.384314, blue: 0.419608, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.603922, green: 0.635294, blue: 0.666667, alpha: 1.0)
+        darkIncreasedContrast: LVMRGBA(red: 0.666667, green: 0.721569, blue: 0.772549, alpha: 1.0)
     ).color
 
-    /// The one accent — Signal blue.
+    /// Accessible gold used for primary native controls.
     static let accent = LVMDynamicColor(
-        light: LVMRGBA(red: 0.121569, green: 0.517647, blue: 0.788235, alpha: 1.0),
-        dark: LVMRGBA(red: 0.305882, green: 0.65098, blue: 0.901961, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.121569, green: 0.517647, blue: 0.788235, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.305882, green: 0.65098, blue: 0.901961, alpha: 1.0)
+        light: LVMRGBA(red: 0.509804, green: 0.360784, blue: 0.094118, alpha: 1.0),
+        dark: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.509804, green: 0.360784, blue: 0.094118, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0)
     ).color
 
     /// Soft accent fill (e.g. add-button background).
     static let accentSoft = LVMDynamicColor(
-        light: LVMRGBA(red: 0.85098, green: 0.917647, blue: 0.964706, alpha: 1.0),
-        dark: LVMRGBA(red: 0.141176, green: 0.2, blue: 0.25098, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.85098, green: 0.917647, blue: 0.964706, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.141176, green: 0.2, blue: 0.25098, alpha: 1.0)
+        light: LVMRGBA(red: 0.952941, green: 0.917647, blue: 0.847059, alpha: 1.0),
+        dark: LVMRGBA(red: 0.227451, green: 0.196078, blue: 0.121569, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.952941, green: 0.917647, blue: 0.847059, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.227451, green: 0.196078, blue: 0.121569, alpha: 1.0)
     ).color
 
     /// Accent tuned for text/legibility on the page background.
     static let textAccent = LVMDynamicColor(
-        light: LVMRGBA(red: 0.082353, green: 0.380392, blue: 0.603922, alpha: 1.0),
-        dark: LVMRGBA(red: 0.435294, green: 0.713725, blue: 0.917647, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.058824, green: 0.313725, blue: 0.533333, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.541176, green: 0.768627, blue: 0.933333, alpha: 1.0)
+        light: LVMRGBA(red: 0.509804, green: 0.360784, blue: 0.094118, alpha: 1.0),
+        dark: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.431373, green: 0.301961, blue: 0.070588, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.941176, green: 0.839216, blue: 0.639216, alpha: 1.0)
     ).color
 
     /// Hairline borders / separators.
     static let border = LVMDynamicColor(
-        light: LVMRGBA(red: 0.890196, green: 0.909804, blue: 0.92549, alpha: 1.0),
-        dark: LVMRGBA(red: 0.164706, green: 0.188235, blue: 0.211765, alpha: 1.0),
+        light: LVMRGBA(red: 0.894118, green: 0.905882, blue: 0.92549, alpha: 1.0),
+        dark: LVMRGBA(red: 0.207843, green: 0.278431, blue: 0.352941, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 0.768627, green: 0.8, blue: 0.827451, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.235294, green: 0.266667, blue: 0.298039, alpha: 1.0)
+        darkIncreasedContrast: LVMRGBA(red: 0.337255, green: 0.415686, blue: 0.490196, alpha: 1.0)
     ).color
 
     /// Text/icon color on top of the accent.
     static let onAccent = LVMDynamicColor(
         light: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
-        dark: LVMRGBA(red: 0.078431, green: 0.090196, blue: 0.101961, alpha: 1.0),
+        dark: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.078431, green: 0.090196, blue: 0.101961, alpha: 1.0)
+        darkIncreasedContrast: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0)
     ).color
 
     /// Destructive actions (delete/remove) — text on surfaces and fills.
@@ -126,15 +126,15 @@ enum LVMColor {
 
     /// Favorite/star fill (gold).
     static let star = LVMDynamicColor(
-        light: LVMRGBA(red: 0.941176, green: 0.690196, blue: 0.0, alpha: 1.0),
-        dark: LVMRGBA(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0),
-        lightIncreasedContrast: LVMRGBA(red: 0.941176, green: 0.690196, blue: 0.0, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0)
+        light: LVMRGBA(red: 0.776471, green: 0.631373, blue: 0.356863, alpha: 1.0),
+        dark: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0),
+        lightIncreasedContrast: LVMRGBA(red: 0.776471, green: 0.631373, blue: 0.356863, alpha: 1.0),
+        darkIncreasedContrast: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0)
     ).color
 
     /// Non-accent emphasis: marks a fixed point that is NOT a selection. Used for the Key Reference
     /// dial's index, where the accent already means "chosen" and a second meaning on the same hue
-    /// would be unreadable. A muted violet — outside the Signal Blue family, and deliberately quiet
+    /// would be unreadable. A muted violet — outside the LVM navy/gold brand roles, and quiet
     /// enough not to compete with it.
     static let spotlight = LVMDynamicColor(
         light: LVMRGBA(red: 0.415686, green: 0.352941, blue: 0.768627, alpha: 1.0),
@@ -162,7 +162,7 @@ enum LVMColor {
     /// Dimmed color for inactive scrubber letters.
     static let off = LVMDynamicColor(
         light: LVMRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 0.45),
-        dark: LVMRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 0.5),
+        dark: LVMRGBA(red: 0.568627, green: 0.627451, blue: 0.682353, alpha: 0.5),
         lightIncreasedContrast: LVMRGBA(red: 0.352941, green: 0.384314, blue: 0.419608, alpha: 0.7),
         darkIncreasedContrast: LVMRGBA(red: 0.603922, green: 0.635294, blue: 0.666667, alpha: 0.75)
     ).color
@@ -171,17 +171,17 @@ enum LVMColor {
     /// 40% opacity; iOS renders UIKit's own grabber and never reads this.
     static let sheetHandle = LVMDynamicColor(
         light: LVMRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 0.4),
-        dark: LVMRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 0.4),
+        dark: LVMRGBA(red: 0.568627, green: 0.627451, blue: 0.682353, alpha: 0.4),
         lightIncreasedContrast: LVMRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 0.4),
-        darkIncreasedContrast: LVMRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 0.4)
+        darkIncreasedContrast: LVMRGBA(red: 0.568627, green: 0.627451, blue: 0.682353, alpha: 0.4)
     ).color
 
     /// Soft top-center highlight overlaid on the hero to hint the radial glow.
     static let heroGlow = LVMDynamicColor(
         light: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55),
-        dark: LVMRGBA(red: 0.305882, green: 0.65098, blue: 0.901961, alpha: 0.18),
+        dark: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 0.18),
         lightIncreasedContrast: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55),
-        darkIncreasedContrast: LVMRGBA(red: 0.305882, green: 0.65098, blue: 0.901961, alpha: 0.18)
+        darkIncreasedContrast: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 0.18)
     ).color
 }
 
@@ -197,38 +197,38 @@ enum LVMGradient {
         case .dark:
             return [
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.211765, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.227451, green: 0.196078, blue: 0.121569, alpha: 1.0).color,
                     location: 0.0
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.094118, green: 0.133333, blue: 0.164706, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.14902, green: 0.219608, blue: 0.294118, alpha: 1.0).color,
                     location: 0.38
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.082353, green: 0.098039, blue: 0.113725, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.109804, green: 0.164706, blue: 0.223529, alpha: 1.0).color,
                     location: 0.78
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.078431, green: 0.090196, blue: 0.101961, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0).color,
                     location: 1.0
                 ),
             ]
         default:
             return [
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.74902, green: 0.827451, blue: 0.890196, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0).color,
                     location: 0.0
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.811765, green: 0.878431, blue: 0.917647, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.921569, green: 0.85098, blue: 0.72549, alpha: 1.0).color,
                     location: 0.34
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.890196, green: 0.929412, blue: 0.94902, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.945098, green: 0.921569, blue: 0.87451, alpha: 1.0).color,
                     location: 0.72
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.960784, green: 0.968627, blue: 0.976471, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0).color,
                     location: 1.0
                 ),
             ]

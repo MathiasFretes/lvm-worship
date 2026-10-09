@@ -118,7 +118,7 @@ export default function ArcBubble({
       ? t.colors.surfaceAlt
       : t.colors.surface
   const borderColor = outlined ? t.colors.accent : t.colors.border
-  // White on Signal Blue is only ever semibold or heavier, per the brand rule.
+  // Keep selected text legible on the gold control fill.
   const nameColor = solid ? t.colors.onAccent : t.colors.ink
   const numberColor = solid
     ? t.colors.onAccent

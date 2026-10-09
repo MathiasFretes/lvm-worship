@@ -74,7 +74,7 @@ function ChordCell({
         numberOfLines={1}
         style={{
           fontSize: CHORD_SIZE,
-          // White on Signal Blue is only ever semibold or heavier.
+          // Keep selected text legible on the gold control fill.
           fontWeight: '700',
           letterSpacing: -0.2,
           color: solid ? t.colors.onAccent : outlined ? t.colors.textAccent : t.colors.ink,

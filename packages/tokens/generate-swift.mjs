@@ -369,7 +369,7 @@ function buildSwift(tokens, docs) {
 //  GENERATED FILE — DO NOT EDIT.
 //
 //  Source of truth: packages/tokens/native.ts (the same map apps/mobile consumes,
-//  so the Signal-blue palette cannot drift between the iOS app and Studio).
+//  so the LVM navy/gold palette cannot drift between the iOS app and Studio).
 //  Regenerate with: ${REGEN_COMMAND}
 //
 //  Every color carries all four macOS appearance variants — light and dark, each

@@ -9,7 +9,7 @@ struct LaVozMisionera_StudioApp: App {
         WindowGroup {
             ContentView()
                 // The brand accent, set once at the root so buttons, list
-                // selection, and focus rings all read as Signal blue. The
+                // selection, and focus rings all read as LVM gold. The
                 // AccentColor asset — generated from the same tokens — covers the
                 // AppKit chrome the SwiftUI environment does not reach.
                 .tint(LVMColor.accent)

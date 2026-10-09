@@ -227,7 +227,7 @@ struct SongLibraryView: View {
 /// semantic foreground styles rather than `LVMColor.ink` / `LVMColor.sec`: this List
 /// is selectable, and macOS inverts a selected row's text to read against the
 /// accent fill. Only the automatic styles participate in that inversion, so
-/// pinning token colors here would leave dark text on a Signal-blue selection.
+/// pinning token colors here would leave dark text on a gold selection.
 /// Brand color shows up on this screen through the accent (selection, the search
 /// field's recessed surface) instead.
 private struct SongRow: View {
