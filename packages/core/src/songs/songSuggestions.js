@@ -18,7 +18,7 @@ export async function submitSongSuggestion(client, input) {
   const user = userData && userData.user
   if (authError || !user) throw authError || new Error('Not authenticated')
 
-  const { data, error } = await client
+  const result = await client
     .from('song_suggestions')
     .insert({
       song_id: input.songId || null,
@@ -30,8 +30,7 @@ export async function submitSongSuggestion(client, input) {
     })
     .select('id')
     .single()
-  if (error) throw error
-  return data
+  return requireData(result)
 }
 
 /**
@@ -42,14 +41,13 @@ export async function submitSongSuggestion(client, input) {
  * @param {string} songId
  */
 export async function fetchSuggestionsForSong(client, songId) {
-  const { data, error } = await client
+  const result = await client
     .from('song_suggestions')
     .select('*, users!suggested_by(display_name)')
     .eq('song_id', songId)
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
-  if (error) throw error
-  return data || []
+  return requireData(result, [])
 }
 
 /**
@@ -64,11 +62,15 @@ export async function fetchSuggestionsForSong(client, songId) {
  * @param {string|null} [reason]
  */
 export async function reviewSongSuggestion(client, suggestionId, action, reason = null) {
-  const { data, error } = await client.rpc('review_song_suggestion', {
+  const result = await client.rpc('review_song_suggestion', {
     p_suggestion_id: suggestionId,
     p_action: action,
     p_reason: reason,
   })
-  if (error) throw error
-  return data
+  return requireData(result)
+}
+
+function requireData(result, fallback){
+  if (result.error) throw result.error
+  return result.data ?? fallback
 }

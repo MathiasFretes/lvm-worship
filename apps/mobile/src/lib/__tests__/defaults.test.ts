@@ -23,7 +23,8 @@ function memoryStorage(initial: Record<string, string> = {}): KVStorage & { stor
   }
 }
 
-describe('defaults store', () => {
+describe.each([{ product: 'LVM' }])('$product · defaults store', () => {
+  const key = (name: string) => `lvm.defaults.${name}`
   it('falls back to DEFAULT_APP_DEFAULTS when nothing is stored', async () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
@@ -31,7 +32,7 @@ describe('defaults store', () => {
   })
 
   it('ignores invalid stored values and uses fallbacks', async () => {
-    await hydrateDefaults(memoryStorage({ 'gc.defaults.theme': 'neon', 'gc.defaults.chordStyle': 'tab' }))
+    await hydrateDefaults(memoryStorage({ 'lvm.defaults.theme': 'neon', 'lvm.defaults.chordStyle': 'tab' }))
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
   })
 
@@ -45,20 +46,20 @@ describe('defaults store', () => {
     setDefaultLanguage('tr')
 
     expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true, language: 'tr', dailyWordDestination: 'landing' })
-    expect(s.store.get('gc.defaults.theme')).toBe('dark')
-    expect(s.store.get('gc.defaults.chordStyle')).toBe('solfege')
-    expect(s.store.get('gc.defaults.keepAwake')).toBe('1')
-    expect(s.store.get('gc.defaults.language')).toBe('tr')
+    expect(s.store.get(key('theme'))).toBe('dark')
+    expect(s.store.get(key('chordStyle'))).toBe('solfege')
+    expect(s.store.get(key('keepAwake'))).toBe('1')
+    expect(s.store.get(key('language'))).toBe('tr')
   })
 
   it('clears the language key when set back to follow-device (null)', async () => {
-    const s = memoryStorage({ 'gc.defaults.language': 'tr' })
+    const s = memoryStorage({ 'lvm.defaults.language': 'tr' })
     await hydrateDefaults(s)
     expect(getDefaultsSnapshot().language).toBe('tr')
 
     setDefaultLanguage(null)
     expect(getDefaultsSnapshot().language).toBeNull()
-    expect(s.store.has('gc.defaults.language')).toBe(false)
+    expect(s.store.has(key('language'))).toBe(false)
   })
 
   it('survives a simulated reload (re-hydrate from the same storage)', async () => {
@@ -80,10 +81,10 @@ describe('defaults store', () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot().dailyWordDestination).toBe('landing')
 
-    await hydrateDefaults(memoryStorage({ 'gc.defaults.dailyWordDestination': 'reader' }))
+    await hydrateDefaults(memoryStorage({ 'lvm.defaults.dailyWordDestination': 'reader' }))
     expect(getDefaultsSnapshot().dailyWordDestination).toBe('reader')
 
-    await hydrateDefaults(memoryStorage({ 'gc.defaults.dailyWordDestination': 'bogus' }))
+    await hydrateDefaults(memoryStorage({ 'lvm.defaults.dailyWordDestination': 'bogus' }))
     expect(getDefaultsSnapshot().dailyWordDestination).toBe('landing')
   })
 
@@ -92,17 +93,17 @@ describe('defaults store', () => {
     await hydrateDefaults(s)
     setDefaultDailyWordDestination('reader')
     expect(getDefaultsSnapshot().dailyWordDestination).toBe('reader')
-    expect(s.store.get('gc.defaults.dailyWordDestination')).toBe('reader')
+    expect(s.store.get(key('dailyWordDestination'))).toBe('reader')
   })
 
   it('hydrates keepAwake from storage and defaults it off', async () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot().keepAwake).toBe(false)
 
-    await hydrateDefaults(memoryStorage({ 'gc.defaults.keepAwake': '1' }))
+    await hydrateDefaults(memoryStorage({ 'lvm.defaults.keepAwake': '1' }))
     expect(getDefaultsSnapshot().keepAwake).toBe(true)
 
-    await hydrateDefaults(memoryStorage({ 'gc.defaults.keepAwake': '0' }))
+    await hydrateDefaults(memoryStorage({ 'lvm.defaults.keepAwake': '0' }))
     expect(getDefaultsSnapshot().keepAwake).toBe(false)
   })
 
@@ -117,7 +118,7 @@ describe('defaults store', () => {
   })
 })
 
-describe('resolveThemeMode', () => {
+describe.each([{ product: 'LVM' }])('$product · resolveThemeMode', () => {
   it("'system' follows the OS scheme", () => {
     expect(resolveThemeMode('system', 'dark')).toBe('dark')
     expect(resolveThemeMode('system', 'light')).toBe('light')
@@ -131,7 +132,7 @@ describe('resolveThemeMode', () => {
   })
 })
 
-describe('initialChordStyle', () => {
+describe.each([{ product: 'LVM' }])('$product · initialChordStyle', () => {
   it('seeds the viewer from the stored default', () => {
     expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false, language: null, dailyWordDestination: 'landing' })).toBe('solfege')
     expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null, dailyWordDestination: 'landing' })).toBe('letters')

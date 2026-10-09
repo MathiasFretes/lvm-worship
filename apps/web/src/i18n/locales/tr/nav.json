@@ -5,16 +5,16 @@
   "setlist": "Set Listesi",
   "songbook": "İlahi Kitabı",
   "dailyWord": "Kutsal Kitap",
-  "blog": "Blog",
   "editorPortal": "Editör Portalı",
   "profile": "Profil",
   "songEditor": "İlahi Editörü",
-  "postEditor": "Yazı Editörü",
   "adminPortal": "Yönetici Portalı",
   "signIn": "Giriş yap",
   "signOut": "Çıkış yap",
   "openMainMenu": "Ana menüyü aç",
   "userMenu": "Kullanıcı menüsü",
   "mobileMenu": "Mobil menü",
+  "mainNavigation": "Ana gezinme",
+  "closeMainMenu": "Ana menüyü kapat",
   "laVozMisioneraHome": "La Voz Misionera ana sayfası"
 }

@@ -9,7 +9,7 @@ import AuthLinkScreen from '../src/screens/AuthLinkScreen'
 // Sits OUTSIDE the auth gate: a recovery or confirmation link is by definition
 // opened without a session, and this screen is what creates one.
 
-export default function AuthLink() {
+function LvmAuthLinkRoute() {
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -17,3 +17,5 @@ export default function AuthLink() {
     </Screen>
   )
 }
+
+export default LvmAuthLinkRoute

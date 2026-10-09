@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase'
 import { reportFailure } from './errors'
 import type { Song } from './useSongList'
@@ -29,13 +29,15 @@ export function useStarredSongs() {
   const [songs, setSongs] = useState<StarredSong[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const requestRef = useRef(0)
 
   // Extracted from the mount effect so the Home card can offer a Retry. Before
   // 1.0.1 a failed read stayed failed until the app relaunched: the effect had
   // `[]` deps, Home has no RefreshControl, and Home's focus effect only bumps a
   // tick for the local recents cache.
   const load = useCallback(() => {
-    let alive = true
+    const request = ++requestRef.current
+    const isCurrent = () => requestRef.current === request
     setLoading(true)
     setError(null)
     ;(async () => {
@@ -43,7 +45,7 @@ export function useStarredSongs() {
         const { data: sessionData } = await supabase.auth.getSession()
         const uid = sessionData.session?.user?.id
         if (!uid) {
-          if (alive) {
+          if (isCurrent()) {
             setSongs([])
             setError(null)
           }
@@ -60,7 +62,7 @@ export function useStarredSongs() {
 
         const ids = (stars ?? []).map((r: { song_id: string }) => r.song_id)
         if (ids.length === 0) {
-          if (alive) {
+          if (isCurrent()) {
             setSongs([])
             setError(null)
           }
@@ -82,20 +84,20 @@ export function useStarredSongs() {
           .map((id) => byId.get(id))
           .filter((s): s is StarredSong => s != null)
 
-        if (alive) {
+        if (isCurrent()) {
           setSongs(ordered)
           setError(null)
         }
       } catch (err: unknown) {
         // Logs the real error for debugging and returns false for a deliberate
         // cancellation, which must not surface as a failure.
-        if (reportFailure('useStarredSongs', err) && alive) setError(LOAD_ERROR_KEY)
+        if (reportFailure('useStarredSongs', err) && isCurrent()) setError(LOAD_ERROR_KEY)
       } finally {
-        if (alive) setLoading(false)
+        if (isCurrent()) setLoading(false)
       }
     })()
     return () => {
-      alive = false
+      if (isCurrent()) requestRef.current++
     }
   }, [])
 

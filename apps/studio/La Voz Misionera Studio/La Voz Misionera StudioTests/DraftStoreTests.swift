@@ -17,7 +17,7 @@ struct DraftStoreTests {
     /// container and delete somebody's recovered work.
     static func temporaryStore() -> DraftStore {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("gc-draft-tests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("lvm-draft-tests-\(UUID().uuidString)", isDirectory: true)
         return DraftStore(directory: directory)
     }
 
@@ -95,12 +95,14 @@ struct DraftStoreTests {
     @Test("a key cannot walk out of the drafts directory")
     func keySanitising() throws {
         let store = Self.temporaryStore()
-        let url = try #require(store.fileURL(for: "../../escape"))
-        #expect(!url.path.contains(".."))
-        #expect(url.deletingLastPathComponent().path == store.directory.path)
-        // A key with nothing usable in it is refused outright.
+        // Invalid keys are rejected instead of being rewritten into a colliding
+        // valid key (`../../escape` used to share `escape.json`).
+        #expect(store.fileURL(for: "../../escape") == nil)
+        #expect(store.fileURL(for: "song/one") == nil)
         #expect(store.fileURL(for: "../..") == nil)
         #expect(store.fileURL(for: "") == nil)
+        let valid = try #require(store.fileURL(for: "song_123-abc"))
+        #expect(valid.deletingLastPathComponent() == store.directory)
     }
 
     @Test("a draft written before a field existed still restores the rest")
@@ -121,5 +123,113 @@ struct DraftStoreTests {
         #expect(read.form.chordproContent == "[G]hi")
         #expect(read.form.artist.isEmpty)
         #expect(read.form.tags.isEmpty)
+    }
+
+    @Test("a snapshot copied into another slot is rejected")
+    func mismatchedSlot() throws {
+        let store = Self.temporaryStore()
+        let source = SongDraftSnapshot(key: "song-one", form: Self.sampleForm(), savedAt: Date())
+        #expect(store.write(source))
+        let sourceURL = try #require(store.fileURL(for: "song-one"))
+        let otherURL = try #require(store.fileURL(for: "song-two"))
+        try FileManager.default.copyItem(at: sourceURL, to: otherURL)
+
+        #expect(store.read(key: "song-two") == nil)
+        #expect(!FileManager.default.fileExists(atPath: otherURL.path))
+        #expect(store.read(key: "song-one") == source)
+    }
+}
+
+@Suite("Song form rules")
+struct SongFormTests {
+    @Test("keys respell without changing pitch or mode")
+    func keyRespelling() {
+        #expect(SongForm.respelled("D#m", as: .flat) == "Ebm")
+        #expect(SongForm.respelled("Bb", as: .sharp) == "A#")
+        #expect(SongForm.respelled("C", as: .flat) == "C")
+    }
+
+    @Test("known tags keep catalog spelling and reject folded duplicates")
+    func tagIdentity() {
+        var form = SongForm()
+        #expect(form.addTag("  worship ", knownTags: ["Worship"]))
+        #expect(form.tags == ["Worship"])
+        #expect(!form.addTag("WORSHIP"))
+    }
+
+    @Test("YouTube normalization returns only the captured id")
+    func youtubeNormalization() {
+        let id = "abcdefghijk"
+        #expect(SongForm.normalizeYouTube("https://www.youtube.com/watch?v=\(id)&t=4").id == id)
+        #expect(SongForm.normalizeYouTube("https://youtu.be/\(id)").id == id)
+        #expect(!SongForm.normalizeYouTube("not-a-video").valid)
+    }
+}
+
+@Suite("Editor macros")
+@MainActor
+struct MacroStoreTests {
+    @Test("same folded name updates one stable macro")
+    func replaceByName() throws {
+        let defaults = LVMPreferenceStorageTests.isolatedDefaults()
+        let store = MacroStore(defaults: defaults)
+        store.add(name: "Intro", body: "[G] [C]")
+        let id = try #require(store.macros.first?.id)
+        store.add(name: " intro ", body: "[D] [A]")
+
+        #expect(store.macros.count == 1)
+        #expect(store.macros.first?.id == id)
+        #expect(store.macros.first?.name == "Intro")
+        #expect(store.macros.first?.body == "[D] [A]")
+    }
+
+    @Test("persisted format remains a top-level macro array")
+    func persistenceFormat() throws {
+        let defaults = LVMPreferenceStorageTests.isolatedDefaults()
+        let store = MacroStore(defaults: defaults)
+        store.add(name: "Tag", body: "{start_of_tag}\n[G]Amen\n{end_of_tag}")
+
+        let reloaded = MacroStore(defaults: defaults)
+        #expect(reloaded.macros == store.macros)
+    }
+}
+
+@Suite("LVM preference storage")
+@MainActor
+struct LVMPreferenceStorageTests {
+    static func isolatedDefaults() -> UserDefaults {
+        let suite = "lvm-studio-preference-tests-\(UUID().uuidString)"
+        let store = UserDefaults(suiteName: suite)!
+        store.removePersistentDomain(forName: suite)
+        return store
+    }
+
+    @Test("app defaults read LVM keys")
+    func appDefaultsStorage() {
+        let store = Self.isolatedDefaults()
+        store.set("dark", forKey: "lvm.defaults.theme")
+        store.set("solfege", forKey: "lvm.defaults.chordStyle")
+        store.set(true, forKey: "lvm.defaults.keepAwake")
+        store.set(true, forKey: "lvm.viewer.autoHideChrome")
+
+        let defaults = StudioDefaults(store: store)
+
+        #expect(defaults.theme == .dark)
+        #expect(defaults.chordStyle == .solfege)
+        #expect(defaults.keepAwake)
+        #expect(defaults.autoHideChrome)
+    }
+
+    @Test("viewer preferences read LVM song overrides")
+    func viewerPrefsStorage() {
+        let store = Self.isolatedDefaults()
+        store.set([
+            "default": "single",
+            "songs": ["santo": "double"],
+        ], forKey: "lvm.viewer.columnMode.v1")
+
+        let preferences = ViewerPrefs(store: store)
+
+        #expect(preferences.columnMode(for: "santo") == .double)
     }
 }

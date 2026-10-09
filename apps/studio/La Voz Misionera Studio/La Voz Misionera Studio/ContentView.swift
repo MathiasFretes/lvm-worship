@@ -1,11 +1,3 @@
-//
-//  ContentView.swift
-//  La Voz Misionera Studio
-//
-//  Created by Ryan Moore on 7/24/26.
-//
-//  App shell: config check → session check → library + viewer.
-//
 
 import SwiftUI
 
@@ -145,6 +137,10 @@ private struct StudioShell: View {
             // exists.
             if !allowed, navigation.section == .manage { navigation.section = .library }
         }
+        .onChange(of: navigation.requestedSection) { _, _ in
+            guard let destination = navigation.consumeRequest() else { return }
+            attemptSectionChange(to: destination)
+        }
         .focusedSceneObject(navigation)
         .focusedSceneObject(session)
         // Leaving Manage is leaving the editor, so it asks the same question the
@@ -183,16 +179,21 @@ private struct StudioShell: View {
     private var guardedSection: Binding<ShellNavigation.Section> {
         Binding(
             get: { navigation.section },
-            set: { next in
-                guard next != navigation.section else { return }
-                if navigation.section == .manage, session.hasUnsavedChanges {
-                    blockedSection = next
-                } else {
-                    if navigation.section == .manage { session.close() }
-                    navigation.section = next
-                }
-            }
+            set: { attemptSectionChange(to: $0) }
         )
+    }
+
+    /// All section entry points (segmented control and View menu) pass through the
+    /// same authorization and unsaved-work checks.
+    private func attemptSectionChange(to destination: ShellNavigation.Section) {
+        guard destination != navigation.section else { return }
+        guard destination != .manage || canManage else { return }
+        if navigation.section == .manage, session.hasUnsavedChanges {
+            blockedSection = destination
+            return
+        }
+        if navigation.section == .manage { session.close() }
+        navigation.section = destination
     }
 }
 
@@ -254,8 +255,8 @@ private struct LibrarySplitView: View {
             .id(slug)
         } else {
             Text("Select a song")
-                .gcTextStyle(.body)
-                .foregroundStyle(GCColor.sec)
+                .lvmTextStyle(.body)
+                .foregroundStyle(LVMColor.sec)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -272,22 +273,22 @@ private struct ConfigErrorView: View {
     let message: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
             Label {
                 Text("Studio is not configured")
-                    .gcTextStyle(.rowTitle)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowTitle)
+                    .foregroundStyle(LVMColor.ink)
             } icon: {
                 Image(systemName: "exclamationmark.triangle")
-                    .foregroundStyle(GCColor.danger)
+                    .foregroundStyle(LVMColor.danger)
             }
             Text(message)
-                .gcTextStyle(.body)
-                .foregroundStyle(GCColor.sec)
+                .lvmTextStyle(.body)
+                .foregroundStyle(LVMColor.sec)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(GCSpacing.xl)
+        .padding(LVMSpacing.xl)
         .frame(minWidth: 520, minHeight: 300, alignment: .topLeading)
     }
 }

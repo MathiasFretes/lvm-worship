@@ -22,7 +22,7 @@ import { useTheme } from '../../theme/ThemeProvider'
 //     silently when the fetch lands.
 
 export default function DevotionalSection() {
-  const t = useTheme()
+  const theme = useTheme()
   const { dayKey, day } = useTodayDevotionals()
 
   // Not downloaded yet: render nothing at all — and no leading margin either, so
@@ -31,21 +31,24 @@ export default function DevotionalSection() {
   if (!day) return null
 
   // Matches the gap the reading-section header keeps below the page header.
-  const leading = { marginTop: t.spacing.xl }
-
-  if (day.state === 'open') {
-    return (
-      <View style={leading}>
-        <DevotionalPlaceholder />
-      </View>
-    )
+  const sectionStyle = {
+    marginTop: theme.spacing.xl,
+    gap: theme.spacing.lg,
   }
 
   return (
-    <View style={[leading, { gap: t.spacing.lg }]}>
-      {day.devotionals.map((devotional) => (
-        <DevotionalCard key={devotional.slug} devotional={devotional} dayKey={dayKey} />
-      ))}
+    <View style={sectionStyle}>
+      {day.state === 'open' ? (
+        <DevotionalPlaceholder />
+      ) : (
+        day.devotionals.map((devotional) => (
+          <DevotionalCard
+            key={`${dayKey}:${devotional.slug}`}
+            devotional={devotional}
+            dayKey={dayKey}
+          />
+        ))
+      )}
     </View>
   )
 }

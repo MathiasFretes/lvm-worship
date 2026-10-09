@@ -9,11 +9,13 @@ export const ROLE_ORDER = ['user', 'editor', 'admin', 'owner']
 // powerful option first.
 export const ROLES_BY_RANK_DESC = [...ROLE_ORDER].reverse()
 
+const ROLE_RANK = new Map(ROLE_ORDER.map((role, rank) => [role, rank]))
+
 export function hasMinRole(userRole, minRole) {
-  const userIdx = ROLE_ORDER.indexOf(userRole || 'user')
-  const minIdx = ROLE_ORDER.indexOf(minRole || 'user')
-  if (minIdx < 0) return false
-  return userIdx >= minIdx
+  const requiredRank = ROLE_RANK.get(minRole || 'user')
+  if (requiredRank === undefined) return false
+  const userRank = ROLE_RANK.get(userRole || 'user')
+  return (userRank ?? -1) >= requiredRank
 }
 
 // Editor+ may write directly to the public catalog; everyone else submits for

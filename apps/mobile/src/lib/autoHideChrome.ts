@@ -7,7 +7,7 @@ import { useAccessibilityFlags } from './accessibilityFlags'
 // Performer. Unlike the other view options (transpose, font, chord style),
 // this preference PERSISTS across launches, so it lives in AsyncStorage.
 
-const PREF_KEY = 'gc.viewer.autoHideChrome'
+const PREF_KEY = 'lvm.viewer.autoHideChrome'
 const HIDE_DELAY_MS = 4500
 
 // Persisted on/off toggle. Defaults OFF; loads asynchronously so the toggle
@@ -18,8 +18,9 @@ export function useAutoHidePref(): [boolean, (v: boolean) => void] {
   useEffect(() => {
     let alive = true
     AsyncStorage.getItem(PREF_KEY)
-      .then((v) => {
-        if (alive && v != null) setValue(v === '1')
+      .then((stored) => {
+        if (!alive) return
+        if (stored != null) setValue(stored === '1')
       })
       .catch(() => {})
     return () => {
@@ -49,7 +50,7 @@ export function useAutoHideChrome(enabled: boolean) {
   const { reduceMotion } = useAccessibilityFlags()
 
   const clearTimer = useCallback(() => {
-    if (timer.current) {
+    if (timer.current !== null) {
       clearTimeout(timer.current)
       timer.current = null
     }
@@ -57,7 +58,11 @@ export function useAutoHideChrome(enabled: boolean) {
 
   const schedule = useCallback(() => {
     clearTimer()
-    if (enabled) timer.current = setTimeout(() => setVisible(false), HIDE_DELAY_MS)
+    if (!enabled) return
+    timer.current = setTimeout(() => {
+      timer.current = null
+      setVisible(false)
+    }, HIDE_DELAY_MS)
   }, [enabled, clearTimer])
 
   const reveal = useCallback(() => {

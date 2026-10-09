@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import { getCachedPassage, getPassage, type BibleTranslation, type ChapterData, type Passage } from './bibleSource'
 import { failureDetailKey } from './errors'
 
@@ -13,6 +13,27 @@ type ChapterState = {
   error: string | null
 }
 
+type ChapterAction =
+  | { type: 'idle' }
+  | { type: 'loading' }
+  | { type: 'ready'; chapter: ChapterData }
+  | { type: 'failed'; error: string }
+
+const EMPTY_STATE: ChapterState = { chapter: null, loading: false, error: null }
+
+function chapterReducer(_state: ChapterState, action: ChapterAction): ChapterState {
+  switch (action.type) {
+    case 'idle':
+      return EMPTY_STATE
+    case 'loading':
+      return { chapter: null, loading: true, error: null }
+    case 'ready':
+      return { chapter: action.chapter, loading: false, error: null }
+    case 'failed':
+      return { chapter: null, loading: false, error: action.error }
+  }
+}
+
 /**
  * Fetch the chapter backing `passage` in `translation` via the source seam,
  * aborting in-flight loads when the passage or translation changes. Mirrors the
@@ -23,39 +44,39 @@ export function usePassageChapter(
   translation: BibleTranslation | null,
   reloadToken = 0
 ): ChapterState {
-  const [state, setState] = useState<ChapterState>({ chapter: null, loading: false, error: null })
+  const [state, dispatch] = useReducer(chapterReducer, EMPTY_STATE)
 
   useEffect(() => {
     if (!passage || !translation) {
-      setState({ chapter: null, loading: false, error: null })
+      dispatch({ type: 'idle' })
       return
     }
     // Prefetched / previously-read chapters render immediately, no spinner.
     const cached = getCachedPassage(translation.id, passage.bookNumber, passage.chapter)
     if (cached) {
-      setState({ chapter: cached, loading: false, error: null })
+      dispatch({ type: 'ready', chapter: cached })
       return
     }
 
-    let alive = true
-    setState({ chapter: null, loading: true, error: null })
+    let cancelled = false
+    dispatch({ type: 'loading' })
 
     getPassage({ passage, translation })
       .then((chapter) => {
-        if (alive) setState({ chapter, loading: false, error: null })
+        if (!cancelled) dispatch({ type: 'ready', chapter })
       })
       .catch((err: unknown) => {
         // The reader renders its own localized copy and only reads this for
         // truthiness, so the value was never shown — but it held raw error text,
         // which made it a trap for anyone who later decided to render it, and
         // nothing logged reader failures at all. An i18n key closes both.
-        if (alive) {
-          setState({ chapter: null, loading: false, error: failureDetailKey('usePassageChapter', err) })
+        if (!cancelled) {
+          dispatch({ type: 'failed', error: failureDetailKey('usePassageChapter', err) })
         }
       })
 
     return () => {
-      alive = false
+      cancelled = true
     }
   }, [passage, translation, reloadToken])
 

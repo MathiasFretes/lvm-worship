@@ -48,9 +48,15 @@ function compareLanguageCodes(a, b){
 }
 
 function coerceStringList(value){
-  if (Array.isArray(value)) return value.filter(Boolean).map((x) => String(x))
+  if (Array.isArray(value)) {
+    const seen = new Set()
+    return value
+      .map((item) => String(item ?? '').trim())
+      .filter((item) => item && !seen.has(item) && seen.add(item))
+  }
   if (value == null) return []
-  return [String(value)]
+  const normalized = String(value).trim()
+  return normalized ? [normalized] : []
 }
 
 export function normalizeLanguageCode(value, fallback = DEFAULT_SONG_LANGUAGE){
@@ -150,12 +156,12 @@ export function buildSongCatalog(rawItems = []){
   const groupBySongId = new Map()
   const groupByEntryId = new Map()
 
-  for (const raw of rawItems || []) {
+  for (const raw of Array.isArray(rawItems) ? rawItems : []) {
     const item = normalizeSongEntry(raw)
     if (!item) continue
     if (byId.has(item.id)) continue
     byId.set(item.id, item)
-    if (item.dbId) byDbId.set(item.dbId, item)
+    if (item.dbId && !byDbId.has(String(item.dbId))) byDbId.set(String(item.dbId), item)
 
     const key = item.songId || slugify(item.id)
     if (!groupBySongId.has(key)) {
@@ -224,7 +230,8 @@ export function getGroupByEntryId(catalog, entryId){
 
 export function getEntryById(catalog, entryId){
   if (!catalog || !catalog.byId) return null
-  return catalog.byId.get(String(entryId)) || null
+  const key = String(entryId)
+  return catalog.byId.get(key) || catalog.byDbId?.get(key) || null
 }
 
 export function resolveCatalogEntry(catalog, entryId, language){

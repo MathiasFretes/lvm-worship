@@ -61,6 +61,13 @@ enum ExportError: LocalizedError {
 struct ExportService {
     let client: SupabaseClient
     let apiBaseURL: URL?
+    private let session: URLSession
+
+    init(client: SupabaseClient, apiBaseURL: URL?, session: URLSession = .shared) {
+        self.client = client
+        self.apiBaseURL = apiBaseURL
+        self.session = session
+    }
 
     var isConfigured: Bool { apiBaseURL != nil }
 
@@ -71,10 +78,25 @@ struct ExportService {
         let filename: String
     }
 
+    private struct SongRequest: Encodable {
+        let songID: String
+        let key: String
+        let format: String
+
+        enum CodingKeys: String, CodingKey {
+            case songID = "song_id"
+            case key, format
+        }
+    }
+
+    private struct FailureBody: Decodable {
+        let error: String?
+    }
+
     func exportSong(songID: String, key: String, format: ExportFormat) async throws -> ExportedFile {
         let (data, response) = try await post(
             "/api/export/song",
-            body: ["song_id": songID, "key": key, "format": format.rawValue]
+            body: SongRequest(songID: songID, key: key, format: format.rawValue)
         )
 
         // 501 = server rasteriser unavailable.
@@ -91,12 +113,12 @@ struct ExportService {
 
     // MARK: - Transport
 
-    private func post(_ path: String, body: [String: Any]) async throws -> (Data, HTTPURLResponse) {
+    private func post<Body: Encodable>(_ path: String, body: Body) async throws -> (Data, HTTPURLResponse) {
         guard let base = apiBaseURL else { throw ExportError.notConfigured }
         guard let accessToken = try? await client.auth.session.accessToken else {
             throw ExportError.notSignedIn
         }
-        let payload = try JSONSerialization.data(withJSONObject: body)
+        let payload = try JSONEncoder().encode(body)
 
         var (data, response) = try await send(url: base.appendingPathComponent(path.trimmedLeadingSlash),
                                               token: accessToken, payload: payload)
@@ -118,7 +140,7 @@ struct ExportService {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = payload
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw ExportError.failed("The server sent an unexpected response.")
         }
@@ -130,16 +152,25 @@ struct ExportService {
     private func throwIfFailed(_ response: HTTPURLResponse, data: Data, fallback: String) throws {
         guard !(200..<300).contains(response.statusCode) else { return }
         if response.statusCode == 405 { throw ExportError.redirectingBaseURL }
-        let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        if let message = parsed?["error"] as? String, !message.isEmpty {
+        let parsed = try? JSONDecoder().decode(FailureBody.self, from: data)
+        if let message = parsed?.error, !message.isEmpty {
             throw ExportError.failed(message)
         }
         throw ExportError.failed("\(fallback)_\(response.statusCode)")
     }
 
-    private static func filename(fromContentDisposition disposition: String) -> String? {
+    static func filename(fromContentDisposition disposition: String) -> String? {
+        if let range = disposition.range(
+            of: "filename\\*=UTF-8''[^;]+", options: [.regularExpression, .caseInsensitive]) {
+            let encoded = disposition[range].dropFirst("filename*=UTF-8''".count)
+            if let decoded = String(encoded).removingPercentEncoding, !decoded.isEmpty {
+                return decoded
+            }
+        }
         guard let range = disposition.range(
-            of: "filename=\"[^\"]+\"", options: .regularExpression) else { return nil }
+            of: "filename=\"[^\"]+\"", options: [.regularExpression, .caseInsensitive]) else {
+            return nil
+        }
         let match = disposition[range]
         return String(match.dropFirst("filename=\"".count).dropLast())
     }

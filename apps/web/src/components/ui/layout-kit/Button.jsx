@@ -38,22 +38,22 @@ export default function Button({
   if (loading) props['aria-busy'] = true
 
   const cls = [
-    'gc-btn',
-    resolvedVariant ? `gc-btn--${resolvedVariant}` : '',
-    size ? `gc-btn--${size}` : '',
-    fullWidth ? 'gc-btn--full' : '',
-    iconOnly ? 'gc-btn--iconOnly' : '',
+    'lvm-btn',
+    resolvedVariant ? `lvm-btn--${resolvedVariant}` : '',
+    size ? `lvm-btn--${size}` : '',
+    fullWidth ? 'lvm-btn--full' : '',
+    iconOnly ? 'lvm-btn--iconOnly' : '',
     loading ? 'is-loading' : '',
     className,
   ].filter(Boolean).join(' ')
 
   return (
     <Component className={cls} {...props}>
-      {loading ? <span className="gc-btn__spinner" aria-hidden /> : null}
-      <span className="gc-btn__content">
-        {resolvedLeft ? <span className="gc-btn__icon gc-btn__icon--left" aria-hidden>{resolvedLeft}</span> : null}
-        {!iconOnly && <span className="gc-btn__label">{children}</span>}
-        {resolvedRight ? <span className="gc-btn__icon gc-btn__icon--right" aria-hidden>{resolvedRight}</span> : null}
+      {loading ? <span className="lvm-btn__spinner" aria-hidden /> : null}
+      <span className="lvm-btn__content">
+        {resolvedLeft ? <span className="lvm-btn__icon lvm-btn__icon--left" aria-hidden>{resolvedLeft}</span> : null}
+        {!iconOnly && <span className="lvm-btn__label">{children}</span>}
+        {resolvedRight ? <span className="lvm-btn__icon lvm-btn__icon--right" aria-hidden>{resolvedRight}</span> : null}
       </span>
     </Component>
   )

@@ -1,9 +1,3 @@
-//
-//  LaVozMisionera_StudioApp.swift
-//  La Voz Misionera Studio
-//
-//  Created by Ryan Moore on 7/24/26.
-//
 
 import SwiftUI
 
@@ -15,10 +9,10 @@ struct LaVozMisionera_StudioApp: App {
         WindowGroup {
             ContentView()
                 // The brand accent, set once at the root so buttons, list
-                // selection, and focus rings all read as Signal blue. The
+                // selection, and focus rings all read as LVM gold. The
                 // AccentColor asset — generated from the same tokens — covers the
                 // AppKit chrome the SwiftUI environment does not reach.
-                .tint(GCColor.accent)
+                .tint(LVMColor.accent)
                 // The appearance override. Declarative, so it applies at launch as
                 // well as when the View menu changes it.
                 .preferredColorScheme(defaults.theme.colorScheme)

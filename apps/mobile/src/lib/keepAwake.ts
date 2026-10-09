@@ -9,7 +9,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 // on blur, unmount, or toggle-off, so it never keeps the display awake in the
 // background.
 
-const TAG = 'gc-viewer-keep-awake'
+const TAG = 'lvm-viewer-keep-awake'
 
 export function useKeepAwakeWhileFocused(enabled: boolean): void {
   const isFocused = useIsFocused()

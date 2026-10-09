@@ -10,6 +10,7 @@ export default function StarButton({ songId }) {
   const location = useLocation()
   const [starred, setStarred] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   const userId = session?.user?.id
 
@@ -31,9 +32,9 @@ export default function StarButton({ songId }) {
       .eq('user_id', userId)
       .eq('song_id', songId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (cancelled) return
-        setStarred(!!data)
+        if (!error) setStarred(Boolean(data))
         setChecking(false)
       })
     return () => { cancelled = true }
@@ -44,38 +45,42 @@ export default function StarButton({ songId }) {
       navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)
       return
     }
+    if (saving || checking || !userId || !songId) return
     const wasStarred = starred
+    setSaving(true)
     setStarred(!wasStarred) // optimistic update
-    if (wasStarred) {
-      const { error } = await supabase
-        .from('user_starred_songs')
-        .delete()
-        .eq('user_id', userId)
-        .eq('song_id', songId)
-      if (error) {
-        console.error('Failed to unstar song:', error)
-        setStarred(wasStarred)
-        showToast('Could not remove star. Please try again.')
+    try {
+      if (wasStarred) {
+        const { error } = await supabase
+          .from('user_starred_songs')
+          .delete()
+          .eq('user_id', userId)
+          .eq('song_id', songId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('user_starred_songs')
+          .insert({ user_id: userId, song_id: songId })
+        if (error) throw error
       }
-    } else {
-      const { error } = await supabase
-        .from('user_starred_songs')
-        .insert({ user_id: userId, song_id: songId })
-      if (error) {
-        console.error('Failed to star song:', error)
-        setStarred(wasStarred)
-        showToast('Could not star song. Please try again.')
-      }
+    } catch (error) {
+      console.error(`Failed to ${wasStarred ? 'unstar' : 'star'} song:`, error)
+      setStarred(wasStarred)
+      showToast(wasStarred
+        ? 'Could not remove star. Please try again.'
+        : 'Could not star song. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
     <button
-      className={`gc-star-btn${starred ? ' starred' : ''}`}
+      className={`lvm-star-btn${starred ? ' starred' : ''}`}
       onClick={handleClick}
       aria-label={starred ? 'Unstar song' : 'Star song'}
       aria-pressed={starred}
-      disabled={checking}
+      disabled={checking || saving}
       title={starred ? 'Remove from starred' : 'Star this song'}
     >
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

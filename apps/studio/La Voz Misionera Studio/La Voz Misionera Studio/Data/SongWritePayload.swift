@@ -19,21 +19,21 @@ import Foundation
 struct SongWritePayload: Encodable {
     let title: String
     let artist: String?
-    let default_key: String?
+    let defaultKey: String?
     let tempo: Int?
-    let time_signature: String?
+    let timeSignature: String?
     let country: String?
-    let youtube_id: String?
+    let youtubeID: String?
     let language: String?
-    let pptx_url: String?
+    let pptxURL: String?
     let tags: [String]
-    let chordpro_content: String
+    let chordproContent: String
     let slug: String
-    let is_deleted: Bool
-    let updated_at: String
+    let isDeleted: Bool
+    let updatedAt: String
     /// Only set on an insert. `nil` is skipped by the encoder below, so an update
     /// never rewrites the creation time.
-    let created_at: String?
+    let createdAt: String?
     /// Only set on an insert — a new song is always a draft. Deliberately absent on
     /// an update, which is what makes "saving an edit cannot un-publish a song" a
     /// property of the payload rather than a rule the UI has to remember.
@@ -54,19 +54,19 @@ struct SongWritePayload: Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(title, forKey: .title)
         try container.encode(artist, forKey: .artist)
-        try container.encode(default_key, forKey: .default_key)
+        try container.encode(defaultKey, forKey: .default_key)
         try container.encode(tempo, forKey: .tempo)
-        try container.encode(time_signature, forKey: .time_signature)
+        try container.encode(timeSignature, forKey: .time_signature)
         try container.encode(country, forKey: .country)
-        try container.encode(youtube_id, forKey: .youtube_id)
+        try container.encode(youtubeID, forKey: .youtube_id)
         try container.encode(language, forKey: .language)
-        try container.encode(pptx_url, forKey: .pptx_url)
+        try container.encode(pptxURL, forKey: .pptx_url)
         try container.encode(tags, forKey: .tags)
-        try container.encode(chordpro_content, forKey: .chordpro_content)
+        try container.encode(chordproContent, forKey: .chordpro_content)
         try container.encode(slug, forKey: .slug)
-        try container.encode(is_deleted, forKey: .is_deleted)
-        try container.encode(updated_at, forKey: .updated_at)
-        try container.encodeIfPresent(created_at, forKey: .created_at)
+        try container.encode(isDeleted, forKey: .is_deleted)
+        try container.encode(updatedAt, forKey: .updated_at)
+        try container.encodeIfPresent(createdAt, forKey: .created_at)
         try container.encodeIfPresent(status, forKey: .status)
     }
 }
@@ -80,21 +80,21 @@ extension SongWritePayload {
     init(form: SongForm, slug: String, isInsert: Bool, now: String = SongsRepository.timestamp()) {
         self.title = form.title.trimmed
         self.artist = form.artist.nilIfBlank
-        self.default_key = form.defaultKey.nilIfBlank
+        self.defaultKey = form.defaultKey.nilIfBlank
         self.tempo = form.tempoValue
-        self.time_signature = form.timeSignature.nilIfBlank
+        self.timeSignature = form.timeSignature.nilIfBlank
         self.country = form.country.nilIfBlank
-        self.youtube_id = form.youtubeID.nilIfBlank
+        self.youtubeID = form.youtubeID.nilIfBlank
         self.language = form.language.nilIfBlank
-        self.pptx_url = form.pptxURL.nilIfBlank
+        self.pptxURL = form.pptxURL.nilIfBlank
         self.tags = form.tags
         // Coalesced to "" rather than NULL, matching core's note that the live
         // column is NOT NULL — saving an empty body must not violate it.
-        self.chordpro_content = form.chordproContent
+        self.chordproContent = form.chordproContent
         self.slug = slug
-        self.is_deleted = false
-        self.updated_at = now
-        self.created_at = isInsert ? now : nil
+        self.isDeleted = false
+        self.updatedAt = now
+        self.createdAt = isInsert ? now : nil
         self.status = isInsert ? SongStatus.draft.rawValue : nil
     }
 }

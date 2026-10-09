@@ -114,10 +114,10 @@ struct SongEditorView: View {
         } else if let errorText = model.errorText, model.songID == nil, model.form.title.isEmpty {
             // A load that failed outright — distinct from a save error, which is
             // shown as a banner over a working editor.
-            VStack(alignment: .leading, spacing: GCSpacing.sm) {
-                Text(errorText).gcTextStyle(.body).foregroundStyle(GCColor.sec)
+            VStack(alignment: .leading, spacing: LVMSpacing.sm) {
+                Text(errorText).lvmTextStyle(.body).foregroundStyle(LVMColor.sec)
             }
-            .padding(GCSpacing.xl)
+            .padding(LVMSpacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
             editor
@@ -160,11 +160,11 @@ struct SongEditorView: View {
         recoveredDraftBanner
         importBanner
         if let errorText = model.errorText {
-            HStack(spacing: GCSpacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(GCColor.danger)
+            HStack(spacing: LVMSpacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(LVMColor.danger)
                 Text(errorText)
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button {
@@ -173,12 +173,12 @@ struct SongEditorView: View {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(GCColor.muted)
+                .foregroundStyle(LVMColor.muted)
                 .accessibilityLabel("Dismiss")
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
-            .background(GCColor.surfaceAlt)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
+            .background(LVMColor.surfaceAlt)
             .overlay(alignment: .bottom) { Divider() }
         }
     }
@@ -193,28 +193,28 @@ struct SongEditorView: View {
     @ViewBuilder
     private var recoveredDraftBanner: some View {
         if let savedAt = model.restoredDraftAt {
-            HStack(alignment: .top, spacing: GCSpacing.sm) {
-                Image(systemName: "clock.arrow.circlepath").foregroundStyle(GCColor.accent)
+            HStack(alignment: .top, spacing: LVMSpacing.sm) {
+                Image(systemName: "clock.arrow.circlepath").foregroundStyle(LVMColor.accent)
                 Text("Restored unsaved changes from \(savedAt.formatted(date: .abbreviated, time: .shortened)). They are not saved yet.")
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Discard") { model.discardRestoredDraft() }
                     .buttonStyle(.link)
-                    .gcTextStyle(.rowMeta)
+                    .lvmTextStyle(.rowMeta)
                 Button {
                     model.dismissRestoredDraftBanner()
                 } label: {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(GCColor.muted)
+                .foregroundStyle(LVMColor.muted)
                 .accessibilityLabel("Dismiss")
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
-            .background(GCColor.surfaceAlt)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
+            .background(LVMColor.surfaceAlt)
             .overlay(alignment: .bottom) { Divider() }
         }
     }
@@ -222,12 +222,12 @@ struct SongEditorView: View {
     @ViewBuilder
     private var importBanner: some View {
         if let summary = model.importSummary {
-            HStack(alignment: .top, spacing: GCSpacing.sm) {
+            HStack(alignment: .top, spacing: LVMSpacing.sm) {
                 Image(systemName: model.importNeedsAttention ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                    .foregroundStyle(model.importNeedsAttention ? GCColor.accent : GCColor.success)
+                    .foregroundStyle(model.importNeedsAttention ? LVMColor.accent : LVMColor.success)
                 Text(summary)
-                    .gcTextStyle(.rowMeta)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowMeta)
+                    .foregroundStyle(LVMColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 // Offered only when the result is worth investigating. The JSON it
@@ -237,7 +237,7 @@ struct SongEditorView: View {
                 if model.importNeedsAttention {
                     Button("Copy Diagnostics") { model.copyImportDiagnostics() }
                         .buttonStyle(.link)
-                        .gcTextStyle(.rowMeta)
+                        .lvmTextStyle(.rowMeta)
                 }
                 Button {
                     model.dismissImportSummary()
@@ -245,12 +245,12 @@ struct SongEditorView: View {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(GCColor.muted)
+                .foregroundStyle(LVMColor.muted)
                 .accessibilityLabel("Dismiss")
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
-            .background(GCColor.surfaceAlt)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
+            .background(LVMColor.surfaceAlt)
             .overlay(alignment: .bottom) { Divider() }
         }
     }
@@ -268,11 +268,11 @@ struct SongEditorView: View {
                 // taking it from the body. Collapsing Details is the escape hatch on a
                 // short window.
                 metadataForm
-                    .padding(.horizontal, GCSpacing.lg)
+                    .padding(.horizontal, LVMSpacing.lg)
                     // A little air under the header — the first cut had the Title label
                     // almost touching it.
-                    .padding(.top, GCSpacing.lg)
-                    .padding(.bottom, GCSpacing.lg)
+                    .padding(.top, LVMSpacing.lg)
+                    .padding(.bottom, LVMSpacing.lg)
             }
             Divider()
             chordproEditor
@@ -284,15 +284,15 @@ struct SongEditorView: View {
         Button {
             showsDetails.toggle()
         } label: {
-            HStack(spacing: GCSpacing.sm) {
+            HStack(spacing: LVMSpacing.sm) {
                 Image(systemName: showsDetails ? "chevron.down" : "chevron.right")
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(GCColor.muted)
-                Text("Details").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
+                    .foregroundStyle(LVMColor.muted)
+                Text("Details").lvmTextStyle(.overline).foregroundStyle(LVMColor.sec)
                 if !showsDetails, !collapsedSummary.isEmpty {
                     Text(collapsedSummary)
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(GCColor.muted)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(LVMColor.muted)
                         .lineLimit(1)
                 }
                 Spacer()
@@ -301,13 +301,13 @@ struct SongEditorView: View {
                 // not blocked, and 8 songs already in the catalog are in this state.
                 if !model.form.isPublishable {
                     Text("Needs \(model.form.missingForPublish.formattedList) to publish")
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(GCColor.star)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(LVMColor.star)
                         .lineLimit(1)
                 }
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -329,7 +329,7 @@ struct SongEditorView: View {
     /// Tags three with Language one. Grid keeps the columns aligned down the form,
     /// which is what stops it reading as a pile of differently-sized boxes.
     private var metadataForm: some View {
-        Grid(alignment: .topLeading, horizontalSpacing: GCSpacing.md, verticalSpacing: GCSpacing.md) {
+        Grid(alignment: .topLeading, horizontalSpacing: LVMSpacing.md, verticalSpacing: LVMSpacing.md) {
             GridRow {
                 field("Title", requirement: .toSave, error: model.form.errors.title) {
                     TextField("Song title", text: $model.form.title)
@@ -391,7 +391,7 @@ struct SongEditorView: View {
     /// and the toggle re-spells the current selection rather than clearing it.
     private var keyField: some View {
         field("Key", requirement: .toPublish, error: model.form.errors.defaultKey) {
-            HStack(spacing: GCSpacing.sm) {
+            HStack(spacing: LVMSpacing.sm) {
                 Picker("", selection: $model.form.defaultKey) {
                     Text("Choose…").tag("")
                     Section("Major") {
@@ -458,8 +458,8 @@ struct SongEditorView: View {
         var marker: Color? {
             switch self {
             case .optional: return nil
-            case .toSave: return GCColor.danger
-            case .toPublish: return GCColor.star
+            case .toSave: return LVMColor.danger
+            case .toPublish: return LVMColor.star
             }
         }
     }
@@ -474,16 +474,16 @@ struct SongEditorView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 2) {
-                Text(label).gcTextStyle(.overline).foregroundStyle(GCColor.sec)
+                Text(label).lvmTextStyle(.overline).foregroundStyle(LVMColor.sec)
                 if let marker = requirement.marker {
-                    Text("*").gcTextStyle(.overline).foregroundStyle(marker)
+                    Text("*").lvmTextStyle(.overline).foregroundStyle(marker)
                 }
                 if let error = error {
                     Text(error)
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(requirement.marker ?? GCColor.danger)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(requirement.marker ?? LVMColor.danger)
                 } else if let warning = warning {
-                    Text(warning).gcTextStyle(.overline).foregroundStyle(GCColor.star)
+                    Text(warning).lvmTextStyle(.overline).foregroundStyle(LVMColor.star)
                 }
             }
             content()
@@ -495,17 +495,17 @@ struct SongEditorView: View {
 
     private var chordproEditor: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: GCSpacing.sm) {
-                Text("ChordPro").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
+            HStack(spacing: LVMSpacing.sm) {
+                Text("ChordPro").lvmTextStyle(.overline).foregroundStyle(LVMColor.sec)
                 Spacer()
                 if !model.form.chordproContent.isEmpty {
                     Text("\(model.form.chordproContent.count) characters")
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(GCColor.muted)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(LVMColor.muted)
                 }
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
 
             ChordProToolbar(
                 key: model.form.defaultKey,
@@ -552,60 +552,60 @@ struct SongEditorView: View {
 
     private var previewPane: some View {
         VStack(spacing: 0) {
-            HStack(spacing: GCSpacing.sm) {
-                Text("Preview").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
+            HStack(spacing: LVMSpacing.sm) {
+                Text("Preview").lvmTextStyle(.overline).foregroundStyle(LVMColor.sec)
                 Spacer()
                 if !model.form.defaultKey.isEmpty {
                     Text(model.form.defaultKey)
-                        .gcTextStyle(.overline)
-                        .foregroundStyle(GCColor.textAccent)
+                        .lvmTextStyle(.overline)
+                        .foregroundStyle(LVMColor.textAccent)
                 }
             }
-            .padding(.horizontal, GCSpacing.md)
-            .padding(.vertical, GCSpacing.sm)
+            .padding(.horizontal, LVMSpacing.md)
+            .padding(.vertical, LVMSpacing.sm)
             Divider()
 
             ScrollView {
                 previewBody
-                    .padding(GCSpacing.lg)
+                    .padding(LVMSpacing.lg)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .background(GCColor.bg)
+            .background(LVMColor.bg)
         }
         .frame(minWidth: Self.previewMinimumWidth, maxHeight: .infinity)
     }
 
     @ViewBuilder
     private var previewBody: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
             // A parse failure is shown ABOVE the last good chart rather than
             // replacing it: mid-edit a body is transiently unparseable, and blanking
             // the pane on those keystrokes would make the preview unusable.
             if let parseError = model.previewErrorText {
-                HStack(alignment: .firstTextBaseline, spacing: GCSpacing.sm) {
+                HStack(alignment: .firstTextBaseline, spacing: LVMSpacing.sm) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(GCColor.star)
+                        .foregroundStyle(LVMColor.star)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Cannot draw this chart yet")
-                            .gcTextStyle(.rowMeta)
-                            .foregroundStyle(GCColor.ink)
+                            .lvmTextStyle(.rowMeta)
+                            .foregroundStyle(LVMColor.ink)
                         Text(parseError)
-                            .gcTextStyle(.overline)
-                            .foregroundStyle(GCColor.muted)
+                            .lvmTextStyle(.overline)
+                            .foregroundStyle(LVMColor.muted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .padding(GCSpacing.sm)
-                .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: GCRadius.sm))
+                .padding(LVMSpacing.sm)
+                .background(LVMColor.surfaceAlt, in: RoundedRectangle(cornerRadius: LVMRadius.sm))
             }
 
             if let doc = model.previewDoc {
                 ChordChartView(doc: doc, options: .default)
             } else if model.form.chordproContent.trimmed.isEmpty {
-                VStack(alignment: .leading, spacing: GCSpacing.xs) {
-                    Text("Nothing to preview yet").gcTextStyle(.body).foregroundStyle(GCColor.ink)
+                VStack(alignment: .leading, spacing: LVMSpacing.xs) {
+                    Text("Nothing to preview yet").lvmTextStyle(.body).foregroundStyle(LVMColor.ink)
                     Text("Type ChordPro on the left and the chart appears here.")
-                        .gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
+                        .lvmTextStyle(.rowMeta).foregroundStyle(LVMColor.muted)
                 }
             } else {
                 // Never parsed successfully even once — show the recovered lyrics,
@@ -613,8 +613,8 @@ struct SongEditorView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(model.rawFallbackLines.enumerated()), id: \.offset) { _, line in
                         Text(line.isEmpty ? " " : line)
-                            .font(.system(size: GCChartMetrics.lyricSize))
-                            .foregroundStyle(GCColor.ink)
+                            .font(.system(size: LVMChartMetrics.lyricSize))
+                            .foregroundStyle(LVMColor.ink)
                             .textSelection(.enabled)
                     }
                 }
@@ -664,7 +664,7 @@ struct SongEditorView: View {
             }
             .keyboardShortcut("p", modifiers: .command)
             .help(previewToggleHelp)
-            .foregroundStyle(isPreviewVisible ? GCColor.accent : GCColor.sec)
+            .foregroundStyle(isPreviewVisible ? LVMColor.accent : LVMColor.sec)
         }
 
         ToolbarItem(placement: .primaryAction) {
@@ -725,9 +725,9 @@ struct SongEditorView: View {
                 case .idle:
                     EmptyView()
                 case .succeeded:
-                    badge("checkmark.circle.fill", tint: GCColor.success)
+                    badge("checkmark.circle.fill", tint: LVMColor.success)
                 case .failed:
-                    badge("xmark.circle.fill", tint: GCColor.danger)
+                    badge("xmark.circle.fill", tint: LVMColor.danger)
                 }
             }
     }
@@ -738,7 +738,7 @@ struct SongEditorView: View {
             .foregroundStyle(tint)
             // A ring in the toolbar's own colour so the badge reads against whatever
             // the icon behind it is doing.
-            .background(Circle().fill(GCColor.surface).frame(width: 9, height: 9))
+            .background(Circle().fill(LVMColor.surface).frame(width: 9, height: 9))
             .offset(x: 3, y: 2)
     }
 

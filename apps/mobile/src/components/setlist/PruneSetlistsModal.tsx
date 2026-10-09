@@ -6,6 +6,7 @@ import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 import { actionFailureMessage } from '../../lib/errors'
+import { oldestSetlistsFirst, togglePruneSelection } from '../../lib/setlistPrune'
 import type { SetlistRow } from '../../lib/useSetlists'
 
 // Shown when the user hits their per-role personal setlist cap. Lists every
@@ -31,22 +32,10 @@ export default function PruneSetlistsModal({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
 
-  // Oldest first so the user prunes stale sets before recent ones.
-  const ordered = useMemo(
-    () =>
-      setlists
-        .slice()
-        .sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()),
-    [setlists],
-  )
+  const ordered = useMemo(() => oldestSetlistsFirst(setlists), [setlists])
 
   function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    setSelected((prev) => togglePruneSelection(prev, id))
   }
 
   function close() {
@@ -89,7 +78,6 @@ export default function PruneSetlistsModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: t.colors.bg, paddingTop: insets.top }}>
-        {/* Header */}
         <View
           style={{
             flexDirection: 'row',
@@ -155,7 +143,6 @@ export default function PruneSetlistsModal({
           contentContainerStyle={{ paddingBottom: t.spacing.lg, flexGrow: 1 }}
         />
 
-        {/* Footer: delete CTA */}
         <View
           style={{
             paddingHorizontal: t.spacing.lg,
@@ -179,9 +166,12 @@ export default function PruneSetlistsModal({
               opacity: selected.size === 0 || busy ? 0.5 : pressed ? 0.85 : 1,
             })}
           >
-            <Text style={{ color: t.colors.onDanger, fontSize: 16, fontWeight: '600', letterSpacing: -0.2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
+              <SymbolIcon name="trash" size={17} color={t.colors.onDanger} />
+              <Text style={{ color: t.colors.onDanger, fontSize: 16, fontWeight: '600', letterSpacing: -0.2 }}>
               {selected.size > 0 ? tx('prune.deleteCount', { count: selected.size }) : tx('prune.deleteSelectedShort')}
-            </Text>
+              </Text>
+            </View>
           </Pressable>
         </View>
       </View>

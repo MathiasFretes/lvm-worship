@@ -7,7 +7,7 @@ import { createRouteDwellTracker, OVERLAY_ROUTE_KEY } from '../routeDwell'
 const VIEWER = 'viewer/[slug]'
 const SONGS = '(tabs)/songs'
 
-describe('createRouteDwellTracker', () => {
+describe.each([{ product: 'LVM' }])('$product · createRouteDwellTracker', () => {
   it('does not emit for the first route of a session', () => {
     const t = createRouteDwellTracker()
     expect(t.onRoute(SONGS, '/songs', 0)).toBeNull()

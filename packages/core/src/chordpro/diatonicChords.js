@@ -57,25 +57,17 @@ const MINOR_DEGREES = ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII']
 export function getDiatonicChords(key) {
   if (!key) return null
 
-  // Check if it's a minor key
-  const isMinor = key.endsWith('m') && key.length > 1
-
-  if (isMinor) {
+  if (key.endsWith('m') && key.length > 1) {
     const rel = MINOR_TO_RELATIVE_MAJOR[key]
     if (!rel) return null
 
     const majorChords = MAJOR_DIATONIC[rel.major]
     if (!majorChords) return null
 
-    // Natural minor starts at vi of the relative major (index 5)
-    // Rotate: [vi, vii°, I, ii, iii, IV, V] → degrees i, ii°, III, iv, v, VI, VII
-    const rotated = []
-    for (let i = 0; i < 7; i++) {
-      const srcIndex = (5 + i) % 7
-      const [symbol, , display] = majorChords[srcIndex]
-      rotated.push({ degree: MINOR_DEGREES[i], symbol, display })
-    }
-    return rotated
+    return MINOR_DEGREES.map((degree, index) => {
+      const [symbol, , display] = majorChords[(rel.offset + index) % majorChords.length]
+      return { degree, symbol, display }
+    })
   }
 
   // Handle Gb as alias for F# in our lookup
@@ -84,5 +76,5 @@ export function getDiatonicChords(key) {
   const chords = MAJOR_DIATONIC[lookupKey]
   if (!chords) return null
 
-  return chords.map(([symbol, degree, display]) => ({ degree, symbol, display }))
+  return Array.from(chords, ([symbol, degree, display]) => ({ degree, symbol, display }))
 }

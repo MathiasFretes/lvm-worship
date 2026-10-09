@@ -12,7 +12,7 @@ const IPAD_MINI = { min: 744, portrait: 744, landscape: 1133 }
 const IPAD_AIR_11 = { min: 820, portrait: 820, landscape: 1180 }
 const IPAD_PRO_13 = { min: 1024, portrait: 1024, landscape: 1366 }
 
-describe('maxColumnsFor device tier', () => {
+describe.each([{ product: 'LVM' }])('$product · maxColumnsFor device tier', () => {
   it('phones never get a second column, in either orientation', () => {
     expect(maxColumnsFor(IPHONE_15.min, pad(IPHONE_15.portrait), GAP)).toBe(1)
     // Landscape is wide enough for two 300pt columns, but the device tier wins.
@@ -31,7 +31,7 @@ describe('maxColumnsFor device tier', () => {
   })
 })
 
-describe('maxColumnsFor width cap', () => {
+describe.each([{ product: 'LVM' }])('$product · maxColumnsFor width cap', () => {
   it('keeps an 11" iPad at 2 columns in portrait — 3 would be too narrow', () => {
     // 820 - 32 = 788 content; three columns would be ~252pt each.
     expect(maxColumnsFor(IPAD_AIR_11.min, pad(IPAD_AIR_11.portrait), GAP)).toBe(2)

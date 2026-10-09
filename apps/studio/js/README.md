@@ -11,7 +11,8 @@ JavaScriptCore `JSContext`.
 |------|------|
 | `entry.mjs` | Bridge entry. Imports core **subpaths** (never the barrel), validates arguments, exports the functions in the table below. |
 | `build-core-bundle.mjs` | esbuild build → `La Voz Misionera Studio/La Voz Misionera Studio/Resources/LaVozMisioneraCore.js` |
-| `verify-bundle.mjs` | Parity harness: bundle vs. the core modules `apps/mobile` resolves. |
+| `verify-bundle.mjs` | Parity harness: generated bundle vs. current `packages/core` sources. |
+| `pdf-draft.mjs` | Runs saved positioned-text JSON through the current core importer. |
 
 Exposed to Swift:
 
@@ -39,12 +40,6 @@ two disagree the moment a lyric leaves ASCII — and the catalog has Turkish and
 songs. `Core/ChordProEditing.swift` does the conversion at the boundary and the parity
 harness covers Turkish, Korean and an emoji surrogate pair specifically.
 
-Adding `lint.ts` and `slug.ts` cost the bundle nothing transitively: `lint.ts`'s only
-runtime import is `./parser`, which was already bundled, and `slug.ts` imports
-nothing, and `editing.ts` / `diatonicChords.js` / `rbac/roles.js` likewise. The build
-script prints its module list — **ten** files as of Phase 3 — so a dependency creeping
-in is visible on every rebuild.
-
 `hasMinRole` and `slugify` are bridged rather than ported for the same reason as the
 parser: both have outputs that must match another client exactly. A Swift copy of
 `ROLE_ORDER` is precisely the thing that outlives a hierarchy change unnoticed
@@ -63,56 +58,16 @@ Swift side: `La Voz Misionera Studio/La Voz Misionera Studio/Core/CoreBridge.swi
 
 ## Rebuilding the bundle
 
-Run from the repo root, after any change to `entry.mjs` or to
-`packages/core/src/chordpro/`:
+Run from the repo root, after changing `entry.mjs` or one of its imported
+`packages/core` modules:
 
-```sh
+```powershell
 node "apps/studio/js/build-core-bundle.mjs"
-node "apps/studio/js/verify-bundle.mjs"     # must print ALL CHECKS PASSED
+node "apps/studio/js/verify-bundle.mjs"
 ```
 
-The output is committed, so a clean checkout builds in Xcode without running npm.
-
-### Why this is a manual step, not an Xcode Run Script phase
-
-1. Xcode build phases run with a minimal `PATH`; `node` installed via Homebrew or
-   nvm is not on it, which fails as a confusing build error rather than an
-   obvious missing-tool one.
-2. The output is committed, so regenerating it on every build would dirty the
-   working tree constantly.
-3. Fewer moving parts while the spike is being diagnosed.
-
-When this graduates past the spike, the switch is: gitignore
-`Resources/LaVozMisioneraCore.js`, add a Run Script phase with an absolute `node`
-path (declaring `entry.mjs` + the core sources as Input Files and the bundle as
-an Output File so Xcode can skip unchanged builds).
-
-## Confirming the bundle reaches the built app
-
-The Xcode target uses a file-system-synchronized root group (`objectVersion = 77`),
-so `Resources/LaVozMisioneraCore.js` is picked up from disk with no project-file
-edits — but Xcode decides the build phase from the file type, and a `.js` file has
-no compiler. Verify it landed:
-
-```sh
-ls -l "$(xcodebuild -project "apps/studio/La Voz Misionera Studio/La Voz Misionera Studio.xcodeproj" \
-  -showBuildSettings 2>/dev/null | awk -F' = ' '/ BUILT_PRODUCTS_DIR/{print $2}' \
-  )/La Voz Misionera Studio.app/Contents/Resources/LaVozMisioneraCore.js"
-```
-
-The app also reports this itself: the spike window prints the path the bundle was
-loaded from, and `CoreBridge` throws `bundleMissing` with remediation text rather
-than crashing if it is absent.
-
-**If it did not land:** select `LaVozMisioneraCore.js` in Xcode → File Inspector →
-set Target Membership for "La Voz Misionera Studio". If a synchronized group blocks
-that, add a Copy Files phase (Destination: Resources, Subpath: empty) with the
-file, or a Run Script phase after it:
-
-```sh
-cp "$SRCROOT/La Voz Misionera Studio/Resources/LaVozMisioneraCore.js" \
-   "$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/"
-```
+Success ends with `ALL CHECKS PASSED`. The generated resource is committed; Node
+is a maintenance dependency, not a runtime dependency of Studio.
 
 ## Bundle format
 
@@ -127,8 +82,8 @@ IIFE that self-assigns is the format that needs no shim.
 `@supabase/supabase-js` and its `fetch`/WebSocket/storage expectations — none of
 which exist in a bare `JSContext`. Always import the narrowest subpath
 (`@lavozmisionera/core/<dir>/<file>`, which the package's `"./*": "./src/*"` exports
-pattern resolves). The current bundle is 10 modules / ~27 KB with no dependencies;
-`build-core-bundle.mjs` prints the module list so unexpected growth is visible.
+pattern resolves). The build script prints its module list so unexpected
+dependency growth is visible.
 
 ## How parity is checked
 

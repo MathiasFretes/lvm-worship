@@ -33,6 +33,17 @@ final class ExportController: ObservableObject {
     @Published private(set) var exportKey = ""
     private var services: AppServices?
 
+    private struct ExportContext {
+        let services: AppServices
+        let songID: String
+        let key: String
+    }
+
+    private enum Destination {
+        case save
+        case share
+    }
+
     struct ExportAlert: Identifiable {
         let id = UUID()
         let title: String
@@ -51,48 +62,51 @@ final class ExportController: ObservableObject {
     // MARK: - Actions
 
     func save(_ format: ExportFormat) {
-        run { services, song in
-            let file = try await services.export.exportSong(
-                songID: song.id, key: self.exportKey, format: format)
-            // The save panel is what grants the sandbox write access to the chosen
-            // location — nothing is written until the user picks one.
-            guard let destination = await Self.promptForDestination(filename: file.filename) else {
-                return nil
-            }
-            try file.data.write(to: destination)
-            return nil
-        }
+        start(format: format, destination: .save)
     }
 
     func share(_ format: ExportFormat = .pdf) {
-        run { services, song in
-            let file = try await services.export.exportSong(
-                songID: song.id, key: self.exportKey, format: format)
-            // The picker needs a real file URL, so the bytes land in the app's own
-            // temporary directory first — inside the container, no entitlement needed.
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent(file.filename)
-            try file.data.write(to: url)
-            Self.presentSharingPicker(for: url)
-            return nil
-        }
+        start(format: format, destination: .share)
     }
 
-    /// Shared busy handling and error reporting, so each action is just its own work.
-    /// Errors become an alert — the native way to report a failed command, and the
-    /// only option once these run from the menu bar with no panel to write into.
-    private func run(_ work: @escaping (AppServices, SongDetail) async throws -> ExportAlert?) {
-        guard let services = services, let song = song, !isBusy else { return }
+    private func start(format: ExportFormat, destination: Destination) {
+        guard let context = context(), !isBusy else { return }
         isBusy = true
         Task {
             do {
-                if let alert = try await work(services, song) { self.alert = alert }
+                let file = try await context.services.export.exportSong(
+                    songID: context.songID,
+                    key: context.key,
+                    format: format
+                )
+                try await deliver(file, to: destination)
             } catch {
-                self.alert = ExportAlert(
+                alert = ExportAlert(
                     title: "Export failed",
                     message: (error as? LocalizedError)?.errorDescription ?? "\(error)"
                 )
             }
-            self.isBusy = false
+            isBusy = false
+        }
+    }
+
+    /// Capture all mutable viewer state before suspension. A transpose or song
+    /// switch while the request is in flight must not alter that export.
+    private func context() -> ExportContext? {
+        guard let services, let song else { return nil }
+        return ExportContext(services: services, songID: song.id, key: exportKey)
+    }
+
+    private func deliver(_ file: ExportService.ExportedFile, to destination: Destination) async throws {
+        switch destination {
+        case .save:
+            // The panel grants sandbox access; bytes are written only after approval.
+            guard let url = await Self.promptForDestination(filename: file.filename) else { return }
+            try file.data.write(to: url, options: .atomic)
+        case .share:
+            let url = try Self.temporaryURL(for: file.filename)
+            try file.data.write(to: url, options: .atomic)
+            Self.presentSharingPicker(for: url)
         }
     }
 
@@ -104,6 +118,17 @@ final class ExportController: ObservableObject {
             panel.allowedContentTypes = [type]
         }
         return await panel.begin() == .OK ? panel.url : nil
+    }
+
+    private static func temporaryURL(for filename: String) throws -> URL {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("lvm-export-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: folder,
+            withIntermediateDirectories: true
+        )
+        let safeName = (filename as NSString).lastPathComponent
+        return folder.appendingPathComponent(safeName.isEmpty ? "song-export" : safeName)
     }
 
     private static func presentSharingPicker(for url: URL) {

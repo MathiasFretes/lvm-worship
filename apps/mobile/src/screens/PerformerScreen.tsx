@@ -55,6 +55,7 @@ import { useChartAutoFit } from '../lib/useChartAutoFit'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { useSessionController } from '../lib/useSessionController'
+import { canMovePerformer, clampPerformerIndex } from '../lib/performerNavigation'
 
 const TRANSPOSE_BAR_CLEARANCE = 120
 const SWIPE_THRESHOLD = 50
@@ -78,8 +79,12 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // session for this setlist on mount.
   const sessionCtl = useSessionController(setlistId)
 
-  const [index, setIndex] = useState(0)
+  const [requestedIndex, setIndex] = useState(0)
+  const index = clampPerformerIndex(requestedIndex, items.length)
   const entry = items[index]
+  useEffect(() => {
+    if (items.length > 0 && requestedIndex !== index) setIndex(index)
+  }, [items.length, requestedIndex, index])
   // Personal-song entries (id `personal:<uuid>`) resolve from personal_songs;
   // catalog entries from the shared cache. Both hooks always run (undefined arg
   // = no-op) to keep hook order stable.
@@ -118,12 +123,19 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // Prefetch every song's chart body in the background so Prev/Next/rail jumps
   // render instantly (the current song is fetched on demand by useSong below).
   useEffect(() => {
-    for (const it of items) prefetchSong(it.song.slug)
+    for (const it of items) {
+      if (!isVerseId(it.songId) && !it.songId.startsWith('personal:') && it.song.slug) {
+        prefetchSong(it.song.slug)
+      }
+    }
   }, [items])
 
   // Transpose — ephemeral, reset on song change. nativeKey comes from the
   // entry's own catalog metadata (always current, unlike the loading `song`).
   const [delta, setDelta] = useState(0)
+  useEffect(() => {
+    setDelta(0)
+  }, [entry?.entryKey])
   // View options — session-ephemeral.
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
@@ -159,13 +171,13 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // native, which the follower re-applies to the same song. The controller
   // de-dupes + debounces, so calling this on every relevant change is safe.
   useEffect(() => {
-    if (!sessionCtl.session) return
+    if (!sessionCtl.session || !entry) return
     sessionCtl.broadcast({
       itemUid: `i${index}`,
       transpose: steps,
       currentKey: effectiveKey || null,
     })
-  }, [sessionCtl, index, steps, effectiveKey])
+  }, [sessionCtl, entry, index, steps, effectiveKey])
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
@@ -204,7 +216,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   const goTo = useCallback(
     (next: number, dir: 'next' | 'prev') => {
-      if (next < 0 || next >= count || next === index) return
+      if (!canMovePerformer(index, next, count)) return
       setSheet(null)
       setDelta(0)
       reveal()
@@ -483,7 +495,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           >
             {displayTitle}
           </Text>
-          <StarButton songId={entry?.song.id} />
+          <StarButton songId={isPersonalEntry || isVerseEntry ? undefined : entry?.song.id} />
         </View>
         {keyLabel ? (
           <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center' }}>
@@ -519,7 +531,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
             </ScrollView>
           </Animated.View>
         </GestureDetector>
-      ) : setLoading || songLoading || (entry && !songReady && !songError) ? (
+      ) : setLoading || (entry && !songReady && songLoading) ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.accent} />
         </View>

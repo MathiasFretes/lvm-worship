@@ -73,12 +73,15 @@ final class SongEditorModel: ObservableObject {
             if form.chordproContent != oldValue.chordproContent {
                 scheduleRefresh()
             }
-            scheduleDraftWrite()
+            if !isApplyingAuthoritativeState {
+                scheduleDraftWrite()
+            }
         }
     }
 
     /// The form as it was last saved, for the dirty check.
     private var savedForm: SongForm
+    private var isApplyingAuthoritativeState = false
 
     // MARK: - Draft recovery
 
@@ -90,6 +93,7 @@ final class SongEditorModel: ObservableObject {
     /// was written.
     private let draftKey: String
     private var draftTask: Task<Void, Never>?
+    private var draftRevision = 0
     private var terminationObserver: NSObjectProtocol?
 
     /// When the work now on screen was recovered from disk, for the banner. Nil when
@@ -144,13 +148,11 @@ final class SongEditorModel: ObservableObject {
     /// the input it documents, `apps/web` has a test asserting exactly that output,
     /// and a row whose column *is* empty still gets its warning.
     static func applicable(_ warnings: [LintWarning], title: String, key: String) -> [LintWarning] {
-        warnings.filter { warning in
-            switch warning.code {
-            case LintWarning.missingTitle: return title.trimmed.isEmpty
-            case LintWarning.missingKey: return key.trimmed.isEmpty
-            default: return true
-            }
-        }
+        let supplied: Set<String> = [
+            title.trimmed.isEmpty ? nil : LintWarning.missingTitle,
+            key.trimmed.isEmpty ? nil : LintWarning.missingKey,
+        ].compactMap { $0 }
+        return warnings.filter { !supplied.contains($0.code) }
     }
     @Published var showsPreview = true
 
@@ -211,6 +213,7 @@ final class SongEditorModel: ObservableObject {
 
     private let services: AppServices
     private var refreshTask: Task<Void, Never>?
+    private var refreshRevision = 0
     /// The body the current `previewDoc` was built from, so an edit that lands back
     /// on the previously parsed text (typing a character and deleting it) skips the
     /// bridge entirely.
@@ -292,11 +295,13 @@ final class SongEditorModel: ObservableObject {
 
     private func apply(_ row: SongEditable) {
         let loaded = SongForm(row: row)
+        isApplyingAuthoritativeState = true
         form = loaded
         savedForm = loaded
         songID = row.id
         slug = row.slug
         status = row.status
+        isApplyingAuthoritativeState = false
         refreshNow()
     }
 
@@ -341,9 +346,11 @@ final class SongEditorModel: ObservableObject {
 
     private func scheduleDraftWrite() {
         draftTask?.cancel()
+        draftRevision += 1
+        let revision = draftRevision
         draftTask = Task { [weak self] in
             try? await Task.sleep(for: Self.draftDebounce)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, self?.draftRevision == revision else { return }
             self?.writeDraft()
         }
     }
@@ -372,6 +379,7 @@ final class SongEditorModel: ObservableObject {
     private func clearDraft() {
         draftTask?.cancel()
         draftTask = nil
+        draftRevision += 1
         let store = drafts
         let key = draftKey
         Task.detached(priority: .utility) { store.clear(key: key) }
@@ -397,15 +405,20 @@ final class SongEditorModel: ObservableObject {
 
     private func scheduleRefresh() {
         refreshTask?.cancel()
+        refreshRevision += 1
+        let revision = refreshRevision
         refreshTask = Task { [weak self] in
             try? await Task.sleep(for: Self.previewDebounce)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, self?.refreshRevision == revision else { return }
             self?.refreshNow()
         }
     }
 
     /// Re-parse, re-render and re-lint the current body immediately.
     func refreshNow() {
+        refreshTask?.cancel()
+        refreshTask = nil
+        refreshRevision += 1
         let body = form.chordproContent
         guard let bridge = services.bridge else {
             previewErrorText = services.bridgeErrorText ?? "The ChordPro parser is unavailable."
@@ -549,7 +562,9 @@ final class SongEditorModel: ObservableObject {
         }
         do {
             let result = try edit(bridge)
-            form.chordproContent = result.value
+            var edited = form
+            edited.chordproContent = result.value
+            form = edited
             // Against the NEW body — the offsets core returned index into that, not the
             // text the range was read from.
             selection = result.selection.range
@@ -743,7 +758,6 @@ final class SongEditorModel: ObservableObject {
             }
 
             apply(saved)
-            savedForm = form
             // The server now has it, so the recovery copy is not just redundant but
             // wrong — offering it later would re-open work that is already live.
             restoredDraftAt = nil

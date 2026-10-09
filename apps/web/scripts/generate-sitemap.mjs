@@ -62,8 +62,6 @@ if (songsError) {
   process.exit(1)
 }
 
-const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
-
 const staticRoutes = [
   '/', // home
   '/about',
@@ -71,22 +69,11 @@ const staticRoutes = [
   '/setlist',
   '/songbook',
   '/reading',
-  '/resources',
   '/bundle',
   '/download'
 ]
 
 const urlSet = new Set()
-
-async function readJson(filePath){
-  try {
-    const txt = await fs.readFile(filePath, 'utf8')
-    return JSON.parse(txt)
-  } catch (err) {
-    console.warn(`Warning: failed to read ${filePath}: ${err?.message || err}`)
-    return {}
-  }
-}
 
 function encodeSlug(raw){
   if (!raw) return ''
@@ -104,12 +91,6 @@ for (const p of staticRoutes) addUrl(p)
 for (const song of (songs || [])) {
   if (!song?.slug) continue
   const loc = `/songs/${encodeSlug(song.slug)}/`
-  addUrl(loc)
-}
-
-for (const res of (resourcesData?.items || [])) {
-  if (!res?.slug) continue
-  const loc = `/resources/${encodeSlug(res.slug)}`
   addUrl(loc)
 }
 

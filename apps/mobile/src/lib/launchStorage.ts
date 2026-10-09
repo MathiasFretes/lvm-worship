@@ -1,13 +1,13 @@
 // One AsyncStorage round trip for the whole splash gate.
 //
 // The launch path hydrates eleven device-local stores before first paint, and
-// between them they read 16 keys with 16 separate getItem calls (five in
+// between them they read their keys with separate getItem calls (five in
 // defaults.ts alone). This module reads those — plus the one non-splash-gating
 // key that rides along (see the list below) — in a single multiGet and hands
 // back a KVStorage-shaped facade served from the result.
 //
 // The point of the facade — rather than teaching each store to accept a
-// pre-read value — is that NOT ONE LINE of parsing, validation or fallback logic
+// pre-read value — is that parsing and validation logic
 // in those stores changes. Nearly every key backs a user preference, and a
 // silent behaviour change here would reset people's settings on upgrade.
 // Equivalence is established by construction instead of by review.
@@ -33,35 +33,31 @@ export type BatchKVStorage = KVStorage & {
  * getItem to the real store, exactly as today.
  *
  * Deliberately excluded: GoTrue's own session key (read behind the auth
- * navigator lock and bounded by GATE_MS, not by us), gc.pendingSprite (only read
- * on a SIGNED_IN event), and the screen-scoped keys in autoHideChrome.ts and
+ * navigator lock and bounded by GATE_MS, not by us), the pending sprite (only
+ * read on a SIGNED_IN event), and the screen-scoped keys in autoHideChrome.ts and
  * useDailyHighlights.ts, which are not on the launch path.
  */
 export const LAUNCH_STORAGE_KEYS = [
-  'gc.defaults.theme', // defaults.ts             → 'system'
-  'gc.defaults.chordStyle', // defaults.ts             → 'letters'
-  'gc.defaults.keepAwake', // defaults.ts             → false ('1' is the only true)
-  'gc.defaults.language', // defaults.ts             → null (follow device)
-  'gc.defaults.dailyWordDestination', // defaults.ts   → 'landing'
-  'gc.downloads.v1', // downloads/manifest.ts   → DEFAULT_DOWNLOADS_STATE
-  'gc.songdrafts.v1', // drafts/draftsStore.ts   → DEFAULT_DRAFTS_STATE
-  'gc.recents.songs.v1', // recents.ts              → []
-  'gc.readingStreak.v1', // readingStreak.ts        → DEFAULT_READING_STREAK
-  'gc.readerReminder.v1', // readerReminder.ts       → DEFAULT_READER_REMINDER
-  'gc.viewer.columns.v2', // viewerPrefs.ts          → DEFAULT_COLUMNS (1)
-  // viewerPrefs.ts reads this superseded v1 key ONLY when columns.v2 is absent,
-  // to migrate the old per-song payload once. Batched so that first launch after
-  // upgrade still costs one round trip rather than two.
-  'gc.viewer.columnMode.v1',
-  'gc.bible.translation.v1', // bibleTranslationPref.ts → '' (no prior choice)
-  'gc.reader.settings.v1', // readerSettings.ts       → defaultReaderSettings
-  'gc.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
-  'gc.intro.seen.v1', // introSeen.ts            → false ('1' is the only true)
+  'lvm.defaults.theme',
+  'lvm.defaults.chordStyle',
+  'lvm.defaults.keepAwake',
+  'lvm.defaults.language',
+  'lvm.defaults.dailyWordDestination',
+  'lvm.downloads.v1', // downloads/manifest.ts   → DEFAULT_DOWNLOADS_STATE
+  'lvm.songdrafts.v1',
+  'lvm.recents.songs.v1',
+  'lvm.readingStreak.v1',
+  'lvm.readerReminder.v1', // readerReminder.ts       → DEFAULT_READER_REMINDER
+  'lvm.viewer.columns.v2', // viewerPrefs.ts          → DEFAULT_COLUMNS (1)
+  'lvm.bible.translation.v1',
+  'lvm.reader.settings.v1', // readerSettings.ts       → defaultReaderSettings
+  'lvm.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
+  'lvm.intro.seen.v1',
   // reviewState.ts → DEFAULT_REVIEW_STATE. The odd one out: it does NOT gate the
   // splash (nothing on screen depends on it, and the review gate cannot fire
   // before the user has navigated somewhere). It rides this batch anyway rather
   // than adding a sixteenth round trip for a key that is read on every launch.
-  'gc.review.v1',
+  'lvm.review.v1',
 ] as const
 
 /**

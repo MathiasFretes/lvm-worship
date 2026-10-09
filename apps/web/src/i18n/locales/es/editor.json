@@ -1,7 +1,6 @@
 {
   "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
   "songEditor": "Editor de canciones",
-  "postEditor": "Editor de publicaciones",
   "editorTools": "Herramientas del editor",
   "editorPortal": "Portal del editor"
 }

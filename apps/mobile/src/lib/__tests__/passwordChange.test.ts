@@ -60,6 +60,15 @@ describe('changePassword', () => {
     expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: 'others' })
   })
 
+  it('normalizes surrounding whitespace in the account email', async () => {
+    const supabase = fakeSupabase()
+    await changePassword(supabase, input({ email: '  user@example.com  ' }))
+    expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'OldPassw0rd!',
+    })
+  })
+
   it('does NOT sign the user out when the current password is wrong', async () => {
     const supabase = fakeSupabase({
       signInWithPassword: vi

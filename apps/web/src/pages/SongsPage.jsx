@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
+import { useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { compareSongsByTitle } from '../utils/songs/sort'
-import { searchSongs } from '../utils/songs/search'
-// src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
+import { normalizeSongSearch, searchSongs } from '../utils/songs/search'
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
-import { Chip, Input, SongCard } from '../components/ui/layout-kit'
-import { publicUrl } from '../utils/network/publicUrl'
+import { Chip, Input } from '../components/ui/layout-kit'
+import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
-import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
+import { buildTagMap, canonicalizeTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
 import {
   buildGroupSearchText,
   buildSongCatalog,
@@ -23,22 +22,12 @@ import {
 
 const SITE_URL = 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
-const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | La Voz Misionera'
-const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at La Voz Misionera.'
-
-// Personal/Pending pill shown on a library card for the user's own drafts.
-function personalBadge(s) {
-  if (!s?.isPersonal) return null
-  return (
-    <span className="gc-tag gc-tag--gray">
-      {s.reviewStatus === 'submitted' ? 'Pending' : 'Personal'}
-    </span>
-  )
-}
 
 export default function Songs(){
-  const { t } = useTranslation('pages')
-  const { songs: itemsRaw } = useSongs()
+  const { t } = useTranslation(['pages', 'home'])
+  const songsTitle = `${t('songs.titleTooltip')} | La Voz Misionera`
+  const songsDescription = t('songs.titleTooltip')
+  const { songs: itemsRaw, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useSongs()
   const { personalSongs } = usePersonalSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
   const languageChipCodes = catalog.translationLanguages || []
@@ -113,6 +102,7 @@ export default function Songs(){
         searchAuthors: authors,
         searchText: `${p.title} ${(p.tags || []).join(' ')} ${p.artist || ''}`.toLowerCase(),
         searchTitles: [p.title].filter(Boolean),
+        chordpro_content: p.chordpro_content || '',
       })
     }
     return out
@@ -125,7 +115,7 @@ export default function Songs(){
 
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
-  const qLower = q.trim().toLowerCase()
+  const qLower = normalizeSongSearch(q)
   const allTags = useMemo(() => {
     const seen = new Set()
     const options = []
@@ -150,11 +140,6 @@ export default function Songs(){
     try { localStorage.setItem('pref:communityOnly', communityOnly ? '1' : '0') } catch {}
   }, [communityOnly])
 
-  const [lyricsCache, setLyricsCache] = useState({})
-  const fetchingRef = useRef(new Set())
-
-
-  const selectedTagsKey = selectedTags.join('|')
   const tagPass = useCallback((s) => {
     if (!selectedTags.length) return true
     const tags = s.tagKeys || []
@@ -165,35 +150,6 @@ export default function Songs(){
     const tags = s.tagKeys || []
     return tags.includes(COMMUNITY_KEY)
   }, [communityOnly, COMMUNITY_KEY])
-
-  useEffect(() => {
-    if (!lyricsOn || qLower.length === 0) return
-    const shouldFetch = items
-      .filter(tagPass)
-      .filter(communityPass)
-      .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
-      .slice(0, 200)
-    if (!shouldFetch.length) return
-
-    let cancelled = false
-    ;(async () => {
-      const next = {}
-      for (const s of shouldFetch) {
-        try {
-          fetchingRef.current.add(s.id)
-          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then((r) => r.text())
-          if (cancelled) return
-          next[s.id] = (txt || '').toLowerCase()
-        } catch {}
-      }
-      if (!cancelled && Object.keys(next).length) {
-        setLyricsCache((prev) => ({ ...prev, ...next }))
-      }
-    })()
-    return () => { cancelled = true }
-  // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTagsKey, communityOnly, tagPass, communityPass])
 
   const resultParts = useMemo(() => {
     const scoreMap = new Map()
@@ -215,10 +171,7 @@ export default function Songs(){
       const extra = items
         .filter(tagPass)
         .filter(communityPass)
-        .filter((s) => {
-          const txt = lyricsCache[s.id]
-          return typeof txt === 'string' ? txt.includes(qLower) : false
-        })
+        .filter(s => normalizeSongSearch(s.chordpro_content).includes(qLower))
       const byId = new Set(list.map((i) => i.id))
       for (const s of extra) {
         if (!byId.has(s.id)) list.push(s)
@@ -229,8 +182,8 @@ export default function Songs(){
       if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
         return a.hasSelectedLanguage ? -1 : 1
       }
-      const aSW = qLower && a.title.toLowerCase().startsWith(qLower) ? 1 : 0
-      const bSW = qLower && b.title.toLowerCase().startsWith(qLower) ? 1 : 0
+      const aSW = qLower && normalizeSongSearch(a.title).startsWith(qLower) ? 1 : 0
+      const bSW = qLower && normalizeSongSearch(b.title).startsWith(qLower) ? 1 : 0
       if (aSW !== bSW) return bSW - aSW
 
       const as = scoreMap.has(a.id) ? scoreMap.get(a.id) : Number.POSITIVE_INFINITY
@@ -247,7 +200,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, qLower, lyricsOn, lyricsCache, tagPass, communityPass])
+  }, [items, qLower, lyricsOn, tagPass, communityPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
@@ -384,22 +337,22 @@ export default function Songs(){
   optionRefs.current = []
 
   return (
-    <div className="HomePage">
+    <div className="lvm-song-library">
       <Helmet>
-        <title>{SONGS_TITLE}</title>
-        <meta name="description" content={SONGS_DESCRIPTION} />
+        <title>{songsTitle}</title>
+        <meta name="description" content={songsDescription} />
         <meta name="keywords" content="worship chord sheets, worship lyrics, transposable charts, La Voz Misionera" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={SONGS_TITLE} />
-        <meta property="og:description" content={SONGS_DESCRIPTION} />
+        <meta property="og:title" content={songsTitle} />
+        <meta property="og:description" content={songsDescription} />
         <meta property="og:url" content={`${SITE_URL}/songs`} />
         <meta property="og:site_name" content="La Voz Misionera" />
         <meta property="og:image" content={OG_IMAGE_URL} />
         <link rel="canonical" href={`${SITE_URL}/songs`} />
       </Helmet>
-      <div className="HomeHeader">
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap'}}>
-          <h1 title={t('songs.titleTooltip')} style={{ marginBottom: 0 }}>{t('songs.title')}</h1>
+      <div className="lvm-song-library__header">
+        <div className="lvm-song-library__heading">
+          <h1 title={t('songs.titleTooltip')}>{t('songs.title')}</h1>
           {languageChipCodes.length > 0 ? (
             <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (
@@ -417,9 +370,10 @@ export default function Songs(){
           ) : null}
         </div>
 
-        <div className="gc-card" style={{display:'grid', gap:10}}>
+        <div className="lvm-song-library__filters">
           <Input
             id="search"
+            type="search"
             ref={searchRef}
             value={q}
             onChange={(e)=> setQ(e.target.value)}
@@ -427,8 +381,8 @@ export default function Songs(){
             placeholder={t('songs.searchPlaceholder')}
             aria-label={t('songs.searchAria')}
           />
-          <div className="row" style={{gap:8, alignItems:'center'}}>
-            <label className="row" style={{gap:8, alignItems:'center'}}>
+          <div className="lvm-song-library__toggles">
+            <label>
               <input
                 type="checkbox"
                 checked={lyricsOn}
@@ -436,7 +390,7 @@ export default function Songs(){
               />
               <span className="meta" title={t('songs.lyricsContainTooltip')}>{t('songs.lyricsContain')}</span>
             </label>
-            <label className="row" style={{gap:8, alignItems:'center'}}>
+            <label>
               <input
                 type="checkbox"
                 checked={communityOnly}
@@ -446,7 +400,7 @@ export default function Songs(){
             </label>
           </div>
 
-          <div className="row">
+          <div className="lvm-song-library__tags">
             <div className="tagbar">
               <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>{t('songs.all')}</Chip>
               {allTags.map((tag) => (
@@ -463,33 +417,40 @@ export default function Songs(){
       </div>
 
       <div
-        className="HomeResults"
+        className="lvm-song-library__results"
         role="region"
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
-        <div className="HomeGrid" role="listbox" aria-label={t('songs.resultsAria')}>
+        {catalogLoading && items.length === 0 ? <p role="status">{t('home:loading')}</p> : null}
+        {catalogError ? (
+          <div role="alert" className="lvm-song-library__feedback">
+            <p>{t('home:errorTitle')}. {t('home:errorDescription')}</p>
+            <button type="button" className="lvm-song-library__retry" onClick={retryCatalog}>{t('home:retry')}</button>
+          </div>
+        ) : null}
+        {!catalogLoading && !catalogError && items.length === 0 ? (
+          <p role="status">{t('home:emptyTitle')}</p>
+        ) : null}
+        {!catalogLoading && !catalogError && items.length > 0 && results.length === 0 ? (
+          <p role="status">{t('songs.noResults')}</p>
+        ) : null}
+        <div className="lvm-song-library__grid" role="listbox" aria-label={t('songs.resultsAria')}>
           {resultParts.translated.map((s, i) => (
-            <SongCard
-              as={Link}
+            <SongLibraryCard
+              song={s}
               key={s.id}
-              to={s.to || `/song/${s.id}`}
               role="option"
               ref={(el) => (optionRefs.current[i] = el)}
               tabIndex={i === activeIndex ? 0 : -1}
               aria-selected={i === activeIndex}
-              className={i === activeIndex ? 'active' : ''}
-              title={s.title}
-              rightSlot={personalBadge(s)}
-              subtitle={(() => {
-                const visible = filterDisplayTags(s.tags)
-                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
-              })()}
+              active={i === activeIndex}
+              personalLabel={s.reviewStatus === 'submitted' ? t('songs.pending') : t('songs.personal')}
             />
           ))}
 
           {resultParts.translated.length > 0 && resultParts.fallback.length > 0 ? (
-            <div className="gc-translation-divider" role="separator">
+            <div className="lvm-song-library__divider" role="separator">
               <span>{t('songs.noTranslation')}</span>
             </div>
           ) : null}
@@ -497,21 +458,15 @@ export default function Songs(){
           {resultParts.fallback.map((s, i) => {
             const idx = i + resultParts.translated.length
             return (
-              <SongCard
-                as={Link}
+              <SongLibraryCard
+                song={s}
                 key={s.id}
-                to={s.to || `/song/${s.id}`}
                 role="option"
                 ref={(el) => (optionRefs.current[idx] = el)}
                 tabIndex={idx === activeIndex ? 0 : -1}
                 aria-selected={idx === activeIndex}
-                className={idx === activeIndex ? 'active' : ''}
-                title={s.title}
-                rightSlot={personalBadge(s)}
-                subtitle={(() => {
-                const visible = filterDisplayTags(s.tags)
-                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
-              })()}
+                active={idx === activeIndex}
+                personalLabel={s.reviewStatus === 'submitted' ? t('songs.pending') : t('songs.personal')}
               />
             )
           })}

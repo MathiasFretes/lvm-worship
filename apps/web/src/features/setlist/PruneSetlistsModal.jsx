@@ -25,25 +25,25 @@ export default function PruneSetlistsModal({ open, setlists, limit, busy, onClos
   }
 
   return (
-    <div className="gc-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gc-prune-title">
-      <div className="gc-modal gc-prune-modal">
-        <h2 id="gc-prune-title">{t('setlist.manageTitle')}</h2>
-        <p className="gc-modal-note">
+    <div className="lvm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lvm-prune-title">
+      <div className="lvm-modal lvm-prune-modal">
+        <h2 id="lvm-prune-title">{t('setlist.manageTitle')}</h2>
+        <p className="lvm-modal-note">
           {t('setlist.manageDesc', { count: setlists.length, limit })}
         </p>
 
-        <div className="gc-prune-list">
+        <div className="lvm-prune-list">
           {oldestFirst.map((s) => {
             const edited = timeAgo(s.updated_at, (k, o) => t(`common:${k}`, o))
             return (
-              <label key={s.id} className="gc-prune-row">
+              <label key={s.id} className="lvm-prune-row">
                 <input
                   type="checkbox"
                   checked={selected.has(s.id)}
                   onChange={() => toggle(s.id)}
                 />
-                <span className="gc-prune-name">{s.name}</span>
-                <span className="gc-prune-meta">
+                <span className="lvm-prune-name">{s.name}</span>
+                <span className="lvm-prune-meta">
                   {songCountLabel(t, s.songCount)}
                   {edited ? ` · ${edited}` : ''}
                 </span>
@@ -52,11 +52,11 @@ export default function PruneSetlistsModal({ open, setlists, limit, busy, onClos
           })}
         </div>
 
-        <div className="gc-modal-actions gc-prune-actions">
-          <span className="gc-modal-note">
+        <div className="lvm-modal-actions lvm-prune-actions">
+          <span className="lvm-modal-note">
             {t('setlist.manageSelectedCount', { count: selected.size })}
           </span>
-          <div className="gc-modal-buttons">
+          <div className="lvm-modal-buttons">
             <Button variant="secondary" onClick={onClose} disabled={busy}>
               {t('setlist.cancel')}
             </Button>

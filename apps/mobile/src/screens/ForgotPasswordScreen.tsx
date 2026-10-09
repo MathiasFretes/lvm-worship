@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import TextField from '../components/TextField'
-import SymbolIcon from '../components/SymbolIcon'
-import GlassSurface from '../components/GlassSurface'
-import ConstrainedContent from '../components/ConstrainedContent'
+import AuthFormLayout from '../components/auth/AuthFormLayout'
 import { useTheme } from '../theme/ThemeProvider'
 import { supabase } from '../lib/supabase'
 import { isValidEmail } from '../lib/authValidation'
@@ -38,14 +35,12 @@ export default function ForgotPasswordScreen() {
   const t = useTheme()
   const { t: tx } = useTranslation(['auth', 'common'])
   const router = useRouter()
-  const insets = useSafeAreaInsets()
 
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
-  const [barH, setBarH] = useState(0)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -98,37 +93,13 @@ export default function ForgotPasswordScreen() {
         : tx('forgotPassword.submit')
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <AuthFormLayout
+      title={tx('forgotPassword.title')}
+      subtitle={tx('forgotPassword.subtitle')}
+      backLabel={tx('forgotPassword.backToSignIn')}
+      onBack={() => router.back()}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: t.spacing.lg,
-          paddingTop: barH + t.spacing.lg,
-          paddingBottom: insets.bottom + t.spacing.xxl,
-        }}
-      >
-        <ConstrainedContent tier="form">
-          <View style={{ gap: t.spacing.lg }}>
-            <View style={{ gap: t.spacing.sm }}>
-              <Text
-                style={{
-                  fontSize: t.typography.largeTitle.fontSize,
-                  fontWeight: t.typography.largeTitle.fontWeight,
-                  letterSpacing: t.typography.largeTitle.letterSpacing,
-                  color: t.colors.ink,
-                }}
-              >
-                {tx('forgotPassword.title')}
-              </Text>
-              <Text style={{ fontSize: 14.5, lineHeight: 20, color: t.colors.sec }}>
-                {tx('forgotPassword.subtitle')}
-              </Text>
-            </View>
-
+      <View style={{ gap: t.spacing.lg }}>
             <TextField
               label={tx('email')}
               icon="envelope"
@@ -186,38 +157,7 @@ export default function ForgotPasswordScreen() {
             <Text style={{ fontSize: 12.5, lineHeight: 17, color: t.colors.sec }}>
               {tx('forgotPassword.webNote')}
             </Text>
-          </View>
-        </ConstrainedContent>
-      </ScrollView>
-
-      <GlassSurface
-        fallbackColor={t.colors.bg}
-        fallbackHairline
-        onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          paddingTop: insets.top,
-          paddingHorizontal: t.spacing.md,
-          paddingBottom: t.spacing.sm,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={tx('forgotPassword.backToSignIn')}
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>
-            {tx('forgotPassword.backToSignIn')}
-          </Text>
-        </Pressable>
-      </GlassSurface>
-    </KeyboardAvoidingView>
+      </View>
+    </AuthFormLayout>
   )
 }

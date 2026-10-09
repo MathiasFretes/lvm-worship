@@ -24,27 +24,26 @@ export interface InTuneHold {
 }
 
 export function createInTuneHold(options: InTuneHoldOptions = {}): InTuneHold {
-  const threshold = options.thresholdCents ?? 4
-  const holdMs = options.holdMs ?? 500
-  const exitSlack = options.exitSlackCents ?? 2
-  let enteredAt: number | null = null
-  let locked = false
+  const { thresholdCents = 4, holdMs = 500, exitSlackCents = 2 } = options
+  let enteredAt: number | undefined
+  let state: HoldState = 'off'
+
+  const reset = () => {
+    enteredAt = undefined
+    state = 'off'
+  }
 
   return {
     push(cents: number, nowMs: number): HoldState {
-      const limit = locked ? threshold + exitSlack : threshold
+      const limit = thresholdCents + (state === 'inTune' ? exitSlackCents : 0)
       if (Math.abs(cents) > limit) {
-        enteredAt = null
-        locked = false
-        return 'off'
+        reset()
+        return state
       }
-      if (enteredAt === null) enteredAt = nowMs
-      if (nowMs - enteredAt >= holdMs) locked = true
-      return locked ? 'inTune' : 'settling'
+      enteredAt ??= nowMs
+      state = nowMs - enteredAt >= holdMs ? 'inTune' : 'settling'
+      return state
     },
-    reset() {
-      enteredAt = null
-      locked = false
-    },
+    reset,
   }
 }

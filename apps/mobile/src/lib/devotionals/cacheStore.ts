@@ -15,17 +15,17 @@ import { DEVOTIONALS_ROOT, manifestRelPath } from './paths'
 // matching downloads/expoBlobStore.ts. With no bundled baseline, an eviction
 // here would empty the feature until the next sync.
 
-function seg(relPath: string): string[] {
+function pathSegments(relPath: string): string[] {
   return String(relPath || '')
     .split('/')
     .filter((p) => p && p !== '.')
 }
 
-const fileAt = (relPath: string) => new File(Paths.document, ...seg(relPath))
-const dirAt = (relPath: string) => new Directory(Paths.document, ...seg(relPath))
+const fileAt = (relPath: string) => new File(Paths.document, ...pathSegments(relPath))
+const dirAt = (relPath: string) => new Directory(Paths.document, ...pathSegments(relPath))
 
 function ensureParent(relPath: string): void {
-  const parts = seg(relPath)
+  const parts = pathSegments(relPath)
   const dir = dirAt(parts.slice(0, -1).join('/'))
   if (!dir.exists) dir.create({ intermediates: true, idempotent: true })
 }
@@ -92,12 +92,17 @@ export async function enforceDevotionalCacheBudget(
     if (!root.exists) return []
 
     const entries: CacheEntry[] = []
-    const walk = (dir: Directory, prefix: string) => {
+    const pending: Array<{ dir: Directory; prefix: string }> = [{ dir: root, prefix: '' }]
+    while (pending.length) {
+      const current = pending.pop()
+      if (!current) break
+      const { dir, prefix } = current
       for (const item of dir.list()) {
         const name = item.name
         const rel = prefix ? `${prefix}/${name}` : name
-        if (item instanceof Directory) walk(item, rel)
-        else {
+        if (item instanceof Directory) {
+          pending.push({ dir: item, prefix: rel })
+        } else {
           entries.push({
             path: rel,
             bytes: Number(item.size ?? 0),
@@ -110,7 +115,6 @@ export async function enforceDevotionalCacheBudget(
         }
       }
     }
-    walk(root, '')
 
     const doomed = planEviction(entries, budgetBytes, [
       manifestRelPath().slice(DEVOTIONALS_ROOT.length + 1),

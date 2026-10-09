@@ -37,19 +37,19 @@ function parseDirective(line) {
 function renderLine(line, idx) {
   if (!hasChords(line)) {
     return (
-      <div key={idx} className="gc-live-preview__line">
-        <span className="gc-live-preview__lyric">{line || '\u00A0'}</span>
+      <div key={idx} className="lvm-live-preview__line">
+        <span className="lvm-live-preview__lyric">{line || '\u00A0'}</span>
       </div>
     )
   }
 
   const segments = parseChordLine(line)
   return (
-    <div key={idx} className="gc-live-preview__line gc-live-preview__chord-row">
+    <div key={idx} className="lvm-live-preview__line lvm-live-preview__chord-row">
       {segments.map((seg, si) => (
-        <span key={si} className="gc-live-preview__chord-col">
-          <span className="gc-live-preview__chord">{seg.chord || ' '}</span>
-          <span className="gc-live-preview__lyric">{seg.lyric || ' '}</span>
+        <span key={si} className="lvm-live-preview__chord-col">
+          <span className="lvm-live-preview__chord">{seg.chord || ' '}</span>
+          <span className="lvm-live-preview__lyric">{seg.lyric || ' '}</span>
         </span>
       ))}
     </div>
@@ -60,11 +60,11 @@ export default function LivePreview({ content, metadata }) {
   const [enabled, setEnabled] = useState(false)
 
   return (
-    <div className="gc-live-preview">
-      <div className="gc-live-preview__toggle-bar">
-        <span className="gc-live-preview__title">Live Preview</span>
+    <div className="lvm-live-preview">
+      <div className="lvm-live-preview__toggle-bar">
+        <span className="lvm-live-preview__title">Live Preview</span>
         <button
-          className="gc-btn gc-btn--secondary gc-btn--sm"
+          className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           type="button"
           onClick={() => setEnabled(v => !v)}
         >
@@ -73,12 +73,12 @@ export default function LivePreview({ content, metadata }) {
       </div>
 
       {enabled && (
-        <div className="gc-live-preview__panel">
+        <div className="lvm-live-preview__panel">
           {metadata?.title && (
-            <h2 className="gc-live-preview__song-title">{metadata.title}</h2>
+            <h2 className="lvm-live-preview__song-title">{metadata.title}</h2>
           )}
           {metadata?.artist && (
-            <p className="gc-live-preview__song-artist">{metadata.artist}</p>
+            <p className="lvm-live-preview__song-artist">{metadata.artist}</p>
           )}
 
           {(content || '').split('\n').map((line, idx) => {
@@ -89,7 +89,7 @@ export default function LivePreview({ content, metadata }) {
               if (directive.type.startsWith('start_of_')) {
                 const sectionName = directive.label || directive.type.replace('start_of_', '').replace(/_/g, ' ')
                 return (
-                  <div key={idx} className="gc-live-preview__section-header">
+                  <div key={idx} className="lvm-live-preview__section-header">
                     {sectionName}
                   </div>
                 )

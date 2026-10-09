@@ -43,6 +43,15 @@ describe('songMatchRank', () => {
     expect(songMatchRank(song({ title: 'Solo', tags: null }), 'solo')).toBe(TITLE_MATCH)
     expect(songMatchRank(song({ title: 'Solo', tags: null }), 'zzz')).toBeNull()
   })
+
+  it('matches accents and capital letters while keeping title priority', () => {
+    expect(songMatchRank(song({ title: 'Jesús vive', tags: ['Adoración'] }), 'JESUS')).toBe(TITLE_MATCH)
+    expect(songMatchRank(song({ title: 'Canto', tags: ['Adoración'] }), 'adoracion')).toBe(TAG_MATCH)
+  })
+
+  it('does not match an empty query', () => {
+    expect(songMatchRank(song({ title: 'Canto' }), '  ')).toBeNull()
+  })
 })
 
 describe('songMatchesQuery', () => {

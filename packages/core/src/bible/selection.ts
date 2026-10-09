@@ -23,8 +23,7 @@ export function isVerseInRange(verse: number, passage: Passage){
 
 export function formatReference(passage: Passage, verses: number[]){
   if (!verses.length) return `${passage.book} ${passage.chapter}`
-  const runs = compressRuns(verses)
-  const body = runs.map(({ start, end }) => (
+  const body = compressRuns(verses).map(({ start, end }) => (
     start === end ? `${start}` : `${start}-${end}`
   )).join(', ')
   return `${passage.book} ${passage.chapter}:${body}`
@@ -73,15 +72,14 @@ export function buildCopyText(
 
 function compressRuns(verses: number[]){
   const ordered = [...verses].sort((a, b) => a - b)
-  const runs: { start: number, end: number }[] = []
-  for (const v of ordered){
+  return ordered.reduce<{ start: number, end: number }[]>((runs, v) => {
     const last = runs[runs.length - 1]
     if (!last || v > last.end + 1){
       runs.push({ start: v, end: v })
     } else {
       last.end = v
     }
-  }
-  return runs
+    return runs
+  }, [])
 }
 

@@ -30,7 +30,7 @@ struct SongEditorDraftTests {
 
     static func temporaryStore() -> DraftStore {
         DraftStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("gc-editor-tests-\(UUID().uuidString)", isDirectory: true))
+            .appendingPathComponent("lvm-editor-tests-\(UUID().uuidString)", isDirectory: true))
     }
 
     /// Wait for the debounced, detached write to land — or give up, so a failure
@@ -124,5 +124,43 @@ struct SongEditorDraftTests {
         #expect(model.form.title.isEmpty)
         #expect(model.restoredDraftAt == nil)
         #expect(store.read(key: "song-123") != nil)
+    }
+
+    @Test("manual refresh supersedes a pending debounce")
+    func immediateRefreshWins() async {
+        let model = SongEditorModel(services: Self.services(), drafts: Self.temporaryStore())
+        model.form.chordproContent = "[G]one"
+        model.refreshNow()
+        let rendered = model.previewDoc
+
+        try? await Task.sleep(for: .milliseconds(400))
+        #expect(model.previewDoc != nil)
+        #expect(model.previewErrorText == nil)
+        #expect(model.previewDoc?.sections.count == rendered?.sections.count)
+    }
+}
+
+@Suite("Editor session")
+@MainActor
+struct EditorSessionTests {
+    @Test("target and model transition atomically")
+    func transitions() {
+        let session = EditorSession()
+        let model = SongEditorModel(
+            services: SongEditorDraftTests.services(),
+            drafts: SongEditorDraftTests.temporaryStore()
+        )
+
+        session.open(.new, model: model)
+        #expect(session.target == .new)
+        #expect(session.editor === model)
+
+        session.retarget(to: .existing(id: "song-1"))
+        #expect(session.target == .existing(id: "song-1"))
+        #expect(session.editor === model)
+
+        session.close()
+        #expect(session.target == nil)
+        #expect(session.editor == nil)
     }
 }

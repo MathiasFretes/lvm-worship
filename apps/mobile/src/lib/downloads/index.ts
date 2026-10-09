@@ -1,14 +1,34 @@
-// Offline-download layer for Bible translations. Device-local (expo-file-system
-// blobs + a JSON manifest via AsyncStorage), NOT Supabase-synced. The pure logic
-// (manifest, downloader, resolver, staleness) is injected-dependency based so it
-// unit-tests headless; service.ts wires the real device impls.
-
-export * from './types'
-export * from './manifest'
-export * from './resolver'
-export * from './staleness'
-export * from './downloader'
-export * from './service'
+export type {
+  AbortToken,
+  BibleDownload,
+  BlobStore,
+  DownloadProgress,
+  KVStorage,
+} from './types'
+export { DownloadCancelledError } from './types'
+export type { DownloadsState } from './manifest'
+export {
+  __resetDownloadsForTest,
+  DEFAULT_DOWNLOADS_STATE,
+  getDownload,
+  getDownloadsSnapshot,
+  hydrateDownloads,
+  isDownloaded,
+  removeDownload,
+  setWifiOnly,
+  upsertDownload,
+  useDownloads,
+} from './manifest'
+export type { ResolverDeps } from './resolver'
+export { readLocalChapter } from './resolver'
+export { isTranslationStale } from './staleness'
+export type { DownloadDeps, FetchLike } from './downloader'
+export { downloadBibleTranslation } from './downloader'
+export {
+  deleteBibleDownload,
+  startBibleDownload,
+  WifiRequiredError,
+} from './service'
 export { expoBlobStore } from './expoBlobStore'
 export {
   chapterRelPath,

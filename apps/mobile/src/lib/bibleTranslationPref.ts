@@ -17,7 +17,7 @@ export type KVStorage = {
   removeItem(key: string): Promise<void>
 }
 
-const STORAGE_KEY = 'gc.bible.translation.v1'
+const STORAGE_KEY = 'lvm.bible.translation.v1'
 
 let cache = ''
 let storage: KVStorage | null = null

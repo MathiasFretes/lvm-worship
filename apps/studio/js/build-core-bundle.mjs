@@ -5,8 +5,7 @@
 // Run manually after touching packages/core's chordpro module or entry.mjs:
 //   node "apps/studio/js/build-core-bundle.mjs"
 //
-// Deliberately not wired to an Xcode Run Script phase yet — see README.md.
-import { mkdir, writeFile, stat } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
 import { dirname, resolve, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -15,8 +14,7 @@ const repoRoot = resolve(here, '../../..')
 const entry = resolve(here, 'entry.mjs')
 const outfile = resolve(here, '../La Voz Misionera Studio/La Voz Misionera Studio/Resources/LaVozMisioneraCore.js')
 
-// esbuild is present in the root node_modules (hoisted; Vite depends on it), so
-// this spike adds no dependency and apps/studio stays out of the workspace glob.
+// esbuild is present in the root node_modules (hoisted through the web workspace).
 let esbuild
 try {
   esbuild = await import('esbuild')

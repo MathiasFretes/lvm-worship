@@ -35,7 +35,7 @@ export type ReflectionDay = {
 
 type PersistedDay = { userId: string; date: string; reflection: Reflection | null }
 
-const STORAGE_KEY = 'gc.reflection.today.v1'
+const STORAGE_KEY = 'lvm.reflection.today.v1'
 
 const memory = new Map<string, ReflectionDay>()
 const listeners = new Set<() => void>()

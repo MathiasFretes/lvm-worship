@@ -4,7 +4,9 @@
 // it with empty flex cells. Never emits an empty row.
 export function chunkRows<T>(items: T[], columns: number): T[][] {
   const size = Math.max(1, Math.floor(columns))
-  const rows: T[][] = []
-  for (let i = 0; i < items.length; i += size) rows.push(items.slice(i, i + size))
-  return rows
+  const rowCount = Math.ceil(items.length / size)
+  return Array.from({ length: rowCount }, (_, row) => {
+    const start = row * size
+    return items.slice(start, start + size)
+  })
 }

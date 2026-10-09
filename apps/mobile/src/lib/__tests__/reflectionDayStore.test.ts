@@ -18,7 +18,7 @@ import type { KVStorage } from '../defaults'
 // shows a spinner only for the latter), and the user keying that stops one
 // account's private reflection reaching the next account on the device.
 
-const STORAGE_KEY = 'gc.reflection.today.v1'
+const STORAGE_KEY = 'lvm.reflection.today.v1'
 
 function memoryStorage(
   initial: Record<string, string> = {},
@@ -74,6 +74,16 @@ describe('reflectionDayStore', () => {
     const store = memoryStorage({ [STORAGE_KEY]: stored('user-1', '2026-08-07', row) })
     await hydrateTodayReflection(store, d('2026-08-07'))
     expect(getReflectionDay(reflectionCacheKey('user-1', '2026-08-07'))?.reflection).toEqual(row)
+  })
+
+  it('hydrates a persisted known-empty day', async () => {
+    const store = memoryStorage({ [STORAGE_KEY]: stored('user-1', '2026-08-07', null) })
+    await hydrateTodayReflection(store, d('2026-08-07'))
+    expect(getReflectionDay(reflectionCacheKey('user-1', '2026-08-07'))).toEqual({
+      userId: 'user-1',
+      date: '2026-08-07',
+      reflection: null,
+    })
   })
 
   it('drops a persisted entry from an earlier day rather than answering today with it', async () => {

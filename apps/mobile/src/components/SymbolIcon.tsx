@@ -1,7 +1,7 @@
 import { SymbolView, type SymbolViewProps, type SymbolWeight } from 'expo-symbols'
 import { Platform, Text, View } from 'react-native'
 import type { StyleProp, ViewStyle } from 'react-native'
-import { MATERIAL_CODEPOINTS, SF_TO_MATERIAL } from './symbolMap'
+import { MATERIAL_CODEPOINTS, resolveMaterialGlyph } from './symbolMap'
 
 // Thin wrapper over the platform icon system. Per the design non-negotiables,
 // all iconography comes from a native design-system font — no hand-drawn/SVG
@@ -51,11 +51,9 @@ function MaterialGlyph({
   color?: string
   style?: StyleProp<ViewStyle>
 }) {
-  const entry = SF_TO_MATERIAL[name]
-  const mdName = md ?? entry?.md
-  const codepoint = mdName ? MATERIAL_CODEPOINTS[mdName] : undefined
+  const symbol = resolveMaterialGlyph(name, md)
 
-  if (codepoint == null) {
+  if (symbol.codepoint == null) {
     if (__DEV__ && !warnedNames.has(name)) {
       warnedNames.add(name)
       console.warn(
@@ -86,13 +84,12 @@ function MaterialGlyph({
     )
   }
 
-  const filled = entry?.filled ?? /\.fill$/.test(name)
   return (
     <View style={[{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>
       <Text
         allowFontScaling={false}
         style={{
-          fontFamily: filled ? 'MaterialSymbolsFilled' : 'MaterialSymbolsOutlined',
+          fontFamily: symbol.filled ? 'MaterialSymbolsFilled' : 'MaterialSymbolsOutlined',
           fontSize: size,
           lineHeight: size,
           color,
@@ -101,7 +98,7 @@ function MaterialGlyph({
           includeFontPadding: false,
         }}
       >
-        {String.fromCodePoint(codepoint)}
+        {String.fromCodePoint(symbol.codepoint)}
       </Text>
     </View>
   )

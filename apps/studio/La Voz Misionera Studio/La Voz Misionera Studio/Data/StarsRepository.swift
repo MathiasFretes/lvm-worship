@@ -36,10 +36,14 @@ struct StarsRepository {
         enum CodingKeys: String, CodingKey { case songID = "song_id" }
     }
 
+    private func userID() async throws -> String {
+        try await client.auth.session.user.id.uuidString.lowercased()
+    }
+
     /// Whether the signed-in user has starred this song. False when there is no
     /// session — the star is simply not offered rather than erroring.
     func isStarred(songID: String) async throws -> Bool {
-        guard let userID = try? await client.auth.session.user.id.uuidString.lowercased() else {
+        guard let userID = try? await userID() else {
             return false
         }
         let rows: [StarKey] = try await client
@@ -56,20 +60,27 @@ struct StarsRepository {
     /// Star the song. Upsert on the composite key so double-starring is a no-op
     /// rather than a duplicate-key error, matching mobile's `onConflict`.
     func star(songID: String) async throws {
-        let userID = try await client.auth.session.user.id.uuidString.lowercased()
-        try await client
-            .from(Self.table)
-            .upsert(StarRow(userID: userID, songID: songID), onConflict: "user_id,song_id")
-            .execute()
+        try await setStarred(true, songID: songID)
     }
 
     func unstar(songID: String) async throws {
-        let userID = try await client.auth.session.user.id.uuidString.lowercased()
-        try await client
-            .from(Self.table)
-            .delete()
-            .eq("user_id", value: userID)
-            .eq("song_id", value: songID)
-            .execute()
+        try await setStarred(false, songID: songID)
+    }
+
+    private func setStarred(_ starred: Bool, songID: String) async throws {
+        let userID = try await userID()
+        if starred {
+            try await client
+                .from(Self.table)
+                .upsert(StarRow(userID: userID, songID: songID), onConflict: "user_id,song_id")
+                .execute()
+        } else {
+            try await client
+                .from(Self.table)
+                .delete()
+                .eq("user_id", value: userID)
+                .eq("song_id", value: songID)
+                .execute()
+        }
     }
 }

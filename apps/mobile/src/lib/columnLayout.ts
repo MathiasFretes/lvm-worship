@@ -86,26 +86,29 @@ export function packOrdered(
   // dp[c][i] = min achievable tallest column when the first `i` sections are
   // laid into exactly `c` non-empty columns. split[c][i] remembers where the
   // last column started.
-  const INF = Number.POSITIVE_INFINITY
-  const dp: number[][] = Array.from({ length: columns + 1 }, () => new Array<number>(n + 1).fill(INF))
-  const split: number[][] = Array.from({ length: columns + 1 }, () => new Array<number>(n + 1).fill(0))
-
-  for (let i = 1; i <= n; i++) dp[1][i] = runHeight(prefix, gap, 0, i)
+  const split: number[][] = Array.from(
+    { length: columns + 1 },
+    () => new Array<number>(n + 1).fill(0),
+  )
+  let previous = new Array<number>(n + 1).fill(Number.POSITIVE_INFINITY)
+  for (let i = 1; i <= n; i++) previous[i] = runHeight(prefix, gap, 0, i)
 
   for (let c = 2; c <= columns; c++) {
+    const current = new Array<number>(n + 1).fill(Number.POSITIVE_INFINITY)
     for (let i = c; i <= n; i++) {
       // j = index the last column starts at; every column must be non-empty.
       // Iterate ascending and use `<=` so ties keep the LARGEST j, which packs
       // the earlier columns fuller — a more natural read than a trailing bias.
       for (let j = c - 1; j < i; j++) {
-        if (dp[c - 1][j] === INF) continue
-        const candidate = Math.max(dp[c - 1][j], runHeight(prefix, gap, j, i))
-        if (candidate <= dp[c][i]) {
-          dp[c][i] = candidate
+        if (!Number.isFinite(previous[j])) continue
+        const candidate = Math.max(previous[j], runHeight(prefix, gap, j, i))
+        if (candidate <= current[i]) {
+          current[i] = candidate
           split[c][i] = j
         }
       }
     }
+    previous = current
   }
 
   const cuts = new Array<number>(columns)
@@ -115,7 +118,7 @@ export function packOrdered(
     cuts[c - 1] = start
     i = start
   }
-  return { cuts, maxHeight: dp[columns][n] }
+  return { cuts, maxHeight: previous[n] }
 }
 
 /**

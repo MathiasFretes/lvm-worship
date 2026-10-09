@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { renderPlanToCanvas } from '../image'
 
-describe('renderPlanToCanvas Turkish text support', () => {
-  it('passes Turkish characters through title/lyrics rendering', () => {
+describe('LVM multilingual chart rendering', () => {
+  it('draws every Turkish ministry glyph without transliteration', () => {
     const drawn = []
     const ctx = {
       fillStyle: '#000',
@@ -23,7 +23,7 @@ describe('renderPlanToCanvas Turkish text support', () => {
       chordSizePt: 16,
       lyricFamily: 'NotoSans',
       chordFamily: 'NotoSansMono',
-      title: 'Rab Bizi Gönder',
+      title: 'Bizi Gönder',
       key: 'A',
       columns: 1,
       headerOffsetY: 0,
@@ -52,9 +52,12 @@ describe('renderPlanToCanvas Turkish text support', () => {
       createCanvas: () => canvas,
     })
 
-    expect(drawn).toContain('Rab Bizi Gönder')
-    expect(drawn).toContain('[Köprü]')
-    expect(drawn).toContain('IĞDIR İÇİN ÖĞÜT')
-    expect(drawn).toContain('ıüşiçöğ IÜŞİÇÖĞ')
+    expect(drawn).toEqual(expect.arrayContaining([
+      'Bizi Gönder',
+      '[Köprü]',
+      'IĞDIR İÇİN ÖĞÜT',
+      'ıüşiçöğ IÜŞİÇÖĞ',
+    ]))
+    expect(drawn.some(text => text.includes('A'))).toBe(true)
   })
 })

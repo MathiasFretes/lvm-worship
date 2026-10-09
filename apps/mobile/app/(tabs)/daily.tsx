@@ -6,7 +6,10 @@ import { useAppDefaults } from '../../src/lib/defaults'
 // "Daily Word opens" preference can switch it to open the M'Cheyne Reader
 // directly (bypassing the landing and reflections). The pref is device-local and
 // read synchronously (hydrated at splash), so this branch never flashes.
-export default function DailyTab() {
+// Route policy belongs here; both destination screens stay router-agnostic.
+function LvmDailyRoute() {
   const { dailyWordDestination } = useAppDefaults()
   return dailyWordDestination === 'reader' ? <DailyWordScreen /> : <DailyWordLandingScreen />
 }
+
+export default LvmDailyRoute

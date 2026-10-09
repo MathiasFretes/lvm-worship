@@ -2,7 +2,6 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
-import { marked } from 'marked'
 
 const SITE_URL = 'https://lavozmisionera.com'
 // Resolve paths from this script's location, not process.cwd(), so the build
@@ -65,28 +64,19 @@ if (songsError) {
   process.exit(1)
 }
 
-const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
-
 const template = await fs.readFile(templatePath, 'utf8')
 
 const genericDescription = 'La Voz Misionera provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in La Voz Misionera for the full experience.'
 
 await buildSongPages(songs || [])
-await buildResourcePages(resourcesData?.items || [])
 await buildShellPages([
   { path: '/about', label: 'About' },
   { path: '/songs', label: 'Songs' },
-  { path: '/resources', label: 'Resources' },
   { path: '/songbook', label: 'Songbook' },
   { path: '/setlist', label: 'Setlist' },
   { path: '/reading', label: 'Daily Word' },
   { path: '/bundle', label: 'Bundle' },
   { path: '/download', label: 'Download' }
-])
-await buildLegalPages([
-  { path: '/privacy', title: 'Privacy Policy', file: 'privacy-policy.md', description: 'How La Voz Misionera handles your data and privacy.' },
-  { path: '/terms', title: 'Terms of Use', file: 'terms-of-use.md', description: 'The terms governing use of La Voz Misionera.' },
-  { path: '/delete-account', title: 'Delete Your Account', file: 'delete-account.md', description: 'How to delete your La Voz Misionera account and the data that is removed.' }
 ])
 await build404Page()
 
@@ -168,28 +158,6 @@ async function buildShellPages(routes){
   console.log(`Generated ${count} shell page(s).`)
 }
 
-// Pre-render the legal pages with their full markdown content. Without a real
-// file at these paths Cloudflare Pages serves dist/404.html with HTTP 404, and
-// Google Play's policy check rejects the privacy-policy and account-deletion
-// URLs even though the SPA renders them fine in a browser. The markdown is our
-// own trusted source, so it is inlined without DOMPurify (which needs a DOM).
-async function buildLegalPages(pages){
-  let count = 0
-  for (const page of pages) {
-    const markdown = await fs.readFile(path.join(root, 'src', 'content', page.file), 'utf8')
-    const body = `\n      <main class="container gc-post-detail">\n        <div class="gc-post-detail__content gc-prose">\n${marked.parse(markdown, { async: false })}\n        </div>\n      </main>\n    `
-    const canonical = `${SITE_URL}${page.path}`
-    const html = buildSeoHtml({ title: `${page.title} · La Voz Misionera`, description: page.description, canonical, ld: null, body })
-    // Written as `privacy.html` rather than `privacy/index.html`: Pages serves
-    // the former at `/privacy` with a 200, the latter only via a 308 to
-    // `/privacy/`, and these exact URLs are the ones declared in Play Console.
-    const outPath = path.join(docsDir, `${page.path.replace(/^\//, '')}.html`)
-    await writeFile(outPath, html)
-    count += 1
-  }
-  console.log(`Generated ${count} legal page(s).`)
-}
-
 async function build404Page(){
   const script = `<script>(function(){var p=window.location.pathname+window.location.search+window.location.hash;var t='/?redirect='+encodeURIComponent(p);window.location.replace(t)})();</script>`
   let html = template
@@ -263,7 +231,7 @@ function absolutizeAssetPaths(html){
 function buildLyricsBody(title, text){
   const safeTitle = escapeHtml(title || 'La Voz Misionera')
   const safeText = escapeHtml(text || '')
-  return `\n      <main>\n        <h1>${safeTitle}</h1>\n        <pre class="gc-seo-lyrics">${safeText}</pre>\n        <p><a href="/">Open La Voz Misionera</a></p>\n      </main>\n    `
+  return `\n      <main>\n        <h1>${safeTitle}</h1>\n        <pre class="lvm-seo-lyrics">${safeText}</pre>\n        <p><a href="/">Open La Voz Misionera</a></p>\n      </main>\n    `
 }
 
 function buildDescription(text, fallback){

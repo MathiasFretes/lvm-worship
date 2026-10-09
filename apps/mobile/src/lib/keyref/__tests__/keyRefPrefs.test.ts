@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { KVStorage } from '../../defaults'
 import {
   DEFAULT_KEY_REF_PREFS,
+  KEY_REF_STORAGE_KEY,
   __resetKeyRefPrefsForTest,
   getKeyRefPrefs,
   hydrateKeyRefPrefs,
@@ -10,7 +11,7 @@ import {
 } from '../keyRefPrefs'
 import { DEFAULT_PROGRESSION_ID } from '../progressions'
 
-const KEY = 'gc.keyref.v1'
+const KEY = KEY_REF_STORAGE_KEY
 
 function memoryStorage(seed: Record<string, string> = {}) {
   const map = new Map(Object.entries(seed))
@@ -48,6 +49,23 @@ describe('hydration', () => {
     await hydrateKeyRefPrefs(memoryStorage(Object.fromEntries(store.map)))
     expect(getKeyRefPrefs().selectedId).toBe('pIntense')
     expect(getKeyRefPrefs().display).toBe('nashville')
+  })
+
+  it('hydrates preferences stored under the LVM key', async () => {
+    await hydrateKeyRefPrefs(
+      memoryStorage({
+        [KEY]: JSON.stringify({ selectedId: 'pBright', display: 'numbers' }),
+      }),
+    )
+    expect(getKeyRefPrefs()).toEqual({ selectedId: 'pBright', display: 'numbers' })
+  })
+
+  it('does not rewrite a valid LVM payload during hydration', async () => {
+    const store = memoryStorage({
+      [KEY]: JSON.stringify({ selectedId: 'g145', display: 'letters' }),
+    })
+    await hydrateKeyRefPrefs(store)
+    expect(store.map.size).toBe(1)
   })
 
   it('survives a corrupt payload', async () => {
@@ -110,6 +128,14 @@ describe('hydration', () => {
 })
 
 describe('writes', () => {
+  it('writes the LVM namespace', async () => {
+    const store = memoryStorage()
+    await hydrateKeyRefPrefs(store)
+    setDisplayMode('nashville')
+
+    expect(store.map.has(KEY_REF_STORAGE_KEY)).toBe(true)
+  })
+
   it('replaces the snapshot object so subscribers see a change', async () => {
     await hydrateKeyRefPrefs(memoryStorage())
     const before = getKeyRefPrefs()

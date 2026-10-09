@@ -34,7 +34,16 @@ export type AuthDiagnostic = AuthErrorInfo & {
 
 const MAX_ENTRIES = 20
 
-let entries: AuthDiagnostic[] = []
+const diagnostics = {
+  newestFirst: [] as AuthDiagnostic[],
+  add(entry: AuthDiagnostic) {
+    this.newestFirst.unshift(entry)
+    if (this.newestFirst.length > MAX_ENTRIES) this.newestFirst.length = MAX_ENTRIES
+  },
+  clear() {
+    this.newestFirst.length = 0
+  },
+}
 
 /**
  * Pull the diagnosable parts out of whatever the native module threw.
@@ -45,14 +54,14 @@ let entries: AuthDiagnostic[] = []
  * runs on a path that is already failing.
  */
 export function describeAuthError(e: unknown): AuthErrorInfo {
-  if (!e || typeof e !== 'object') {
-    return { code: null, status: null, message: String(e) }
-  }
-  const err = e as { code?: unknown; status?: unknown; message?: unknown }
+  const err =
+    e && typeof e === 'object'
+      ? (e as { code?: unknown; status?: unknown; message?: unknown })
+      : null
   return {
-    code: err.code == null ? null : String(err.code),
-    status: typeof err.status === 'number' ? err.status : null,
-    message: err.message == null ? '' : String(err.message),
+    code: err?.code == null ? null : String(err.code),
+    status: typeof err?.status === 'number' ? err.status : null,
+    message: err ? (err.message == null ? '' : String(err.message)) : String(e),
   }
 }
 
@@ -66,7 +75,7 @@ export function describeAuthError(e: unknown): AuthErrorInfo {
  * "Invalid Refresh Token" wording, which this never emits.
  */
 export function recordAuthFailure(scope: string, info: AuthErrorInfo): void {
-  entries = [{ ...info, scope, at: new Date().toISOString() }, ...entries].slice(0, MAX_ENTRIES)
+  diagnostics.add({ ...info, scope, at: new Date().toISOString() })
   console.error(
     `[${scope}] failed: code=${info.code ?? '—'} status=${info.status ?? '—'} ${info.message}`,
   )
@@ -74,12 +83,12 @@ export function recordAuthFailure(scope: string, info: AuthErrorInfo): void {
 
 /** Newest first. Empty until something has actually failed this launch. */
 export function getAuthDiagnostics(): AuthDiagnostic[] {
-  return entries
+  return diagnostics.newestFirst.slice()
 }
 
 /** A plain-text block a tester can copy into a bug report. */
 export function formatAuthDiagnostics(): string {
-  return entries
+  return diagnostics.newestFirst
     .map(
       (e) =>
         `${e.at}  ${e.scope}\n  code=${e.code ?? '—'}  status=${e.status ?? '—'}\n  ${e.message}`,
@@ -89,5 +98,5 @@ export function formatAuthDiagnostics(): string {
 
 /** Test-only reset so each test starts from a clean module state. */
 export function __resetAuthDiagnosticsForTest(): void {
-  entries = []
+  diagnostics.clear()
 }

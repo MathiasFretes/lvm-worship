@@ -90,10 +90,11 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
   const { width } = useWindowDimensions()
   const stackWide = width < 380
 
-  const stepPt = (dir: 1 | -1) => {
-    const next = Math.min(READER_PT_MAX, Math.max(READER_PT_MIN, settings.pt + dir))
-    onChange({ ...settings, pt: next })
+  const update = <K extends keyof ReaderSettings>(key: K, value: ReaderSettings[K]) => {
+    onChange({ ...settings, [key]: value })
   }
+  const stepPt = (dir: 1 | -1) =>
+    update('pt', Math.min(READER_PT_MAX, Math.max(READER_PT_MIN, settings.pt + dir)))
   const atMin = settings.pt <= READER_PT_MIN
   const atMax = settings.pt >= READER_PT_MAX
 
@@ -158,7 +159,7 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
               { value: 'sans', label: tx('settings.sans') },
             ]}
             value={settings.typeface}
-            onChange={(v) => onChange({ ...settings, typeface: v })}
+            onChange={(v) => update('typeface', v)}
           />
         </SettingRow>
 
@@ -169,7 +170,7 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
               { value: 'prose', label: tx('settings.prose') },
             ]}
             value={settings.layout}
-            onChange={(v) => onChange({ ...settings, layout: v })}
+            onChange={(v) => update('layout', v)}
           />
         </SettingRow>
 
@@ -181,7 +182,7 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
               { value: 'relaxed', label: tx('settings.relaxed') },
             ]}
             value={settings.lineSpacing}
-            onChange={(v) => onChange({ ...settings, lineSpacing: v })}
+            onChange={(v) => update('lineSpacing', v)}
           />
         </SettingRow>
       </View>

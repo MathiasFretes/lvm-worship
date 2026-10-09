@@ -1,13 +1,17 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "library": {
     "title": "Biblioteca de canciones",
     "addSong": "Añadir canción",
     "filterAndSort": "Filtrar y ordenar",
     "searchPlaceholder": "Busca canciones, artistas, temas…",
-    "empty": "Tu biblioteca está vacía.",
-    "noMatchesForQuery": "Ninguna canción coincide con «{{query}}».",
-    "noMatchesFilters": "Ninguna canción coincide con tus filtros.",
+    "empty": "Tu biblioteca de LVM está lista para recibir su primera canción.",
+    "noMatchesForQuery": "No encontramos canciones para “{{query}}”.",
+    "noMatchesFilters": "Ninguna canción coincide con esos filtros. Prueba una selección más amplia.",
     "results_one": "{{count}} resultado",
     "results_other": "{{count}} resultados",
     "noKey": "Sin tono"
@@ -26,14 +30,50 @@
     "show_one": "Mostrar {{count}} canción",
     "show_other": "Mostrar {{count}} canciones"
   },
+  "editor": {
+    "newSong": "Nueva canción",
+    "edit": "Editar",
+    "preview": "Vista previa",
+    "emptyPreview": "Todavía no hay nada para previsualizar.",
+    "invalidPreview": "No se pudo previsualizar este cifrado ChordPro. Revisa su sintaxis.",
+    "title": "Título",
+    "titlePlaceholder": "Título de la canción",
+    "titleRequired": "El título es obligatorio",
+    "key": "Tono",
+    "keyRequired": "El tono es obligatorio",
+    "artist": "Artista",
+    "artistPlaceholder": "Artista / compositor",
+    "tags": "Etiquetas",
+    "tagsPlaceholder": "Escribe una etiqueta y pulsa Intro",
+    "tagsRequired": "Añade al menos una etiqueta",
+    "timeSignature": "Compás",
+    "tempo": "Tempo",
+    "tempoInvalid": "El tempo debe ser un número entero entre 20 y 400 BPM",
+    "language": "Idioma",
+    "country": "País",
+    "countryPlaceholder": "p. ej. Paraguay",
+    "youtube": "ID o URL de YouTube",
+    "youtubeInvalid": "Introduce un ID o una URL de YouTube válidos",
+    "chart": "Cifrado (ChordPro)",
+    "chartPlaceholder": "{start_of_verse: Verso 1}\n[G]Sublime [D]gracia\n{end_of_verse}",
+    "keyHint": "Elige un tono para activar los acordes rápidos.",
+    "publish": "Publicar",
+    "submitForReview": "Enviar a revisión",
+    "saveDraft": "Guardar borrador",
+    "working": "Guardando…",
+    "published": "Canción publicada.",
+    "submitted": "Enviada a revisión.",
+    "draftSaved": "Borrador guardado.",
+    "actionFailed": "No se pudo guardar la canción"
+  },
   "viewer": {
     "viewOptions": "Opciones de vista",
     "exportAndShare": "Exportar y compartir",
     "editSong": "Editar canción",
     "noChart": "No hay partitura",
-    "noChartBody": "Esta canción aún no tiene contenido ChordPro.",
+    "noChartBody": "Esta canción todavía no tiene una cifra en ChordPro.",
     "chordsUnavailable": "Acordes no disponibles",
-    "rawFallback": "Acordes no disponibles — mostrando texto sin formato",
+    "rawFallback": "La vista de acordes no está disponible; te mostramos el texto original.",
     "capo": "Cejilla {{fret}} para {{key}}",
     "couldNotOpenEditorTitle": "No se pudo abrir el editor"
   },
@@ -57,7 +97,7 @@
     "down": "Bajar tono",
     "up": "Subir tono",
     "chooseKey": "Elegir tono",
-    "chooseKeyHint": "Abre el selector de tono"
+    "chooseKeyHint": "Abrir el selector de tonalidad"
   },
   "accidentals": {
     "sharps": "Sostenidos",

@@ -13,17 +13,11 @@ import * as ScreenOrientation from 'expo-screen-orientation'
 export async function applyOrientationLock(): Promise<void> {
   try {
     const type = await Device.getDeviceTypeAsync()
-    if (type === Device.DeviceType.TABLET) {
-      // Tablets: allow all orientations. The landscape 3-column library grid
-      // and the two-column chart mode depend on this.
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.ALL)
-    } else {
-      // Phones (and unknown/desktop/TV — safest default): lock to portrait,
-      // preserving the app's prior behavior.
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      )
-    }
+    const lock =
+      type === Device.DeviceType.TABLET
+        ? ScreenOrientation.OrientationLock.ALL
+        : ScreenOrientation.OrientationLock.PORTRAIT_UP
+    await ScreenOrientation.lockAsync(lock)
   } catch {
     // Non-fatal: if the native module is unavailable (e.g. an old dev client
     // that predates this dependency), fall back to whatever the OS chooses.

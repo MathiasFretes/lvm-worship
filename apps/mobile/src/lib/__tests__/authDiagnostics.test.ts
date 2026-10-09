@@ -52,6 +52,12 @@ describe('the diagnostics buffer', () => {
     expect(getAuthDiagnostics().map((e) => e.message)).toEqual(['second', 'first'])
   })
 
+  it('returns a snapshot that callers cannot mutate', () => {
+    recordAuthFailure('googleSignIn', { code: '10', status: null, message: 'kept' })
+    getAuthDiagnostics().pop()
+    expect(getAuthDiagnostics()).toHaveLength(1)
+  })
+
   it('caps the buffer so a retry loop cannot grow it without bound', () => {
     for (let i = 0; i < 30; i += 1) {
       recordAuthFailure('googleSignIn', { code: '10', status: null, message: `e${i}` })

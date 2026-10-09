@@ -308,7 +308,7 @@ export default function Songbook() {
       <PageHeader
         title={t('songbook.title')}
         actions={(
-          <div className="gc-toolbar__actions">
+          <div className="lvm-toolbar__actions">
             {!isStacked ? (
               <Button onClick={clearAll} disabled={!selectedCount} title={t('songbook.clearTooltip')} leftIcon={<ClearIcon />}>
                 <span className="text-when-wide">{t('songbook.clear')}</span>
@@ -349,7 +349,7 @@ export default function Songbook() {
       ) : null}
 
       {/* Two-pane region */}
-      <div className="BuilderPage gc-overflow-safe" style={{ marginTop: 8 }}>
+      <div className="BuilderPage lvm-overflow-safe" style={{ marginTop: 8 }}>
         <div className="BuilderLeft builder-pane" hidden={isStacked && mobileTab !== 'add'}>
           <section className="setlist-section songbook-add" data-role="add">
             <Card className="setlist-pane">
@@ -411,11 +411,11 @@ export default function Songbook() {
                   </div>
                 </div>
               ) : null}
-              <div className="gc-cover-btn-row">
+              <div className="lvm-cover-btn-row">
                 {cover ? (
-                  <div className="gc-cover-chip">
-                    <span className="gc-cover-chip__name" title={coverName}>{coverName}</span>
-                    <button type="button" className="gc-cover-chip__remove" aria-label={t('songbook.removeCover')} onClick={clearCover}>
+                  <div className="lvm-cover-chip">
+                    <span className="lvm-cover-chip__name" title={coverName}>{coverName}</span>
+                    <button type="button" className="lvm-cover-chip__remove" aria-label={t('songbook.removeCover')} onClick={clearCover}>
                       <TrashIcon style={{ width: 14, height: 14 }} />
                     </button>
                   </div>
@@ -427,24 +427,24 @@ export default function Songbook() {
               </div>
               <dialog
                 ref={coverDialogRef}
-                className="gc-cover-dialog"
+                className="lvm-cover-dialog"
                 onClick={(e) => { if (e.target === coverDialogRef.current) coverDialogRef.current.close() }}
               >
-                <div className="gc-cover-dialog__inner">
-                  <div className="gc-cover-dialog__header">
+                <div className="lvm-cover-dialog__inner">
+                  <div className="lvm-cover-dialog__header">
                     <strong>{t('songbook.uploadCoverDialogTitle')}</strong>
-                    <button type="button" className="gc-cover-dialog__close" aria-label={t('songbook.close')} onClick={() => coverDialogRef.current?.close()}>×</button>
+                    <button type="button" className="lvm-cover-dialog__close" aria-label={t('songbook.close')} onClick={() => coverDialogRef.current?.close()}>×</button>
                   </div>
                   <div
-                    className={`gc-cover-dropzone${coverDragOver ? ' gc-cover-dropzone--over' : ''}`}
+                    className={`lvm-cover-dropzone${coverDragOver ? ' lvm-cover-dropzone--over' : ''}`}
                     onClick={() => coverFileRef.current?.click()}
                     onDragOver={(e) => { e.preventDefault(); setCoverDragOver(true) }}
                     onDragLeave={() => setCoverDragOver(false)}
                     onDrop={(e) => { e.preventDefault(); setCoverDragOver(false); handleCoverFileObj(e.dataTransfer.files?.[0]) }}
                   >
                     <CloudUploadIcon style={{ width: 36, height: 36, opacity: 0.45 }} />
-                    <p>{t('songbook.dropImage')}<br />{t('songbook.or')} <span className="gc-cover-dropzone__link">{t('songbook.clickToBrowse')}</span></p>
-                    <p className="gc-cover-dropzone__hint">{t('songbook.coverHint')}</p>
+                    <p>{t('songbook.dropImage')}<br />{t('songbook.or')} <span className="lvm-cover-dropzone__link">{t('songbook.clickToBrowse')}</span></p>
+                    <p className="lvm-cover-dropzone__hint">{t('songbook.coverHint')}</p>
                   </div>
                   <input ref={coverFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onCoverFile} />
                 </div>
@@ -456,7 +456,7 @@ export default function Songbook() {
                 role="region"
                 aria-label={t('songbook.songListAria')}
               >
-                <div className="gc-list">
+                <div className="lvm-list">
                   {results.map((s) => {
                     const checked = selectedIds.has(s.id)
                     const authorsLine = Array.isArray(s.authors)
@@ -516,7 +516,7 @@ export default function Songbook() {
                 style={{ minHeight: 0, flex: '1 1 auto', overflow: 'auto', marginTop: 6 }}
               >
                 {selectedEntries.length ? (
-                  <div className="gc-songbook-selected-list">
+                  <div className="lvm-songbook-selected-list">
                     {selectedEntries.map((s) => (
                       <SongCard
                         key={s.id}
@@ -550,7 +550,7 @@ export default function Songbook() {
         onClose={() => setMobileActionsOpen(false)}
         title={t('songbook.actionsTitle')}
       >
-        <div className="gc-mobile-actions">
+        <div className="lvm-mobile-actions">
           <Button onClick={() => { clearAll(); setMobileActionsOpen(false) }} disabled={!selectedCount} leftIcon={<ClearIcon />}>{t('songbook.clearTooltip')}</Button>
           <Button onClick={() => { clearCover(); setMobileActionsOpen(false) }} disabled={!cover} leftIcon={<ClearIcon />}>{t('songbook.clearCover')}</Button>
         </div>

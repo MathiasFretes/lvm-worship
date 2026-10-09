@@ -32,7 +32,7 @@ const FALLBACK_TRANSLATIONS: BibleTranslation[] = [
 ]
 
 export function getFallbackBibleTranslations(){
-  return [...FALLBACK_TRANSLATIONS]
+  return Array.from(FALLBACK_TRANSLATIONS)
 }
 
 export function getDefaultBibleTranslationId(){
@@ -128,12 +128,13 @@ function resolveManifestDefault(raw: unknown, translations: BibleTranslation[]){
 }
 
 function normalizeTranslations(raw: unknown){
-  if (!Array.isArray(raw)) return [...FALLBACK_TRANSLATIONS]
-  const normalized = raw
-    .map((item) => normalizeTranslation(item))
-    .filter((item): item is BibleTranslation => Boolean(item))
-  if (!normalized.length) return [...FALLBACK_TRANSLATIONS]
-  return normalized
+  if (!Array.isArray(raw)) return getFallbackBibleTranslations()
+  const translations: BibleTranslation[] = []
+  for (const candidate of raw) {
+    const translation = normalizeTranslation(candidate)
+    if (translation) translations.push(translation)
+  }
+  return translations.length ? translations : getFallbackBibleTranslations()
 }
 
 function normalizeTranslation(raw: unknown){
@@ -151,7 +152,7 @@ function normalizeTranslation(raw: unknown){
 
 /** Join a base URL and a path, collapsing the slash between them. */
 export function joinUrl(baseUrl: string, path: string){
-  const base = String(baseUrl || '').replace(/\/+$/, '')
-  const rel = String(path || '').replace(/^\/+/, '')
+  const base = String(baseUrl || '').replace(/\/+$/u, '')
+  const rel = String(path || '').replace(/^\/+/u, '')
   return `${base}/${rel}`
 }

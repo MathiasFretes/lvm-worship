@@ -10,7 +10,27 @@ const RELOAD_COOLDOWN_MS = 15000
 // A reload we started in this page's lifetime. Later callers must be told the
 // recovery is already under way rather than being sent down the cooldown path,
 // which would surface an error screen while the page is navigating away.
-let reloadInFlight = false
+const recoveryState = {
+  reloadInFlight: false,
+}
+
+function readLastReload(){
+  try {
+    const value = Number(window.sessionStorage.getItem(RELOAD_KEY))
+    return Number.isFinite(value) ? value : 0
+  } catch {
+    return 0
+  }
+}
+
+function rememberReload(at){
+  try {
+    window.sessionStorage.setItem(RELOAD_KEY, String(at))
+  } catch {
+    // Storage can be unavailable in private/restricted browsing. The in-memory
+    // flag still prevents multiple reload attempts in this document.
+  }
+}
 
 /**
  * Reload once to pick up the current deploy's chunk hashes.
@@ -23,12 +43,11 @@ let reloadInFlight = false
  */
 export function reloadOnceForStaleChunk(){
   if (typeof window === 'undefined') return false
-  if (reloadInFlight) return true
-  let last = 0
-  try { last = Number(window.sessionStorage.getItem(RELOAD_KEY) || 0) } catch {}
-  if (Date.now() - last < RELOAD_COOLDOWN_MS) return false
-  try { window.sessionStorage.setItem(RELOAD_KEY, String(Date.now())) } catch {}
-  reloadInFlight = true
+  if (recoveryState.reloadInFlight) return true
+  const now = Date.now()
+  if (now - readLastReload() < RELOAD_COOLDOWN_MS) return false
+  rememberReload(now)
+  recoveryState.reloadInFlight = true
   window.location.reload()
   return true
 }
@@ -45,7 +64,7 @@ function ReloadingRoute(){
 
 function recoverOrRethrow(error){
   if (reloadOnceForStaleChunk()) return { default: ReloadingRoute }
-  throw error
+  throw error instanceof Error ? error : new Error(String(error || 'Route chunk failed to load'))
 }
 
 /**
@@ -62,10 +81,16 @@ function recoverOrRethrow(error){
  * error that says what actually happened.
  */
 export default function lazyRoute(load){
-  return React.lazy(() => Promise.resolve().then(load).then(
-    (mod) => (mod && mod.default
-      ? mod
-      : recoverOrRethrow(new Error('Route chunk loaded without a module — its deploy is no longer being served.'))),
-    (error) => recoverOrRethrow(error),
-  ))
+  if (typeof load !== 'function') throw new TypeError('lazyRoute requires a module loader')
+  return React.lazy(async () => {
+    try {
+      const mod = await load()
+      if (mod?.default) return mod
+      return recoverOrRethrow(
+        new Error('Route chunk loaded without a module — its deploy is no longer being served.')
+      )
+    } catch (error) {
+      return recoverOrRethrow(error)
+    }
+  })
 }

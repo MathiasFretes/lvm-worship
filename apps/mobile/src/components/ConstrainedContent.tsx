@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { View, type StyleProp, type ViewStyle } from 'react-native'
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 
@@ -21,16 +21,20 @@ export default function ConstrainedContent({
   children: ReactNode
 }) {
   const t = useTheme()
-  const isRegular = useIsTabletWidth()
-  if (!isRegular) return <>{children}</>
+  const shouldConstrain = useIsTabletWidth()
+  if (!shouldConstrain) return children
+
+  const widthLimit = t.layout.maxWidth[tier]
   return (
-    <View
-      style={[
-        { width: '100%', maxWidth: t.layout.maxWidth[tier], alignSelf: 'center' },
-        style,
-      ]}
-    >
+    <View style={[styles.centered, { maxWidth: widthLimit }, style]}>
       {children}
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    alignSelf: 'center',
+    width: '100%',
+  },
+})

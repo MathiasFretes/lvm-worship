@@ -29,18 +29,18 @@ function parseDirective(line) {
 function renderLine(line, idx) {
   if (!hasChords(line)) {
     return (
-      <div key={idx} className="gc-preview-modal__line">
-        <span className="gc-preview-modal__lyric">{line || '\u00A0'}</span>
+      <div key={idx} className="lvm-preview-modal__line">
+        <span className="lvm-preview-modal__lyric">{line || '\u00A0'}</span>
       </div>
     )
   }
   const segments = parseChordLine(line)
   return (
-    <div key={idx} className="gc-preview-modal__line gc-preview-modal__chord-row">
+    <div key={idx} className="lvm-preview-modal__line lvm-preview-modal__chord-row">
       {segments.map((seg, si) => (
-        <span key={si} className="gc-preview-modal__chord-col">
-          <span className="gc-preview-modal__chord">{seg.chord || ' '}</span>
-          <span className="gc-preview-modal__lyric">{seg.lyric || ' '}</span>
+        <span key={si} className="lvm-preview-modal__chord-col">
+          <span className="lvm-preview-modal__chord">{seg.chord || ' '}</span>
+          <span className="lvm-preview-modal__lyric">{seg.lyric || ' '}</span>
         </span>
       ))}
     </div>
@@ -58,19 +58,19 @@ export default function LivePreviewModal({ content, metadata, onClose }) {
   }, [onClose])
 
   return (
-    <div className="gc-preview-modal" role="dialog" aria-modal="true" aria-label="Song preview">
-      <div className="gc-preview-modal__backdrop" onClick={onClose} />
-      <div className="gc-preview-modal__panel">
-        <div className="gc-preview-modal__header">
+    <div className="lvm-preview-modal" role="dialog" aria-modal="true" aria-label="Song preview">
+      <div className="lvm-preview-modal__backdrop" onClick={onClose} />
+      <div className="lvm-preview-modal__panel">
+        <div className="lvm-preview-modal__header">
           <div>
-            {metadata?.title && <h2 className="gc-preview-modal__title">{metadata.title}</h2>}
+            {metadata?.title && <h2 className="lvm-preview-modal__title">{metadata.title}</h2>}
             {metadata?.currentKey && (
-              <span className="gc-preview-modal__key">Key: {metadata.currentKey}</span>
+              <span className="lvm-preview-modal__key">Key: {metadata.currentKey}</span>
             )}
           </div>
           <button
             type="button"
-            className="gc-preview-modal__close"
+            className="lvm-preview-modal__close"
             onClick={onClose}
             aria-label="Close preview"
           >
@@ -78,7 +78,7 @@ export default function LivePreviewModal({ content, metadata, onClose }) {
           </button>
         </div>
 
-        <div className="gc-preview-modal__body">
+        <div className="lvm-preview-modal__body">
           {(content || '').split('\n').map((line, idx) => {
             const trimmed = line.trim()
             const directive = parseDirective(trimmed)
@@ -87,7 +87,7 @@ export default function LivePreviewModal({ content, metadata, onClose }) {
               if (directive.type.startsWith('start_of_')) {
                 const name = directive.label || directive.type.replace('start_of_', '').replace(/_/g, ' ')
                 return (
-                  <div key={idx} className="gc-preview-modal__section-header">
+                  <div key={idx} className="lvm-preview-modal__section-header">
                     {name}
                   </div>
                 )

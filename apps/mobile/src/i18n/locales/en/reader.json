@@ -1,5 +1,8 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
   "chooseTranslation": "Choose translation",
   "chooseDate": "Choose date",
   "readerSettings": "Reader settings",
@@ -7,31 +10,31 @@
   "landingTitle": "Daily Word",
   "streakDays_one": "{{count}}-day streak",
   "streakDays_other": "{{count}}-day streak",
-  "landingReadingHeader": "{{date}}'s reading · M'Cheyne",
+  "landingReadingHeader": "Reading for {{date}} · M’Cheyne plan",
   "backToLanding": "Back to Daily Word",
   "reflection": {
     "landingHeader": "Your reflection",
     "composeCta": "Write your reflection",
-    "composeHint": "Today · not written yet",
+    "composeHint": "Nothing written for today yet",
     "viewAll": "View all reflections",
     "journalTitle": "Reflections",
     "composeTitle": "New reflection",
     "editTitle": "Edit reflection",
     "edit": "Edit",
     "editErrorTitle": "Couldn't update reflection",
-    "placeholder": "Write your reflections, thoughts, or prayers…",
+    "placeholder": "Write what stood out, a prayer, or what you want to remember…",
     "charCount": "{{count}} / {{max}}",
     "save": "Save",
     "cancel": "Cancel",
     "ok": "OK",
     "delete": "Delete",
     "deleteTitle": "Delete reflection?",
-    "deleteMessage": "This can't be undone.",
+    "deleteMessage": "This reflection will be gone for good.",
     "duplicateTitle": "Already written",
     "duplicateMessage": "You've already written a reflection for today.",
     "saveErrorTitle": "Couldn't save reflection",
     "emptyTitle": "No reflections yet",
-    "emptySubtitle": "Your reflections will appear here once you write one."
+    "emptySubtitle": "When you save a reflection, you’ll find it here."
   },
   "journal": {
     "privateLabel": "Private"
@@ -40,12 +43,12 @@
   "copyVerses_other": "Copy {{count}} verses",
   "error": {
     "title": "Can't load today's reading",
-    "subtitle": "Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline.",
+    "subtitle": "Reconnect and try again, or save this translation from Settings → Offline & Downloads.",
     "retry": "Retry"
   },
   "empty": {
     "title": "No reading for this day",
-    "subtitle": "Pick another date to keep reading."
+    "subtitle": "Choose another date and continue in the plan."
   },
   "translationPicker": {
     "title": "Translation"
@@ -73,10 +76,28 @@
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "monthYear": "{{month}} {{year}}",
-    "weekdays": ["S", "M", "T", "W", "T", "F", "S"],
+    "weekdays": [
+      "S",
+      "M",
+      "T",
+      "W",
+      "T",
+      "F",
+      "S"
+    ],
     "months": [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
     ]
   }
 }

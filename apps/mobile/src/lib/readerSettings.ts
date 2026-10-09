@@ -38,7 +38,7 @@ export const defaultReaderSettings: ReaderSettings = {
   lineSpacing: 'normal',
 }
 
-const STORAGE_KEY = 'gc.reader.settings.v1'
+const STORAGE_KEY = 'lvm.reader.settings.v1'
 
 // Match the web reader's derivations so the two platforms read alike.
 const LINE_HEIGHT_MULTIPLIER: Record<LineSpacing, number> = {
@@ -97,7 +97,7 @@ function clampPt(value: unknown): number {
 }
 
 function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
-  return allowed.includes(value as T) ? (value as T) : fallback
+  return typeof value === 'string' && allowed.includes(value as T) ? (value as T) : fallback
 }
 
 /**

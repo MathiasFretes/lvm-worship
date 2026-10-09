@@ -44,8 +44,8 @@ struct DiatonicChord: Codable, Hashable, Identifiable {
 }
 
 /// The result of an edit: new text plus where the caret or selection ends up.
-struct ChordProEdit: Codable {
-    struct Selection: Codable {
+struct ChordProEdit: Decodable {
+    struct Selection: Decodable {
         /// UTF-16 offsets, matching JS string indices.
         let start: Int
         let end: Int
@@ -53,6 +53,25 @@ struct ChordProEdit: Codable {
 
     let value: String
     let selection: Selection
+
+    private enum CodingKeys: String, CodingKey { case value, selection }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        value = try values.decode(String.self, forKey: .value)
+        selection = try values.decode(Selection.self, forKey: .selection)
+
+        let length = value.utf16.count
+        guard selection.start >= 0,
+              selection.end >= selection.start,
+              selection.end <= length else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .selection,
+                in: values,
+                debugDescription: "Selection must be an ordered UTF-16 range inside the edited value."
+            )
+        }
+    }
 }
 
 // MARK: - Selection

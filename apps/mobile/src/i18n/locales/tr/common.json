@@ -17,7 +17,6 @@
   "closeSheet": "{{title}} kapat",
   "showPassword": "Şifreyi göster",
   "hidePassword": "Şifreyi gizle",
-  "copyright": "© {{range}} Ryan Moore. Tüm hakları saklıdır.",
   "keyOf": "{{key}} tonu",
   "keyTransposed": "{{from}} → {{to}}",
   "keyTransposedA11y": "{{from}} tonu, {{to}} tonuna transpoze edildi",

@@ -43,6 +43,7 @@ final class AuthController: ObservableObject {
 
     private let client: SupabaseClient
     private let users: UserRepository
+    private var accountID: UUID?
 
     init(client: SupabaseClient) {
         self.client = client
@@ -54,42 +55,20 @@ final class AuthController: ObservableObject {
     func observeAuthState() async {
         do {
             let session = try await client.auth.session
-            apply(session: session)
-            await refreshRole()
+            if !session.isExpired { await accept(session) }
         } catch {
-            // No stored session, or one that could not be refreshed — either way
-            // the answer is the sign-in screen, not an error.
-            phase = .signedOut
+            resetSession()
         }
 
         for await (event, session) in client.auth.authStateChanges {
-            // Only `.signedOut` is matched by name; every other event is judged by
-            // whether it carries a session, which keeps this independent of the
-            // exact AuthChangeEvent case list.
             if case .signedOut = event {
-                clear()
-            } else if let session = session {
-                // An expired session is not a signed-in state. With
-                // `emitLocalSessionAsInitialSession` (set in AppServices) the SDK
-                // deliberately emits the stored session even when it has expired, and
-                // promises a `tokenRefreshed` — or a `signOut` if the refresh fails —
-                // to follow. So this waits for that verdict instead of showing the
-                // library behind a dead token and bouncing the user out on the first
-                // query that comes back PGRST301.
-                //
-                // Not `clear()`: the common launch case is a stored session an hour
-                // old, and dropping to the sign-in screen for the duration of a
-                // refresh that is about to succeed would flash a login prompt at
-                // someone who is signed in.
-                guard !session.isExpired else { continue }
-                let wasSignedIn = phase == .signedIn
-                apply(session: session)
-                // A token refresh fires this stream repeatedly for a session that
-                // was already established; re-reading the role each time would be a
-                // query per refresh for an answer that has not changed.
-                if !wasSignedIn { await refreshRole() }
+                resetSession()
+            } else if let session, !session.isExpired {
+                await accept(session)
             } else {
-                clear()
+                // An expired local session is followed by either tokenRefreshed or
+                // signedOut. Keep the current screen until the SDK resolves it.
+                if phase == .loading, case nil = session { resetSession() }
             }
         }
     }
@@ -104,12 +83,8 @@ final class AuthController: ObservableObject {
         isWorking = true
         errorText = nil
         do {
-            _ = try await client.auth.signIn(email: trimmedEmail, password: password)
-            // authStateChanges also reports this; setting it here means the UI does
-            // not wait on the stream.
-            phase = .signedIn
-            signedInEmail = trimmedEmail
-            await refreshRole()
+            let session = try await client.auth.signIn(email: trimmedEmail, password: password)
+            await accept(session)
         } catch {
             errorText = Self.message(for: error)
         }
@@ -119,7 +94,7 @@ final class AuthController: ObservableObject {
     func signOut() async {
         isWorking = true
         try? await client.auth.signOut()
-        clear()
+        resetSession()
         isWorking = false
     }
 
@@ -129,15 +104,20 @@ final class AuthController: ObservableObject {
         Task { await signOut() }
     }
 
-    private func apply(session: Session) {
-        signedInEmail = session.user.email
-        phase = .signedIn
-    }
-
-    private func clear() {
+    private func resetSession() {
+        accountID = nil
         signedInEmail = nil
         role = "user"
         phase = .signedOut
+    }
+
+    private func accept(_ session: Session) async {
+        let incomingID = session.user.id
+        let accountChanged = accountID != incomingID
+        accountID = incomingID
+        signedInEmail = session.user.email
+        phase = .signedIn
+        if accountChanged { await refreshRole(for: incomingID) }
     }
 
     /// Read the role for the current session.
@@ -147,11 +127,17 @@ final class AuthController: ObservableObject {
     /// to decide whether that surface exists at all, and one query at sign-in is
     /// cheaper than making every gate check async.
     func refreshRole() async {
-        guard phase == .signedIn else {
+        guard let accountID, phase == .signedIn else {
             role = "user"
             return
         }
-        role = await users.fetchRole()
+        await refreshRole(for: accountID)
+    }
+
+    private func refreshRole(for expectedID: UUID) async {
+        let fetched = await users.fetchRole(userID: expectedID)
+        guard accountID == expectedID, phase == .signedIn else { return }
+        role = fetched
     }
 
     private static func message(for error: Error) -> String {

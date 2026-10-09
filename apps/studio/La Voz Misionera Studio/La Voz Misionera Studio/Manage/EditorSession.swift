@@ -34,11 +34,18 @@ final class EditorSession: ObservableObject {
         }
     }
 
-    @Published private(set) var target: Target?
-    @Published private(set) var editor: SongEditorModel?
+    private struct OpenDocument {
+        var target: Target
+        let editor: SongEditorModel
+    }
+
+    @Published private var document: OpenDocument?
+
+    var target: Target? { document?.target }
+    var editor: SongEditorModel? { document?.editor }
 
     /// True when closing or navigating away would lose typing.
-    var hasUnsavedChanges: Bool { editor?.isDirty ?? false }
+    var hasUnsavedChanges: Bool { document?.editor.isDirty ?? false }
 
     /// Start a new song, going through the Manage section's unsaved-changes guard.
     /// Set by that section so File ▸ New Song reaches the same path the toolbar does
@@ -51,19 +58,19 @@ final class EditorSession: ObservableObject {
     var requestImport: (() -> Void)?
 
     func open(_ target: Target, model: SongEditorModel) {
-        self.target = target
-        self.editor = model
+        document = OpenDocument(target: target, editor: model)
     }
 
     /// Re-point at a real row without rebuilding the model — used after a new draft's
     /// first save, so the sidebar can select it while the user keeps typing in the
     /// editor they already have open.
     func retarget(to target: Target) {
-        self.target = target
+        guard var current = document else { return }
+        current.target = target
+        document = current
     }
 
     func close() {
-        target = nil
-        editor = nil
+        document = nil
     }
 }

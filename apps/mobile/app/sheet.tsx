@@ -29,7 +29,7 @@ import { useTheme } from '../src/theme/ThemeProvider'
 // Decorative: Android's sheet is itself the accessibility target and the handle
 // duplicates gestures TalkBack already exposes, so it is hidden from the tree
 // rather than given a label — which is also why this adds no i18n key.
-function MaterialDragHandle() {
+function LvmMaterialDragHandle() {
   const t = useTheme()
   return (
     <View
@@ -48,7 +48,7 @@ function MaterialDragHandle() {
   )
 }
 
-export default function SheetRoute() {
+function LvmSheetRoute() {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const content = useFormSheetContent()
@@ -83,9 +83,11 @@ export default function SheetRoute() {
         {/* iOS renders null here — no view, no layout node — so UIKit's own
             grabber stays the only one and the wrapper keeps exactly the single
             child the fitToContents sizing above depends on. */}
-        {Platform.OS === 'android' ? <MaterialDragHandle /> : null}
+        {Platform.OS === 'android' ? <LvmMaterialDragHandle /> : null}
         {content}
       </View>
     </>
   )
 }
+
+export default LvmSheetRoute

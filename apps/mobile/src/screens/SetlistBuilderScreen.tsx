@@ -1,608 +1,256 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import * as Clipboard from 'expo-clipboard'
 import * as Sharing from 'expo-sharing'
-import {
-  createSetlist,
-  effectiveKey,
-  formatSetSummary,
-  summarizeSet,
-  timeAgo,
-} from '@lavozmisionera/core'
-import Screen from '../components/Screen'
-import Card from '../components/Card'
-import Button from '../components/Button'
-import SymbolIcon from '../components/SymbolIcon'
-import HeaderIconButton from '../components/HeaderIconButton'
-import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
-import LibraryPane from '../components/setlist/LibraryPane'
-import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
-import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
-import ShareSetSheet from '../components/setlist/ShareSetSheet'
+import { createSetlist, effectiveKey, formatSetSummary, summarizeSet, timeAgo } from '@lavozmisionera/core'
 import AddSongsModal from '../components/setlist/AddSongsModal'
 import AddVerseModal from '../components/setlist/AddVerseModal'
-import { useTheme } from '../theme/ThemeProvider'
+import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
+import LibraryPane from '../components/setlist/LibraryPane'
+import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
+import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
+import ShareSetSheet from '../components/setlist/ShareSetSheet'
+import Button from '../components/Button'
+import Card from '../components/Card'
+import HeaderIconButton from '../components/HeaderIconButton'
+import Screen from '../components/Screen'
+import SymbolIcon from '../components/SymbolIcon'
+import { actionFailureMessage } from '../lib/errors'
+import { exportSetlist } from '../lib/exportSong'
+import { defaultSetlistName } from '../lib/setlistName'
+import { buildSetlistShareUrl } from '../lib/setlistShare'
+import { supabase } from '../lib/supabase'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
-import { supabase } from '../lib/supabase'
-import { buildSetlistShareUrl } from '../lib/setlistShare'
-import { exportSetlist } from '../lib/exportSong'
 import { uuidv4 } from '../lib/uuid'
-import { actionFailureMessage } from '../lib/errors'
-import { defaultSetlistName } from '../lib/setlistName'
+import { useTheme } from '../theme/ThemeProvider'
 
-const TOAST_MS = 1900
-
-// The Setlist Builder (build mode): hero set card with inline rename, the
-// numbered drag-to-reorder timeline, summary footer, Add + Start set bar,
-// and the share / options / key / row sheets. All edits autosave through
-// useSetlistBuilder; opening a song pushes the Viewer seeded at the entry's
-// setlist key via the existing initialKey param.
 export default function SetlistBuilderScreen({ setlistId }: { setlistId: string }) {
-  const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export', 'errors'])
+  const theme = useTheme()
+  const { t, i18n } = useTranslation(['setlist', 'common', 'export', 'errors'])
   const router = useRouter()
-  const isTablet = useIsTabletWidth()
-  const {
-    name,
-    loadFailed,
-    retryLoad,
-    items,
-    songs,
-    songsLoading,
-    loading,
-    notFound,
-    error,
-    setName,
-    toggleSong,
-    addVerse,
-    removeEntry,
-    moveEntry,
-    setKeyFor,
-    deleteSet,
-    updatedAt,
-  } = useSetlistBuilder(setlistId)
+  const tablet = useIsTabletWidth()
+  const builder = useSetlistBuilder(setlistId)
+  const { name, items, songs, songsLoading, loading, notFound, loadFailed, error,
+    retryLoad, setName, toggleSong, addVerse, removeEntry, duplicateEntry, moveEntry, setKeyFor,
+    deleteSet, updatedAt } = builder
 
-  // Inline rename (in the hero card, no modal): select-all on focus, × clears
-  // and refocuses, Done/return commits, an empty draft reverts.
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState('')
+  const [renaming, setRenaming] = useState(false)
+  const [draftName, setDraftName] = useState('')
   const nameInput = useRef<TextInput>(null)
-
   const [keyIndex, setKeyIndex] = useState<number | null>(null)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
-  const [addOpen, setAddOpen] = useState(false)
+  const [addSongsOpen, setAddSongsOpen] = useState(false)
   const [addVerseOpen, setAddVerseOpen] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (noticeTimer.current) clearTimeout(noticeTimer.current) }, [])
 
-  // Toast pill (bottom-center, auto-dismiss).
-  const [toast, setToast] = useState<string | null>(null)
-  const toastOpacity = useRef(new Animated.Value(0)).current
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showToast = useCallback(
-    (message: string) => {
-      if (toastTimer.current) clearTimeout(toastTimer.current)
-      setToast(message)
-      Animated.timing(toastOpacity, { toValue: 1, duration: 160, useNativeDriver: true }).start()
-      toastTimer.current = setTimeout(() => {
-        Animated.timing(toastOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start(
-          ({ finished }) => {
-            if (finished) setToast(null)
-          },
-        )
-      }, TOAST_MS)
-    },
-    [toastOpacity],
-  )
-  useEffect(
-    () => () => {
-      if (toastTimer.current) clearTimeout(toastTimer.current)
-    },
-    [],
-  )
+  const keys = useMemo(() => items.map((item) => effectiveKey(item, item.song)), [items])
+  const songIds = useMemo(() => new Set(items.map((item) => item.songId)), [items])
+  const summary = useMemo(() => summarizeSet(items.map((item) => ({
+    toKey: item.toKey, default_key: item.song.default_key, tempo: item.song.tempo,
+  }))), [items])
 
-  const effectiveKeys = useMemo(
-    () => items.map((item) => effectiveKey(item, item.song)),
-    [items],
-  )
-  const summary = useMemo(
-    () =>
-      summarizeSet(
-        items.map((item) => ({
-          toKey: item.toKey,
-          default_key: item.song.default_key,
-          tempo: item.song.tempo,
-        })),
-      ),
-    [items],
-  )
-  const addedSongIds = useMemo(() => new Set(items.map((item) => item.songId)), [items])
-
-  function startRename() {
-    setDraft(name)
-    setEditing(true)
+  function showNotice(message: string) {
+    if (noticeTimer.current) clearTimeout(noticeTimer.current)
+    setNotice(message)
+    noticeTimer.current = setTimeout(() => setNotice(null), 1900)
   }
 
-  function commitRename() {
-    const next = draft.trim()
-    if (next && next !== name) setName(next)
-    setEditing(false)
+  function beginRename() { setDraftName(name); setRenaming(true) }
+  function finishRename() {
+    const trimmed = draftName.trim()
+    if (trimmed && trimmed !== name) setName(trimmed)
+    setRenaming(false)
   }
 
-  const openSong = useCallback(
-    (index: number) => {
-      const item = items[index]
-      if (!item) return
-      const key = effectiveKeys[index]
-      router.push({
-        pathname: '/viewer/[slug]',
-        params: {
-          slug: item.song.slug,
-          title: item.song.title,
-          songKey: item.song.default_key ?? '',
-          ...(key ? { initialKey: key } : {}),
-        },
-      })
+  const openSong = useCallback((index: number) => {
+    const item = items[index]
+    if (!item) return
+    router.push({ pathname: '/viewer/[slug]', params: {
+      slug: item.song.slug, title: item.song.title, songKey: item.song.default_key ?? '',
+      ...(keys[index] ? { initialKey: keys[index] } : {}),
+    } })
+  }, [items, keys, router])
+
+  const timelineActions: TimelineCallbacks = useMemo(() => ({
+    onPressRow: openSong,
+    onKeyTap: setKeyIndex,
+    onMove: (from, to) => {
+      const before = items[from]?.entryKey
+      const after = items[to]?.entryKey
+      if (before && after) moveEntry(before, after)
     },
-    [items, effectiveKeys, router],
-  )
+    onRemove: (index) => {
+      const key = items[index]?.entryKey
+      if (key) { removeEntry(key); showNotice(t('toasts.removedFromSet')) }
+    },
+    onDuplicate: (index) => {
+      const key = items[index]?.entryKey
+      if (key) duplicateEntry(key)
+    },
+  }), [openSong, items, moveEntry, removeEntry, duplicateEntry, t])
 
   function confirmDelete() {
-    Alert.alert(tx('alerts.deleteSetTitle'), tx('alerts.deleteSetMessage', { name }), [
-      { text: tx('common:cancel'), style: 'cancel' },
-      {
-        text: tx('common:delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteSet()
-            router.back()
-          } catch (err: unknown) {
-            Alert.alert(tx('alerts.couldNotDelete'), actionFailureMessage('SetlistBuilder.delete', err, tx))
-          }
-        },
-      },
+    Alert.alert(t('alerts.deleteSetTitle'), t('alerts.deleteSetMessage', { name }), [
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('common:delete'), style: 'destructive', onPress: async () => {
+        try { await deleteSet(); router.back() } catch (failure) {
+          Alert.alert(t('alerts.couldNotDelete'), actionFailureMessage('SetlistBuilder.delete', failure, t))
+        }
+      } },
     ])
   }
 
-  async function newSet() {
-    // Optimistic: open the new (empty) set immediately; insert in the
-    // background (the builder retries its initial fetch to cover the race).
+  function createAnother() {
     const id = uuidv4()
-    // No existing-names list on this screen, so the date name is used as-is; a
-    // second set made from here on the same day is not de-duplicated. The
-    // Setlists tab, which does hold the list, numbers them.
-    const name = defaultSetlistName((key, opts) => tx(key, opts), i18n.language)
+    const nextName = defaultSetlistName((key, options) => t(key, options), i18n.language)
     router.replace(`/setlist/${id}`)
-    createSetlist(supabase, { id, name }).catch((err: unknown) => {
-      Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('SetlistBuilder.create', err, tx))
-    })
+    void createSetlist(supabase, { id, name: nextName }).catch((failure) =>
+      Alert.alert(t('alerts.couldNotCreate'), actionFailureMessage('SetlistBuilder.create', failure, t)))
   }
 
   async function copyLink() {
-    if (items.length === 0) {
-      showToast(tx('toasts.addSongsFirst'))
-      return
-    }
+    if (!items.length) { showNotice(t('toasts.addSongsFirst')); return }
     try {
       await Clipboard.setStringAsync(buildSetlistShareUrl(items))
-      showToast(tx('toasts.setLinkCopied'))
-    } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotCopyLink'), actionFailureMessage('SetlistBuilder.copyLink', err, tx))
+      showNotice(t('toasts.setLinkCopied'))
+    } catch (failure) {
+      Alert.alert(t('alerts.couldNotCopyLink'), actionFailureMessage('SetlistBuilder.copyLink', failure, t))
     }
   }
 
-  async function exportSet() {
-    if (items.length === 0) {
-      showToast(tx('toasts.addSongsFirst'))
-      return
-    }
+  async function sharePdf() {
+    if (!items.length) { showNotice(t('toasts.addSongsFirst')); return }
     try {
-      // Combined-set PDF via the same /api/export/setlist endpoint the Performer
-      // uses; keys resolve to each entry's effective key (override or default).
-      const uri = await exportSetlist(
-        items.map((item, i) => ({ songId: item.songId, key: effectiveKeys[i] })),
-      )
+      const uri = await exportSetlist(items.map((item, index) => ({ songId: item.songId, key: keys[index] })))
       await Sharing.shareAsync(uri)
-    } catch (err: unknown) {
-      Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SetlistBuilder.export', err, tx))
+    } catch (failure) {
+      Alert.alert(t('export:alerts.exportFailedTitle'), actionFailureMessage('SetlistBuilder.export', failure, t))
     }
   }
 
-  // Stable identity so the memoized timeline rows don't re-render (and
-  // rebuild their gesture chains) on unrelated screen state changes. Actions
-  // resolve the rendered index to the entry's stable key before mutating —
-  // entries the catalog can't resolve stay in state but aren't rendered, so
-  // rendered indexes are not entry indexes.
-  const callbacks: TimelineCallbacks = useMemo(
-    () => ({
-      onPressRow: openSong,
-      onKeyTap: setKeyIndex,
-      onMove: (from, to) => {
-        const fromKey = items[from]?.entryKey
-        const toKey = items[to]?.entryKey
-        if (fromKey && toKey) moveEntry(fromKey, toKey)
-      },
-      onRemove: (index) => {
-        const entryKey = items[index]?.entryKey
-        if (!entryKey) return
-        removeEntry(entryKey)
-        showToast(tx('toasts.removedFromSet'))
-      },
-    }),
-    [openSong, items, moveEntry, removeEntry, showToast],
-  )
-
-  const metaLine = formatSetSummary(summary)
-  const edited = timeAgo(updatedAt, (k, o) => tx(`common:${k}`, o), i18n.language)
-
-  if (notFound) {
-    return (
-      <Screen edges={['top', 'left', 'right', 'bottom']}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
-            {tx('builder.notFound')}
-          </Text>
-        </View>
-      </Screen>
-    )
-  }
-
-  // A load that FAILED is NOT an empty setlist, and must not be presented as
-  // one. It used to be: the builder rendered its normal editable card over
-  // initial state, so the set appeared to have no name and no songs. Renaming
-  // that card edited a setlist the app had never actually read — the rename went
-  // nowhere and the set stayed "New Setlist" (QA report Nº 6994, M-01). Offer
-  // the retry instead; the real setlist is intact on the server.
-  if (loadFailed) {
-    return (
-      <Screen edges={['top', 'left', 'right', 'bottom']}>
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: t.spacing.xl,
-            gap: t.spacing.lg,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: t.typography.body.fontSize,
-              color: t.colors.sec,
-              textAlign: 'center',
-            }}
-          >
-            {tx('builder.loadFailed')}
-          </Text>
-          <Button title={tx('common:retry')} onPress={retryLoad} fullWidth={false} />
-          <Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8}>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>
-              {tx('builder.backToSets')}
-            </Text>
-          </Pressable>
-        </View>
-      </Screen>
-    )
-  }
-
-  // The full builder column (header → timeline → action bar → toast). Phones
-  // render it directly — the tree is unchanged from the single-column screen.
-  // Tablets place it as the right pane beside the library pane.
-  const builderPane = (
-    <>
-      {/* Header: back + more + share. Plain bar on the page background — same
-          chrome as the Viewer/Performer headers. (Glass here drew a visible
-          material edge around the bar because it sits inside the safe area.) */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: t.spacing.lg,
-          paddingVertical: t.spacing.sm,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={tx('builder.backToSetlists')}
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
-        >
-          <SymbolIcon name="chevron.left" size={17} color={t.colors.textAccent} weight="semibold" />
-          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>{tx('builder.back')}</Text>
-        </Pressable>
-        <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-          <HeaderIconButton icon="ellipsis" label={tx('builder.setlistOptions')} onPress={() => setOptionsOpen(true)} />
-          <HeaderIconButton
-            icon="square.and.arrow.up"
-            iconSize={22}
-            label={tx('export:exportAndShare')}
-            onPress={() => setShareOpen(true)}
-          />
-        </View>
+  function message(text: string, retry = false) {
+    return <Screen edges={['top', 'left', 'right', 'bottom']}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.lg, padding: theme.spacing.xl }}>
+        <Text style={{ color: theme.colors.sec, textAlign: 'center' }}>{text}</Text>
+        {retry && <Button title={t('common:retry')} onPress={retryLoad} fullWidth={false} />}
+        {retry && <Pressable accessibilityRole="button" onPress={() => router.back()}>
+          <Text style={{ color: theme.colors.textAccent }}>{t('builder.backToSets')}</Text>
+        </Pressable>}
       </View>
-
-      {loading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={t.colors.accent} />
-        </View>
-      ) : (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: t.spacing.lg, paddingBottom: t.spacing.xl }}
-        >
-          {/* Hero set card */}
-          <Card style={{ padding: t.spacing.lg, marginBottom: t.spacing.lg }}>
-            {editing ? (
-              <View style={{ gap: t.spacing.sm }}>
-                <Text
-                  style={{
-                    fontSize: t.typography.overline.fontSize,
-                    fontWeight: t.typography.overline.fontWeight,
-                    letterSpacing: t.typography.overline.letterSpacing,
-                    textTransform: 'uppercase',
-                    color: t.colors.sec,
-                  }}
-                >
-                  {tx('builder.setName')}
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    borderWidth: 1.5,
-                    borderColor: t.colors.accent,
-                    borderRadius: t.radii.md,
-                    paddingHorizontal: 12,
-                    height: 46,
-                  }}
-                >
-                  <TextInput
-                    ref={nameInput}
-                    value={draft}
-                    onChangeText={setDraft}
-                    autoFocus
-                    selectTextOnFocus
-                    returnKeyType="done"
-                    onSubmitEditing={commitRename}
-                    accessibilityLabel={tx('builder.setName')}
-                    style={{ flex: 1, fontSize: 17, fontWeight: '600', color: t.colors.ink, padding: 0 }}
-                  />
-                  <Pressable
-                    onPress={() => {
-                      setDraft('')
-                      nameInput.current?.focus()
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={tx('builder.clearSetName')}
-                    hitSlop={8}
-                  >
-                    <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.sec} />
-                  </Pressable>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
-                    {metaLine}
-                  </Text>
-                  <Button title={tx('common:done')} onPress={commitRename} fullWidth={false} style={{ height: 40 }} />
-                </View>
-              </View>
-            ) : (
-              <Pressable onPress={startRename} accessibilityRole="button" accessibilityLabel={tx('builder.renameSet')}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{ flexShrink: 1, fontSize: 22, fontWeight: '700', letterSpacing: -0.4, color: t.colors.ink }}
-                  >
-                    {name}
-                  </Text>
-                  <SymbolIcon name="pencil" size={15} color={t.colors.sec} />
-                </View>
-                <Text style={{ marginTop: 6, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
-                  {metaLine}
-                </Text>
-                {edited ? (
-                  <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
-                    {tx('builder.lastEdited', { time: edited })}
-                  </Text>
-                ) : null}
-              </Pressable>
-            )}
-          </Card>
-
-          {/* Timeline */}
-          {error ? (
-            <Text
-              style={{
-                marginBottom: t.spacing.sm,
-                fontSize: t.typography.rowMeta.fontSize,
-                color: t.colors.danger,
-              }}
-            >
-              {/* An i18n key from useSetlistBuilder — a save failure and a load
-                  failure say different things — never raw error text. */}
-              {tx(error)}
-            </Text>
-          ) : null}
-          {items.length === 0 ? (
-            <View style={{ alignItems: 'center', paddingVertical: t.spacing.xxl, gap: 4 }}>
-              <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-                {tx('builder.noSongs')}
-              </Text>
-              <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
-                {isTablet ? tx('builder.addHintTablet') : tx('builder.addHintPhone')}
-              </Text>
-            </View>
-          ) : (
-            <SetlistTimeline items={items} effectiveKeys={effectiveKeys} callbacks={callbacks} />
-          )}
-        </ScrollView>
-      )}
-
-      {/* Bottom action bar — borderless, on the page background. */}
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: t.spacing.sm,
-          paddingHorizontal: t.spacing.lg,
-          paddingTop: t.spacing.sm,
-        }}
-      >
-        {/* The Add modal is phone-only — on tablets the library pane IS the
-            add flow, so the button (and its search sheet) would be redundant. */}
-        {!isTablet ? (
-          <Pressable
-            onPress={() => setAddOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={tx('builder.addSongs')}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              height: 48,
-              paddingHorizontal: t.spacing.lg,
-              borderRadius: t.radii.md,
-              backgroundColor: t.colors.surfaceAlt,
-            }}
-          >
-            <SymbolIcon name="plus" size={16} color={t.colors.ink} weight="semibold" />
-            <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
-              {tx('builder.add')}
-            </Text>
-          </Pressable>
-        ) : null}
-        <Pressable
-          onPress={() => setAddVerseOpen(true)}
-          accessibilityRole="button"
-          accessibilityLabel={tx('verse.add')}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            height: 48,
-            paddingHorizontal: t.spacing.lg,
-            borderRadius: t.radii.md,
-            backgroundColor: t.colors.surfaceAlt,
-          }}
-        >
-          <SymbolIcon name="book.closed" size={16} color={t.colors.ink} weight="semibold" />
-          <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
-            {tx('verse.add')}
-          </Text>
-        </Pressable>
-        <Button
-          title={tx('builder.startSet')}
-          onPress={() => router.push(`/perform/${setlistId}`)}
-          disabled={items.length === 0}
-          style={{ flex: 1 }}
-          fullWidth={false}
-        />
-      </View>
-
-      {/* Toast */}
-      {toast ? (
-        <Animated.View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            bottom: 84,
-            alignSelf: 'center',
-            opacity: toastOpacity,
-            backgroundColor: t.colors.ink,
-            borderRadius: t.radii.pill,
-            paddingHorizontal: t.spacing.lg,
-            paddingVertical: 10,
-          }}
-        >
-          <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.colors.bg }}>{toast}</Text>
-        </Animated.View>
-      ) : null}
-    </>
-  )
-
-  return (
-    <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {isTablet ? (
-        // Tablet list-detail split: searchable library pane (~1/3) with
-        // tap-to-add, the existing builder (~2/3) on the right. Ratio from
-        // tokens layout.split.
-        <View style={{ flex: 1, flexDirection: 'row' }}>
-          <View
-            style={{
-              flex: t.layout.split.list,
-              borderRightWidth: 1,
-              borderRightColor: t.colors.border,
-            }}
-          >
-            <LibraryPane
-              songs={songs}
-              addedSongIds={addedSongIds}
-              onToggle={toggleSong}
-              loading={songsLoading}
-            />
-          </View>
-          <View style={{ flex: t.layout.split.detail }}>{builderPane}</View>
-        </View>
-      ) : (
-        builderPane
-      )}
-
-      {/* Sheets */}
-      <KeyPickerSheet
-        visible={keyIndex != null}
-        onClose={() => setKeyIndex(null)}
-        songTitle={keyIndex != null ? items[keyIndex]?.song.title ?? null : null}
-        currentKey={keyIndex != null ? effectiveKeys[keyIndex] ?? null : null}
-        nativeKey={keyIndex != null ? items[keyIndex]?.song.default_key ?? null : null}
-        hasOverride={keyIndex != null ? items[keyIndex]?.toKey != null : false}
-        onPick={(key) => {
-          const entryKey = keyIndex != null ? items[keyIndex]?.entryKey : undefined
-          if (entryKey) setKeyFor(entryKey, key)
-        }}
-      />
-      <SetOptionsSheet
-        visible={optionsOpen}
-        onClose={() => setOptionsOpen(false)}
-        onRename={startRename}
-        onSavedSets={() => router.navigate('/setlists')}
-        onNewSet={newSet}
-        onDeleteSet={confirmDelete}
-      />
-      <ShareSetSheet
-        visible={shareOpen}
-        onClose={() => setShareOpen(false)}
-        songCount={items.length}
-        onExport={exportSet}
-        onCopyLink={copyLink}
-      />
-      <AddSongsModal
-        visible={addOpen}
-        onClose={() => setAddOpen(false)}
-        songs={songs}
-        addedSongIds={addedSongIds}
-        onToggle={toggleSong}
-      />
-      <AddVerseModal
-        visible={addVerseOpen}
-        onClose={() => setAddVerseOpen(false)}
-        onAdd={addVerse}
-      />
     </Screen>
-  )
+  }
+
+  if (notFound) return message(t('builder.notFound'))
+  if (loadFailed) return message(t('builder.loadFailed'), true)
+
+  const edited = timeAgo(updatedAt, (key, options) => t(`common:${key}`, options), i18n.language)
+  const pane = <>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('builder.backToSetlists')}
+        onPress={() => router.back()} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+        <SymbolIcon name="chevron.left" size={17} color={theme.colors.textAccent} weight="semibold" />
+        <Text style={{ color: theme.colors.textAccent, fontSize: 16 }}>{t('builder.back')}</Text>
+      </Pressable>
+      <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+        <HeaderIconButton icon="ellipsis" label={t('builder.setlistOptions')} onPress={() => setOptionsOpen(true)} />
+        <HeaderIconButton icon="square.and.arrow.up" iconSize={22} label={t('export:exportAndShare')}
+          onPress={() => setShareOpen(true)} />
+      </View>
+    </View>
+
+    {loading ? <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator color={theme.colors.accent} /></View>
+      : <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+        <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg }}>
+          {renaming ? <View style={{ gap: theme.spacing.sm }}>
+            <Text style={{ ...theme.typography.overline, color: theme.colors.sec }}>{t('builder.setName')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', height: 46, paddingHorizontal: 12,
+              borderWidth: 1.5, borderColor: theme.colors.accent, borderRadius: theme.radii.md }}>
+              <TextInput ref={nameInput} value={draftName} onChangeText={setDraftName} autoFocus
+                selectTextOnFocus returnKeyType="done" onSubmitEditing={finishRename}
+                accessibilityLabel={t('builder.setName')}
+                style={{ flex: 1, color: theme.colors.ink, fontSize: 17, fontWeight: '600', padding: 0 }} />
+              <Pressable accessibilityRole="button" accessibilityLabel={t('builder.clearSetName')}
+                onPress={() => { setDraftName(''); nameInput.current?.focus() }} hitSlop={8}>
+                <SymbolIcon name="xmark.circle.fill" size={18} color={theme.colors.sec} />
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ color: theme.colors.sec }}>{formatSetSummary(summary)}</Text>
+              <Button title={t('common:done')} onPress={finishRename} fullWidth={false} style={{ height: 40 }} />
+            </View>
+          </View> : <Pressable accessibilityRole="button" accessibilityLabel={t('builder.renameSet')} onPress={beginRename}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+              <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: 22, fontWeight: '700', flexShrink: 1 }}>{name}</Text>
+              <SymbolIcon name="pencil" size={15} color={theme.colors.sec} />
+            </View>
+            <Text style={{ color: theme.colors.sec, marginTop: 6 }}>{formatSetSummary(summary)}</Text>
+            {edited && <Text style={{ color: theme.colors.sec, marginTop: 2 }}>{t('builder.lastEdited', { time: edited })}</Text>}
+          </Pressable>}
+        </Card>
+        {error && <Text style={{ color: theme.colors.danger, marginBottom: theme.spacing.sm }}>{t(error)}</Text>}
+        {items.length
+          ? <SetlistTimeline items={items} effectiveKeys={keys} callbacks={timelineActions} />
+          : <View style={{ alignItems: 'center', paddingVertical: theme.spacing.xxl, gap: 4 }}>
+              <Text style={{ color: theme.colors.ink, fontWeight: '600' }}>{t('builder.noSongs')}</Text>
+              <Text style={{ color: theme.colors.sec }}>
+                {tablet ? t('builder.addHintTablet') : t('builder.addHintPhone')}
+              </Text>
+            </View>}
+      </ScrollView>}
+
+    <View style={{ flexDirection: 'row', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.sm }}>
+      {!tablet && <Pressable accessibilityRole="button" accessibilityLabel={t('builder.addSongs')}
+        onPress={() => setAddSongsOpen(true)} style={{ height: 48, paddingHorizontal: theme.spacing.lg,
+          borderRadius: theme.radii.md, backgroundColor: theme.colors.surfaceAlt,
+          flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <SymbolIcon name="plus" size={16} color={theme.colors.ink} weight="semibold" />
+        <Text style={{ color: theme.colors.ink, fontWeight: '600' }}>{t('builder.add')}</Text>
+      </Pressable>}
+      <Pressable accessibilityRole="button" accessibilityLabel={t('verse.add')}
+        onPress={() => setAddVerseOpen(true)} style={{ height: 48, paddingHorizontal: theme.spacing.lg,
+          borderRadius: theme.radii.md, backgroundColor: theme.colors.surfaceAlt,
+          flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <SymbolIcon name="book.closed" size={16} color={theme.colors.ink} weight="semibold" />
+        <Text style={{ color: theme.colors.ink, fontWeight: '600' }}>{t('verse.add')}</Text>
+      </Pressable>
+      <Button title={t('builder.startSet')} onPress={() => router.push(`/perform/${setlistId}`)}
+        disabled={!items.length} style={{ flex: 1 }} fullWidth={false} />
+    </View>
+    {notice && <View style={{ position: 'absolute', bottom: 84, alignSelf: 'center',
+      backgroundColor: theme.colors.ink, borderRadius: theme.radii.pill,
+      paddingHorizontal: theme.spacing.lg, paddingVertical: 10 }}>
+      <Text style={{ color: theme.colors.bg }}>{notice}</Text>
+    </View>}
+  </>
+
+  return <Screen edges={['top', 'left', 'right', 'bottom']}>
+    {tablet ? <View style={{ flex: 1, flexDirection: 'row' }}>
+      <View style={{ flex: theme.layout.split.list, borderRightWidth: 1, borderRightColor: theme.colors.border }}>
+        <LibraryPane songs={songs} addedSongIds={songIds} onToggle={toggleSong} loading={songsLoading} />
+      </View>
+      <View style={{ flex: theme.layout.split.detail }}>{pane}</View>
+    </View> : pane}
+    <KeyPickerSheet visible={keyIndex != null} onClose={() => setKeyIndex(null)}
+      songTitle={keyIndex != null ? items[keyIndex]?.song.title ?? null : null}
+      currentKey={keyIndex != null ? keys[keyIndex] ?? null : null}
+      nativeKey={keyIndex != null ? items[keyIndex]?.song.default_key ?? null : null}
+      hasOverride={keyIndex != null ? items[keyIndex]?.toKey != null : false}
+      onPick={(key) => { const entryKey = keyIndex != null ? items[keyIndex]?.entryKey : null;
+        if (entryKey) setKeyFor(entryKey, key) }} />
+    <SetOptionsSheet visible={optionsOpen} onClose={() => setOptionsOpen(false)}
+      onRename={beginRename} onSavedSets={() => router.navigate('/setlists')}
+      onNewSet={createAnother} onDeleteSet={confirmDelete} />
+    <ShareSetSheet visible={shareOpen} onClose={() => setShareOpen(false)}
+      songCount={items.length} onExport={sharePdf} onCopyLink={copyLink} />
+    <AddSongsModal visible={addSongsOpen} onClose={() => setAddSongsOpen(false)}
+      songs={songs} addedSongIds={songIds} onToggle={toggleSong} />
+    <AddVerseModal visible={addVerseOpen} onClose={() => setAddVerseOpen(false)} onAdd={addVerse} />
+  </Screen>
 }

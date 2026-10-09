@@ -94,6 +94,9 @@ struct LintLocatorTests {
         #expect(LintLocator.lineRanges(in: "a\r\nb").count == 2)
         let crlf = LintLocator.lineRanges(in: "a\r\nb")
         #expect(("a\r\nb" as NSString).substring(with: crlf[0]) == "a")
+        // Core only splits on LF; a standalone CR remains inside one source line.
+        #expect(LintLocator.lineRanges(in: "a\rb").count == 1)
+        #expect(("a\rb" as NSString).substring(with: LintLocator.lineRanges(in: "a\rb")[0]) == "a\rb")
     }
 
     @Test("a section_mismatch warning goes straight to its line")
@@ -138,6 +141,25 @@ struct LintLocatorTests {
         let warning = LintWarning(code: LintWarning.sectionMismatch, message: "m", sectionIndex: nil, lineIndex: 999)
         #expect(LintLocator.bodyLine(for: warning, in: Self.body, sectionCount: 2) == nil)
     }
+
+    @Test("short and long directives preserve section ordinal")
+    func directiveVariants() {
+        let body = """
+          {sov: 1}
+        [G]one
+        {eov}
+        {start_of_chorus: Main}
+        [C]two
+        """
+        #expect(LintLocator.sectionOpenerLines(in: body) == [0, 3])
+        let warning = LintWarning(
+            code: "warn:unknown_chord",
+            message: "m",
+            sectionIndex: 1,
+            lineIndex: 0
+        )
+        #expect(LintLocator.bodyLine(for: warning, in: body, sectionCount: 2) == 3)
+    }
 }
 
 @Suite("Editor lint wiring")
@@ -181,5 +203,76 @@ struct SongEditorLintTests {
         #expect(model.jump(to: mismatch))
         let selected = try #require(model.selection)
         #expect((model.form.chordproContent as NSString).substring(with: selected) == "{end_of_chorus}")
+    }
+}
+
+@Suite("Runtime wire contracts")
+struct RuntimeWireContractTests {
+    @Test("bridge edit selections are UTF-16 ranges")
+    func editSelectionValidation() throws {
+        let valid = Data(#"{"value":"a🎵b","selection":{"start":3,"end":4}}"#.utf8)
+        let edit = try JSONDecoder().decode(ChordProEdit.self, from: valid)
+        #expect(edit.selection.range == NSRange(location: 3, length: 1))
+
+        let invalid = Data(#"{"value":"a🎵b","selection":{"start":0,"end":5}}"#.utf8)
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(ChordProEdit.self, from: invalid)
+        }
+    }
+
+    @Test("song chord positions use UTF-16 offsets")
+    func songPositionValidation() throws {
+        let valid = Data(
+            #"{"meta":{},"sections":[{"kind":"verse","lines":[{"lyrics":"a🎵b","chords":[{"sym":"G","index":3}]}]}]}"#.utf8
+        )
+        let song = try JSONDecoder().decode(SongDoc.self, from: valid)
+        #expect(song.sections[0].lines[0].chords[0].index == 3)
+
+        let invalid = Data(
+            #"{"meta":{},"sections":[{"kind":"verse","lines":[{"lyrics":"a🎵b","chords":[{"sym":"G","index":5}]}]}]}"#.utf8
+        )
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(SongDoc.self, from: invalid)
+        }
+    }
+
+    @Test("song payload keeps PostgREST column names and insert-only fields")
+    func songPayloadEncoding() throws {
+        var form = SongForm()
+        form.title = "  Amazing Grace  "
+        form.defaultKey = " G "
+        form.chordproContent = "Verse\n[G]Grace"
+        form.tags = ["Hymn"]
+
+        let insert = SongWritePayload(
+            form: form,
+            slug: "amazing-grace",
+            isInsert: true,
+            now: "2026-10-07T12:00:00.000Z"
+        )
+        let object = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(insert)) as? [String: Any]
+        )
+        #expect(object["default_key"] as? String == "G")
+        #expect(object["chordpro_content"] as? String == "Verse\n[G]Grace")
+        #expect(object["status"] as? String == "draft")
+        #expect(object["created_at"] as? String == "2026-10-07T12:00:00.000Z")
+
+        let update = SongWritePayload(form: form, slug: "amazing-grace", isInsert: false)
+        let updated = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(update)) as? [String: Any]
+        )
+        #expect(updated["status"] == nil)
+        #expect(updated["created_at"] == nil)
+    }
+
+    @Test("export filenames support quoted and UTF-8 forms")
+    func exportFilenameParsing() {
+        #expect(ExportService.filename(fromContentDisposition: #"attachment; filename="song.pdf""#) == "song.pdf")
+        #expect(
+            ExportService.filename(
+                fromContentDisposition: "attachment; filename*=UTF-8''Canci%C3%B3n.pdf"
+            ) == "Canción.pdf"
+        )
     }
 }

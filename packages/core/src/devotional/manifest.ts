@@ -10,7 +10,9 @@ export const DEVOTIONAL_SCHEMA = 1
 /** How often the device bothers checking the manifest. Once a day is plenty. */
 export const SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000
 
-const MONTH_KEYS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+const MONTH_KEYS = Object.freeze(
+  Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')),
+)
 
 /** Every valid month key, `"01"`–`"12"`. */
 export function monthKeys(): string[] {
@@ -19,6 +21,15 @@ export function monthKeys(): string[] {
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   Boolean(v) && typeof v === 'object' && !Array.isArray(v)
+
+function parseManifestMonth(value: unknown): ManifestMonth | null {
+  if (!isObj(value)) return null
+  const file = typeof value.file === 'string' ? value.file : ''
+  const hash = typeof value.hash === 'string' ? value.hash : ''
+  if (!file || !hash) return null
+  const bytes = Number(value.bytes)
+  return { file, hash, bytes: Number.isFinite(bytes) ? bytes : 0 }
+}
 
 /**
  * Validate an untrusted manifest payload.
@@ -36,16 +47,13 @@ export function parseManifest(payload: unknown): Manifest | null {
   const contentVersion = typeof payload.contentVersion === 'string' ? payload.contentVersion : ''
   if (!contentVersion) return null
 
-  const months: Record<string, ManifestMonth> = {}
-  for (const key of MONTH_KEYS) {
-    const raw = payload.months[key]
-    if (!isObj(raw)) continue
-    const file = typeof raw.file === 'string' ? raw.file : ''
-    const hash = typeof raw.hash === 'string' ? raw.hash : ''
-    const bytes = Number(raw.bytes)
-    if (!file || !hash) continue
-    months[key] = { file, hash, bytes: Number.isFinite(bytes) ? bytes : 0 }
-  }
+  const rawMonths = payload.months
+  const months = Object.fromEntries(
+    MONTH_KEYS.flatMap((key) => {
+      const month = parseManifestMonth(rawMonths[key])
+      return month ? [[key, month]] : []
+    }),
+  ) as Record<string, ManifestMonth>
   if (!Object.keys(months).length) return null
   return {
     schemaVersion,
@@ -74,13 +82,13 @@ export function emptySyncState(): SyncState {
 export function parseSyncState(payload: unknown): SyncState {
   if (!isObj(payload)) return emptySyncState()
   const lastCheckedAt = Number(payload.lastCheckedAt)
-  const hashes: Record<string, string> = {}
-  if (isObj(payload.hashes)) {
-    for (const key of MONTH_KEYS) {
-      const h = payload.hashes[key]
-      if (typeof h === 'string' && h) hashes[key] = h
-    }
-  }
+  const source = isObj(payload.hashes) ? payload.hashes : {}
+  const hashes = Object.fromEntries(
+    MONTH_KEYS.flatMap((key) => {
+      const hash = source[key]
+      return typeof hash === 'string' && hash ? [[key, hash]] : []
+    }),
+  )
   return { lastCheckedAt: Number.isFinite(lastCheckedAt) ? lastCheckedAt : 0, hashes }
 }
 
@@ -101,11 +109,9 @@ export function shouldCheck(state: SyncState, now: number): boolean {
  * changes nothing costs no downloads.
  */
 export function staleMonths(manifest: Manifest, state: SyncState): string[] {
-  return MONTH_KEYS.filter((key) => {
-    const entry = manifest.months[key]
-    if (!entry) return false
-    return state.hashes[key] !== entry.hash
-  })
+  return MONTH_KEYS.filter(
+    (key) => manifest.months[key] && state.hashes[key] !== manifest.months[key].hash,
+  )
 }
 
 /** Record a month as cached at the given hash. Returns a new state. */

@@ -54,7 +54,7 @@ describe('draftsStore', () => {
     await hydrateDrafts(storage)
     upsertDraft({ id: 'd1', form, status: 'draft', updatedAt: '' })
     flushDrafts()
-    expect(storage.store.has('gc.songdrafts.v1')).toBe(true)
+    expect(storage.store.has('lvm.songdrafts.v1')).toBe(true)
 
     // Simulate a relaunch: reset module state, re-hydrate from the same storage.
     __resetDraftsForTest()

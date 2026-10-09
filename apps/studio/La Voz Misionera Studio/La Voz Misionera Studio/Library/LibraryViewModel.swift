@@ -31,6 +31,8 @@ final class LibraryViewModel: ObservableObject {
 
     private let repository: SongsRepository
     private var hasLoaded = false
+    /// Identifies the newest refresh so a slower, older request cannot overwrite it.
+    private var loadGeneration = 0
 
     init(repository: SongsRepository) {
         self.repository = repository
@@ -38,7 +40,8 @@ final class LibraryViewModel: ObservableObject {
 
     /// Every tag present in the catalog, sorted — the filter list's contents.
     var availableTags: [String] {
-        Set(songs.flatMap { $0.tags ?? [] }).sorted()
+        Set(songs.flatMap { $0.tags ?? [] })
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     /// Every tag, most-used first, ties broken alphabetically.
@@ -66,9 +69,7 @@ final class LibraryViewModel: ObservableObject {
     /// of operations.
     private var tagFiltered: [SongListItem] {
         guard !selectedTags.isEmpty else { return songs }
-        return songs.filter { song in
-            (song.tags ?? []).contains { selectedTags.contains($0) }
-        }
+        return songs.filter { !selectedTags.isDisjoint(with: $0.tags ?? []) }
     }
 
     /// Whether any filter or non-default sort is active, for the toolbar accent.
@@ -124,7 +125,7 @@ final class LibraryViewModel: ObservableObject {
     /// Artist is deliberately not searched — mobile does not search it either,
     /// despite what its search placeholder says.
     var results: [SongListItem] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmed = Self.normalizedSearch(query)
         guard !trimmed.isEmpty else { return tagFiltered }
 
         return tagFiltered
@@ -145,22 +146,26 @@ final class LibraryViewModel: ObservableObject {
     }
 
     func load() async {
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
         errorText = nil
+        sessionExpired = false
+
         do {
-            songs = try await repository.fetchSongList()
+            let fetched = try await repository.fetchSongList()
+            guard generation == loadGeneration else { return }
+            songs = fetched
             hasLoaded = true
-            // A selection that is no longer in the catalog would leave the viewer
-            // pointing at nothing.
-            if let selected = selectedSlug, !songs.contains(where: { $0.slug == selected }) {
-                selectedSlug = nil
-            }
+            reconcileSelection()
         } catch SongsRepositoryError.sessionExpired {
+            guard generation == loadGeneration else { return }
             sessionExpired = true
         } catch {
+            guard generation == loadGeneration else { return }
             errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
         }
-        isLoading = false
+        if generation == loadGeneration { isLoading = false }
     }
 
     // MARK: - Local mutations
@@ -172,6 +177,7 @@ final class LibraryViewModel: ObservableObject {
     /// row that comes back is the row the database actually wrote, so this cannot
     /// drift from the server the way an optimistic guess could.
     func upsert(_ saved: SongEditable) {
+        let previous = songs.first { $0.id == saved.id }
         let item = SongListItem(
             id: saved.id,
             slug: saved.slug,
@@ -185,13 +191,16 @@ final class LibraryViewModel: ObservableObject {
             // whatever the existing row had so a save cannot reorder the
             // "recently added" sort; a newly inserted row legitimately has none
             // loaded yet and sorts as unknown until the next full load.
-            createdAt: songs.first(where: { $0.id == saved.id })?.createdAt,
+            createdAt: previous?.createdAt,
             status: saved.status
         )
-        if let index = songs.firstIndex(where: { $0.id == saved.id }) {
+        if let index = songs.firstIndex(where: { $0.id == item.id }) {
             songs[index] = item
         } else {
             songs.append(item)
+        }
+        if selectedSlug == previous?.slug, previous?.slug != item.slug {
+            selectedSlug = item.slug
         }
         // Sections and search recompute from `songs`, so re-sorting here is not
         // needed for display — but keeping the array title-ordered matches what a
@@ -209,8 +218,21 @@ final class LibraryViewModel: ObservableObject {
     }
 
     private static func matchRank(_ song: SongListItem, query: String) -> Int? {
-        if song.title.lowercased().contains(query) { return 0 }
-        for tag in song.tags ?? [] where tag.lowercased().contains(query) { return 1 }
+        if normalizedSearch(song.title).contains(query) { return 0 }
+        for tag in song.tags ?? [] where normalizedSearch(tag).contains(query) { return 1 }
         return nil
+    }
+
+    private func reconcileSelection() {
+        guard let selectedSlug else { return }
+        if !songs.contains(where: { $0.slug == selectedSlug }) {
+            self.selectedSlug = nil
+        }
+    }
+
+    private static func normalizedSearch(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 }

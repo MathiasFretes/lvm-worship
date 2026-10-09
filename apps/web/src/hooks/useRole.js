@@ -3,7 +3,7 @@ import { useAuth } from './useAuth'
 
 // Role hierarchy: user < editor < admin < owner
 
-const ACTIONS = {
+const ACTIONS = Object.freeze({
   suggest:         'user',
   directSave:      'editor',
   suggestDeletion: 'user',
@@ -11,7 +11,7 @@ const ACTIONS = {
   review:          'editor',
   viewAuditLog:    'admin',
   deletePptx:      'admin',
-}
+})
 
 /**
  * Returns { role, isAtLeast, can }
@@ -33,7 +33,7 @@ export function useRole() {
 
   const can = useCallback(
     (action) => {
-      const required = ACTIONS[action]
+      const required = ACTIONS[String(action || '')]
       if (!required) return false
       return hasMinRole(required)
     },

@@ -6,7 +6,7 @@ import { formatKeyPair } from '../keyDisplay'
 const tx = (key: string, options?: Record<string, unknown>) =>
   options ? `${key}(${JSON.stringify(options)})` : key
 
-describe('formatKeyPair', () => {
+describe.each([{ product: 'LVM' }])('$product · formatKeyPair', () => {
   it('shows the song key alone when nothing is transposed', () => {
     const result = formatKeyPair('C', null, tx)
     expect(result?.text).toBe('C')

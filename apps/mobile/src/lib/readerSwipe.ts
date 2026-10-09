@@ -23,10 +23,20 @@ export const END_MAX = 44
 export const FLICK_VELOCITY = 900
 export const FLICK_MIN_FRACTION = 0.5
 
+function clamp(value: number, lower: number, upper: number): number {
+  'worklet'
+  return Math.max(lower, Math.min(upper, value))
+}
+
+function signedMagnitude(value: number, magnitude: number): number {
+  'worklet'
+  return value < 0 ? -magnitude : magnitude
+}
+
 /** How far the page must travel for a release to change chapter. */
 export function swipeThreshold(width: number): number {
   'worklet'
-  return Math.min(THRESHOLD_MAX, Math.max(THRESHOLD_MIN, width * THRESHOLD_FRACTION))
+  return clamp(width * THRESHOLD_FRACTION, THRESHOLD_MIN, THRESHOLD_MAX)
 }
 
 /**
@@ -51,12 +61,13 @@ export function isForwardDrag(raw: number, rtl: boolean): boolean {
 export function dragTravel(raw: number, threshold: number, hasNeighbour: boolean): number {
   'worklet'
   const magnitude = Math.abs(raw)
-  const sign = raw < 0 ? -1 : 1
-  if (!hasNeighbour) return sign * Math.min(END_MAX, magnitude * END_RATE)
+  if (!hasNeighbour) {
+    return signedMagnitude(raw, Math.min(END_MAX, magnitude * END_RATE))
+  }
   if (magnitude <= threshold) return raw
-  return (
-    sign *
-    Math.min(threshold + OVERDRAG_MAX, threshold + (magnitude - threshold) * OVERDRAG_RATE)
+  return signedMagnitude(
+    raw,
+    Math.min(threshold + OVERDRAG_MAX, threshold + (magnitude - threshold) * OVERDRAG_RATE),
   )
 }
 
@@ -67,13 +78,16 @@ export function dragTravel(raw: number, threshold: number, hasNeighbour: boolean
  */
 export function shouldCommitSwipe(travelled: number, velocityX: number, threshold: number): boolean {
   'worklet'
-  if (travelled >= threshold) return true
-  return Math.abs(velocityX) > FLICK_VELOCITY && travelled > threshold * FLICK_MIN_FRACTION
+  const crossedDetent = travelled >= threshold
+  const intentionalFlick =
+    Math.abs(velocityX) > FLICK_VELOCITY &&
+    travelled > threshold * FLICK_MIN_FRACTION
+  return crossedDetent || intentionalFlick
 }
 
 /** 0 → 1 as the page approaches the commit threshold (drives the edge chevron). */
 export function swipeProgress(travelled: number, threshold: number): number {
   'worklet'
-  if (travelled <= 0) return 0
-  return Math.min(1, travelled / threshold)
+  if (threshold <= 0) return travelled > 0 ? 1 : 0
+  return clamp(travelled / threshold, 0, 1)
 }

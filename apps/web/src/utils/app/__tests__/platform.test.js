@@ -40,65 +40,35 @@ afterEach(() => {
   delete document.ontouchend
 })
 
-describe('isIOS', () => {
-  it('detects iPhone', () => {
-    stubClient({ ua: IPHONE_SAFARI })
-    expect(isIOS()).toBe(true)
-  })
-
-  it('detects an iPad reporting the desktop Macintosh UA', () => {
-    stubClient({ ua: IPAD_DESKTOP_UA, touchPoints: 5, touchEvents: true })
-    expect(isIOS()).toBe(true)
-  })
-
-  it('does not mistake desktop Safari on macOS for an iPad', () => {
-    // Same UA string as the iPad case — maxTouchPoints is the only thing that
-    // separates them, so this pins the check that ontouchend alone would miss.
-    stubClient({ ua: MAC_SAFARI, touchPoints: 0, touchEvents: true })
-    expect(isIOS()).toBe(false)
-  })
-
-  it('is false on Android and desktop Chrome', () => {
-    stubClient({ ua: ANDROID_CHROME })
-    expect(isIOS()).toBe(false)
-    expect(isAndroid()).toBe(true)
-  })
-})
-
-describe('isIOSSafari', () => {
-  it('is true for Safari on iPhone', () => {
-    stubClient({ ua: IPHONE_SAFARI })
-    expect(isIOSSafari()).toBe(true)
+describe('LVM web platform behavior', () => {
+  it.each([
+    ['iPhone Safari', { ua: IPHONE_SAFARI }, true, false],
+    ['iPad desktop mode', { ua: IPAD_DESKTOP_UA, touchPoints: 5, touchEvents: true }, true, false],
+    ['macOS Safari', { ua: MAC_SAFARI, touchPoints: 0, touchEvents: true }, false, false],
+    ['Android Chrome', { ua: ANDROID_CHROME }, false, true],
+    ['desktop Chrome', { ua: DESKTOP_CHROME }, false, false],
+  ])('classifies %s for mobile handoff', (_name, client, ios, android) => {
+    stubClient(client)
+    expect({ ios: isIOS(), android: isAndroid() }).toEqual({ ios, android })
   })
 
   it.each([
-    ['Chrome', IPHONE_CHROME],
-    ['Firefox', IPHONE_FIREFOX],
-    ['a Facebook webview', IPHONE_FACEBOOK_WEBVIEW],
-  ])('is false for %s on iOS', (_label, ua) => {
+    ['Safari', IPHONE_SAFARI, true],
+    ['Chrome', IPHONE_CHROME, false],
+    ['Firefox', IPHONE_FIREFOX, false],
+    ['Facebook webview', IPHONE_FACEBOOK_WEBVIEW, false],
+    ['desktop Chrome', DESKTOP_CHROME, false],
+  ])('identifies %s as iOS Safari: %s', (_name, ua, expected) => {
     stubClient({ ua })
-    expect(isIOSSafari()).toBe(false)
+    expect(isIOSSafari()).toBe(expected)
   })
 
-  it('is false off iOS entirely', () => {
-    stubClient({ ua: DESKTOP_CHROME })
-    expect(isIOSSafari()).toBe(false)
-  })
-})
-
-describe('isNativeAppBannerActive', () => {
-  it('is true in iOS Safari, where the Smart App Banner renders', () => {
-    stubClient({ ua: IPHONE_SAFARI })
-    expect(isNativeAppBannerActive()).toBe(true)
-  })
-
-  it('is false in an installed home-screen PWA — Safari suppresses the banner there', () => {
-    stubClient({ ua: IPHONE_SAFARI, standalone: true })
-    expect(isNativeAppBannerActive()).toBe(false)
-  })
-
-  it('is false in Chrome on iOS, which never shows the native banner', () => {
-    stubClient({ ua: IPHONE_CHROME })
-    expect(isNativeAppBannerActive()).toBe(false)
+  it.each([
+    ['browser Safari', IPHONE_SAFARI, undefined, true],
+    ['installed LVM PWA', IPHONE_SAFARI, true, false],
+    ['iOS Chrome', IPHONE_CHROME, undefined, false],
+  ])('shows the native-app banner for %s: %s', (_name, ua, standalone, expected) => {
+    stubClient({ ua, standalone })
+    expect(isNativeAppBannerActive()).toBe(expected)
   })
 })

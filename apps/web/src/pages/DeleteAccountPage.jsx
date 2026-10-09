@@ -6,7 +6,7 @@ import deleteAccountMarkdown from '../content/delete-account.md?raw'
 import '../styles/posts.css'
 
 // Renders the public Delete Account instructions at /delete-account from the
-// markdown source in src/content/. Same marked → DOMPurify → .gc-prose pipeline
+// markdown source in src/content/. Same marked → DOMPurify → .lvm-prose pipeline
 // as PrivacyPage/TermsPage. This URL is referenced by the Google Play store
 // listing, so it must stay publicly reachable without signing in. Edit the .md
 // to update.
@@ -17,13 +17,13 @@ export default function DeleteAccountPage() {
   )
 
   return (
-    <div className="container gc-post-detail">
+    <div className="container lvm-post-detail">
       <Helmet>
         <title>Delete Your Account · La Voz Misionera</title>
         <meta name="description" content="How to delete your La Voz Misionera account and the data that is removed." />
       </Helmet>
       <div
-        className="gc-post-detail__content gc-prose"
+        className="lvm-post-detail__content lvm-prose"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

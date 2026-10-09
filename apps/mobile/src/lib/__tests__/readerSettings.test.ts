@@ -33,7 +33,7 @@ function memoryStorage(seed: Record<string, string> = {}) {
   return store
 }
 
-const KEY = 'gc.reader.settings.v1'
+const KEY = 'lvm.reader.settings.v1'
 
 beforeEach(() => {
   __resetReaderSettingsForTest()
@@ -68,6 +68,13 @@ describe('parseReaderSettings', () => {
 })
 
 describe('reader settings store', () => {
+  it('uses defaults without writing when the LVM key is absent', async () => {
+    const store = memoryStorage()
+    await hydrateReaderSettings(store)
+    expect(getReaderSettings()).toStrictEqual(defaultReaderSettings)
+    expect(store.writes).toStrictEqual([])
+  })
+
   it('restores a stored choice, so the reader reopens the way it was left', async () => {
     const store = memoryStorage({
       [KEY]: JSON.stringify({ pt: 18, typeface: 'sans', layout: 'prose', lineSpacing: 'relaxed' }),

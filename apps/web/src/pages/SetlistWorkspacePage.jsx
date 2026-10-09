@@ -28,10 +28,10 @@ import { Button, Toolbar } from '../components/ui/layout-kit'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import { ListIcon, MediaIcon, PlusIcon, SearchIcon } from '../components/Icons'
-import SetlistsRail from '../features/setlist/SetlistsRail'
-import LibraryRail from '../features/setlist/LibraryRail'
-import SetHeader from '../features/setlist/SetHeader'
-import SetTable from '../features/setlist/SetTable'
+import LvmSetlistsRail from '../features/setlist/LvmSetlistsRail'
+import LvmSongPicker from '../features/setlist/LvmSongPicker'
+import LvmSetlistEditor from '../features/setlist/LvmSetlistEditor'
+import '../features/setlist/lvm-setlist.css'
 import SetActions from '../features/setlist/SetActions'
 import AddVerseDialog from '../features/setlist/AddVerseDialog'
 import PruneSetlistsModal from '../features/setlist/PruneSetlistsModal'
@@ -112,13 +112,24 @@ export default function SetlistWorkspacePage() {
   const { id: routeId, songIds: routeSongIds, code: routeCode } = useParams()
   const [searchParams] = useSearchParams()
   const location = useLocation()
+  const serviceReturnTo = useMemo(() => {
+    const candidate = searchParams.get('returnTo')
+    if (!candidate) return ''
+    try {
+      const url = new URL(candidate)
+      if (!['127.0.0.1', 'localhost'].includes(url.hostname) || !['http:', 'https:'].includes(url.protocol)) return ''
+      return url.toString()
+    } catch {
+      return ''
+    }
+  }, [searchParams])
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   const chordStyle = useChordStyle()
   const isMobile = useIsMobile()
 
   const controller = useController(routeId)
-  const { items, catalog, songs, songsLoading } = controller
+  const { items, catalog, songs, songsLoading, songsError, retrySongs } = controller
   const sectionLabels = useMemo(() => {
     const labels = {}
     for (const song of songs) {
@@ -504,6 +515,7 @@ export default function SetlistWorkspacePage() {
     try {
       const plan = buildWorshipPlanFromSetlist({ context: worshipContext, items, songs })
       downloadJson(plan, `${plan.serviceId}-worship-plan.json`)
+      showToast(t('setlist.planDownloaded'))
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'No se pudo exportar el repertorio')
     }
@@ -548,26 +560,39 @@ export default function SetlistWorkspacePage() {
   const noSelection = !routeId && location.pathname === '/setlists'
 
   const centre = (
-    <div className="gc-set-main">
+    <div className="lvm-set-main">
+      {!routeId && worshipContext && (
+        <div className="lvm-service-handoff" role="status">
+          <div>
+            <strong>{t('setlist.preparingForService', { name: worshipContext.title })}</strong>
+            <span>{t('setlist.finishForService')}</span>
+          </div>
+          {serviceReturnTo && (
+            <a href={serviceReturnTo} rel="noopener noreferrer">
+              {t('setlist.returnToService')}
+            </a>
+          )}
+        </div>
+      )}
       {controller.loadFailed ? (
-        <div className="gc-set-notice">
-          <h1 className="gc-set-heading">{t('setlist.title')}</h1>
+        <div className="lvm-set-notice">
+          <h1 className="lvm-set-heading">{t('setlist.title')}</h1>
           <p>{t('setlist.failedLoad')}</p>
           <Button variant="primary" onClick={controller.retryLoad}>
             {t('setlist.retry')}
           </Button>
         </div>
       ) : controller.notFound ? (
-        <div className="gc-set-notice">
-          <h1 className="gc-set-heading">{t('setlist.title')}</h1>
+        <div className="lvm-set-notice">
+          <h1 className="lvm-set-heading">{t('setlist.title')}</h1>
           <p>{t('setlist.setNotFound')}</p>
           <Button as={Link} to="/setlists" variant="secondary">
             {t('setlist.backToSets')}
           </Button>
         </div>
       ) : noSelection ? (
-        <div className="gc-set-notice">
-          <h1 className="gc-set-heading">{t('setlist.title')}</h1>
+        <div className="lvm-set-notice">
+          <h1 className="lvm-set-heading">{t('setlist.title')}</h1>
           <p>{t('setlist.pickASet')}</p>
           <Button variant="primary" iconLeft={<PlusIcon />} onClick={onCreate}>
             {t('setlist.newSet')}
@@ -575,10 +600,11 @@ export default function SetlistWorkspacePage() {
         </div>
       ) : (
         <>
-          <SetHeader
+          <LvmSetlistEditor
             name={controller.name}
             items={items}
-            updatedAt={controller.updatedAt}
+            selectedKey={selectedKey}
+            onSelect={setSelectedKey}
             saving={controller.saving}
             saveFailed={controller.saveFailed}
             persisted={!!routeId}
@@ -587,40 +613,22 @@ export default function SetlistWorkspacePage() {
               controller.setName(next)
               if (routeId) lists.rename(routeId, next)
             }}
+            onMoveBy={moveBy}
+            onRemove={controller.removeEntry}
+            onDuplicate={controller.duplicateEntry}
+            onKeyChange={controller.setKeyFor}
+            onArrangementChange={!routeId ? controller.setSectionOrderFor : undefined}
+            sectionLabels={sectionLabels}
+            onAddVerse={() => setVerseOpen(true)}
+            onShortcuts={() => setShortcutsOpen(true)}
           />
-          <div className="gc-set-scroll">
-            <SetTable
-              items={items}
-              selectedKey={selectedKey}
-              onSelect={setSelectedKey}
-              onMove={controller.moveEntry}
-              onMoveBy={moveBy}
-              onRemove={controller.removeEntry}
-              onDuplicate={controller.duplicateEntry}
-              onKeyChange={controller.setKeyFor}
-              onArrangementChange={!routeId ? controller.setSectionOrderFor : undefined}
-              sectionLabels={sectionLabels}
-            />
-            <div className="gc-set-footer-actions">
-              <Button size="sm" variant="secondary" onClick={() => setVerseOpen(true)}>
-                {t('setlist.addVerse')}
-              </Button>
-              <button
-                type="button"
-                className="gc-linkbtn"
-                onClick={() => setShortcutsOpen(true)}
-              >
-                {t('setlist.shortcutsHint')}
-              </button>
-            </div>
-          </div>
         </>
       )}
     </div>
   )
 
   const setlistsRail = (
-    <SetlistsRail
+    <LvmSetlistsRail
       setlists={lists.setlists}
       loading={lists.loading}
       error={lists.error}
@@ -667,9 +675,11 @@ export default function SetlistWorkspacePage() {
   )
 
   const libraryRail = (
-    <LibraryRail
+    <LvmSongPicker
       catalog={catalog}
       songsLoading={songsLoading}
+      songsError={songsError}
+      onRetrySongs={retrySongs}
       query={query}
       onQuery={setQuery}
       communityOnly={communityOnly}
@@ -680,14 +690,14 @@ export default function SetlistWorkspacePage() {
         writeSongLanguagePreference(code)
       }}
       selectedIds={selectedIds}
-      onToggle={controller.toggleSong}
+      onAdd={controller.addSong}
       searchRef={searchRef}
     />
   )
 
   return (
     <PageContainer className="is-setlist-workspace">
-      <Toolbar className="gc-set-bar">
+      <Toolbar className="lvm-set-bar">
         {!isMobile ? (
           <Button
             size="sm"
@@ -701,7 +711,7 @@ export default function SetlistWorkspacePage() {
         ) : null}
         {/* apps/web/AGENTS.md: on mobile the export actions belong in the sheet,
             not as individual buttons in the bar. */}
-        {!isMobile ? <div className="gc-set-bar-actions">{actions}</div> : null}
+        {!isMobile ? <div className="lvm-set-bar-actions">{actions}</div> : null}
         {!isMobile ? (
           <Button
             size="sm"
@@ -714,7 +724,7 @@ export default function SetlistWorkspacePage() {
           />
         ) : null}
         {isMobile ? (
-          <div className="gc-set-bar-actions">
+          <div className="lvm-set-bar-actions">
             <Button
               variant="primary"
               size="sm"
@@ -733,7 +743,7 @@ export default function SetlistWorkspacePage() {
       </Toolbar>
 
       {legacySets.length > 0 ? (
-        <div className="gc-draft-banner">
+        <div className="lvm-draft-banner">
           <strong>{t('setlist.legacyTitle', { count: legacySets.length })}</strong>
           {isLoggedIn ? null : <span>{t('setlist.legacySignedOut')}</span>}
           {isLoggedIn ? (
@@ -755,7 +765,7 @@ export default function SetlistWorkspacePage() {
       ) : null}
 
       {!routeId && !isLoggedIn ? (
-        <div className="gc-draft-banner">
+        <div className="lvm-draft-banner">
           <strong>{t('setlist.draftTitle')}</strong>
           <span>{t('setlist.draftBody')}</span>
           <Button size="sm" variant="primary" onClick={onSaveDraft}>
@@ -764,10 +774,10 @@ export default function SetlistWorkspacePage() {
         </div>
       ) : null}
       {!routeId && worshipContext ? (
-        <div className="gc-draft-banner">
+        <div className="lvm-draft-banner">
           <strong>{worshipContext.title}</strong>
           <span>{t('setlist.platformRepertoire')} · {new Date(worshipContext.startsAt).toLocaleString(i18n.language)}</span>
-          <label className="gc-btn gc-btn--secondary gc-btn--sm">
+          <label className="lvm-btn lvm-btn--secondary lvm-btn--sm">
             {t('setlist.addLocalChordPro')}
             <input type="file" accept=".chordpro,.cho,.pro,.txt,text/plain" multiple hidden onChange={(event) => {
               if (event.target.files?.length) void onImportLocalSongs(event.target.files)
@@ -777,7 +787,7 @@ export default function SetlistWorkspacePage() {
         </div>
       ) : null}
       {!routeId && isLoggedIn && items.length > 0 ? (
-        <div className="gc-draft-banner">
+        <div className="lvm-draft-banner">
           <strong>{t('setlist.draftTitle')}</strong>
           <Button size="sm" variant="primary" onClick={onSaveDraft}>
             {t('setlist.saveToMySetlists')}
@@ -797,20 +807,20 @@ export default function SetlistWorkspacePage() {
 
       <div
         className={[
-          'gc-set-workspace',
+          'lvm-set-workspace',
           railsHidden.setlists ? 'is-setlists-hidden' : '',
           railsHidden.library ? 'is-library-hidden' : '',
         ]
           .filter(Boolean)
           .join(' ')}
       >
-        <div className="gc-set-col gc-set-col--left" hidden={isMobile && mobileTab !== 'saved'}>
+        <div className="lvm-set-col lvm-set-col--left" hidden={isMobile && mobileTab !== 'saved'}>
           {setlistsRail}
         </div>
-        <div className="gc-set-col gc-set-col--mid" hidden={isMobile && mobileTab !== 'current'}>
+        <div className="lvm-set-col lvm-set-col--mid" hidden={isMobile && mobileTab !== 'current'}>
           {centre}
         </div>
-        <div className="gc-set-col gc-set-col--right" hidden={isMobile && mobileTab !== 'add'}>
+        <div className="lvm-set-col lvm-set-col--right" hidden={isMobile && mobileTab !== 'add'}>
           {libraryRail}
         </div>
       </div>
@@ -847,7 +857,7 @@ export default function SetlistWorkspacePage() {
         onClose={() => setMobileActionsOpen(false)}
         title={t('setlist.actionsTitle')}
       >
-        <div className="gc-mobile-actions">{actions}</div>
+        <div className="lvm-mobile-actions">{actions}</div>
       </MobileActionSheet>
     </PageContainer>
   )

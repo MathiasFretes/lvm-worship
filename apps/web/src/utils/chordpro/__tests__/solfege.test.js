@@ -1,62 +1,40 @@
 import { describe, it, expect } from 'vitest'
 import { symToSolfege, formatChord, formatKeyDisplay, rootToSolfege } from '../solfege'
 
-describe('rootToSolfege', () => {
-  it('maps naturals (Turkish convention)', () => {
-    expect(rootToSolfege('C')).toBe('Do')
-    expect(rootToSolfege('D')).toBe('Re')
-    expect(rootToSolfege('E')).toBe('Mi')
-    expect(rootToSolfege('F')).toBe('Fa')
-    expect(rootToSolfege('G')).toBe('Sol')
-    expect(rootToSolfege('A')).toBe('La')
-    expect(rootToSolfege('B')).toBe('Si')
+describe('LVM chord notation preferences', () => {
+  it.each([
+    ['C', 'Do'], ['D', 'Re'], ['E', 'Mi'], ['F', 'Fa'],
+    ['G', 'Sol'], ['A', 'La'], ['B', 'Si'],
+    ['C#', 'Do#'], ['Bb', 'Sib'], ['F#', 'Fa#'], ['Eb', 'Mib'],
+  ])('maps root %s to %s without losing accidentals', (root, display) => {
+    expect(rootToSolfege(root)).toBe(display)
   })
-  it('preserves accidentals', () => {
-    expect(rootToSolfege('C#')).toBe('Do#')
-    expect(rootToSolfege('Bb')).toBe('Sib')
-    expect(rootToSolfege('F#')).toBe('Fa#')
-    expect(rootToSolfege('Eb')).toBe('Mib')
-  })
-})
 
-describe('symToSolfege', () => {
-  it('preserves chord qualities and extensions', () => {
-    expect(symToSolfege('Am')).toBe('Lam')
-    expect(symToSolfege('Dsus4')).toBe('Resus4')
-    expect(symToSolfege('Gmaj7')).toBe('Solmaj7')
-    expect(symToSolfege('F#m7')).toBe('Fa#m7')
-    expect(symToSolfege('Ebmaj7')).toBe('Mibmaj7')
-    expect(symToSolfege('C7')).toBe('Do7')
+  it.each([
+    ['Am', 'Lam'], ['Dsus4', 'Resus4'], ['Gmaj7', 'Solmaj7'],
+    ['F#m7', 'Fa#m7'], ['Ebmaj7', 'Mibmaj7'], ['C7', 'Do7'],
+    ['G/B', 'Sol/Si'], ['C/E', 'Do/Mi'], ['Bb/D', 'Sib/Re'], ['F#m/A', 'Fa#m/La'],
+    ['', ''], ['N.C.', 'N.C.'],
+  ])('renders chart symbol %j as %j', (symbol, display) => {
+    expect(symToSolfege(symbol)).toBe(display)
   })
-  it('handles slash chords', () => {
-    expect(symToSolfege('G/B')).toBe('Sol/Si')
-    expect(symToSolfege('C/E')).toBe('Do/Mi')
-    expect(symToSolfege('Bb/D')).toBe('Sib/Re')
-    expect(symToSolfege('F#m/A')).toBe('Fa#m/La')
-  })
-  it('passes through unknown tokens unchanged', () => {
-    expect(symToSolfege('')).toBe('')
-    expect(symToSolfege('N.C.')).toBe('N.C.')
-  })
-})
 
-describe('formatChord', () => {
-  it('passes through letters when style=letters or omitted', () => {
-    expect(formatChord('Em')).toBe('Em')
-    expect(formatChord('C/G', { style: 'letters' })).toBe('C/G')
+  it.each([
+    ['Em', undefined, 'Em'],
+    ['C/G', { style: 'letters' }, 'C/G'],
+    ['Em', { style: 'solfege' }, 'Mim'],
+    ['G/B', { style: 'solfege' }, 'Sol/Si'],
+    ['Bb', { style: 'solfege' }, 'Sib'],
+  ])('honors the musician preference for %s', (symbol, options, display) => {
+    expect(formatChord(symbol, options)).toBe(display)
   })
-  it('produces solfège when style=solfege', () => {
-    expect(formatChord('Em', { style: 'solfege' })).toBe('Mim')
-    expect(formatChord('G/B', { style: 'solfege' })).toBe('Sol/Si')
-    expect(formatChord('Bb', { style: 'solfege' })).toBe('Sib')
-  })
-})
 
-describe('formatKeyDisplay', () => {
-  it('formats keys with solfège style', () => {
-    expect(formatKeyDisplay('G', 'solfege')).toBe('Sol')
-    expect(formatKeyDisplay('Em', 'solfege')).toBe('Mim')
-    expect(formatKeyDisplay('Bb', 'solfege')).toBe('Sib')
-    expect(formatKeyDisplay('G', 'letters')).toBe('G')
+  it.each([
+    ['G', 'solfege', 'Sol'],
+    ['Em', 'solfege', 'Mim'],
+    ['Bb', 'solfege', 'Sib'],
+    ['G', 'letters', 'G'],
+  ])('formats song key %s in %s notation', (key, style, display) => {
+    expect(formatKeyDisplay(key, style)).toBe(display)
   })
 })

@@ -21,8 +21,8 @@ export function openDay(): DayEntry {
  */
 export function selectDay(month: MonthFile | null | undefined, dayKey: string): DayEntry | null {
   if (!month) return null
-  if (monthOfDayKey(dayKey) !== String(month.month).padStart(2, '0')) return null
-  return month.days?.[dayKey] ?? null
+  const belongsToMonth = monthOfDayKey(dayKey) === String(month.month).padStart(2, '0')
+  return belongsToMonth ? month.days?.[dayKey] ?? null : null
 }
 
 /**
@@ -36,8 +36,7 @@ export function selectDayForDate(month: MonthFile | null | undefined, date: Date
 
 /** One devotional from a day by slug. Slugs are unique within a day. */
 export function selectDevotional(day: DayEntry | null | undefined, slug: string): Devotional | null {
-  if (!day) return null
-  return day.devotionals.find((d) => d.slug === slug) ?? null
+  return findDevotional(day, (devotional) => devotional.slug === slug)
 }
 
 /**
@@ -46,5 +45,12 @@ export function selectDevotional(day: DayEntry | null | undefined, slug: string)
  */
 export function siblingDevotional(day: DayEntry | null | undefined, slug: string): Devotional | null {
   if (!day || day.devotionals.length < 2) return null
-  return day.devotionals.find((d) => d.slug !== slug) ?? null
+  return findDevotional(day, (devotional) => devotional.slug !== slug)
+}
+
+function findDevotional(
+  day: DayEntry | null | undefined,
+  matches: (devotional: Devotional) => boolean,
+): Devotional | null {
+  return day?.devotionals.find(matches) ?? null
 }

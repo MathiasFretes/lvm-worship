@@ -98,7 +98,7 @@ const sos = entries.filter((e) => e.name.endsWith('.so'))
 if (!sos.length) {
   pass('no bundled native libraries')
 } else {
-  const dir = mkdtempSync(join(tmpdir(), 'gc-aab-'))
+  const dir = mkdtempSync(join(tmpdir(), 'lvm-aab-'))
   try {
     execFileSync('unzip', ['-qq', '-o', artifact, '*.so', '-d', dir])
     const walk = (d) =>

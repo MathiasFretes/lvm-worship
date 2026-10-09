@@ -23,6 +23,27 @@ describe('validateSongForm', () => {
     const errors = validateSongForm({ title: 'A', default_key: 'G', tags: ['hymn'] })
     expect(hasFormErrors(errors)).toBe(false)
   })
+
+  it('matches web validation for blank tags, tempo, and YouTube input', () => {
+    expect(validateSongForm({
+      title: 'A',
+      default_key: 'G',
+      tags: ['  '],
+      tempo: 12,
+      youtube_id: 'not a video',
+    })).toMatchObject({
+      tags: expect.any(String),
+      tempo: expect.any(String),
+      youtube_id: expect.any(String),
+    })
+    expect(validateSongForm({
+      title: 'A',
+      default_key: 'G',
+      tags: ['hymn'],
+      tempo: 120,
+      youtube_id: 'https://youtu.be/dQw4w9WgXcQ',
+    })).toEqual({})
+  })
 })
 
 describe('formToSongRow', () => {

@@ -45,6 +45,10 @@ export type ChartAutoFit = {
   paddingTop: number
 }
 
+function usableHeight(area: number, reserved: number): number {
+  return Math.max(0, area - reserved)
+}
+
 export function useChartAutoFit({
   chartAreaH,
   headerH,
@@ -57,7 +61,7 @@ export function useChartAutoFit({
   const contentWidth = Math.max(0, width - horizontalPadding * 2)
   const maxColumns = maxColumnsFor(Math.min(width, height), contentWidth, columnGap)
   const preferred = useColumns()
-  const columns = Math.min(preferred, maxColumns) as ColumnCount
+  const columns: ColumnCount = preferred <= maxColumns ? preferred : maxColumns
 
   // Auto-fit owns the size until the user touches A−/A+, after which their
   // choice sticks for the rest of the session — including across songs in a
@@ -81,8 +85,8 @@ export function useChartAutoFit({
     fontAuto: manualScale == null,
     onFontScale: setManualScale,
     onPlan,
-    viewportHeight: Math.max(0, chartAreaH - headerH - topGap),
-    viewportHeightChromeHidden: Math.max(0, chartAreaH - topGap),
+    viewportHeight: usableHeight(chartAreaH, headerH + topGap),
+    viewportHeightChromeHidden: usableHeight(chartAreaH, topGap),
     paddingTop,
   }
 }

@@ -153,7 +153,7 @@ export default function ProfilePage() {
   if (loading || !profile) {
     return (
       <div className="container">
-        <p style={{ padding: '32px 0', color: 'var(--gc-text-secondary)' }}>Loading…</p>
+        <p style={{ padding: '32px 0', color: 'var(--lvm-text-secondary)' }}>Loading…</p>
       </div>
     )
   }
@@ -166,20 +166,20 @@ export default function ProfilePage() {
       <Helmet><title>Profile – La Voz Misionera</title></Helmet>
 
       {/* Profile header */}
-      <div className="gc-profile-header">
+      <div className="lvm-profile-header">
         <SpriteAvatar sprite={currentSprite} size="lg" />
         <div>
           <h1 style={{ margin: 0 }}>{profile.display_name || 'Your Profile'}</h1>
-          <p style={{ margin: '4px 0 0', color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
+          <p style={{ margin: '4px 0 0', color: 'var(--lvm-text-secondary)', fontSize: 'var(--lvm-font-sub)' }}>
             {session.user.email}
           </p>
         </div>
       </div>
 
       {/* Identity section */}
-      <section className="gc-profile-section">
+      <section className="lvm-profile-section">
         <h2>Identity</h2>
-        <div className="gc-form-field">
+        <div className="lvm-form-field">
           <label htmlFor="displayName">Display name</label>
           <input
             id="displayName"
@@ -188,16 +188,16 @@ export default function ProfilePage() {
             onChange={e => setDisplayName(e.target.value)}
           />
         </div>
-        <div className="gc-form-field">
+        <div className="lvm-form-field">
           <label>Email</label>
           <input type="email" value={session.user.email} disabled readOnly />
         </div>
-        <div className="gc-form-field">
+        <div className="lvm-form-field">
           <label>Your icon</label>
           <SpritePicker value={sprite} onChange={setSprite} />
         </div>
         <button
-          className="gc-btn gc-btn--primary"
+          className="lvm-btn lvm-btn--primary"
           onClick={saveProfile}
           disabled={saving}
           style={{ width: 'fit-content' }}
@@ -207,39 +207,39 @@ export default function ProfilePage() {
       </section>
 
       {/* Preferences section */}
-      <section className="gc-profile-section">
+      <section className="lvm-profile-section">
         <h2>{t('preferences')}</h2>
-        <div className="gc-form-field">
+        <div className="lvm-form-field">
           <label htmlFor="ui-language">{t('uiLanguage')}</label>
           <LanguageSelector id="ui-language" style={{ maxWidth: 240 }} />
-          <p style={{ fontSize: 13, color: 'var(--gc-text-secondary)', marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: 'var(--lvm-text-secondary)', marginTop: 4 }}>
             {t('uiLanguageHelper')}
           </p>
         </div>
       </section>
 
       {/* Starred songs section */}
-      <section className="gc-profile-section">
+      <section className="lvm-profile-section">
         <h2>Starred Songs</h2>
         {starsLoading ? (
-          <p style={{ color: 'var(--gc-text-secondary)' }}>Loading…</p>
+          <p style={{ color: 'var(--lvm-text-secondary)' }}>Loading…</p>
         ) : starredItems.length === 0 ? (
-          <p style={{ color: 'var(--gc-text-secondary)' }}>
+          <p style={{ color: 'var(--lvm-text-secondary)' }}>
             No starred songs yet. Star songs from the song page to find them here.
           </p>
         ) : (
-          <div className="gc-starred-list">
+          <div className="lvm-starred-list">
             {starredItems.map(item => {
               const { song_id, songs: song } = item
               return (
-                <div key={song_id} className="gc-starred-row">
-                  <Link to={`/songs/${song?.slug || song_id}`} className="gc-starred-row__info">
-                    <span className="gc-starred-row__title">{song?.title || song_id}</span>
-                    {song?.default_key && <span className="gc-starred-row__key">{song.default_key}</span>}
-                    {song?.artist && <span className="gc-starred-row__artist">{song.artist}</span>}
+                <div key={song_id} className="lvm-starred-row">
+                  <Link to={`/songs/${song?.slug || song_id}`} className="lvm-starred-row__info">
+                    <span className="lvm-starred-row__title">{song?.title || song_id}</span>
+                    {song?.default_key && <span className="lvm-starred-row__key">{song.default_key}</span>}
+                    {song?.artist && <span className="lvm-starred-row__artist">{song.artist}</span>}
                   </Link>
                   <button
-                    className="gc-btn gc-btn--ghost gc-btn--sm"
+                    className="lvm-btn lvm-btn--ghost lvm-btn--sm"
                     onClick={() => unstarSong(song_id)}
                     aria-label={`Unstar ${song?.title || song_id}`}
                   >
@@ -253,37 +253,37 @@ export default function ProfilePage() {
       </section>
 
       {/* Account section */}
-      <section className="gc-profile-section">
+      <section className="lvm-profile-section">
         <h2>Account</h2>
         {roleBadge && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <div className="gc-role-badge">
+            <div className="lvm-role-badge">
               {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
             </div>
             {isAdmin && (
-              <Link to="/admin" className="gc-btn gc-btn--ghost gc-btn--sm">
+              <Link to="/admin" className="lvm-btn lvm-btn--ghost lvm-btn--sm">
                 Admin Portal →
               </Link>
             )}
           </div>
         )}
         <button
-          className="gc-btn gc-btn--ghost"
+          className="lvm-btn lvm-btn--ghost"
           onClick={signOut}
           style={{ width: 'fit-content', marginTop: 8 }}
         >
           Sign out
         </button>
 
-        <div className="gc-danger-zone">
+        <div className="lvm-danger-zone">
           <div>
-            <p className="gc-danger-zone__label">Delete account</p>
-            <p className="gc-danger-zone__description">
+            <p className="lvm-danger-zone__label">Delete account</p>
+            <p className="lvm-danger-zone__description">
               Permanently remove your account and all associated data. This cannot be undone.
             </p>
           </div>
           <button
-            className="gc-btn gc-btn--danger"
+            className="lvm-btn lvm-btn--danger"
             onClick={() => { setDeletePassword(''); setDeleteConfirmText(''); setDeleteError(''); setShowDeleteModal(true) }}
             style={{ width: 'fit-content', flexShrink: 0 }}
           >
@@ -294,15 +294,15 @@ export default function ProfilePage() {
 
       {/* Delete account modal */}
       {showDeleteModal && (
-        <div className="gc-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="gc-modal" onClick={e => e.stopPropagation()}>
+        <div className="lvm-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <div className="lvm-modal" onClick={e => e.stopPropagation()}>
             <h2>Delete account</h2>
-            <p style={{ margin: 0, color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
+            <p style={{ margin: 0, color: 'var(--lvm-text-secondary)', fontSize: 'var(--lvm-font-sub)' }}>
               This will permanently delete your account and all your data, including starred songs,
-              setlists and reflections. <strong style={{ color: 'var(--gc-danger)' }}>This cannot be undone.</strong>
+              setlists and reflections. <strong style={{ color: 'var(--lvm-danger)' }}>This cannot be undone.</strong>
             </p>
             {hasPasswordLogin ? (
-              <div className="gc-form-field">
+              <div className="lvm-form-field">
                 <label htmlFor="deletePassword">Confirm your password</label>
                 <input
                   id="deletePassword"
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                 />
               </div>
             ) : (
-              <div className="gc-form-field">
+              <div className="lvm-form-field">
                 <label htmlFor="deleteConfirmText">Type DELETE to confirm</label>
                 <input
                   id="deleteConfirmText"
@@ -329,11 +329,11 @@ export default function ProfilePage() {
               </div>
             )}
             {deleteError && (
-              <p className="gc-auth-error" style={{ margin: 0 }}>{deleteError}</p>
+              <p className="lvm-auth-error" style={{ margin: 0 }}>{deleteError}</p>
             )}
             <div style={{ display: 'flex', gap: 8 }}>
               <button
-                className="gc-btn gc-btn--danger"
+                className="lvm-btn lvm-btn--danger"
                 onClick={deleteAccount}
                 disabled={
                   deleting ||
@@ -345,7 +345,7 @@ export default function ProfilePage() {
                 {deleting ? 'Deleting…' : 'Delete my account'}
               </button>
               <button
-                className="gc-btn gc-btn--ghost"
+                className="lvm-btn lvm-btn--ghost"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
               >

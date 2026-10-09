@@ -5,7 +5,5 @@
 // treated as fresh so working offline copies are never force-re-downloaded.
 
 export function isTranslationStale(localVersion: string, remoteVersion: string): boolean {
-  if (!remoteVersion) return false
-  if (!localVersion) return false
-  return localVersion !== remoteVersion
+  return Boolean(localVersion && remoteVersion && localVersion !== remoteVersion)
 }

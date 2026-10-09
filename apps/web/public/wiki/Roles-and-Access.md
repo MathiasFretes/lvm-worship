@@ -5,7 +5,7 @@ La Voz Misionera uses a four-level role system to control who can view, edit, an
 | Role | Description |
 |------|-------------|
 | **user** | Default for all signed-in accounts. Can star songs, use personal features, create personal songs, and submit songs for review. |
-| **editor** | Can add/edit songs and blog posts directly, approve/reject song suggestions, and request deletions. Access to the Editor Portal (`/editor`). |
+| **editor** | Can add/edit songs directly, approve/reject song suggestions, and request deletions. Access to the Editor Portal (`/editor`). |
 | **admin** | Full site management — all editor permissions plus deleting content, promoting users up to editor, and access to the Admin Portal (`/admin`). |
 | **owner** | Unrestricted access. Can promote users to admin and delete accounts. There is exactly one owner, and the role cannot be granted through the app — see below. |
 
@@ -16,10 +16,10 @@ La Voz Misionera uses a four-level role system to control who can view, edit, an
 | View public site | ✓ | ✓ | ✓ | ✓ |
 | Star songs / personal features | ✓ | ✓ | ✓ | ✓ |
 | Create personal songs & submit for review | ✓ | ✓ | ✓ | ✓ |
-| Add/edit songs & posts directly | | ✓ | ✓ | ✓ |
+| Add/edit songs directly | | ✓ | ✓ | ✓ |
 | Approve/reject suggestions | | ✓ | ✓ | ✓ |
 | Request deletion | | ✓ | ✓ | ✓ |
-| Delete songs & posts | | | ✓ | ✓ |
+| Delete songs | | | ✓ | ✓ |
 | Promote users to Editor | | | ✓ | ✓ |
 | Promote users to Admin | | | | ✓ |
 | Promote anyone to Owner | | | | |

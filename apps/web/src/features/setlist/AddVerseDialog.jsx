@@ -146,28 +146,28 @@ export default function AddVerseDialog({ open, onClose, onAdd, verseCache }) {
   }
 
   return (
-    <div className="gc-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gc-verse-title">
-      <div className="gc-modal gc-verse-modal">
-        <h2 id="gc-verse-title">{t('setlist.addVerseTitle')}</h2>
+    <div className="lvm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lvm-verse-title">
+      <div className="lvm-modal lvm-verse-modal">
+        <h2 id="lvm-verse-title">{t('setlist.addVerseTitle')}</h2>
 
-        <div className="gc-verse-grid">
-          <label className="gc-label" htmlFor="gc-verse-input">
+        <div className="lvm-verse-grid">
+          <label className="lvm-label" htmlFor="lvm-verse-input">
             {t('setlist.bibleVerse')}
           </label>
-          <label className="gc-label" htmlFor="gc-verse-translation">
+          <label className="lvm-label" htmlFor="lvm-verse-translation">
             {t('setlist.translation')}
           </label>
 
-          <div className="gc-verse-field">
+          <div className="lvm-verse-field">
             {completion ? (
-              <div className="gc-verse-ghost" aria-hidden="true">
-                <span className="gc-verse-ghost-typed">{input}</span>
-                <span className="gc-verse-ghost-rest">{completion.remainder}</span>
+              <div className="lvm-verse-ghost" aria-hidden="true">
+                <span className="lvm-verse-ghost-typed">{input}</span>
+                <span className="lvm-verse-ghost-rest">{completion.remainder}</span>
               </div>
             ) : null}
             <input
-              id="gc-verse-input"
-              className="gc-input"
+              id="lvm-verse-input"
+              className="lvm-input"
               value={input}
               placeholder={t('setlist.versePlaceholder')}
               autoFocus
@@ -191,7 +191,7 @@ export default function AddVerseDialog({ open, onClose, onAdd, verseCache }) {
           </div>
 
           <BibleTranslationPicker
-            id="gc-verse-translation"
+            id="lvm-verse-translation"
             groups={buildBibleTranslationGroups(translations)}
             value={translation}
             ariaLabel={t('setlist.translationAria')}
@@ -203,9 +203,9 @@ export default function AddVerseDialog({ open, onClose, onAdd, verseCache }) {
           />
         </div>
 
-        {error ? <p className="gc-verse-error">{error}</p> : null}
+        {error ? <p className="lvm-verse-error">{error}</p> : null}
 
-        <div className="gc-modal-actions">
+        <div className="lvm-modal-actions">
           <Button variant="secondary" onClick={onClose}>
             {t('setlist.cancel')}
           </Button>

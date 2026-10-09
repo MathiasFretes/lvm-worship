@@ -25,12 +25,14 @@
 // both inside a single app run. Persisting it would mean a link tapped and
 // abandoned today could reopen itself on an unrelated launch next week.
 
-let inbound: string | null = null
-let held: string | null = null
+const pendingRoute = {
+  inbound: null as string | null,
+  held: null as string | null,
+}
 
 /** Record an externally-opened link's resolved target. */
 export function noteInboundLink(target: string): void {
-  inbound = target
+  pendingRoute.inbound = target
 }
 
 /**
@@ -38,24 +40,24 @@ export function noteInboundLink(target: string): void {
  * favour of /login, so that only a destination the user actually lost is kept.
  */
 export function holdInboundLink(): void {
-  held = inbound
-  inbound = null
+  pendingRoute.held = pendingRoute.inbound
+  pendingRoute.inbound = null
 }
 
 /** Drop a link the gate did not need to discard. */
 export function clearInboundLink(): void {
-  inbound = null
+  pendingRoute.inbound = null
 }
 
 /** Read and clear the held destination. Consumed once, then gone. */
 export function takeHeldLink(): string | null {
-  const target = held
-  held = null
+  const target = pendingRoute.held
+  pendingRoute.held = null
   return target
 }
 
 /** Test-only reset so each test starts from a clean module state. */
 export function __resetPendingRouteForTest(): void {
-  inbound = null
-  held = null
+  pendingRoute.inbound = null
+  pendingRoute.held = null
 }

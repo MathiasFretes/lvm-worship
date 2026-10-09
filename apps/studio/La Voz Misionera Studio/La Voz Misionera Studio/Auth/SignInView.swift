@@ -15,17 +15,17 @@ struct SignInView: View {
     @State private var password = ""
 
     var body: some View {
-        VStack(spacing: GCSpacing.lg) {
-            VStack(spacing: GCSpacing.xs) {
+        VStack(spacing: LVMSpacing.lg) {
+            VStack(spacing: LVMSpacing.xs) {
                 Text("La Voz Misionera Studio")
-                    .gcTextStyle(.largeTitle)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.largeTitle)
+                    .foregroundStyle(LVMColor.ink)
                 Text("Sign in with your La Voz Misionera account")
-                    .gcTextStyle(.body)
-                    .foregroundStyle(GCColor.sec)
+                    .lvmTextStyle(.body)
+                    .foregroundStyle(LVMColor.sec)
             }
 
-            VStack(spacing: GCSpacing.sm) {
+            VStack(spacing: LVMSpacing.sm) {
                 TextField("Email", text: $email)
                     .textContentType(.username)
                     .disableAutocorrection(true)
@@ -37,8 +37,8 @@ struct SignInView: View {
 
             if let errorText = auth.errorText {
                 Text(errorText)
-                    .gcTextStyle(.body)
-                    .foregroundStyle(GCColor.danger)
+                    .lvmTextStyle(.body)
+                    .foregroundStyle(LVMColor.danger)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -56,8 +56,8 @@ struct SignInView: View {
         // MaxWidth.form is the token cap the mobile auth screen uses; the window's
         // 420pt floor means it rarely binds, but it keeps the column from
         // stretching when the sign-in view is shown in a resized window.
-        .frame(maxWidth: GCLayout.MaxWidth.form)
-        .padding(GCSpacing.xxl)
+        .frame(maxWidth: LVMLayout.MaxWidth.form)
+        .padding(LVMSpacing.xxl)
         .frame(minWidth: 420, minHeight: 320)
     }
 

@@ -7,8 +7,7 @@ import {
 } from '../viewerPrefs'
 import type { KVStorage as KV } from '../defaults'
 
-const KEY = 'gc.viewer.columns.v2'
-const LEGACY_KEY = 'gc.viewer.columnMode.v1'
+const KEY = 'lvm.viewer.columns.v2'
 
 function memoryStorage(initial: Record<string, string> = {}): KV & { store: Map<string, string> } {
   const store = new Map(Object.entries(initial))
@@ -28,7 +27,7 @@ beforeEach(() => {
   __resetViewerPrefsForTest()
 })
 
-describe('viewerPrefs column ceiling', () => {
+describe.each([{ product: 'LVM' }])('$product · viewerPrefs column ceiling', () => {
   it('defaults to a single column when nothing is stored', async () => {
     await hydrateViewerPrefs(memoryStorage())
     expect(getColumns()).toBe(1)
@@ -76,38 +75,5 @@ describe('viewerPrefs column ceiling', () => {
     __resetViewerPrefsForTest()
     await hydrateViewerPrefs(memoryStorage({ [KEY]: JSON.stringify({ columns: 7 }) }))
     expect(getColumns()).toBe(1)
-  })
-})
-
-describe('viewerPrefs v1 → v2 migration', () => {
-  it("carries over v1's app-wide default and removes the old key", async () => {
-    const s = memoryStorage({
-      [LEGACY_KEY]: JSON.stringify({ default: 'double', songs: { 'song-a': 'single' } }),
-    })
-    await hydrateViewerPrefs(s)
-    await flush()
-
-    expect(getColumns()).toBe(2)
-    expect(s.store.has(LEGACY_KEY)).toBe(false)
-    expect(JSON.parse(s.store.get(KEY)!)).toEqual({ columns: 2 })
-  })
-
-  it('drops v1 per-song overrides rather than picking one', async () => {
-    const s = memoryStorage({
-      [LEGACY_KEY]: JSON.stringify({ songs: { 'song-a': 'double', 'song-b': 'double' } }),
-    })
-    await hydrateViewerPrefs(s)
-    // v1 had no app-wide default here, so the result is the v2 default — the
-    // per-song 'double' entries do NOT get promoted.
-    expect(getColumns()).toBe(1)
-  })
-
-  it('prefers an existing v2 value over a stale v1 payload', async () => {
-    const s = memoryStorage({
-      [KEY]: JSON.stringify({ columns: 3 }),
-      [LEGACY_KEY]: JSON.stringify({ default: 'single' }),
-    })
-    await hydrateViewerPrefs(s)
-    expect(getColumns()).toBe(3)
   })
 })

@@ -9,14 +9,14 @@ export default function PageHeader({
   ...rest
 }){
   return (
-    <header className={`gc-page-header ${className}`.trim()} {...rest}>
-      <div className="gc-page-header__main">
-        <div className="gc-page-header__text">
-          {title ? <h1 className="gc-page-header__title">{title}</h1> : null}
-          {subtitle ? <p className="gc-page-header__subtitle">{subtitle}</p> : null}
+    <header className={`lvm-page-header ${className}`.trim()} {...rest}>
+      <div className="lvm-page-header__main">
+        <div className="lvm-page-header__text">
+          {title ? <h1 className="lvm-page-header__title">{title}</h1> : null}
+          {subtitle ? <p className="lvm-page-header__subtitle">{subtitle}</p> : null}
           {children}
         </div>
-        {actions ? <div className="gc-page-header__actions">{actions}</div> : null}
+        {actions ? <div className="lvm-page-header__actions">{actions}</div> : null}
       </div>
     </header>
   )

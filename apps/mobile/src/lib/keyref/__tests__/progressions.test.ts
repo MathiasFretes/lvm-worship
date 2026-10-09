@@ -50,6 +50,12 @@ describe('progression sets', () => {
     expect(progressionById(DEFAULT_PROGRESSION_ID)).not.toBeNull()
   })
 
+  it('returns the canonical object used by its set', () => {
+    const first = GENERAL_PROGRESSIONS[0]
+    expect(progressionById(first.id)).toBe(first)
+    expect(flatChords(first)).toHaveLength(4)
+  })
+
   it('resolves an unknown id to null rather than throwing', () => {
     expect(progressionById('nope')).toBeNull()
     expect(progressionById(null)).toBeNull()

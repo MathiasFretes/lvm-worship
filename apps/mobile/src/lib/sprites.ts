@@ -5,12 +5,30 @@ import type { ImageSourcePropType } from 'react-native'
 // (users.preferences.sprite) is shared with the web app. Duplicated here
 // because mobile cannot import from apps/web.
 export const SPRITE_IDS = [
-  'acoustic', 'bible', 'boba', 'charlie', 'drums', 'elec',
-  'heart', 'keys', 'lamb', 'lion', 'mic',
-  'notes', 'shepherd', 'star', 'thomas',
+  'acoustic',
+  'bible',
+  'boba',
+  'charlie',
+  'drums',
+  'elec',
+  'heart',
+  'keys',
+  'lamb',
+  'lion',
+  'mic',
+  'notes',
+  'shepherd',
+  'star',
+  'thomas',
 ] as const
 
 export type SpriteId = (typeof SPRITE_IDS)[number]
+
+const SPRITE_ID_SET: ReadonlySet<string> = new Set(SPRITE_IDS)
+
+export function isSpriteId(value: unknown): value is SpriteId {
+  return typeof value === 'string' && SPRITE_ID_SET.has(value)
+}
 
 // WebP, generated from the same public/sprites sources the web app serves —
 // see assets/README.md. These must only ever be rendered through `expo-image`,

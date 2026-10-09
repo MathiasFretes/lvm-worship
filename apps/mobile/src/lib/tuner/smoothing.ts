@@ -17,23 +17,27 @@ export interface CentsSmoother {
 }
 
 export function createCentsSmoother(options: SmootherOptions = {}): CentsSmoother {
-  const medianWindow = options.medianWindow ?? 5
-  const emaAlpha = options.emaAlpha ?? 0.35
+  const medianWindow = Math.max(1, Math.floor(options.medianWindow ?? 5))
+  const emaAlpha = Math.max(0, Math.min(1, options.emaAlpha ?? 0.35))
   const history: number[] = []
-  let ema: number | null = null
+  let smoothed: number | undefined
+
+  const reset = () => {
+    history.splice(0)
+    smoothed = undefined
+  }
 
   return {
     push(cents: number): number {
       history.push(cents)
-      if (history.length > medianWindow) history.shift()
+      if (history.length > medianWindow) history.splice(0, history.length - medianWindow)
       const sorted = [...history].sort((a, b) => a - b)
       const median = sorted[Math.floor(sorted.length / 2)]
-      ema = ema === null ? median : ema + emaAlpha * (median - ema)
-      return ema
+      smoothed = smoothed === undefined
+        ? median
+        : smoothed * (1 - emaAlpha) + median * emaAlpha
+      return smoothed
     },
-    reset() {
-      history.length = 0
-      ema = null
-    },
+    reset,
   }
 }

@@ -34,13 +34,13 @@ struct KeyPickerView: View {
     private var labels: [String] { accidental == .flat ? Self.flatKeys : Self.sharpKeys }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
+        VStack(alignment: .leading, spacing: LVMSpacing.md) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Play \(songTitle) in…")
-                    .gcTextStyle(.rowTitle)
-                    .foregroundStyle(GCColor.ink)
+                    .lvmTextStyle(.rowTitle)
+                    .foregroundStyle(LVMColor.ink)
                     .lineLimit(2)
-                Spacer(minLength: GCSpacing.sm)
+                Spacer(minLength: LVMSpacing.sm)
                 Picker("Accidentals", selection: Binding(get: { accidental }, set: onAccidental)) {
                     ForEach(Accidental.allCases, id: \.self) { candidate in
                         Text(candidate.glyph)
@@ -53,8 +53,8 @@ struct KeyPickerView: View {
                 .fixedSize()
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: GCSpacing.sm), count: 4),
-                      spacing: GCSpacing.sm) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: LVMSpacing.sm), count: 4),
+                      spacing: LVMSpacing.sm) {
                 ForEach(Array(Self.sharpKeys.enumerated()), id: \.offset) { index, sharpKey in
                     keyCell(sharpKey: sharpKey, label: labels[index])
                 }
@@ -69,7 +69,7 @@ struct KeyPickerView: View {
                 .accessibilityLabel("Reset to the original key")
             }
         }
-        .padding(GCSpacing.lg)
+        .padding(LVMSpacing.lg)
         .frame(width: 300)
     }
 
@@ -88,7 +88,7 @@ struct KeyPickerView: View {
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
-        .tint(selected ? GCColor.accent : nil)
+        .tint(selected ? LVMColor.accent : nil)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 

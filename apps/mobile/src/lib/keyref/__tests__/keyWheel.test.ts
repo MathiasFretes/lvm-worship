@@ -32,6 +32,11 @@ describe('the circle of fifths', () => {
     expect(keyAtOffset('C', -13)).toBe('F')
   })
 
+  it('normalizes offsets spanning many complete turns', () => {
+    expect(keyAtOffset('A', 12 * 20 + 2)).toBe('B')
+    expect(keyAtOffset('A', -12 * 20 - 2)).toBe('G')
+  })
+
   it('falls back to C for a key it does not know', () => {
     expect(keySlot('H')).toBe(0)
     expect(keyAtOffset('H', 1)).toBe('G')

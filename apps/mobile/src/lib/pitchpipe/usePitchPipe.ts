@@ -16,6 +16,16 @@ interface Voice {
   gain: GainNode
 }
 
+function configurePlaybackSession(): void {
+  AudioManager.setAudioSessionOptions({
+    iosCategory: 'playback',
+    iosMode: 'default',
+    iosOptions: ['mixWithOthers'],
+    iosAllowHaptics: true,
+  })
+  void AudioManager.setAudioSessionActivity(true).catch(() => {})
+}
+
 export interface ActiveNote {
   noteIndex: number
   octave: number
@@ -57,13 +67,7 @@ export function usePitchPipe(): PitchPipe {
 
   const play = useCallback(
     (noteIndex: number, octave: number) => {
-      AudioManager.setAudioSessionOptions({
-        iosCategory: 'playback',
-        iosMode: 'default',
-        iosOptions: ['mixWithOthers'],
-        iosAllowHaptics: true,
-      })
-      AudioManager.setAudioSessionActivity(true).catch(() => {})
+      configurePlaybackSession()
       let ctx = ctxRef.current
       if (!ctx) {
         ctx = new AudioContext()
@@ -72,16 +76,15 @@ export function usePitchPipe(): PitchPipe {
       if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
       releaseVoice()
       const now = ctx.currentTime
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(noteFrequency(noteIndex, octave), now)
-      gain.gain.setValueAtTime(0.0001, now)
-      gain.gain.exponentialRampToValueAtTime(LEVEL, now + ATTACK_S)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start(now)
-      voiceRef.current = { osc, gain }
+      const next: Voice = { osc: ctx.createOscillator(), gain: ctx.createGain() }
+      next.osc.type = 'sine'
+      next.osc.frequency.setValueAtTime(noteFrequency(noteIndex, octave), now)
+      next.gain.gain.setValueAtTime(0.0001, now)
+      next.gain.gain.exponentialRampToValueAtTime(LEVEL, now + ATTACK_S)
+      next.osc.connect(next.gain)
+      next.gain.connect(ctx.destination)
+      next.osc.start(now)
+      voiceRef.current = next
       setActiveNote({ noteIndex, octave })
     },
     [releaseVoice]

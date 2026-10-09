@@ -9,7 +9,7 @@ export default function SpriteAvatar({ sprite, size = 'md', className = '' }) {
   const px = SIZE_MAP[size] ?? SIZE_MAP.md
   return (
     <div
-      className={`gc-sprite-avatar gc-sprite-avatar--${size} ${className}`}
+      className={`lvm-sprite-avatar lvm-sprite-avatar--${size} ${className}`}
       style={{ width: px, height: px }}
       aria-hidden="true"
     >

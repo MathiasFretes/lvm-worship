@@ -5,7 +5,8 @@ export function splitTextRowsByWidth(text = '', width = 0, measure = () => 0) {
   if (!source.length) return [{ text: '', start: 0, end: 0 }]
 
   const rows = []
-  const safeWidth = Math.max(1, width)
+  const numericWidth = Number(width)
+  const safeWidth = Number.isFinite(numericWidth) ? Math.max(1, numericWidth) : 1
   let cursor = 0
 
   while (cursor < source.length) {
@@ -55,14 +56,16 @@ export function buildChordRowsLayout({
   spaceWidth = 0,
 }) {
   const rows = splitTextRowsByWidth(plain, width, measureLyric)
-  const normalizedChords = (chords || [])
+  const normalizedChords = (Array.isArray(chords) ? chords : [])
     .map((c) => ({
-      index: Math.max(0, Number(c?.index) || 0),
+      index: normalizeChordIndex(c?.index, plain.length),
       sym: String(c?.sym || ''),
     }))
+    .filter((c) => c.sym)
     .sort((a, b) => a.index - b.index)
 
-  const safeRowWidth = Math.max(0, width)
+  const numericWidth = Number(width)
+  const safeRowWidth = Number.isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
 
   return rows.map((row, i) => {
     const isLast = i === rows.length - 1
@@ -74,11 +77,11 @@ export function buildChordRowsLayout({
       const localIndex = Math.max(0, Math.min(row.text.length, c.index - row.start))
       const sym = transposeSym(c.sym)
       return {
-        sym,
-        x: measureLyric(row.text.slice(0, localIndex)),
-        w: measureChord(sym),
+        sym: String(sym || ''),
+        x: finiteMeasurement(measureLyric(row.text.slice(0, localIndex))),
+        w: finiteMeasurement(measureChord(sym)),
       }
-    })
+    }).filter((chord) => chord.sym)
 
     resolveChordCollisions(measured, spaceWidth)
     measured.sort((a, b) => a.x - b.x)
@@ -104,4 +107,16 @@ export function buildChordRowsLayout({
       })),
     }
   })
+}
+
+function normalizeChordIndex(value, textLength){
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return 0
+  const max = Math.max(0, Number(textLength) || 0)
+  return Math.min(Math.max(0, Math.trunc(parsed)), max)
+}
+
+function finiteMeasurement(value){
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0
 }

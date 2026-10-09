@@ -66,6 +66,11 @@ export type ArcBubbleProps = {
   reachable: boolean
 }
 
+function bubbleBorder(state: ArcBubbleState, altered: boolean): number {
+  if (state === 'active') return altered ? 3 : 2
+  return state === 'ringed' ? 2 : 1
+}
+
 export default function ArcBubble({
   ring,
   baseAngle,
@@ -102,7 +107,7 @@ export default function ArcBubble({
 
   const solid = state === 'active' && !altered
   const outlined = state === 'active' || state === 'ringed'
-  const border = solid ? 2 : altered && state === 'active' ? 3 : outlined ? 2 : 1
+  const border = bubbleBorder(state, altered)
 
   // The dial face is tinted (accentSoft), so an accentSoft bubble would vanish
   // into it — an altered chord takes the neutral recessed fill instead. Three
@@ -113,7 +118,7 @@ export default function ArcBubble({
       ? t.colors.surfaceAlt
       : t.colors.surface
   const borderColor = outlined ? t.colors.accent : t.colors.border
-  // White on Signal Blue is only ever semibold or heavier, per the brand rule.
+  // Keep selected text legible on the gold control fill.
   const nameColor = solid ? t.colors.onAccent : t.colors.ink
   const numberColor = solid
     ? t.colors.onAccent

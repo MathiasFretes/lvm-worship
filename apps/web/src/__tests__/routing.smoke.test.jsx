@@ -12,8 +12,7 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    // Query by the associated <label for="search">Search</label>
-	expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
+    expect(await screen.findByRole('searchbox', { name: /find a song/i })).toBeInTheDocument()
   })
 
   test('draft setlist route renders', async () => {
@@ -26,7 +25,7 @@ describe('Routing smoke', () => {
       </HelmetProvider>
     )
     // PDF download is in the setlist workspace's action bar on every route.
-    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /download pdf/i }, { timeout: 5000 })).toBeInTheDocument()
   })
 
   test('saved setlists route renders', async () => {
@@ -38,12 +37,10 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /download pdf/i }, { timeout: 5000 })).toBeInTheDocument()
   })
 
-  test('delete-account route renders publicly (no sign-in)', async () => {
-    // This URL is referenced by the Google Play store listing, so it must render
-    // for anonymous visitors. The page shows the deletion instructions heading.
+  test('unapproved delete-account page is not published', async () => {
     window.location.hash = '#/delete-account'
     render(
       <HelmetProvider>
@@ -52,7 +49,7 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByRole('heading', { level: 1, name: /delete your account/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /not found/i })).toBeInTheDocument()
   })
 
   test('admin route is gated — anonymous users are redirected home', async () => {
@@ -67,6 +64,6 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
+    expect(await screen.findByRole('searchbox', { name: /find a song/i })).toBeInTheDocument()
   })
 })

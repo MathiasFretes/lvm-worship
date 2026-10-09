@@ -5,15 +5,23 @@
 // imports — require.context only exists under Metro.
 
 type NamespaceResources = Record<string, Record<string, unknown>>
+type ResourceAddress = { locale: string; namespace: string }
 
 const ctx = require.context('./locales', true, /\.json$/)
+const LOCALE_RESOURCE_PATH = /^\.\/([\w-]+)\/([\w-]+)\.json$/
+
+function resourceAddress(path: string): ResourceAddress | null {
+  const match = LOCALE_RESOURCE_PATH.exec(path)
+  if (!match) return null
+  return { locale: match[1], namespace: match[2] }
+}
 
 const resources: Record<string, NamespaceResources> = {}
-for (const key of ctx.keys()) {
-  const match = key.match(/^\.\/([\w-]+)\/([\w-]+)\.json$/)
-  if (!match) continue
-  const [, locale, ns] = match
-  ;(resources[locale] ??= {})[ns] = ctx(key) as Record<string, unknown>
+for (const path of [...ctx.keys()].sort()) {
+  const address = resourceAddress(path)
+  if (!address) continue
+  const localeResources = (resources[address.locale] ??= {})
+  localeResources[address.namespace] = ctx(path) as Record<string, unknown>
 }
 
 export const RESOURCES = resources

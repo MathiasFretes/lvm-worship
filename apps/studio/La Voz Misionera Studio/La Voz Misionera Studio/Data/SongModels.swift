@@ -13,6 +13,21 @@
 
 import Foundation
 
+/// PostgREST projections live beside the DTOs they decode. This keeps repository
+/// queries and CodingKeys tied to one contract instead of repeating column lists
+/// in transport code.
+enum SongProjection {
+    static let list =
+        "id, slug, title, artist, default_key, time_signature, tags, tempo, created_at, status"
+    static let detail =
+        "id, slug, title, artist, default_key, time_signature, tempo, chordpro_content, status"
+    static let editable =
+        """
+        id, slug, title, artist, default_key, tempo, time_signature, country, \
+        youtube_id, language, pptx_url, tags, chordpro_content, status
+        """
+}
+
 /// Publication state of a row in `public.songs`.
 ///
 /// Two cases, matching the `songs_status_check` constraint. `public.personal_songs`

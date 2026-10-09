@@ -69,9 +69,9 @@ describe('SongView mobile dock', () => {
     const downloadBtn = screen.getByRole('button', { name: 'Download' })
     const worshipLink = screen.getByRole('link', { name: 'Worship Mode' })
     expect(downloadBtn).toBeInTheDocument()
-    expect(downloadBtn).toHaveClass('gc-btn--iconOnly')
+    expect(downloadBtn).toHaveClass('lvm-btn--iconOnly')
     expect(worshipLink).toBeInTheDocument()
-    expect(worshipLink).toHaveClass('gc-btn--iconOnly')
+    expect(worshipLink).toHaveClass('lvm-btn--iconOnly')
 
     fireEvent.click(downloadBtn)
     expect(await screen.findByRole('dialog', { name: /download/i })).toBeInTheDocument()

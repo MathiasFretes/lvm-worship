@@ -42,30 +42,37 @@ export default function SpritePickerScreen() {
   // width — an exact fit is prone to sub-pixel rounding that wraps the third
   // tile and collapses the grid to 2 columns.
   const gridGap = t.spacing.lg
-  const tileSize = Math.floor((width - t.spacing.lg * 2 - gridGap * 2) / 3)
+  const availableGridWidth = Math.min(width - t.spacing.lg * 2, 440)
+  const tileSize = Math.floor((availableGridWidth - gridGap * 2) / 3)
 
   async function finish(sprite: SpriteId | null) {
+    if (busy) return
     setBusy(true)
-    const { data } = await supabase.auth.getSession()
-    if (data.session) {
-      if (sprite) {
-        const { error } = await saveSpritePreference(supabase, data.session.user.id, sprite)
-        if (error) await stashPendingSprite(AsyncStorage, sprite)
-        else {
-          setLocalSprite(sprite) // reflect the new avatar everywhere at once
-          // …and on the next cold launch, before the network answers.
-          await writeCachedSprite(AsyncStorage, data.session.user.id, sprite)
+    try {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        if (sprite) {
+          const { error } = await saveSpritePreference(supabase, data.session.user.id, sprite)
+          if (error) await stashPendingSprite(AsyncStorage, sprite)
+          else {
+            setLocalSprite(sprite)
+            await writeCachedSprite(AsyncStorage, data.session.user.id, sprite)
+          }
         }
+        if (isEdit) router.back()
+        else router.replace('/')
+        return
       }
-      // Edit came from Settings — return there; onboarding enters the app.
-      if (isEdit) router.back()
-      else router.replace('/')
-    } else {
+
       if (sprite) await stashPendingSprite(AsyncStorage, sprite)
-      Alert.alert(tx('spritePicker.checkEmailAlert.title'), tx('spritePicker.checkEmailAlert.message'))
+      Alert.alert(
+        tx('spritePicker.checkEmailAlert.title'),
+        tx('spritePicker.checkEmailAlert.message'),
+      )
       router.replace('/login')
+    } finally {
+      setBusy(false)
     }
-    setBusy(false)
   }
 
   return (
@@ -115,6 +122,8 @@ export default function SpritePickerScreen() {
             flexWrap: 'wrap',
             gap: gridGap,
             marginTop: t.spacing.xl,
+            width: availableGridWidth,
+            alignSelf: 'center',
           }}
         >
           {SPRITE_IDS.map((id) => {
@@ -179,7 +188,7 @@ export default function SpritePickerScreen() {
 
       <View style={{ paddingHorizontal: t.spacing.lg, gap: t.spacing.sm }}>
         <Pressable
-          onPress={() => finish(selected)}
+          onPress={() => void finish(selected)}
           disabled={busy || !selected}
           accessibilityRole="button"
           style={({ pressed }) => ({
@@ -202,7 +211,7 @@ export default function SpritePickerScreen() {
         </Pressable>
         {isEdit ? null : (
           <Pressable
-            onPress={() => finish(null)}
+            onPress={() => void finish(null)}
             disabled={busy}
             accessibilityRole="button"
             hitSlop={4}

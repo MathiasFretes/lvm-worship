@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../theme/ThemeProvider'
@@ -27,19 +27,16 @@ export default function OfflineBanner() {
       pointerEvents="none"
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        paddingTop: insets.top,
-        paddingBottom: t.spacing.xs + 2,
-        paddingHorizontal: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: t.colors.border,
-      }}
+      style={[
+        styles.banner,
+        {
+          paddingTop: insets.top,
+          paddingBottom: t.spacing.xs + 2,
+          paddingHorizontal: t.spacing.md,
+          backgroundColor: t.colors.surface,
+          borderBottomColor: t.colors.border,
+        },
+      ]}
     >
       <Text
         style={{ fontSize: 12.5, fontWeight: '600', color: t.colors.sec, textAlign: 'center' }}
@@ -50,3 +47,14 @@ export default function OfflineBanner() {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    borderBottomWidth: 1,
+  },
+})

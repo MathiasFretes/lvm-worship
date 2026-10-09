@@ -10,7 +10,7 @@ import '../styles/posts.css'
 // (src/content/third-party-licenses.md, produced by `npm run generate:licenses`).
 // Keeping the preamble here — not in the generated file — means regenerating the
 // notices never disturbs the Scripture section. Same marked → DOMPurify →
-// .gc-prose pipeline as the Privacy/Terms pages.
+// .lvm-prose pipeline as the Privacy/Terms pages.
 const PREAMBLE = `# Acknowledgements & Licenses
 
 La Voz Misionera is free, non-commercial worship software. This page lists the
@@ -30,7 +30,7 @@ export default function LicensesPage() {
   )
 
   return (
-    <div className="container gc-post-detail">
+    <div className="container lvm-post-detail">
       <Helmet>
         <title>Acknowledgements &amp; Licenses · La Voz Misionera</title>
         <meta
@@ -39,7 +39,7 @@ export default function LicensesPage() {
         />
       </Helmet>
       <div
-        className="gc-post-detail__content gc-prose"
+        className="lvm-post-detail__content lvm-prose"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

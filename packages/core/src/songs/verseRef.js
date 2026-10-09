@@ -97,11 +97,14 @@ export function parseVerseId(id){
   if (!isVerseId(id)) return null
   const body = String(id).slice(2)
   const dividerIdx = body.indexOf('|')
-  const hasTranslation = dividerIdx > -1
-  const translation = hasTranslation
-    ? normalizeTranslationId(body.slice(0, dividerIdx))
-    : DEFAULT_BIBLE_TRANSLATION
-  const rawRef = hasTranslation ? body.slice(dividerIdx + 1) : body
+  const parts = dividerIdx < 0
+    ? { translation: DEFAULT_BIBLE_TRANSLATION, reference: body }
+    : {
+        translation: normalizeTranslationId(body.slice(0, dividerIdx)),
+        reference: body.slice(dividerIdx + 1),
+      }
+  const translation = parts.translation
+  const rawRef = parts.reference
   const raw = rawRef.replace(/~/g, ',')
   const parsed = parseVerseReference(raw, { translation })
   if (parsed.error) return null
@@ -199,15 +202,15 @@ function resolveBook(rawBook){
 }
 
 function findBookMatches(key){
-  const matches = []
-  for (const b of BOOK_KEYS) {
-    if (b.key.startsWith(key)) matches.push(b.name)
-  }
-  if (matches.length) return matches
-  for (const a of ALIAS_KEYS) {
-    if (a.key.startsWith(key)) matches.push(a.name)
-  }
-  return Array.from(new Set(matches))
+  const canonical = BOOK_KEYS
+    .filter((candidate) => candidate.key.startsWith(key))
+    .map((candidate) => candidate.name)
+  if (canonical.length) return canonical
+  return [...new Set(
+    ALIAS_KEYS
+      .filter((candidate) => candidate.key.startsWith(key))
+      .map((candidate) => candidate.name)
+  )]
 }
 
 function normalizeBookKey(raw){
@@ -241,10 +244,9 @@ function bookNumberFromName(book){
 }
 
 function normalizeRef(rawRef){
-  return String(rawRef || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/\s*[&,]\s*/g, ',')
+  const compactSeparators = String(rawRef || '').trim().replace(/\s+/g, ' ')
+  return compactSeparators
+    .replace(/\s*(?:&|,)\s*/g, ',')
     .replace(/\s*-\s*/g, '-')
 }
 

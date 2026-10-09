@@ -2,46 +2,48 @@ import { describe, it, expect } from 'vitest';
 import { parseChordProOrLegacy } from '../parser';
 import { serializeChordPro } from '../serialize';
 
-const s = `
-{title: Jolene}
+const ministryChart = `
+{title: Envíame}
 {key: Am}
 {capo: 3}
 {columns: 2}
 {define: G 320003 23xxxx}
 
-{start_of_verse: Verse 1}
-{c: Pick soft}
-[Am]Jolene...
+{start_of_verse: Estrofa 1}
+{c: Suave}
+[Am]Heme aquí...
 {end_of_verse}
 {column_break}
 {start_of_chorus}
-[C]Jolene...
+[C]Envíame...
 {end_of_chorus}
 `;
 
-describe('ChordPro features: capo, comments, columns, define', () => {
-  it('parses features and re-serializes them', () => {
-    const doc = parseChordProOrLegacy(s);
+describe('LVM extended ChordPro contract', () => {
+  it('retains musician-facing layout directives during an edit round trip', () => {
+    const doc = parseChordProOrLegacy(ministryChart);
     expect(doc.meta.capo).toBe(3);
     expect(doc.layoutHints?.requestedColumns).toBe(2);
     expect(doc.chordDefs?.length).toBeGreaterThan(0);
     const out = serializeChordPro(doc);
-    expect(out).toMatch(/\{capo:\s*3\}/);
-    expect(out).toMatch(/\{columns:\s*2\}/);
-    expect(out).toMatch(/\{c:\s*Pick soft\}/i);
-    expect(out).toMatch(/\{define:\s*G\s+/i);
-    expect(out).toMatch(/\{column_break\}/);
+    for (const directive of [
+      /\{capo:\s*3\}/,
+      /\{columns:\s*2\}/,
+      /\{c:\s*Suave\}/i,
+      /\{define:\s*G\s+/i,
+      /\{column_break\}/,
+    ]) expect(out).toMatch(directive);
   });
 
-  it('creates standalone sections for instrumental and comment directives', () => {
+  it('separates cues and instrumental passages from sung sections', () => {
     const src = `
-{title: Sample}
-{start_of_verse: Verse 1}
-Line before
+{title: La cosecha}
+{start_of_verse: Estrofa 1}
+Antes del instrumental
 {inst D, A, E}
-Line after
+Después del instrumental
 {end_of_verse}
-{com Whisper}
+{com Suave}
 {i: Em, D, Am7, Bm7 x2}
 `;
 
@@ -50,17 +52,17 @@ Line after
 
     const [first, second, third, fourth] = doc.sections;
     expect(first.kind).toBe('verse');
-    expect(first.lines[0]?.lyrics).toBe('Line before');
+    expect(first.lines[0]?.lyrics).toBe('Antes del instrumental');
 
     expect(second.kind).toBe('instrumental');
     expect(second.instrumental?.chords).toEqual(['D', 'A', 'E']);
     expect(second.lines[0]?.instrumental?.repeat).toBeUndefined();
 
     expect(third.kind).toBe('verse');
-    expect(third.lines[0]?.lyrics).toBe('Line after');
+    expect(third.lines[0]?.lyrics).toBe('Después del instrumental');
 
     const commentSec = doc.sections.find(sec => sec.kind === 'comment');
-    expect(commentSec?.lines?.[0]?.comment).toBe('Whisper');
+    expect(commentSec?.lines?.[0]?.comment).toBe('Suave');
 
     const instSections = doc.sections.filter(sec => sec.kind === 'instrumental');
     expect(instSections).toHaveLength(2);
@@ -69,12 +71,12 @@ Line after
     expect(lastInst.instrumental?.repeat).toBe(2);
   });
 
-  it('keeps top-level instrumental directives ahead of the first section', () => {
+  it('keeps a service-opening instrumental before the first lyric', () => {
     const src = `
-{title: Example}
+{title: Heme aquí}
 {inst Em, D, Am7, Bm7 x2}
-{sov Verse 1}
-[Em]Line one
+{sov Estrofa 1}
+[Em]Heme aquí
 {eov}
 `;
     const doc = parseChordProOrLegacy(src);

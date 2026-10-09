@@ -5,7 +5,10 @@ import DailyWordScreen from '../../src/screens/DailyWordScreen'
 // chevron to the landing (the tab-root Reader in reader-direct mode does not).
 // The optional `passage` param is a core `passageId()`, so tapping a specific
 // reading on the landing opens ON that chapter instead of the day's first one.
-export default function DailyReader() {
-  const { passage } = useLocalSearchParams<{ passage?: string }>()
+function LvmDailyReaderRoute() {
+  const params = useLocalSearchParams<{ passage?: string | string[] }>()
+  const passage = Array.isArray(params.passage) ? params.passage[0] : params.passage
   return <DailyWordScreen showBackToLanding initialPassageId={passage} />
 }
+
+export default LvmDailyReaderRoute

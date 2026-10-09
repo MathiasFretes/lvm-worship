@@ -3,28 +3,26 @@
 // derived from the locale folders in resources.ts — this module only holds the
 // pieces that can't come from the filesystem (labels, resolution rules).
 
-export const DEFAULT_LOCALE = 'en'
+export const DEFAULT_LOCALE = 'en' as const
 
-// code → native display name for the Settings picker. Hermes has no
-// Intl.DisplayNames data (same constraint as core's translationMenu.ts), so
-// names are explicit; unknown codes fall back to the uppercased code.
-const LOCALE_LABELS: Record<string, string> = {
+// LVM keeps the picker names explicit because Hermes does not guarantee
+// Intl.DisplayNames data. `satisfies` catches accidental non-string labels
+// without widening the known locale keys.
+const LVM_LOCALE_LABELS = {
   en: 'English',
   es: 'Español',
   ko: '한국어',
   tr: 'Türkçe',
-}
+} as const satisfies Record<string, string>
 
 export function localeLabel(code: string): string {
-  return LOCALE_LABELS[code] ?? code.toUpperCase()
+  return LVM_LOCALE_LABELS[code as keyof typeof LVM_LOCALE_LABELS] ?? code.toUpperCase()
 }
 
 /** 'ko-KR' / 'en_US' → 'ko' / 'en'. Empty input stays empty. */
 export function normalizeLanguageTag(tag: unknown): string {
-  return String(tag ?? '')
-    .trim()
-    .toLowerCase()
-    .split(/[-_]/)[0]
+  const normalized = typeof tag === 'string' ? tag.trim().toLowerCase() : ''
+  return normalized.split(/[-_]/, 1)[0]
 }
 
 /**
@@ -37,11 +35,14 @@ export function resolveLanguage(
   deviceTags: readonly string[],
   supported: readonly string[]
 ): string {
+  const available = new Set(supported)
   const pick = normalizeLanguageTag(stored)
-  if (pick && supported.includes(pick)) return pick
+  if (pick && available.has(pick)) return pick
+
   for (const tag of deviceTags) {
     const base = normalizeLanguageTag(tag)
-    if (base && supported.includes(base)) return base
+    if (base && available.has(base)) return base
   }
+
   return DEFAULT_LOCALE
 }

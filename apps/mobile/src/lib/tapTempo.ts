@@ -24,33 +24,35 @@ export interface TapTempo {
 }
 
 export function createTapTempo({ windowSize = 6, staleGapMs = 2000 }: TapTempoOptions = {}): TapTempo {
-  const defaultWindow = windowSize
-  let lastTapMs: number | null = null
-  let intervals: number[] = []
+  const defaultWindow = Math.max(1, windowSize)
+  let previousTap: number | undefined
+  const intervals: number[] = []
   return {
     tap(nowMs: number, windowSize: number = defaultWindow): number | null {
-      const effectiveWindow = Math.max(1, windowSize)
-      if (lastTapMs !== null) {
-        const gap = nowMs - lastTapMs
+      const effectiveWindow = Math.max(1, Math.floor(windowSize))
+      if (previousTap !== undefined) {
+        const gap = nowMs - previousTap
         // Non-increasing timestamps are treated like a stale gap: start over
         // rather than derive a nonsense (infinite/negative) BPM.
         if (gap > staleGapMs || gap <= 0) {
-          intervals = []
+          intervals.length = 0
         } else {
           intervals.push(gap)
         }
       }
-      lastTapMs = nowMs
+      previousTap = nowMs
       // Keep only the most recent `effectiveWindow` gaps. Using slice (not a
       // single shift) means a window that just shrank is honored on this tap.
-      if (intervals.length > effectiveWindow) intervals = intervals.slice(-effectiveWindow)
+      if (intervals.length > effectiveWindow) {
+        intervals.splice(0, intervals.length - effectiveWindow)
+      }
       if (intervals.length === 0) return null
       const avgMs = intervals.reduce((sum, v) => sum + v, 0) / intervals.length
       return 60000 / avgMs
     },
     reset() {
-      lastTapMs = null
-      intervals = []
+      previousTap = undefined
+      intervals.length = 0
     },
   }
 }

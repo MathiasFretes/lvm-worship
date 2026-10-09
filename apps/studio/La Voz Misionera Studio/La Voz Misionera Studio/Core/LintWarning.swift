@@ -65,21 +65,20 @@ struct LintWarning: Codable, Hashable, Identifiable {
     }
 
     var location: Location {
-        // `warn:section_mismatch` is the only code produced by lint.ts's raw-text
-        // scan, and the only one whose lineIndex is a body line. Keyed on the code
-        // rather than on "has a lineIndex but no sectionIndex", because a future code
-        // with that shape would silently inherit the wrong unit.
-        if code == Self.sectionMismatch, let lineIndex = lineIndex {
-            return .bodyLine(lineIndex)
+        switch (code, sectionIndex, lineIndex) {
+        case (Self.sectionMismatch, _, .some(let line)):
+            return .bodyLine(line)
+        case (_, .some(let section), .some(let line)):
+            return .sectionLine(section: section, lyricLine: line)
+        case (_, .some(let section), nil):
+            return .section(section)
+        case (_, nil, .some(let line)):
+            // Preserve visibility for a future body-scoped warning. Core's current
+            // only producer is section_mismatch, handled explicitly above.
+            return .bodyLine(line)
+        case (_, nil, nil):
+            return .song
         }
-        if let sectionIndex = sectionIndex {
-            if let lineIndex = lineIndex {
-                return .sectionLine(section: sectionIndex, lyricLine: lineIndex)
-            }
-            return .section(sectionIndex)
-        }
-        if let lineIndex = lineIndex { return .bodyLine(lineIndex) }
-        return .song
     }
 
     /// The code with its `warn:` prefix dropped and underscores opened up, for the

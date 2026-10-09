@@ -35,23 +35,23 @@ export type ProgressionChord = {
  * `6 – 5/7 – 1 /// 6 – 5/7 – 1`, which read as a repeated figure rather than a
  * six-chord run.
  */
-export type Phrase = { chords: ProgressionChord[] }
+export type Phrase = { readonly chords: readonly ProgressionChord[] }
 
 export type ProgressionSet = 'general' | 'prayer'
 
 export type Progression = {
   /** Stable id — this is what the pinned-slot preference persists. */
-  id: string
-  set: ProgressionSet
+  readonly id: string
+  readonly set: ProgressionSet
   /** i18n key under the `utilities` namespace. Never a literal string. */
-  labelKey: string
+  readonly labelKey: string
   /**
    * i18n key for a playing note carried over from the source document (e.g.
    * "add the 9th on 4/6"). Surfaced as a note affordance, deliberately NOT
    * encoded as playable data.
    */
-  noteKey?: string
-  phrases: Phrase[]
+  readonly noteKey?: string
+  readonly phrases: readonly Phrase[]
 }
 
 /**

@@ -3,7 +3,7 @@
 // A live "Session" lets a native leader broadcast their current setlist item +
 // transpose to web followers in real time. ONE `sessions` row is the single
 // source of truth: the late-join snapshot and the live stream both come from it.
-// Callers inject the Supabase client created via createGcSupabase() (same
+// Callers inject the Supabase client created via createLvmSupabase() (same
 // convention as setlistsRepo/songsRepo). Errors throw; callers catch.
 //
 // The row carries its own frozen `items` snapshot (built at session start via
@@ -24,6 +24,32 @@ const CREATE_MAX_RETRIES = 5 // code-collision retries against the UNIQUE index
 // unexpected value can't alter the filter's structure.
 function sanitizeCode(code) {
   return typeof code === 'string' && /^[A-Za-z0-9]+$/.test(code) ? code : null
+}
+
+function snapshotItem(entry, index) {
+  const uid = `i${index}`
+  const songId = entry && entry.songId
+  const song = (entry && entry.song) || null
+  const title = (song && song.title) || 'Untitled'
+
+  if (isVerseId(songId)) {
+    const parsed = parseVerseId(songId)
+    return { uid, kind: 'verse', ref: songId, title: (parsed && parsed.refDisplay) || title }
+  }
+  if (typeof songId === 'string' && songId.startsWith('personal:')) {
+    return { uid, kind: 'unavailable', title, reason: 'personal' }
+  }
+  if (!song || !song.slug) {
+    return { uid, kind: 'unavailable', title, reason: 'personal' }
+  }
+  return {
+    uid,
+    kind: 'song',
+    slug: song.slug,
+    title,
+    defaultKey: song.default_key || null,
+    toKey: (entry && entry.toKey) || null,
+  }
 }
 
 /**
@@ -49,33 +75,7 @@ function sanitizeCode(code) {
  * @returns {SnapshotItem[]}
  */
 export function buildSnapshot(entries = []) {
-  return entries.map((entry, i) => {
-    const uid = `i${i}`
-    const songId = entry && entry.songId
-    const song = (entry && entry.song) || null
-    const title = (song && song.title) || 'Untitled'
-    if (isVerseId(songId)) {
-      const parsed = parseVerseId(songId)
-      return { uid, kind: 'verse', ref: songId, title: (parsed && parsed.refDisplay) || title }
-    }
-    if (typeof songId === 'string' && songId.startsWith('personal:')) {
-      return { uid, kind: 'unavailable', title, reason: 'personal' }
-    }
-    const slug = song && song.slug ? song.slug : null
-    if (!slug) {
-      // No public slug to resolve lyrics from — treat as unavailable rather than
-      // ship a reference the follower can't render.
-      return { uid, kind: 'unavailable', title, reason: 'personal' }
-    }
-    return {
-      uid,
-      kind: 'song',
-      slug,
-      title,
-      defaultKey: (song && song.default_key) || null,
-      toKey: (entry && entry.toKey) || null,
-    }
-  })
+  return entries.map(snapshotItem)
 }
 
 /**
@@ -234,7 +234,7 @@ export async function fetchSessionByCode(client, code) {
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const tier = data.chord_code && data.chord_code === safe ? 'chord' : 'lyric'
+  const tier = data.chord_code === safe && data.chord_code ? 'chord' : 'lyric'
   return { ...data, tier }
 }
 
@@ -279,13 +279,9 @@ export function subscribeToSession(client, sessionId, handlers = {}) {
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` },
-      (payload) => {
-        if (onChange && payload && payload.new) onChange(payload.new)
-      },
+      (payload) => payload?.new && onChange?.(payload.new),
     )
-    .subscribe((status) => {
-      if (onStatus) onStatus(status)
-    })
+    .subscribe((status) => onStatus?.(status))
   return () => {
     try {
       client.removeChannel(channel)

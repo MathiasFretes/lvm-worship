@@ -52,7 +52,13 @@ export function usePersonalSetlists() {
       return
     }
     try {
-      const rows = await fetchPersonalSetlists(supabase)
+      let timeout
+      const rows = await Promise.race([
+        fetchPersonalSetlists(supabase),
+        new Promise((_, reject) => {
+          timeout = setTimeout(() => reject(new Error('Saved setlists request timed out')), 8000)
+        }),
+      ]).finally(() => clearTimeout(timeout))
       if (!alive.current) return
       setSetlists((rows || []).map(toRow))
       setError(false)

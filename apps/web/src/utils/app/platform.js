@@ -4,20 +4,20 @@
 // Smart App Banner. Kept intentionally small — UA sniffing is best-effort, not
 // authoritative.
 
-function ua() {
+function navigatorValue(key, fallback) {
   try {
-    return (navigator && navigator.userAgent) || ''
+    return typeof navigator === 'undefined' ? fallback : navigator[key] ?? fallback
   } catch {
-    return ''
+    return fallback
   }
 }
 
+function ua() {
+  return String(navigatorValue('userAgent', ''))
+}
+
 function maxTouchPoints() {
-  try {
-    return (navigator && navigator.maxTouchPoints) || 0
-  } catch {
-    return 0
-  }
+  return Number(navigatorValue('maxTouchPoints', 0)) || 0
 }
 
 export function isIOS() {
@@ -26,7 +26,7 @@ export function isIOS() {
   // iPadOS 13+ ships "Request Desktop Website" on by default and reports as
   // Macintosh. maxTouchPoints is what separates it from a real Mac — desktop
   // Safari also exposes ontouchend, so that check alone false-positives.
-  return /Macintosh/.test(s) && typeof document !== 'undefined' && 'ontouchend' in document && maxTouchPoints() > 1
+  return /Macintosh/.test(s) && maxTouchPoints() > 1
 }
 
 export function isAndroid() {
@@ -57,8 +57,10 @@ export function isIOSSafari() {
 // standalone mode does not count.
 export function isNativeAppBannerActive() {
   if (!isIOSSafari()) return false
+  if (navigatorValue('standalone', false) === true) return false
   try {
-    if (navigator.standalone === true) return false
-  } catch {}
-  return true
+    return !window.matchMedia?.('(display-mode: standalone)').matches
+  } catch {
+    return true
+  }
 }

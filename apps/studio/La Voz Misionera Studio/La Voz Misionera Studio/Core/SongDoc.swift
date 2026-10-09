@@ -29,14 +29,35 @@ struct InstrumentalDirective: Codable, Hashable {
     }
 }
 
-struct SongLine: Codable, Hashable {
+struct SongLine: Decodable, Hashable {
     let lyrics: String
     let chords: [ChordPlacement]
     let comment: String?
     let instrumental: InstrumentalDirective?
+
+    private enum CodingKeys: String, CodingKey {
+        case lyrics, chords, comment, instrumental
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        lyrics = try values.decode(String.self, forKey: .lyrics)
+        chords = try values.decodeIfPresent([ChordPlacement].self, forKey: .chords) ?? []
+        comment = try values.decodeIfPresent(String.self, forKey: .comment)
+        instrumental = try values.decodeIfPresent(InstrumentalDirective.self, forKey: .instrumental)
+
+        let utf16Length = lyrics.utf16.count
+        guard chords.allSatisfy({ $0.index >= 0 && $0.index <= utf16Length }) else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .chords,
+                in: values,
+                debugDescription: "Chord indices must be UTF-16 offsets inside lyrics."
+            )
+        }
+    }
 }
 
-struct SongSection: Codable, Hashable {
+struct SongSection: Decodable, Hashable {
     /// 'verse', 'chorus', 'bridge', 'comment', 'instrumental', …
     let kind: String
     let label: String?
@@ -44,7 +65,7 @@ struct SongSection: Codable, Hashable {
     let instrumental: InstrumentalDirective?
 }
 
-struct SongMeta: Codable, Hashable {
+struct SongMeta: Decodable, Hashable {
     let title: String?
     let key: String?
     let capo: Int?
@@ -52,17 +73,17 @@ struct SongMeta: Codable, Hashable {
     let meta: [String: String]?
 }
 
-struct SongLayoutHints: Codable, Hashable {
+struct SongLayoutHints: Decodable, Hashable {
     let requestedColumns: Int?
     let columnBreakAfter: [Int]?
 }
 
-struct ChordDefine: Codable, Hashable {
+struct ChordDefine: Decodable, Hashable {
     let name: String
     let raw: String
 }
 
-struct SongDoc: Codable, Hashable {
+struct SongDoc: Decodable, Hashable {
     let meta: SongMeta
     let sections: [SongSection]
     let layoutHints: SongLayoutHints?

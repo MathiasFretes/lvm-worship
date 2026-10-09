@@ -34,7 +34,7 @@ export const DEFAULT_KEY_REF_PREFS: KeyRefPrefs = {
   display: 'letters',
 }
 
-const STORAGE_KEY = 'gc.keyref.v1'
+export const KEY_REF_STORAGE_KEY = 'lvm.keyref.v1'
 const DISPLAY_MODES: readonly DisplayMode[] = ['letters', 'numbers', 'nashville']
 
 let cache: KeyRefPrefs = DEFAULT_KEY_REF_PREFS
@@ -70,7 +70,7 @@ function parse(raw: string | null): KeyRefPrefs {
 }
 
 function persist(): void {
-  storage?.setItem(STORAGE_KEY, JSON.stringify(cache)).catch(() => {})
+  storage?.setItem(KEY_REF_STORAGE_KEY, JSON.stringify(cache)).catch(() => {})
 }
 
 /**
@@ -83,7 +83,7 @@ export async function hydrateKeyRefPrefs(store: KVStorage): Promise<void> {
   if (hydrated) return
   hydrated = true
   try {
-    cache = parse(await store.getItem(STORAGE_KEY))
+    cache = parse(await store.getItem(KEY_REF_STORAGE_KEY))
   } catch {
     cache = DEFAULT_KEY_REF_PREFS
   }

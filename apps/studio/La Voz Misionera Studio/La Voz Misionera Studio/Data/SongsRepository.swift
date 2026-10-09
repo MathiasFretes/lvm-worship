@@ -61,20 +61,8 @@ enum SongsRepositoryError: LocalizedError {
 }
 
 struct SongsRepository {
-    /// Mirrors apps/mobile/src/lib/useSongList.ts COLUMNS, plus `status` so the
-    /// library can badge a draft.
-    private static let listColumns =
-        "id, slug, title, artist, default_key, time_signature, tags, tempo, created_at, status"
-    /// Mirrors core's fetchSongBySlug default columns, plus `status`.
-    private static let detailColumns =
-        "id, slug, title, artist, default_key, time_signature, tempo, chordpro_content, status"
-    /// Every authoring-relevant column, for the editor. Mirrors the column set
-    /// packages/core/src/songs/songAuthoring.ts maps to and from.
-    private static let editableColumns =
-        """
-        id, slug, title, artist, default_key, tempo, time_signature, country, \
-        youtube_id, language, pptx_url, tags, chordpro_content, status
-        """
+    private static let songsTable = "songs"
+    private static let auditTable = "editor_audit_log"
 
     let client: SupabaseClient
 
@@ -83,8 +71,8 @@ struct SongsRepository {
     func fetchSongList() async throws -> [SongListItem] {
         do {
             let rows: [SongListItem] = try await client
-                .from("songs")
-                .select(Self.listColumns)
+                .from(Self.songsTable)
+                .select(SongProjection.list)
                 .eq("is_deleted", value: false)
                 .order("title")
                 .execute()
@@ -101,8 +89,8 @@ struct SongsRepository {
     func fetchSong(slug: String) async throws -> SongDetail? {
         do {
             let rows: [SongDetail] = try await client
-                .from("songs")
-                .select(Self.detailColumns)
+                .from(Self.songsTable)
+                .select(SongProjection.detail)
                 .eq("slug", value: slug)
                 .eq("is_deleted", value: false)
                 .limit(1)
@@ -123,8 +111,8 @@ struct SongsRepository {
     func fetchEditable(id: String) async throws -> SongEditable? {
         do {
             let rows: [SongEditable] = try await client
-                .from("songs")
-                .select(Self.editableColumns)
+                .from(Self.songsTable)
+                .select(SongProjection.editable)
                 .eq("id", value: id)
                 .eq("is_deleted", value: false)
                 .limit(1)
@@ -146,15 +134,12 @@ struct SongsRepository {
     func insert(_ payload: SongWritePayload) async throws -> SongEditable {
         do {
             let rows: [SongEditable] = try await client
-                .from("songs")
+                .from(Self.songsTable)
                 .insert(payload)
-                .select(Self.editableColumns)
+                .select(SongProjection.editable)
                 .execute()
                 .value
-            guard let saved = rows.first else {
-                throw SongsRepositoryError.requestFailed("The song was not returned after saving.")
-            }
-            return saved
+            return try Self.requireSaved(rows)
         } catch let error as SongsRepositoryError {
             throw error
         } catch {
@@ -170,21 +155,13 @@ struct SongsRepository {
     func update(id: String, with payload: SongWritePayload) async throws -> SongEditable {
         do {
             let rows: [SongEditable] = try await client
-                .from("songs")
+                .from(Self.songsTable)
                 .update(payload)
                 .eq("id", value: id)
-                .select(Self.editableColumns)
+                .select(SongProjection.editable)
                 .execute()
                 .value
-            guard let saved = rows.first else {
-                // An editor+ caller whose UPDATE matches nothing means the row was
-                // deleted underneath them — RLS returning zero rows and a missing
-                // row are indistinguishable here, and both mean the same thing.
-                throw SongsRepositoryError.requestFailed(
-                    "This song no longer exists. It may have been deleted in another session."
-                )
-            }
-            return saved
+            return try Self.requireSaved(rows, missingIsDeleted: true)
         } catch let error as SongsRepositoryError {
             throw error
         } catch {
@@ -200,18 +177,13 @@ struct SongsRepository {
         }
         do {
             let rows: [SongEditable] = try await client
-                .from("songs")
+                .from(Self.songsTable)
                 .update(StatusPayload(status: status.rawValue, updated_at: Self.timestamp()))
                 .eq("id", value: id)
-                .select(Self.editableColumns)
+                .select(SongProjection.editable)
                 .execute()
                 .value
-            guard let saved = rows.first else {
-                throw SongsRepositoryError.requestFailed(
-                    "This song no longer exists. It may have been deleted in another session."
-                )
-            }
-            return saved
+            return try Self.requireSaved(rows, missingIsDeleted: true)
         } catch let error as SongsRepositoryError {
             throw error
         } catch {
@@ -231,7 +203,7 @@ struct SongsRepository {
     func delete(id: String) async throws {
         do {
             try await client
-                .from("songs")
+                .from(Self.songsTable)
                 .delete()
                 .eq("id", value: id)
                 .execute()
@@ -259,7 +231,7 @@ struct SongsRepository {
             let rows: [SlugProbe]
             do {
                 rows = try await client
-                    .from("songs")
+                    .from(Self.songsTable)
                     .select("id")
                     .eq("slug", value: candidate)
                     .limit(1)
@@ -282,13 +254,24 @@ struct SongsRepository {
     /// losing the record must never be the reason the action itself fails.
     func writeAuditLog(_ entry: EditorAuditEntry) async throws {
         do {
-            try await client.from("editor_audit_log").insert(entry).execute()
+            try await client.from(Self.auditTable).insert(entry).execute()
         } catch {
             throw Self.mapped(error)
         }
     }
 
     private struct SlugProbe: Decodable { let id: String }
+
+    private static func requireSaved(
+        _ rows: [SongEditable],
+        missingIsDeleted: Bool = false
+    ) throws -> SongEditable {
+        if let row = rows.first { return row }
+        let message = missingIsDeleted
+            ? "This song no longer exists. It may have been deleted in another session."
+            : "The song was not returned after saving."
+        throw SongsRepositoryError.requestFailed(message)
+    }
 
     /// ISO-8601 with fractional seconds, matching JavaScript's `toISOString()` so
     /// rows written by Studio sort identically to rows written by web and mobile.
@@ -308,7 +291,7 @@ struct SongsRepository {
     /// 42501 is Postgres's "new row violates row-level security policy" (an INSERT
     /// the `songs_insert` policy refused), and 23505 is a unique-constraint
     /// violation, which on this table means the slug.
-    private static func mapped(_ error: Error) -> SongsRepositoryError {
+    static func mapped(_ error: Error) -> SongsRepositoryError {
         let description = "\(error)".lowercased()
         if description.contains("42501") || description.contains("row-level security") {
             return .notPermitted

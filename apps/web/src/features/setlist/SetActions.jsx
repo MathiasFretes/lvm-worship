@@ -84,7 +84,7 @@ export default function SetActions({
       </Button>
 
       {onImportContext ? (
-        <label className="gc-btn gc-btn--secondary">
+        <label className="lvm-btn lvm-btn--secondary">
           {t('setlist.importPlatformContext')}
           <input type="file" accept=".json,application/json" hidden onChange={(event) => {
             const file = event.target.files?.[0]
@@ -103,7 +103,7 @@ export default function SetActions({
         </Button>
       ) : null}
 
-      <div className="gc-ppt-menu" ref={pptRef}>
+      <div className="lvm-ppt-menu" ref={pptRef}>
         <Button
           size="sm"
           variant="secondary"
@@ -116,30 +116,30 @@ export default function SetActions({
           {pptxProgress || combineProgress || t('setlist.exportPpt')}
         </Button>
         {pptOpen ? (
-          <div className="gc-menu gc-ppt-menu__panel" role="menu" aria-label={t('setlist.exportPptAria')}>
+          <div className="lvm-menu lvm-ppt-menu__panel" role="menu" aria-label={t('setlist.exportPptAria')}>
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               onClick={() => {
                 setPptOpen(false)
                 onCombinePptx()
               }}
             >
-              <span className="gc-menu-item-title">{t('setlist.pptCombined')}</span>
-              <span className="gc-menu-item-note">{t('setlist.pptCombinedBeta')}</span>
+              <span className="lvm-menu-item-title">{t('setlist.pptCombined')}</span>
+              <span className="lvm-menu-item-note">{t('setlist.pptCombinedBeta')}</span>
             </button>
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               onClick={() => {
                 setPptOpen(false)
                 onBundlePptx()
               }}
             >
-              <span className="gc-menu-item-title">{t('setlist.pptSeparate')}</span>
-              <span className="gc-menu-item-note">{t('setlist.pptZipTooltip')}</span>
+              <span className="lvm-menu-item-title">{t('setlist.pptSeparate')}</span>
+              <span className="lvm-menu-item-note">{t('setlist.pptZipTooltip')}</span>
             </button>
           </div>
         ) : null}
@@ -156,7 +156,7 @@ export default function SetActions({
         {t('setlist.worshipMode')}
       </Button>
 
-      <div className="gc-more-menu" ref={moreRef}>
+      <div className="lvm-more-menu" ref={moreRef}>
         <Button
           size="sm"
           variant="ghost"
@@ -168,11 +168,11 @@ export default function SetActions({
           onClick={() => setMoreOpen((v) => !v)}
         />
         {moreOpen ? (
-          <div className="gc-menu gc-more-menu__panel" role="menu" aria-label={t('setlist.actionsTitle')}>
+          <div className="lvm-menu lvm-more-menu__panel" role="menu" aria-label={t('setlist.actionsTitle')}>
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               onClick={() => {
                 setMoreOpen(false)
                 onRename()
@@ -183,7 +183,7 @@ export default function SetActions({
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               disabled={empty}
               onClick={() => {
                 setMoreOpen(false)
@@ -195,7 +195,7 @@ export default function SetActions({
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               disabled={empty}
               onClick={() => {
                 setMoreOpen(false)
@@ -207,7 +207,7 @@ export default function SetActions({
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               disabled={empty}
               onClick={() => {
                 setMoreOpen(false)
@@ -216,11 +216,11 @@ export default function SetActions({
             >
               <ResetIcon /> {t('setlist.resetKeys')}
             </button>
-            <hr className="gc-menu-divider" />
+            <hr className="lvm-menu-divider" />
             <button
               type="button"
               role="menuitem"
-              className="gc-menu-item"
+              className="lvm-menu-item"
               onClick={() => {
                 setMoreOpen(false)
                 onServiceDate()
@@ -233,7 +233,7 @@ export default function SetActions({
                 <button
                   type="button"
                   role="menuitem"
-                  className="gc-menu-item"
+                  className="lvm-menu-item"
                   onClick={() => {
                     setMoreOpen(false)
                     onDuplicate()
@@ -244,7 +244,7 @@ export default function SetActions({
                 <button
                   type="button"
                   role="menuitem"
-                  className="gc-menu-item is-danger"
+                  className="lvm-menu-item is-danger"
                   onClick={() => {
                     setMoreOpen(false)
                     onDelete()

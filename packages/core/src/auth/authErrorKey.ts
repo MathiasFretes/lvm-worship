@@ -36,17 +36,34 @@ function statusOf(error: AuthErrorish): number | null {
   return Number.isFinite(status) ? status : null
 }
 
-// React Native's fetch rejects with a bare TypeError on an unreachable host — no
-// code, no cause, nothing but the string. Matching on it is unlovely, but it is
-// the difference between telling a user to check their connection and telling
-// them nothing useful, and it is the most common real failure this app sees.
-function isNetworkFailure(error: AuthErrorish): boolean {
-  const message = messageOf(error)
-  return (
-    message.includes('network request failed') ||
-    message.includes('failed to fetch') ||
-    message.includes('network error')
-  )
+const CODE_KEYS: Readonly<Record<string, string>> = {
+  weak_password: 'errors.passwordNeedsMix',
+  password_required_characters: 'errors.passwordNeedsMix',
+  same_password: 'errors.passwordSameAsCurrent',
+  invalid_credentials: 'errors.invalidCredentials',
+  invalid_grant: 'errors.invalidCredentials',
+  email_not_confirmed: 'errors.emailNotConfirmed',
+  email_exists: 'errors.emailExists',
+  user_already_exists: 'errors.emailExists',
+  invalid_email: 'errors.invalidEmail',
+  validation_failed: 'errors.invalidEmail',
+  over_email_send_rate_limit: 'errors.rateLimited',
+}
+
+const MESSAGE_KEYS: ReadonlyArray<readonly [readonly string[], string]> = [
+  [['network request failed', 'failed to fetch', 'network error'], 'errors.network'],
+  [['invalid login', 'invalid credentials'], 'errors.invalidCredentials'],
+  [['email not confirmed'], 'errors.emailNotConfirmed'],
+  [['already registered', 'already been registered'], 'errors.emailExists'],
+  [['password should', 'password must'], 'errors.passwordNeedsMix'],
+  [['too many requests'], 'errors.rateLimited'],
+]
+
+function keyForMessage(message: string): string | null {
+  for (const [phrases, key] of MESSAGE_KEYS) {
+    if (phrases.some((phrase) => message.includes(phrase))) return key
+  }
+  return null
 }
 
 /**
@@ -56,47 +73,16 @@ function isNetworkFailure(error: AuthErrorish): boolean {
 export function authErrorKey(error: AuthErrorish): string {
   if (!error) return 'errors.generic'
 
-  // Network first: a request that never reached GoTrue has no meaningful code,
-  // and "check your connection" beats every other reading of the failure.
-  if (isNetworkFailure(error)) return 'errors.network'
-
   const code = codeOf(error)
   const message = messageOf(error)
   const status = statusOf(error)
+  const messageKey = keyForMessage(message)
 
+  // Network failures win over provider metadata because the request did not
+  // reliably reach the provider.
+  if (messageKey === 'errors.network') return messageKey
   if (status === 429 || code.includes('rate_limit') || message.includes('rate limit')) {
     return 'errors.rateLimited'
   }
-
-  if (code === 'weak_password' || code === 'password_required_characters') {
-    return 'errors.passwordNeedsMix'
-  }
-  if (code === 'same_password') return 'errors.passwordSameAsCurrent'
-
-  if (code === 'invalid_credentials' || code === 'invalid_grant') {
-    return 'errors.invalidCredentials'
-  }
-  if (code === 'email_not_confirmed') return 'errors.emailNotConfirmed'
-  if (code === 'email_exists' || code === 'user_already_exists') {
-    return 'errors.emailExists'
-  }
-  if (code === 'invalid_email' || code === 'validation_failed') {
-    return 'errors.invalidEmail'
-  }
-  if (code === 'over_email_send_rate_limit') return 'errors.rateLimited'
-
-  // Message fallbacks for responses without a code.
-  if (message.includes('invalid login') || message.includes('invalid credentials')) {
-    return 'errors.invalidCredentials'
-  }
-  if (message.includes('email not confirmed')) return 'errors.emailNotConfirmed'
-  if (message.includes('already registered') || message.includes('already been registered')) {
-    return 'errors.emailExists'
-  }
-  if (message.includes('password should') || message.includes('password must')) {
-    return 'errors.passwordNeedsMix'
-  }
-  if (message.includes('too many requests')) return 'errors.rateLimited'
-
-  return 'errors.generic'
+  return CODE_KEYS[code] ?? messageKey ?? 'errors.generic'
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
@@ -6,15 +7,68 @@ import { useTheme } from '../../theme/ThemeProvider'
 import { getRecentlyOpened, type RecentSong } from '../../lib/recents'
 import { formatKeyPair } from '../../lib/keyDisplay'
 
-// Home's Recent-songs card: the most-recently-opened songs (count from tokens
-// layout.recentSongs). Each row shows the song's own key, plus the key it was
-// last viewed in when the two differ ("C → D") — it used to show only the
-// last-viewed key, which is why the same song could read as C on the Continue
-// card and D here (QA report Nº 7327, S-02).
-//
-// Tapping still reopens the song in that stored key via the viewer's existing
-// initialKey param — opening the same song from the Library uses its default
-// key, as before.
+type RecentSongRowProps = {
+  song: RecentSong
+  divided: boolean
+  onOpen: (song: RecentSong) => void
+  tx: (key: string, options?: Record<string, unknown>) => string
+}
+
+function RecentSongRow({ song, divided, onOpen, tx }: RecentSongRowProps) {
+  const theme = useTheme()
+  const keyDisplay = formatKeyPair(song.default_key, song.lastKey, tx)
+
+  return (
+    <Pressable
+      onPress={() => onOpen(song)}
+      accessibilityRole="button"
+      accessibilityLabel={tx('common:openSong', { title: song.title })}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.md,
+        paddingVertical: 10,
+        borderTopWidth: divided ? 0.5 : 0,
+        borderTopColor: theme.colors.border,
+        opacity: pressed ? 0.6 : 1,
+      })}
+    >
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: theme.typography.rowTitle.fontSize,
+            fontWeight: theme.typography.rowTitle.fontWeight,
+            letterSpacing: theme.typography.rowTitle.letterSpacing,
+            color: theme.colors.ink,
+          }}
+        >
+          {song.title}
+        </Text>
+        {song.artist ? (
+          <Text
+            numberOfLines={1}
+            style={{ marginTop: 1, fontSize: theme.typography.rowSubtitle.fontSize, color: theme.colors.sec }}
+          >
+            {song.artist}
+          </Text>
+        ) : null}
+      </View>
+      {keyDisplay ? (
+        <Text
+          accessibilityLabel={keyDisplay.a11yLabel}
+          style={{
+            fontSize: theme.typography.rowKey.fontSize,
+            fontWeight: theme.typography.rowKey.fontWeight,
+            color: theme.colors.textAccent,
+          }}
+        >
+          {keyDisplay.text}
+        </Text>
+      ) : null}
+    </Pressable>
+  )
+}
 
 export default function RecentSongsCard() {
   const t = useTheme()
@@ -22,17 +76,20 @@ export default function RecentSongsCard() {
   const router = useRouter()
   const recents = getRecentlyOpened().slice(0, t.layout.recentSongs)
 
-  function openSong(s: RecentSong) {
-    router.push({
-      pathname: '/viewer/[slug]',
-      params: {
-        slug: s.slug,
-        title: s.title,
-        songKey: s.default_key ?? '',
-        ...(s.lastKey ? { initialKey: s.lastKey } : {}),
-      },
-    })
-  }
+  const openSong = useCallback(
+    (song: RecentSong) => {
+      router.push({
+        pathname: '/viewer/[slug]',
+        params: {
+          slug: song.slug,
+          title: song.title,
+          songKey: song.default_key ?? '',
+          ...(song.lastKey ? { initialKey: song.lastKey } : {}),
+        },
+      })
+    },
+    [router],
+  )
 
   return (
     <View style={cardStyle(t)}>
@@ -54,60 +111,15 @@ export default function RecentSongsCard() {
         </Text>
       ) : (
         <View style={{ marginTop: t.spacing.xs }}>
-          {recents.map((s, i) => {
-            const key = formatKeyPair(s.default_key, s.lastKey, tx)
-            return (
-              <Pressable
-                key={s.slug}
-                onPress={() => openSong(s)}
-                accessibilityRole="button"
-                accessibilityLabel={tx('common:openSong', { title: s.title })}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: t.spacing.md,
-                  paddingVertical: 10,
-                  borderTopWidth: i === 0 ? 0 : 0.5,
-                  borderTopColor: t.colors.border,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontSize: t.typography.rowTitle.fontSize,
-                      fontWeight: t.typography.rowTitle.fontWeight,
-                      letterSpacing: t.typography.rowTitle.letterSpacing,
-                      color: t.colors.ink,
-                    }}
-                  >
-                    {s.title}
-                  </Text>
-                  {s.artist ? (
-                    <Text
-                      numberOfLines={1}
-                      style={{ marginTop: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
-                    >
-                      {s.artist}
-                    </Text>
-                  ) : null}
-                </View>
-                {key ? (
-                  <Text
-                    accessibilityLabel={key.a11yLabel}
-                    style={{
-                      fontSize: t.typography.rowKey.fontSize,
-                      fontWeight: t.typography.rowKey.fontWeight,
-                      color: t.colors.textAccent,
-                    }}
-                  >
-                    {key.text}
-                  </Text>
-                ) : null}
-              </Pressable>
-            )
-          })}
+          {recents.map((song, index) => (
+            <RecentSongRow
+              key={song.slug}
+              song={song}
+              divided={index > 0}
+              onOpen={openSong}
+              tx={tx}
+            />
+          ))}
         </View>
       )}
     </View>

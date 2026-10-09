@@ -93,6 +93,36 @@ describe('WorshipMode', () => {
     expect(['light','dark']).toContain(localStorage.getItem('lvm.theme'))
   })
 
+  it('closes settings with Escape and restores focus to its trigger', async () => {
+    render(
+      <MemoryRouter initialEntries={['/worship/abba']}>
+        <Routes><Route path="/worship/:songIds" element={<WorshipMode />} /></Routes>
+      </MemoryRouter>
+    )
+    await screen.findByText('Abba')
+    const trigger = screen.getByRole('button', { name: 'Open settings' })
+    trigger.focus()
+    fireEvent.click(trigger)
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Settings' })).toBeNull()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('requests fullscreen from the Worship Mode viewport', async () => {
+    render(
+      <MemoryRouter initialEntries={['/worship/abba']}>
+        <Routes><Route path="/worship/:songIds" element={<WorshipMode />} /></Routes>
+      </MemoryRouter>
+    )
+    await screen.findByText('Abba')
+    const viewport = document.querySelector('.worship__viewport')
+    viewport.requestFullscreen = vi.fn()
+    fireEvent.click(screen.getByRole('button', { name: 'Open settings' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle fullscreen' }))
+    expect(viewport.requestFullscreen).toHaveBeenCalledOnce()
+  })
+
   it('uses PDF pt window for fit (font size from {16..12})', async () => {
     render(
       <MemoryRouter initialEntries={[`/worship/abba`]}>

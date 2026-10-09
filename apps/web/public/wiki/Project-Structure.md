@@ -15,7 +15,7 @@ packages/
   tokens/         @lavozmisionera/tokens — design tokens (web CSS + native TS map)
 workers/          Cloudflare Workers (PPTX upload, sitemap rebuild)
 supabase/         SQL migrations
-gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
+lvm-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
 ```
 
 Run web tasks from the repo root (`npm run dev`, `build`, `test`, `lint` delegate
@@ -24,11 +24,10 @@ to `-w @lavozmisionera/web`) or from inside `apps/web/`.
 ## `apps/web/`
 The production single-page app.
 
-- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Resources, Worship Mode, Editor Portal, Admin Portal, Daily Word)
+- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Worship Mode, Editor Portal, Admin Portal, Daily Word)
 - `src/components/auth/RoleGuard.jsx` — route guard; redirects users lacking the required role
 - `src/hooks/useAuth.jsx` — auth context (`role`, `hasMinRole`, `isOwner`, …)
 - `src/hooks/useSongs.jsx` — fetches the song catalog from Supabase (session cache)
-- `src/hooks/usePosts.jsx` — CRUD helpers for the Supabase `posts` table
 - `src/lib/supabase.js` — web Supabase client (thin wrapper over `@lavozmisionera/core`'s factory)
 - `src/utils/setlists/supabaseSets.js` — Supabase-backed saved-set operations
 - `src/utils/pdf_mvp/` — single-song PDF engine with tests and font registrar
@@ -42,7 +41,7 @@ The production single-page app.
 - `scripts/` — SEO/sitemap generation, Bible ingest, wiki sync, i18n check, ChordPro conversion
 - `dist/` — Vite build output for Cloudflare Pages (gitignored, generated)
 
-**Songs and posts live in Supabase, not in `public/`.** Styling uses the `--gc-*`
+**Songs live in Supabase, not in `public/`.** Styling uses the `--lvm-*`
 tokens from `packages/tokens/tokens.css` (imported via `src/styles/index.css`).
 
 ## `apps/mobile/`
@@ -62,7 +61,7 @@ Design tokens for both platforms — web imports `tokens.css`; React Native impo
 the typed map from `@lavozmisionera/tokens/native`.
 
 ## `supabase/`
-SQL migrations applied in order — `users`, `songs`, `posts`, `user_starred_songs`,
+SQL migrations applied in order — `users`, `songs`, `user_starred_songs`,
 `saved_sets`. Every table has row-level security.
 
 ## `workers/`

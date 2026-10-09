@@ -163,7 +163,7 @@ export default function ProgressionList({
 }: ProgressionListProps) {
   const t = useTheme()
 
-  const group = (label: string, items: Progression[], first: boolean) => (
+  const group = (label: string, items: readonly Progression[], first: boolean) => (
     <View style={{ marginTop: first ? 0 : t.spacing.md }}>
       <SectionHeader label={label} />
       <Card>

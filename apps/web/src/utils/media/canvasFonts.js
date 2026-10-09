@@ -50,6 +50,9 @@ export async function ensureFontsEmbedded(doc) {
 let canvasFontsPromise = null
 export async function ensureCanvasFonts() {
   if (canvasFontsPromise) return canvasFontsPromise
+  if (typeof FontFace !== 'function' || typeof document === 'undefined' || !document.fonts) {
+    return { lyricFamily: 'Helvetica', chordFamily: 'Courier' }
+  }
   const base = publicUrl('fonts/')
   const specs = [
     { family: 'NotoSans', weight: '400', style: 'normal', file: 'NotoSans-Regular.ttf' },
@@ -64,7 +67,11 @@ export async function ensureCanvasFonts() {
     const loaded = await face.load()
     document.fonts.add(loaded)
   })).then(() => ({ lyricFamily: 'NotoSans', chordFamily: 'NotoSansMono' }))
-    .catch(() => ({ lyricFamily: 'Helvetica', chordFamily: 'Courier' }))
+    .catch(() => {
+      // Do not permanently cache a transient font/network failure.
+      canvasFontsPromise = null
+      return { lyricFamily: 'Helvetica', chordFamily: 'Courier' }
+    })
   return canvasFontsPromise
 }
 

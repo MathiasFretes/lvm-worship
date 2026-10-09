@@ -61,6 +61,8 @@ struct ChordProTextViewTests {
     func nonASCII() {
         Self.check("주님의 사랑", "주님의 큰 사랑")
         Self.check("güzelsin", "çok güzelsin")
+        Self.check("👨‍👩‍👧‍👦 worship", "👨‍👩‍👧‍👦 joyful worship")
+        Self.check("Cafe\u{301}", "Café")
     }
 
     @Test("a change with a shared prefix and suffix picks the middle")
@@ -68,5 +70,15 @@ struct ChordProTextViewTests {
         let result = ChordProTextView.minimalReplacement(from: "abcXYZdef" as NSString, to: "abcQdef" as NSString)
         #expect(result?.0 == NSRange(location: 3, length: 3))
         #expect(result?.1 == "Q")
+    }
+
+    @Test("replacement never consumes an unchanged grapheme")
+    func preservesGraphemeBoundaries() throws {
+        let old = "A👩🏽‍🎤B" as NSString
+        let new = "A👩🏽‍🎤 bright B" as NSString
+        let result = try #require(ChordProTextView.minimalReplacement(from: old, to: new))
+        #expect(result.0.length == 0)
+        #expect(result.0.location == ("A👩🏽‍🎤" as NSString).length)
+        #expect(old.replacingCharacters(in: result.0, with: result.1) == new as String)
     }
 }

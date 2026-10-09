@@ -1,97 +1,58 @@
-#!/usr/bin/env node
-// Generates the third-party open-source attribution file rendered at /licenses.
-//
-// Enumerates the *production* dependency closure of both apps (web + mobile) via
-// `npm ls --omit=dev`, then pulls license metadata for the installed tree with
-// license-checker, and writes a sorted markdown listing to
-// src/content/third-party-licenses.md.
-//
-// This covers third-party dependency notices only. La Voz Misionera' own source is
-// Apache-2.0 (see LICENSE) and is not part of this file. Scripture-text
-// attribution is a separate, hand-maintained section in LicensesPage.jsx.
-//
-// Run: npm run generate:licenses -w @lavozmisionera/web
-
-import { execFileSync } from 'node:child_process'
 import { promisify } from 'node:util'
-import { writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import checker from 'license-checker'
+import { dirname, resolve } from 'node:path'
+import licenseChecker from 'license-checker'
 
-const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../..')
-const outFile = resolve(scriptDir, '../src/content/third-party-licenses.md')
-
-// 1. Production dependency closure (names) across both shipped apps.
-function productionClosure() {
-  const raw = execFileSync(
-    'npm',
-    ['ls', '--omit=dev', '--all', '--json',
-     '--workspace', '@lavozmisionera/web',
-     '--workspace', '@lavozmisionera/mobile'],
-    { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, encoding: 'utf8' }
-  )
-  const tree = JSON.parse(raw)
-  const names = new Set()
-  const walk = (deps) => {
-    if (!deps) return
-    for (const [name, info] of Object.entries(deps)) {
-      names.add(name)
-      walk(info.dependencies)
-    }
+const here = dirname(fileURLToPath(import.meta.url))
+const root = resolve(here, '../../..')
+const destination = resolve(here, '../src/content/third-party-licenses.md')
+const scan = promisify(licenseChecker.init)
+const npmCli = process.env.npm_execpath
+if (!npmCli) throw new Error('Run this generator through npm run generate:licenses')
+const dependencyTree = JSON.parse(execFileSync(process.execPath, [
+  npmCli, 'ls', '--omit=dev', '--all', '--json',
+  '-w', '@lavozmisionera/web',
+  '-w', '@lavozmisionera/mobile',
+], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }))
+const productionNames = new Set()
+function visit(dependencies = {}) {
+  for (const [name, entry] of Object.entries(dependencies)) {
+    productionNames.add(name)
+    visit(entry.dependencies)
   }
-  walk(tree.dependencies)
-  if (tree.workspaces) for (const ws of Object.values(tree.workspaces)) walk(ws.dependencies)
-  return names
 }
-
-// 2. License metadata for the whole installed tree.
-async function licenseMetadata() {
-  const init = promisify(checker.init)
-  return init({ start: repoRoot })
+visit(dependencyTree.dependencies)
+for (const workspace of Object.values(dependencyTree.workspaces || {})) {
+  visit(workspace.dependencies)
 }
+const packages = await scan({ start: root })
 
-function repoUrl(entry) {
-  const url = entry.repository || ''
-  return url.replace(/^git\+/, '').replace(/\.git$/, '')
-}
+const entries = Object.entries(packages)
+  .filter(([name]) => {
+    const packageName = name.slice(0, name.lastIndexOf('@'))
+    return productionNames.has(packageName) && !packageName.startsWith('@lavozmisionera/')
+  })
+  .map(([name, metadata]) => ({
+    name,
+    license: Array.isArray(metadata.licenses)
+      ? metadata.licenses.join(', ')
+      : metadata.licenses || 'See package',
+    repository: String(metadata.repository || '').replace(/^git\+/, '').replace(/\.git$/, ''),
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name))
 
-function splitNameVersion(key) {
-  const at = key.lastIndexOf('@')
-  return { name: key.slice(0, at), version: key.slice(at + 1) }
-}
+const lines = [
+  '## Open-source dependencies',
+  '',
+  'This list records third-party package metadata found in the installed production dependency tree. It does not cover source-code provenance, images, song rights or Scripture translations.',
+  '',
+  ...entries.map(({ name, license, repository }) =>
+    `- **${name}** — ${license}${repository ? ` — ${repository}` : ''}`),
+  '',
+]
 
-const closure = productionClosure()
-const meta = await licenseMetadata()
-
-const entries = []
-for (const [key, entry] of Object.entries(meta)) {
-  const { name, version } = splitNameVersion(key)
-  if (!closure.has(name)) continue
-  if (name.startsWith('@lavozmisionera/')) continue // our own workspace packages
-  entries.push({ name, version, license: entry.licenses, repo: repoUrl(entry) })
-}
-
-entries.sort((a, b) =>
-  a.name.localeCompare(b.name) || a.version.localeCompare(b.version)
-)
-
-const lines = []
-lines.push('## Open-Source Components')
-lines.push('')
-lines.push(
-  `La Voz Misionera is built with the open-source software listed below (${entries.length} ` +
-  'packages), each distributed under its own license. We are grateful to the ' +
-  'authors and maintainers of these projects.'
-)
-lines.push('')
-for (const e of entries) {
-  const license = Array.isArray(e.license) ? e.license.join(', ') : (e.license || 'See project')
-  const suffix = e.repo ? ` — [${e.repo}](${e.repo})` : ''
-  lines.push(`- **${e.name}** ${e.version} — ${license}${suffix}`)
-}
-lines.push('')
-
-writeFileSync(outFile, lines.join('\n'), 'utf8')
-console.log(`Wrote ${entries.length} entries to ${outFile}`)
+await mkdir(dirname(destination), { recursive: true })
+await writeFile(destination, lines.join('\n'), 'utf8')
+console.log(`Recorded ${entries.length} third-party packages.`)

@@ -1,4 +1,4 @@
-.gc-page{
+.lvm-page{
   max-width:1200px;
   margin:0 auto;
   padding:0 1.5rem;
@@ -9,13 +9,13 @@
   min-height: 0;
   overflow: hidden;
 }
-.gc-page > *{ margin-bottom:12px; }
-.gc-page > *:last-child{ margin-bottom:0; }
+.lvm-page > *{ margin-bottom:12px; }
+.lvm-page > *:last-child{ margin-bottom:0; }
 
 /* Builder pages use the full available width — no 1200px cap */
 @media (min-width: 901px) {
-  .gc-page.is-setlist,
-  .gc-page.is-songbook {
+  .lvm-page.is-setlist,
+  .lvm-page.is-songbook {
     max-width: none;
     padding: 0 2rem;
   }

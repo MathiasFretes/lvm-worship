@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isTranslationStale } from '../staleness'
 
-describe('isTranslationStale', () => {
+describe.each([{ product: 'LVM' }])('$product · isTranslationStale', () => {
   it('is stale when both versions are known and differ', () => {
     expect(isTranslationStale('v1', 'v2')).toBe(true)
   })

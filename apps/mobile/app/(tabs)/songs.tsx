@@ -1,5 +1,1 @@
-import SongLibraryScreen from '../../src/screens/SongLibraryScreen'
-
-export default function SongsTab() {
-  return <SongLibraryScreen />
-}
+export { default } from '../../src/screens/SongLibraryScreen'

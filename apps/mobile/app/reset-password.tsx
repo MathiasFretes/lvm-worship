@@ -9,7 +9,7 @@ import ResetPasswordScreen from '../src/screens/ResetPasswordScreen'
 // must not bounce it in the window before that lands — and must never redirect
 // away from a half-finished reset.
 
-export default function ResetPassword() {
+function LvmResetPasswordRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -17,3 +17,5 @@ export default function ResetPassword() {
     </>
   )
 }
+
+export default LvmResetPasswordRoute

@@ -10,9 +10,8 @@ conventions (theme/primitives, SF Symbols, auth gating, Metro resolution).
 
 ## What it is today
 
-A real, feature-complete-enough-to-use native client, built from the
-[`gc-ios-design-reference/`](../../gc-ios-design-reference/) design bundle. The
-core worship-team flows all ship:
+A real, feature-complete-enough-to-use native client. The core worship-team
+flows all ship:
 
 - a themed **four-tab shell** — Home · Songs · Setlists · Daily Word,
 - a **Song Viewer** with a real chord chart: live transpose, key change,
@@ -42,7 +41,7 @@ A few things are still stubs or later stages — see [Roadmap](#roadmap).
 - **Stack:** Expo SDK 55, Expo Router v7, TypeScript, React 19.2 / React Native 0.83.
 - **Native dirs:** `ios/` and `android/` use Continuous Native Generation — they are gitignored and regenerated via `npx expo prebuild`. Never commit them; treat `app.json` (+ config plugins) as the source of truth for native config.
 - **Theme:** the typed token map from `@lavozmisionera/tokens/native` (light/dark palette), consumed via `useTheme()`. Icons go through `SymbolIcon` — **SF Symbols on iOS, Material Symbols on Android**; never hand-drawn SVGs.
-- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export** and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createLvmSupabase`; the web app's Pages Functions for song/setlist **export** and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
 
 ## Run it (macOS + Xcode required for the iOS simulator)
 
@@ -88,7 +87,6 @@ Not yet in the build, in rough priority order:
   translations (Daily Word translation downloads already ship).
 - **Password reset / email-confirmation** screens (login "Forgot?" is an alert).
 - **Tablet** master-detail layout.
-- **GraceTracks** practice-stem integration.
 
 See [`AGENTS.md`](./AGENTS.md) for the conventions that keep new screens
 consistent with the theme, primitives, and shared core.

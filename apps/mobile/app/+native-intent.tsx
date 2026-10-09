@@ -13,6 +13,11 @@ import { getFocusedRouteKey } from '../src/lib/topRoute'
 import { noteInboundLink } from '../src/lib/pendingRoute'
 import { parseAuthLink, setPendingAuthLink } from '../src/lib/authLink'
 
+function isFocusedLvmStackTarget(target: string): boolean {
+  const targetKey = deepLinkStackRouteKey(target)
+  return targetKey !== null && targetKey === getFocusedRouteKey()
+}
+
 export function redirectSystemPath({
   path,
   initial,
@@ -54,8 +59,7 @@ export function redirectSystemPath({
   // `initial` is a cold start, where the stack cannot already hold the target, so it
   // keeps the plain push. In-app navigation never reaches this file at all, so every
   // router.push to a viewer or a setlist is untouched.
-  const key = deepLinkStackRouteKey(target)
-  if (!initial && key !== null && key === getFocusedRouteKey()) {
+  if (!initial && isFocusedLvmStackTarget(target)) {
     router.replace(target as Parameters<typeof router.replace>[0])
     return null
   }

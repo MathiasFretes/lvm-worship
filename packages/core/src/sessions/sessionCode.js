@@ -12,15 +12,20 @@
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'
 const DEFAULT_LENGTH = 6
 
+function randomCharacter() {
+  const index = Math.floor(Math.random() * ALPHABET.length)
+  return ALPHABET.charAt(index)
+}
+
 /**
  * Generate a random session code from the unambiguous alphabet.
  * @param {number} [length=6]
  * @returns {string}
  */
 export function generateSessionCode(length = DEFAULT_LENGTH) {
-  let out = ''
-  for (let i = 0; i < length; i += 1) {
-    out += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+  const characters = []
+  for (let position = 0; position < length; position += 1) {
+    characters.push(randomCharacter())
   }
-  return out
+  return characters.join('')
 }

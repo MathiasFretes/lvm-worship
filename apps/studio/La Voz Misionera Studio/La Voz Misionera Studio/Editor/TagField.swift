@@ -32,7 +32,7 @@ struct TagField: View {
     private static let maximumSuggestions = 6
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.sm) {
+        VStack(alignment: .leading, spacing: LVMSpacing.sm) {
             TextField("Add tags, comma-separated", text: $input)
                 .textFieldStyle(.roundedBorder)
                 .focused($isFocused)
@@ -97,22 +97,22 @@ struct TagField: View {
                     take(tag)
                 } label: {
                     HStack {
-                        Text(tag).gcTextStyle(.rowMeta)
-                        Spacer(minLength: GCSpacing.md)
+                        Text(tag).lvmTextStyle(.rowMeta)
+                        Spacer(minLength: LVMSpacing.md)
                     }
-                    .padding(.horizontal, GCSpacing.sm)
+                    .padding(.horizontal, LVMSpacing.sm)
                     .padding(.vertical, 5)
                     .background(
-                        index == highlighted ? GCColor.accent : Color.clear,
+                        index == highlighted ? LVMColor.accent : Color.clear,
                         in: RoundedRectangle(cornerRadius: 5)
                     )
-                    .foregroundStyle(index == highlighted ? GCColor.onAccent : GCColor.ink)
+                    .foregroundStyle(index == highlighted ? LVMColor.onAccent : LVMColor.ink)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(GCSpacing.xs)
+        .padding(LVMSpacing.xs)
         .frame(minWidth: 180)
     }
 
@@ -161,10 +161,10 @@ struct TagField: View {
     // MARK: - Chips
 
     private var chips: some View {
-        FlowLayout(horizontalSpacing: GCSpacing.xs, verticalSpacing: GCSpacing.xs) {
+        FlowLayout(horizontalSpacing: LVMSpacing.xs, verticalSpacing: LVMSpacing.xs) {
             ForEach(tags, id: \.self) { tag in
                 HStack(spacing: 4) {
-                    Text(tag).gcTextStyle(.rowMeta)
+                    Text(tag).lvmTextStyle(.rowMeta)
                     Button {
                         tags.removeAll { $0 == tag }
                     } label: {
@@ -174,11 +174,11 @@ struct TagField: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Remove \(tag)")
                 }
-                .padding(.leading, GCSpacing.sm)
+                .padding(.leading, LVMSpacing.sm)
                 .padding(.trailing, 6)
                 .padding(.vertical, 3)
-                .background(GCColor.accentSoft, in: Capsule())
-                .foregroundStyle(GCColor.textAccent)
+                .background(LVMColor.accentSoft, in: Capsule())
+                .foregroundStyle(LVMColor.textAccent)
             }
         }
     }

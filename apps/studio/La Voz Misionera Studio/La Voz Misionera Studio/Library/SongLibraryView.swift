@@ -28,8 +28,8 @@ struct SongLibraryView: View {
         // The macOS reading of mobile's orientation split: the landscape count once
         // there is genuinely room for it.
         return availableWidth >= 980
-            ? GCLayout.LibraryColumns.landscape
-            : GCLayout.LibraryColumns.portrait
+            ? LVMLayout.LibraryColumns.landscape
+            : LVMLayout.LibraryColumns.portrait
     }
 
     var body: some View {
@@ -46,32 +46,32 @@ struct SongLibraryView: View {
     }
 
     private var searchField: some View {
-        VStack(spacing: GCSpacing.xs) {
-            HStack(spacing: GCSpacing.sm) {
-                HStack(spacing: GCSpacing.sm) {
+        VStack(spacing: LVMSpacing.xs) {
+            HStack(spacing: LVMSpacing.sm) {
+                HStack(spacing: LVMSpacing.sm) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(GCColor.muted)
+                        .foregroundStyle(LVMColor.muted)
                     // Mobile's placeholder mentions artists, but its songMatchRank
                     // does not search them — the behaviour is what is matched here.
                     TextField("Search songs and themes…", text: $model.query)
                         .textFieldStyle(.plain)
-                        .gcTextStyle(.body)
+                        .lvmTextStyle(.body)
                     if !model.query.isEmpty {
                         Button {
                             model.query = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(GCColor.muted)
+                                .foregroundStyle(LVMColor.muted)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Clear search")
                     }
                 }
-                .padding(.horizontal, GCSpacing.md)
-                .padding(.vertical, GCSpacing.sm)
+                .padding(.horizontal, LVMSpacing.md)
+                .padding(.vertical, LVMSpacing.sm)
                 // surfaceAlt is the token for recessed surfaces — "search field" is
                 // the example native.ts names for it.
-                .background(GCColor.surfaceAlt, in: .rect(cornerRadius: GCRadius.sm))
+                .background(LVMColor.surfaceAlt, in: .rect(cornerRadius: LVMRadius.sm))
 
                 Button {
                     showsFilters = true
@@ -80,7 +80,7 @@ struct SongLibraryView: View {
                           ? "line.3.horizontal.decrease.circle.fill"
                           : "line.3.horizontal.decrease.circle")
                         .font(.system(size: 15))
-                        .foregroundStyle(model.isFilterActive ? GCColor.accent : GCColor.muted)
+                        .foregroundStyle(model.isFilterActive ? LVMColor.accent : LVMColor.muted)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -96,13 +96,13 @@ struct SongLibraryView: View {
             if model.isSearching || model.isFilterActive {
                 HStack {
                     Text(model.visibleCount == 1 ? "1 result" : "\(model.visibleCount) results")
-                        .gcTextStyle(.rowMeta)
-                        .foregroundStyle(GCColor.muted)
+                        .lvmTextStyle(.rowMeta)
+                        .foregroundStyle(LVMColor.muted)
                     Spacer()
                 }
             }
         }
-        .padding(GCSpacing.sm)
+        .padding(LVMSpacing.sm)
     }
 
     @ViewBuilder
@@ -111,11 +111,11 @@ struct SongLibraryView: View {
             centered { ProgressView() }
         } else if let errorText = model.errorText {
             centered {
-                VStack(spacing: GCSpacing.sm) {
+                VStack(spacing: LVMSpacing.sm) {
                     Text(errorText)
-                        .gcTextStyle(.body)
+                        .lvmTextStyle(.body)
                         .multilineTextAlignment(.center)
-                        .foregroundStyle(GCColor.sec)
+                        .foregroundStyle(LVMColor.sec)
                     Button("Try Again") { Task { await model.load() } }
                 }
                 .padding()
@@ -135,8 +135,8 @@ struct SongLibraryView: View {
                                 rows(for: section.songs)
                             } header: {
                                 Text(section.title)
-                                    .gcTextStyle(.overline)
-                                    .foregroundStyle(GCColor.muted)
+                                    .lvmTextStyle(.overline)
+                                    .foregroundStyle(LVMColor.muted)
                             }
                         }
                     }
@@ -145,10 +145,10 @@ struct SongLibraryView: View {
             .overlay {
                 if model.visibleCount == 0 {
                     Text(emptyMessage)
-                        .gcTextStyle(.body)
-                        .foregroundStyle(GCColor.sec)
+                        .lvmTextStyle(.body)
+                        .foregroundStyle(LVMColor.sec)
                         .multilineTextAlignment(.center)
-                        .padding(GCSpacing.lg)
+                        .padding(LVMSpacing.lg)
                 }
             }
         }
@@ -165,7 +165,7 @@ struct SongLibraryView: View {
             }
         } else {
             ForEach(Array(chunked(songs).enumerated()), id: \.offset) { _, chunk in
-                HStack(alignment: .top, spacing: GCSpacing.md) {
+                HStack(alignment: .top, spacing: LVMSpacing.md) {
                     ForEach(chunk) { song in
                         gridCell(song)
                     }
@@ -189,12 +189,12 @@ struct SongLibraryView: View {
             model.selectedSlug = song.slug
         } label: {
             SongRow(song: song)
-                .padding(.horizontal, GCSpacing.sm)
-                .padding(.vertical, GCSpacing.xs)
+                .padding(.horizontal, LVMSpacing.sm)
+                .padding(.vertical, LVMSpacing.xs)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
-                    selected ? GCColor.accentSoft : Color.clear,
-                    in: RoundedRectangle(cornerRadius: GCRadius.sm, style: .continuous)
+                    selected ? LVMColor.accentSoft : Color.clear,
+                    in: RoundedRectangle(cornerRadius: LVMRadius.sm, style: .continuous)
                 )
                 .contentShape(Rectangle())
         }
@@ -224,21 +224,21 @@ struct SongLibraryView: View {
 }
 
 /// Row text takes its sizes from the token ramp, but deliberately keeps SwiftUI's
-/// semantic foreground styles rather than `GCColor.ink` / `GCColor.sec`: this List
+/// semantic foreground styles rather than `LVMColor.ink` / `LVMColor.sec`: this List
 /// is selectable, and macOS inverts a selected row's text to read against the
 /// accent fill. Only the automatic styles participate in that inversion, so
-/// pinning token colors here would leave dark text on a Signal-blue selection.
+/// pinning token colors here would leave dark text on a gold selection.
 /// Brand color shows up on this screen through the accent (selection, the search
 /// field's recessed surface) instead.
 private struct SongRow: View {
     let song: SongListItem
 
     var body: some View {
-        HStack(alignment: .center, spacing: GCSpacing.sm) {
+        HStack(alignment: .center, spacing: LVMSpacing.sm) {
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: GCSpacing.xs) {
+                HStack(spacing: LVMSpacing.xs) {
                     Text(song.title)
-                        .gcTextStyle(.rowTitle)
+                        .lvmTextStyle(.rowTitle)
                         .lineLimit(1)
                     // Drafts reach this list only for editor+ — the `songs_select`
                     // policy filters them out for everyone else — so the badge is not
@@ -260,19 +260,19 @@ private struct SongRow: View {
                 }
                 if let artist = song.artist, !artist.isEmpty {
                     Text(artist)
-                        .gcTextStyle(.rowSubtitle)
+                        .lvmTextStyle(.rowSubtitle)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
-            Spacer(minLength: GCSpacing.xs)
+            Spacer(minLength: LVMSpacing.xs)
             VStack(alignment: .trailing, spacing: 2) {
                 if let key = song.defaultKey, !key.isEmpty {
-                    Text(key).gcTextStyle(.rowKey)
+                    Text(key).lvmTextStyle(.rowKey)
                 }
                 if let timeSignature = song.timeSignature, !timeSignature.isEmpty {
                     Text(timeSignature)
-                        .gcTextStyle(.rowMeta)
+                        .lvmTextStyle(.rowMeta)
                         .foregroundStyle(.secondary)
                 }
             }

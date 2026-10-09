@@ -1,15 +1,13 @@
 export function normalizeTitleForSort(title = ''){
-  const t = String(title || '').trim()
-  const t2 = t.replace(/^[^A-Za-z0-9]+/, '') || t
-  return t2
+  const trimmed = String(title || '').trim()
+  const firstAlphaNumeric = trimmed.search(/[A-Za-z0-9]/)
+  return firstAlphaNumeric < 0 ? trimmed : trimmed.slice(firstAlphaNumeric)
 }
 
 export function compareSongsByTitle(a, b){
-  const aa = normalizeTitleForSort(a?.title || '')
-  const bb = normalizeTitleForSort(b?.title || '')
-  const aNum = /^[0-9]/.test(aa)
-  const bNum = /^[0-9]/.test(bb)
-  if (aNum !== bNum) return aNum ? -1 : 1
-  return aa.localeCompare(bb, undefined, { sensitivity: 'base' })
+  const left = normalizeTitleForSort(a?.title)
+  const right = normalizeTitleForSort(b?.title)
+  const numericOrder = Number(/^[0-9]/.test(right)) - Number(/^[0-9]/.test(left))
+  return numericOrder || left.localeCompare(right, undefined, { sensitivity: 'base' })
 }
 

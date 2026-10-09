@@ -12,7 +12,7 @@ async function seededDeps(): Promise<ResolverDeps> {
   return { isDownloaded: () => true, blobStore }
 }
 
-describe('readLocalChapter (read-path resolver)', () => {
+describe.each([{ product: 'LVM' }])('$product · readLocalChapter (read-path resolver)', () => {
   it('returns the local chapter when downloaded and present', async () => {
     const deps = await seededDeps()
     const res = await readLocalChapter('esv', dataRoot, 1, 1, deps)

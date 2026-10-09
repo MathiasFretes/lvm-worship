@@ -19,10 +19,8 @@ import {
   reflectionCacheKey,
 } from '../reflectionDayStore'
 
-// The whole point of the facade is that the ten hydrate modules are unchanged,
-// so these tests assert the OUTCOME each module produces when fed through a
-// batch — not the facade in isolation. A silent change to any fallback here
-// would reset a real user's preference on upgrade.
+// Assert the outcome each module produces when fed through a batch, not only
+// the facade in isolation.
 
 /** Fixed "now" so the reflection cases don't depend on the day they run. */
 const REFLECTION_NOW = new Date('2026-08-07T12:00:00')
@@ -50,16 +48,15 @@ function makeStore(seed: Record<string, string> = {}) {
   return { store, data }
 }
 
-describe('LAUNCH_STORAGE_KEYS', () => {
-  // 16 splash-gating keys plus gc.review.v1, which rides the same batch without
-  // gating first paint (see the list's own comment in launchStorage.ts).
-  it('covers the 17 keys read at launch', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(17)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(17)
+describe.each([{ product: 'LVM' }])('$product · LAUNCH_STORAGE_KEYS', () => {
+  it('covers the LVM keys read at launch without duplicates', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(16)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(16)
+    expect(LAUNCH_STORAGE_KEYS.every((key) => key.startsWith('lvm.'))).toBe(true)
   })
 })
 
-describe('primeLaunchStorage', () => {
+describe.each([{ product: 'LVM' }])('$product · primeLaunchStorage', () => {
   it('reads every key in ONE multiGet and serves hydration from it', async () => {
     const { store } = makeStore()
     const primed = await primeLaunchStorage(store)
@@ -69,17 +66,17 @@ describe('primeLaunchStorage', () => {
   })
 
   it('delegates a key outside the batch to the real store', async () => {
-    const { store } = makeStore({ 'gc.viewer.autoHideChrome': '1' })
+    const { store } = makeStore({ 'lvm.viewer.autoHideChrome': '1' })
     const primed = await primeLaunchStorage(store)
-    await expect(primed.getItem('gc.viewer.autoHideChrome')).resolves.toBe('1')
-    expect(store.getItemCalls).toEqual(['gc.viewer.autoHideChrome'])
+    await expect(primed.getItem('lvm.viewer.autoHideChrome')).resolves.toBe('1')
+    expect(store.getItemCalls).toEqual(['lvm.viewer.autoHideChrome'])
   })
 
   it('falls back to the real store when multiGet rejects', async () => {
     // Today each module does its own getItem behind its own try/catch, so one
     // failing read can only affect one module. A batch that reset every batched
     // preference to its default at once would be a far worse failure.
-    const { store } = makeStore({ 'gc.defaults.theme': 'dark' })
+    const { store } = makeStore({ 'lvm.defaults.theme': 'dark' })
     store.multiGet = () => Promise.reject(new Error('storage unavailable'))
     const primed = await primeLaunchStorage(store)
     expect(primed).toBe(store)
@@ -87,11 +84,7 @@ describe('primeLaunchStorage', () => {
   })
 
   it('serves viewerPrefs entirely from the batch (no fall-through)', async () => {
-    // Regression: the list named the SUPERSEDED v1 key while viewerPrefs v2 reads
-    // gc.viewer.columns.v2 first, so every launch fell through to a second real
-    // getItem — correct, but exactly the round trip this module exists to remove.
-    // Behaviour is identical either way, so only the call log can catch it.
-    const { store } = makeStore({ 'gc.viewer.columns.v2': JSON.stringify({ columns: 2 }) })
+    const { store } = makeStore({ 'lvm.viewer.columns.v2': JSON.stringify({ columns: 2 }) })
     const primed = await primeLaunchStorage(store)
     await hydrateViewerPrefs(primed)
     expect(getColumns()).toBe(2)
@@ -102,41 +95,41 @@ describe('primeLaunchStorage', () => {
     // The hydrate modules keep whatever storage they were handed for
     // write-through, for the app's whole lifetime — so the facade must stay
     // correct long after launch, never answering from a stale snapshot.
-    const { store, data } = makeStore({ 'gc.defaults.theme': 'dark' })
+    const { store, data } = makeStore({ 'lvm.defaults.theme': 'dark' })
     const primed = await primeLaunchStorage(store)
-    await expect(primed.getItem('gc.defaults.theme')).resolves.toBe('dark')
-    data.set('gc.defaults.theme', 'light')
-    await expect(primed.getItem('gc.defaults.theme')).resolves.toBe('light')
+    await expect(primed.getItem('lvm.defaults.theme')).resolves.toBe('dark')
+    data.set('lvm.defaults.theme', 'light')
+    await expect(primed.getItem('lvm.defaults.theme')).resolves.toBe('light')
   })
 
   it('writes through, and a later read sees the written value', async () => {
-    const { store, data } = makeStore({ 'gc.defaults.theme': 'dark' })
+    const { store, data } = makeStore({ 'lvm.defaults.theme': 'dark' })
     const primed = await primeLaunchStorage(store)
-    await primed.setItem('gc.defaults.theme', 'light')
-    expect(data.get('gc.defaults.theme')).toBe('light')
-    await expect(primed.getItem('gc.defaults.theme')).resolves.toBe('light')
+    await primed.setItem('lvm.defaults.theme', 'light')
+    expect(data.get('lvm.defaults.theme')).toBe('light')
+    await expect(primed.getItem('lvm.defaults.theme')).resolves.toBe('light')
   })
 
   it('removes through, and a later read sees the removal', async () => {
-    const { store, data } = makeStore({ 'gc.defaults.language': 'ko' })
+    const { store, data } = makeStore({ 'lvm.defaults.language': 'ko' })
     const primed = await primeLaunchStorage(store)
-    await primed.removeItem('gc.defaults.language')
-    expect(data.has('gc.defaults.language')).toBe(false)
-    await expect(primed.getItem('gc.defaults.language')).resolves.toBeNull()
+    await primed.removeItem('lvm.defaults.language')
+    expect(data.has('lvm.defaults.language')).toBe(false)
+    await expect(primed.getItem('lvm.defaults.language')).resolves.toBeNull()
   })
 
   it('treats a pair missing from the multiGet response as null', async () => {
     const { store } = makeStore()
-    store.multiGet = async () => [['gc.defaults.theme', 'dark'] as const]
+    store.multiGet = async () => [['lvm.defaults.theme', 'dark'] as const]
     const primed = await primeLaunchStorage(store)
-    await expect(primed.getItem('gc.defaults.theme')).resolves.toBe('dark')
+    await expect(primed.getItem('lvm.defaults.theme')).resolves.toBe('dark')
     // Not in the response at all — must read exactly like an absent key, which
     // is what every module's missing-value branch already handles.
-    await expect(primed.getItem('gc.defaults.chordStyle')).resolves.toBeNull()
+    await expect(primed.getItem('lvm.defaults.chordStyle')).resolves.toBeNull()
   })
 })
 
-describe('fallbacks are unchanged, batched vs unbatched', () => {
+describe.each([{ product: 'LVM' }])('$product · fallbacks are unchanged, batched vs unbatched', () => {
   // Each case runs the SAME module twice — once against the raw store, once
   // against the primed facade — and requires identical results.
   const cases: Array<{
@@ -152,28 +145,28 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     {
       name: 'defaults: all keys valid',
       seed: {
-        'gc.defaults.theme': 'dark',
-        'gc.defaults.chordStyle': 'solfege',
-        'gc.defaults.keepAwake': '1',
-        'gc.defaults.language': 'ko',
-        'gc.defaults.dailyWordDestination': 'reader',
+        'lvm.defaults.theme': 'dark',
+        'lvm.defaults.chordStyle': 'solfege',
+        'lvm.defaults.keepAwake': '1',
+        'lvm.defaults.language': 'ko',
+        'lvm.defaults.dailyWordDestination': 'reader',
       },
       run: async (s) => hydrateDefaults(s),
     },
     {
       name: 'defaults: every key malformed',
       seed: {
-        'gc.defaults.theme': 'neon',
-        'gc.defaults.chordStyle': 'numbers',
-        'gc.defaults.keepAwake': 'true',
-        'gc.defaults.language': '   ',
-        'gc.defaults.dailyWordDestination': 'somewhere',
+        'lvm.defaults.theme': 'neon',
+        'lvm.defaults.chordStyle': 'numbers',
+        'lvm.defaults.keepAwake': 'true',
+        'lvm.defaults.language': '   ',
+        'lvm.defaults.dailyWordDestination': 'somewhere',
       },
       run: async (s) => hydrateDefaults(s),
     },
     {
       name: 'recents: malformed JSON',
-      seed: { 'gc.recents.songs.v1': '{not json' },
+      seed: { 'lvm.recents.songs.v1': '{not json' },
       run: async (s) => {
         await hydrateRecents(s)
         return getRecentlyOpened()
@@ -182,7 +175,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     {
       name: 'recents: valid rows plus one junk row',
       seed: {
-        'gc.recents.songs.v1': JSON.stringify([
+        'lvm.recents.songs.v1': JSON.stringify([
           { slug: 'a', title: 'A', openedAt: '2026-01-01T00:00:00Z' },
           { slug: 'b' },
         ]),
@@ -194,7 +187,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'reading streak: wrong shape',
-      seed: { 'gc.readingStreak.v1': JSON.stringify({ enabled: 'yes' }) },
+      seed: { 'lvm.readingStreak.v1': JSON.stringify({ enabled: 'yes' }) },
       run: async (s) => {
         await hydrateReadingStreak(s)
         return getReadingStreak()
@@ -202,7 +195,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'reader reminder: out-of-range hour is clamped',
-      seed: { 'gc.readerReminder.v1': JSON.stringify({ enabled: true, hour: 99, minute: -5 }) },
+      seed: { 'lvm.readerReminder.v1': JSON.stringify({ enabled: true, hour: 99, minute: -5 }) },
       run: async (s) => {
         await hydrateReaderReminder(s)
         return getReaderReminder()
@@ -210,7 +203,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'viewer prefs: valid v2 payload',
-      seed: { 'gc.viewer.columns.v2': JSON.stringify({ columns: 3 }) },
+      seed: { 'lvm.viewer.columns.v2': JSON.stringify({ columns: 3 }) },
       run: async (s) => {
         await hydrateViewerPrefs(s)
         return getColumns()
@@ -218,7 +211,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'viewer prefs: malformed v1 payload falls back to the default',
-      seed: { 'gc.viewer.columnMode.v1': 'null' },
+      seed: { 'lvm.viewer.columnMode.v1': 'null' },
       run: async (s) => {
         await hydrateViewerPrefs(s)
         return getColumns()
@@ -227,7 +220,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     {
       name: 'today’s reflection: cached entry',
       seed: {
-        'gc.reflection.today.v1': JSON.stringify({
+        'lvm.reflection.today.v1': JSON.stringify({
           userId: 'user-1',
           date: '2026-08-07',
           reflection: {
@@ -252,7 +245,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     {
       name: 'today’s reflection: entry from an earlier day is dropped',
       seed: {
-        'gc.reflection.today.v1': JSON.stringify({
+        'lvm.reflection.today.v1': JSON.stringify({
           userId: 'user-1',
           date: '2026-08-06',
           reflection: null,
@@ -266,7 +259,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'bible translation: whitespace only',
-      seed: { 'gc.bible.translation.v1': '   ' },
+      seed: { 'lvm.bible.translation.v1': '   ' },
       run: async (s) => {
         await hydrateBibleTranslationPref(s)
         return getBibleTranslationPref()
@@ -274,7 +267,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'bible translation: valid pick',
-      seed: { 'gc.bible.translation.v1': 'KJV' },
+      seed: { 'lvm.bible.translation.v1': 'KJV' },
       run: async (s) => {
         await hydrateBibleTranslationPref(s)
         return getBibleTranslationPref()
@@ -283,7 +276,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     {
       name: 'reader settings: stored pick',
       seed: {
-        'gc.reader.settings.v1': JSON.stringify({
+        'lvm.reader.settings.v1': JSON.stringify({
           pt: 18,
           typeface: 'sans',
           layout: 'prose',
@@ -298,7 +291,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     },
     {
       name: 'reader settings: malformed payload',
-      seed: { 'gc.reader.settings.v1': '{ not json' },
+      seed: { 'lvm.reader.settings.v1': '{ not json' },
       run: async (s) => {
         __resetReaderSettingsForTest()
         await hydrateReaderSettings(s)
@@ -343,11 +336,11 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     // Pre-existing behaviour worth pinning: defaults.ts wraps its five reads in
     // Promise.all, so one rejecting read discards all five. The batch must not
     // quietly "improve" this into per-key degradation either.
-    const { store } = makeStore({ 'gc.defaults.theme': 'dark' })
+    const { store } = makeStore({ 'lvm.defaults.theme': 'dark' })
     const failing = {
       ...store,
       getItem: vi.fn(async (key: string) => {
-        if (key === 'gc.defaults.chordStyle') throw new Error('read failed')
+        if (key === 'lvm.defaults.chordStyle') throw new Error('read failed')
         return store.getItem(key)
       }),
     } as unknown as BatchKVStorage

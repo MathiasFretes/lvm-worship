@@ -69,13 +69,13 @@ export default function AuditLogPanel() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
   return (
-    <div className="gc-audit-log gc-portal-section">
+    <div className="lvm-audit-log lvm-portal-section">
       <h2>Audit Log</h2>
 
       {/* Filters */}
-      <div className="gc-audit-log__filters">
+      <div className="lvm-audit-log__filters">
         <select
-          className="gc-audit-log__filter-select"
+          className="lvm-audit-log__filter-select"
           value={filterAction}
           onChange={e => { setFilterAction(e.target.value); setPage(0) }}
         >
@@ -85,14 +85,14 @@ export default function AuditLogPanel() {
           ))}
         </select>
         <input
-          className="gc-audit-log__filter-input"
+          className="lvm-audit-log__filter-input"
           type="date"
           value={filterDateFrom}
           onChange={e => { setFilterDateFrom(e.target.value); setPage(0) }}
           title="From date"
         />
         <input
-          className="gc-audit-log__filter-input"
+          className="lvm-audit-log__filter-input"
           type="date"
           value={filterDateTo}
           onChange={e => { setFilterDateTo(e.target.value); setPage(0) }}
@@ -100,19 +100,19 @@ export default function AuditLogPanel() {
         />
         <button
           type="button"
-          className="gc-btn gc-btn--secondary gc-btn--sm"
+          className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={() => { setFilterAction(''); setFilterDateFrom(''); setFilterDateTo(''); setPage(0) }}
         >
           Clear
         </button>
       </div>
 
-      {error && <p style={{ color: 'var(--gc-danger)' }}>Error: {error}</p>}
-      {loading && <p style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>Loading…</p>}
+      {error && <p style={{ color: 'var(--lvm-danger)' }}>Error: {error}</p>}
+      {loading && <p style={{ color: 'var(--lvm-text-secondary)', fontSize: 'var(--lvm-font-sub)' }}>Loading…</p>}
 
       {!loading && !error && (
-        <div className="gc-audit-log__table-wrap">
-          <table className="gc-audit-log__table">
+        <div className="lvm-audit-log__table-wrap">
+          <table className="lvm-audit-log__table">
             <thead>
               <tr>
                 <th>Actor</th>
@@ -126,7 +126,7 @@ export default function AuditLogPanel() {
             <tbody>
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', color: 'var(--gc-text-secondary)' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', color: 'var(--lvm-text-secondary)' }}>
                     No entries found.
                   </td>
                 </tr>
@@ -136,13 +136,13 @@ export default function AuditLogPanel() {
                   <tr>
                     <td>{entry.users?.display_name || entry.actor_id?.slice(0, 8) || '—'}</td>
                     <td>
-                      <span className={`gc-audit-log__action-badge gc-audit-log__action-badge--${entry.action}`}>
+                      <span className={`lvm-audit-log__action-badge lvm-audit-log__action-badge--${entry.action}`}>
                         {entry.action.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td>
                       {entry.song_slug ? (
-                        <Link to={`/songs/${entry.song_slug}`} style={{ color: 'var(--gc-link)' }}>
+                        <Link to={`/songs/${entry.song_slug}`} style={{ color: 'var(--lvm-link)' }}>
                           {entry.song_title || entry.song_slug}
                         </Link>
                       ) : (
@@ -150,12 +150,12 @@ export default function AuditLogPanel() {
                       )}
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(entry.created_at)}</td>
-                    <td style={{ color: 'var(--gc-text-secondary)' }}>{entry.note || '—'}</td>
+                    <td style={{ color: 'var(--lvm-text-secondary)' }}>{entry.note || '—'}</td>
                     <td>
                       {entry.payload_snapshot && (
                         <button
                           type="button"
-                          className="gc-audit-log__expand-btn"
+                          className="lvm-audit-log__expand-btn"
                           onClick={() => toggleExpand(entry.id)}
                         >
                           {expandedRows.has(entry.id) ? '▲ Hide' : '▼ Show'}
@@ -166,7 +166,7 @@ export default function AuditLogPanel() {
                   {expandedRows.has(entry.id) && entry.payload_snapshot && (
                     <tr>
                       <td colSpan={6}>
-                        <pre className="gc-audit-log__payload">
+                        <pre className="lvm-audit-log__payload">
                           {JSON.stringify(entry.payload_snapshot, null, 2)}
                         </pre>
                       </td>
@@ -180,14 +180,14 @@ export default function AuditLogPanel() {
       )}
 
       {totalPages > 1 && (
-        <div className="gc-audit-log__pagination">
+        <div className="lvm-audit-log__pagination">
           <span>
             Page {page + 1} of {totalPages} ({totalCount} entries)
           </span>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <button
               type="button"
-              className="gc-btn gc-btn--secondary gc-btn--sm"
+              className="lvm-btn lvm-btn--secondary lvm-btn--sm"
               disabled={page === 0}
               onClick={() => setPage(p => p - 1)}
             >
@@ -195,7 +195,7 @@ export default function AuditLogPanel() {
             </button>
             <button
               type="button"
-              className="gc-btn gc-btn--secondary gc-btn--sm"
+              className="lvm-btn lvm-btn--secondary lvm-btn--sm"
               disabled={page >= totalPages - 1}
               onClick={() => setPage(p => p + 1)}
             >

@@ -10,7 +10,7 @@ export default function Field({
   ...rest
 }){
   const uid = useId()
-  const inputId = id || `gc-field-${uid}`
+  const inputId = id || `lvm-field-${uid}`
   const helpId = help ? `${inputId}-help` : undefined
   const errorId = error ? `${inputId}-error` : undefined
   const describedBy = [helpId, errorId].filter(Boolean).join(' ') || undefined
@@ -25,11 +25,11 @@ export default function Field({
   }
 
   return (
-    <label className={`gc-field ${className}`.trim()} htmlFor={inputId} {...rest}>
-      {label ? <span className="gc-field__label">{label}</span> : null}
-      <div className="gc-field__control">{control}</div>
-      {help ? <div className="gc-field__help" id={helpId}>{help}</div> : null}
-      {error ? <div className="gc-field__error" id={errorId}>{error}</div> : null}
+    <label className={`lvm-field ${className}`.trim()} htmlFor={inputId} {...rest}>
+      {label ? <span className="lvm-field__label">{label}</span> : null}
+      <div className="lvm-field__control">{control}</div>
+      {help ? <div className="lvm-field__help" id={helpId}>{help}</div> : null}
+      {error ? <div className="lvm-field__error" id={errorId}>{error}</div> : null}
     </label>
   )
 }

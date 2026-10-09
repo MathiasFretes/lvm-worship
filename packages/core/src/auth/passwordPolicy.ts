@@ -35,24 +35,22 @@ export type PasswordChecks = {
   hasSymbol: boolean
 }
 
-// Matched by membership rather than a character class so none of these need
-// regex escaping.
-function hasSymbol(password: string): boolean {
-  for (const ch of password) {
-    if (PASSWORD_SYMBOLS.includes(ch)) return true
-  }
-  return false
-}
+const PASSWORD_RULES = {
+  hasLower: (value: string) => /[a-z]/.test(value),
+  hasUpper: (value: string) => /[A-Z]/.test(value),
+  hasDigit: (value: string) => /[0-9]/.test(value),
+  hasSymbol: (value: string) => Array.from(value).some((ch) => PASSWORD_SYMBOLS.includes(ch)),
+} as const
 
 /** Per-rule pass/fail, for a UI that wants to show each requirement separately. */
 export function checkPassword(password: string): PasswordChecks {
   const pw = password || ''
   return {
     minLength: pw.length >= PASSWORD_POLICY.minLength,
-    hasLower: /[a-z]/.test(pw),
-    hasUpper: /[A-Z]/.test(pw),
-    hasDigit: /[0-9]/.test(pw),
-    hasSymbol: hasSymbol(pw),
+    hasLower: PASSWORD_RULES.hasLower(pw),
+    hasUpper: PASSWORD_RULES.hasUpper(pw),
+    hasDigit: PASSWORD_RULES.hasDigit(pw),
+    hasSymbol: PASSWORD_RULES.hasSymbol(pw),
   }
 }
 
@@ -66,9 +64,10 @@ export function checkPassword(password: string): PasswordChecks {
 export function validatePasswordStrength(password: string): string | null {
   const checks = checkPassword(password)
   if (!checks.minLength) return 'errors.passwordTooShort'
-  if (PASSWORD_POLICY.requireLower && !checks.hasLower) return 'errors.passwordNeedsMix'
-  if (PASSWORD_POLICY.requireUpper && !checks.hasUpper) return 'errors.passwordNeedsMix'
-  if (PASSWORD_POLICY.requireDigit && !checks.hasDigit) return 'errors.passwordNeedsMix'
-  if (PASSWORD_POLICY.requireSymbol && !checks.hasSymbol) return 'errors.passwordNeedsMix'
-  return null
+  const compositionPasses =
+    (!PASSWORD_POLICY.requireLower || checks.hasLower) &&
+    (!PASSWORD_POLICY.requireUpper || checks.hasUpper) &&
+    (!PASSWORD_POLICY.requireDigit || checks.hasDigit) &&
+    (!PASSWORD_POLICY.requireSymbol || checks.hasSymbol)
+  return compositionPasses ? null : 'errors.passwordNeedsMix'
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 import { LINE_HEIGHTS } from '../lib/listRowMetrics'
 import SymbolIcon from './SymbolIcon'
@@ -57,18 +57,18 @@ export default function ListRow({
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
+      accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: t.spacing.md,
-        paddingVertical: 11,
-        paddingHorizontal: t.spacing.xl,
-        borderBottomWidth: isLast ? 0 : 0.5,
-        borderBottomColor: t.colors.border,
-        backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
-      })}
+      style={({ pressed }) => [
+        styles.row,
+        {
+          gap: t.spacing.md,
+          paddingHorizontal: t.spacing.xl,
+          borderBottomWidth: isLast ? 0 : 0.5,
+          borderBottomColor: t.colors.border,
+          backgroundColor: pressed && onPress ? t.colors.surfaceAlt : 'transparent',
+        },
+      ]}
     >
       {leading}
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -151,3 +151,11 @@ export default function ListRow({
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+  },
+})

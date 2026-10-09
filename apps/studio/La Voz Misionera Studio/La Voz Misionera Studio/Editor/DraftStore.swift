@@ -44,13 +44,15 @@ struct SongDraftSnapshot: Codable, Equatable, Sendable {
     var savedAt: Date
 }
 
-/// Reads and writes draft snapshots under Application Support.
-///
-/// A struct with an injectable directory rather than a singleton with a hardcoded
-/// path, so the tests get a temporary directory instead of reaching into the real
-/// container and deleting somebody's recovered work.
+/// File-backed draft repository with an injectable root.
 struct DraftStore: Sendable {
     let directory: URL
+    private let files: FileManager
+
+    init(directory: URL, files: FileManager = .default) {
+        self.directory = directory.standardizedFileURL
+        self.files = files
+    }
 
     /// The app's own drafts folder. Inside the sandbox container, which is what makes
     /// it private to Studio without any entitlement.
@@ -65,10 +67,13 @@ struct DraftStore: Sendable {
 
     func read(key: String) -> SongDraftSnapshot? {
         guard let url = fileURL(for: key) else { return nil }
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        guard let snapshot = try? JSONDecoder.draft.decode(SongDraftSnapshot.self, from: data),
-              snapshot.version <= SongDraftSnapshot.currentVersion else {
-            // Unreadable or from a newer build: drop it rather than guess at it.
+        guard let data = files.contents(atPath: url.path) else { return nil }
+        guard let snapshot = DraftCodec.decode(data),
+              snapshot.version > 0,
+              snapshot.version <= SongDraftSnapshot.currentVersion,
+              snapshot.key == key else {
+            // A malformed payload, unsupported schema, or file copied into the wrong
+            // slot is not safe recovery material.
             clear(key: key)
             return nil
         }
@@ -81,8 +86,8 @@ struct DraftStore: Sendable {
     func write(_ snapshot: SongDraftSnapshot) -> Bool {
         guard let url = fileURL(for: snapshot.key) else { return false }
         do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            let data = try JSONEncoder.draft.encode(snapshot)
+            try files.createDirectory(at: directory, withIntermediateDirectories: true)
+            let data = try DraftCodec.encode(snapshot)
             // Atomic: a draft half-written when the power goes is the one case where
             // this whole file would have made things worse instead of better.
             try data.write(to: url, options: .atomic)
@@ -96,7 +101,8 @@ struct DraftStore: Sendable {
 
     func clear(key: String) {
         guard let url = fileURL(for: key) else { return }
-        try? FileManager.default.removeItem(at: url)
+        guard files.fileExists(atPath: url.path) else { return }
+        try? files.removeItem(at: url)
     }
 
     // MARK: - Paths
@@ -105,26 +111,30 @@ struct DraftStore: Sendable {
     /// a row id rather than from this file's own constants, so it is filtered to
     /// characters that cannot walk out of the directory or name a hidden file.
     func fileURL(for key: String) -> URL? {
-        let safe = key.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
-        guard !safe.isEmpty else { return nil }
-        return directory.appendingPathComponent("\(safe).json", isDirectory: false)
+        guard Self.isSafeKey(key) else { return nil }
+        return directory.appendingPathComponent(key + ".json", isDirectory: false)
+    }
+
+    private static func isSafeKey(_ key: String) -> Bool {
+        guard !key.isEmpty, key.utf8.count <= 128 else { return false }
+        return key.unicodeScalars.allSatisfy {
+            CharacterSet.alphanumerics.contains($0) || $0 == "-" || $0 == "_"
+        }
     }
 }
 
 // MARK: - Coders
 
-private extension JSONEncoder {
-    static let draft: JSONEncoder = {
+private enum DraftCodec {
+    static func encode(_ snapshot: SongDraftSnapshot) throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        return encoder
-    }()
-}
+        return try encoder.encode(snapshot)
+    }
 
-private extension JSONDecoder {
-    static let draft: JSONDecoder = {
+    static func decode(_ data: Data) -> SongDraftSnapshot? {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+        return try? decoder.decode(SongDraftSnapshot.self, from: data)
+    }
 }

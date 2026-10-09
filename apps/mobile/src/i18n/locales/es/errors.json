@@ -1,15 +1,19 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "couldntLoadSong": "No se pudo cargar la canción",
-  "songNotFound": "No se pudo encontrar esta canción.",
-  "tryAgain": "Algo salió mal. Inténtalo de nuevo.",
-  "saveFailed": "Tus últimos cambios no se han guardado. Comprueba tu conexión e inténtalo de nuevo.",
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
+  "couldntLoadSong": "No pudimos abrir esta canción",
+  "songNotFound": "No encontramos esta canción en la biblioteca de LVM.",
+  "tryAgain": "Algo no salió bien. Inténtalo otra vez.",
+  "saveFailed": "Tus últimos cambios siguen sin guardarse. Revisa la conexión e inténtalo de nuevo.",
   "load": {
     "songs": "No se pueden cargar las canciones",
     "setlists": "No se pueden cargar tus repertorios",
     "starred": "No se pueden cargar las canciones favoritas",
     "lastSet": "No se puede cargar tu último repertorio",
     "reflection": "No se puede cargar tu reflexión",
-    "hint": "Comprueba tu conexión e inténtalo de nuevo."
+    "hint": "Revisa tu conexión y vuelve a cargar."
   }
 }

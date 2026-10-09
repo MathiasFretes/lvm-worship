@@ -102,4 +102,12 @@ describe('links the gate must NOT resume', () => {
     gate({ session: false, seg: 'viewer' })
     expect(gate({ session: true, seg: 'login' })).toBe('/viewer/second')
   })
+
+  it('clearing a later inbound hand-off does not erase an already held route', () => {
+    noteInboundLink('/viewer/held')
+    holdInboundLink()
+    noteInboundLink('/viewer/not-lost')
+    clearInboundLink()
+    expect(takeHeldLink()).toBe('/viewer/held')
+  })
 })

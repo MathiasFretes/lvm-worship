@@ -45,6 +45,26 @@ export function createYinDetector(options: YinOptions): YinDetector {
 
   const cmndf = new Float32Array(tauMax + 1)
 
+  const acceptedLag = (): number => {
+    for (let lag = tauMin; lag <= tauMax; lag += 1) {
+      if (cmndf[lag] >= threshold) continue
+      while (lag < tauMax && cmndf[lag + 1] < cmndf[lag]) lag += 1
+      return lag
+    }
+    return -1
+  }
+
+  const refineLag = (lag: number): number => {
+    if (lag <= tauMin || lag >= tauMax) return lag
+    const left = cmndf[lag - 1]
+    const middle = cmndf[lag]
+    const right = cmndf[lag + 1]
+    const denominator = 2 * (2 * middle - right - left)
+    if (denominator === 0) return lag
+    const shift = (right - left) / denominator
+    return Math.abs(shift) < 1 ? lag + shift : lag
+  }
+
   function detect(frame: Float32Array): PitchReading | null {
     if (frame.length < windowSize) return null
 
@@ -64,28 +84,11 @@ export function createYinDetector(options: YinOptions): YinDetector {
     // Absolute threshold: first dip under threshold, then slide to its local
     // minimum. Falling back to the global minimum when nothing dips under
     // would invite octave errors, so we simply report "no pitch".
-    let tau = -1
-    for (let t = tauMin; t <= tauMax; t++) {
-      if (cmndf[t] < threshold) {
-        while (t + 1 <= tauMax && cmndf[t + 1] < cmndf[t]) t++
-        tau = t
-        break
-      }
-    }
+    const tau = acceptedLag()
     if (tau === -1) return null
 
     // Parabolic interpolation around the minimum for sub-sample precision.
-    let betterTau = tau
-    if (tau > tauMin && tau < tauMax) {
-      const s0 = cmndf[tau - 1]
-      const s1 = cmndf[tau]
-      const s2 = cmndf[tau + 1]
-      const denom = 2 * (2 * s1 - s2 - s0)
-      if (denom !== 0) {
-        const adjustment = (s2 - s0) / denom
-        if (Math.abs(adjustment) < 1) betterTau = tau + adjustment
-      }
-    }
+    const betterTau = refineLag(tau)
 
     return {
       frequency: sampleRate / betterTau,
@@ -98,9 +101,9 @@ export function createYinDetector(options: YinOptions): YinDetector {
 
 /** RMS level of a frame — used to gate detection below the noise floor. */
 export function rmsLevel(frame: Float32Array): number {
-  let sum = 0
-  for (let i = 0; i < frame.length; i++) sum += frame[i] * frame[i]
-  return Math.sqrt(sum / frame.length)
+  if (frame.length === 0) return 0
+  const energy = frame.reduce((sum, sample) => sum + sample * sample, 0)
+  return Math.sqrt(energy / frame.length)
 }
 
 /**

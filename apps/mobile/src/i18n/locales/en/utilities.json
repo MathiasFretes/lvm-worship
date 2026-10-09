@@ -1,8 +1,11 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": {
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
+  },
   "title": "Utilities",
   "sectionTools": "TOOLS",
-  "pickTool": "Pick a tool to get started",
+  "pickTool": "Choose what your team needs for rehearsal or worship",
   "tools": {
     "tuner": "Guitar Tuner",
     "metronome": "Tap Tempo / Metronome",
@@ -13,7 +16,7 @@
   },
   "tuner": {
     "title": "Guitar Tuner",
-    "permissionDenied": "The tuner needs microphone access to hear your guitar. Audio is analyzed on this device only — never recorded or sent anywhere.",
+    "permissionDenied": "Allow microphone access so LVM can hear your guitar. Sound is analyzed only on this device—nothing is recorded or uploaded.",
     "enableInSettings": "Enable in Settings",
     "inTune": "In tune",
     "cents": "{{sign}}{{cents}}¢",
@@ -30,7 +33,7 @@
     "slower": "Slower",
     "faster": "Faster",
     "tapTempo": "Tap tempo",
-    "tapTempoHint": "Tap along to the song to set the metronome tempo",
+    "tapTempoHint": "Tap with the song and LVM will match its tempo",
     "metronomeStopped": "Metronome stopped",
     "beatOf": "Beat {{current}} of {{total}}",
     "accentDownbeat": "Accent downbeat",
@@ -51,7 +54,7 @@
     "addSongs": "Add songs",
     "selectedCount_one": "{{count}} song selected",
     "selectedCount_other": "{{count}} songs selected",
-    "noneSelected": "No songs selected yet. Add songs to build your songbook.",
+    "noneSelected": "Choose a few songs and build a songbook for your team.",
     "removeSong": "Remove {{title}}",
     "customizeExport": "Customize & export",
     "optionsTitle": "Songbook options",
@@ -65,7 +68,7 @@
     "addCover": "Add cover image",
     "replaceCover": "Replace",
     "removeCover": "Remove cover",
-    "coverHint": "Optional. Replaces the text cover page.",
+    "coverHint": "Optional. A cover image replaces the simple title page.",
     "coverTooLargeTitle": "Image too large",
     "coverTooLarge": "Please choose a smaller cover image (under about 2 MB).",
     "pickCoverErrorTitle": "Could not open photos",
@@ -78,8 +81,8 @@
     "playIn": "PLAY SHAPES IN",
     "result": "Capo {{fret}}",
     "resultNone": "No capo",
-    "hint": "Play {{shape}} shapes to sound in {{key}}.",
-    "hintNone": "Play in {{key}} — no capo needed."
+    "hint": "Use {{shape}} shapes to sound in {{key}}.",
+    "hintNone": "Play in {{key}} as written—no capo needed."
   },
   "keyRef": {
     "title": "Key Reference",
@@ -89,7 +92,7 @@
     "nashville": "Nashville",
     "setGeneral": "GENERAL",
     "setPrayer": "PRAYER",
-    "selectHint": "Shows this progression on the arc",
+    "selectHint": "Place this progression on the chord wheel",
     "showNote": "Playing note",
     "replay": "Play the sequence again",
     "a11yPosition": "{{chord}}, number {{number}}",

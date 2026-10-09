@@ -1,12 +1,8 @@
-// Canonical La Voz Misionera design tokens for React Native (the iOS "Signal blue"
-// palette). This is the single source of truth for the native app's tokens —
+// Canonical La Voz Misionera design tokens for React Native. This is the
+// single source of truth for the native app's tokens —
 // apps/mobile imports from here and never hardcodes color values.
-//
-// NOTE: these values are intentionally DIFFERENT from the web's tokens.css
-// (a warm-brown palette). The iOS rebuild uses Signal blue per the design
-// reference; the two platforms do not share token values, only this package as
-// their common home. Values below come from the design reference
-// ("[DOC + SPEC] App Shell & Design Tokens" / "[CONTENT] Song Library Content").
+// Brand values align with the V0-derived web shell; semantic roles retain
+// platform-specific contrast and native surface treatment.
 
 export type ThemeMode = 'light' | 'dark'
 
@@ -34,7 +30,7 @@ export type ThemeColors = {
   sec: string
   /** Muted text (e.g. time signature, section letters). */
   muted: string
-  /** The one accent — Signal blue. */
+  /** Accessible gold used for primary native controls. */
   accent: string
   /** Soft accent fill (e.g. add-button background). */
   accentSoft: string
@@ -54,7 +50,7 @@ export type ThemeColors = {
    * Non-accent emphasis: marks a fixed point that is NOT a selection. Used for
    * the Key Reference dial's index, where the accent already means "chosen" and
    * a second meaning on the same hue would be unreadable. A muted violet —
-   * outside the Signal Blue family, and deliberately quiet enough not to compete
+   * outside the LVM navy/gold brand roles, and quiet enough not to compete
    * with it.
    */
   spotlight: string
@@ -80,57 +76,57 @@ export type ThemeColors = {
 }
 
 export const lightColors: ThemeColors = {
-  bg: '#F5F7F9',
+  bg: '#F6F7F9',
   surface: '#FFFFFF',
-  surfaceAlt: '#EEF1F4',
-  ink: '#1E2227',
+  surfaceAlt: '#EEF0F3',
+  ink: '#1C2A39',
   sec: '#5C656F',
   muted: '#8A929B',
-  accent: '#1F84C9',
-  accentSoft: '#D9EAF6',
-  textAccent: '#15619A',
-  border: '#E3E8EC',
+  accent: '#825C18',
+  accentSoft: '#F3EAD8',
+  textAccent: '#825C18',
+  border: '#E4E7EC',
   onAccent: '#FFFFFF',
   danger: '#C43D38',
   onDanger: '#FFFFFF',
-  star: '#F0B000',
+  star: '#C6A15B',
   spotlight: '#6A5AC4',
   spotlightSoft: '#E4E0F6',
   success: '#34C759',
   off: 'rgba(138,146,155,0.45)',
   sheetHandle: 'rgba(138,146,155,0.4)',
   heroGradient: {
-    colors: ['#BFD3E3', '#CFE0EA', '#E3EDF2', '#F5F7F9'],
+    colors: ['#E2C58A', '#EBD9B9', '#F1EBDF', '#F6F7F9'],
     locations: [0, 0.34, 0.72, 1],
   },
   heroGlow: 'rgba(255,255,255,0.55)',
 }
 
 export const darkColors: ThemeColors = {
-  bg: '#14171A',
-  surface: '#1E2227',
-  surfaceAlt: '#242A30',
-  ink: '#E8ECF0',
-  sec: '#AEB6BE',
-  muted: '#7C858E',
-  accent: '#4EA6E6',
-  accentSoft: '#243340',
-  textAccent: '#6FB6EA',
-  border: '#2A3036',
-  onAccent: '#14171A',
+  bg: '#111C28',
+  surface: '#1C2A39',
+  surfaceAlt: '#26384B',
+  ink: '#F6F7F9',
+  sec: '#BAC6D1',
+  muted: '#7C8D9C',
+  accent: '#E2C58A',
+  accentSoft: '#3A321F',
+  textAccent: '#E2C58A',
+  border: '#35475A',
+  onAccent: '#1C2A39',
   danger: '#F0736A',
   onDanger: '#14171A',
-  star: '#FFCC00',
+  star: '#E2C58A',
   spotlight: '#A99BF0',
   spotlightSoft: '#2A2740',
   success: '#30D158',
-  off: 'rgba(124,133,142,0.5)',
-  sheetHandle: 'rgba(124,133,142,0.4)',
+  off: 'rgba(145,160,174,0.5)',
+  sheetHandle: 'rgba(145,160,174,0.4)',
   heroGradient: {
-    colors: ['#1C2A36', '#18222A', '#15191D', '#14171A'],
+    colors: ['#3A321F', '#26384B', '#1C2A39', '#111C28'],
     locations: [0, 0.38, 0.78, 1],
   },
-  heroGlow: 'rgba(78,166,230,0.18)',
+  heroGlow: 'rgba(226,197,138,0.18)',
 }
 
 /**
@@ -144,16 +140,16 @@ export const darkColors: ThemeColors = {
 export const lightContrastBoost: Partial<ThemeColors> = {
   sec: '#454C54',
   muted: '#5A626B',
-  textAccent: '#0F5088',
+  textAccent: '#6E4D12',
   border: '#C4CCD3',
   off: 'rgba(90,98,107,0.7)',
 }
 
 export const darkContrastBoost: Partial<ThemeColors> = {
   sec: '#C7CED5',
-  muted: '#9AA2AA',
-  textAccent: '#8AC4EE',
-  border: '#3C444C',
+  muted: '#AAB8C5',
+  textAccent: '#F0D6A3',
+  border: '#566A7D',
   off: 'rgba(154,162,170,0.75)',
 }
 

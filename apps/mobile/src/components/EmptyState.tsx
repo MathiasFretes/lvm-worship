@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import Button from './Button'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
@@ -23,32 +23,21 @@ export default function EmptyState({
   const t = useTheme()
   return (
     <View
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: t.spacing.xxl,
-        gap: t.spacing.lg,
-      }}
+      accessibilityRole="summary"
+      style={[styles.container, { paddingHorizontal: t.spacing.xxl, gap: t.spacing.lg }]}
     >
       <View
-        style={{
-          width: 72,
-          height: 72,
-          borderRadius: 18,
-          backgroundColor: t.colors.accentSoft,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        accessible={false}
+        style={[styles.iconTile, { backgroundColor: t.colors.accentSoft }]}
       >
         <SymbolIcon name={icon} size={34} color={t.colors.accent} />
       </View>
-      <View style={{ alignItems: 'center', gap: 7 }}>
-        <Text style={{ fontSize: 19, fontWeight: '700', color: t.colors.ink, textAlign: 'center' }}>
+      <View style={styles.copy}>
+        <Text style={[styles.title, { color: t.colors.ink }]}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={{ fontSize: 14, lineHeight: 21, color: t.colors.sec, textAlign: 'center' }}>
+          <Text style={[styles.subtitle, { color: t.colors.sec }]}>
             {subtitle}
           </Text>
         ) : null}
@@ -59,3 +48,32 @@ export default function EmptyState({
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconTile: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copy: {
+    alignItems: 'center',
+    gap: 7,
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+})

@@ -35,7 +35,7 @@ export function useSetlistBuilder(setlistId) {
   // The catalog is only needed for the Add-songs rail; existing rows render
   // from the song data core embeds in the setlist fetch, so the screen is NOT
   // gated on the catalog load.
-  const { songs, loading: songsLoading } = useSongs()
+  const { songs, loading: songsLoading, error: songsError, retry: retrySongs } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(songs), [songs])
 
   const [name, setNameState] = useState('')
@@ -116,6 +116,7 @@ export function useSetlistBuilder(setlistId) {
   }, [setlistId])
 
   const scheduleSave = useCallback(() => {
+    setSaving(true)
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => {
       timer.current = null
@@ -277,6 +278,16 @@ export function useSetlistBuilder(setlistId) {
     [scheduleSave]
   )
 
+  const addSong = useCallback((song) => {
+    setEntries((prev) => [...prev, {
+      entryKey: makeEntryKey(song.dbId),
+      songId: song.dbId,
+      toKey: null,
+      song: entrySongFromCatalog(song),
+    }])
+    scheduleSave()
+  }, [scheduleSave])
+
   const addVerse = useCallback(
     (verseId) => {
       setEntries((prev) => [
@@ -367,6 +378,8 @@ export function useSetlistBuilder(setlistId) {
     items,
     songs,
     songsLoading,
+    songsError,
+    retrySongs,
     catalog,
     updatedAt,
     // Gated on the setlist fetch only — rows render from the embedded song
@@ -380,6 +393,7 @@ export function useSetlistBuilder(setlistId) {
     setName,
     setDate,
     toggleSong,
+    addSong,
     addVerse,
     removeEntry,
     duplicateEntry,

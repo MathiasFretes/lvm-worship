@@ -76,6 +76,18 @@ export function useSessionController(setlistId: string) {
       if (sessionRef.current || busy) return
       setBusy(true)
       try {
+        const existing = await fetchActiveSessionForController(supabase)
+        if (existing) {
+          if (existing.setlist_id !== setlistId) {
+            throw new Error('active_session_for_another_setlist')
+          }
+          setSession({
+            id: existing.id,
+            code: existing.code,
+            chordCode: existing.chord_code ?? null,
+          })
+          return
+        }
         const items = buildSnapshot(entries)
         const row = await createSession(supabase, { setlistId, items })
         setSession({ id: row.id, code: row.code, chordCode: row.chord_code ?? null })

@@ -2,7 +2,7 @@ The La Voz Misionera native iOS app — an Expo / React Native client that share
 same `@lavozmisionera/core` logic and Supabase backend as the web app.
 
 ## What it is today
-Built from the `gc-ios-design-reference/` design bundle, the app now covers the
+Built from the `lvm-ios-design-reference/` design bundle, the app now covers the
 core worship-team flows end to end:
 - a themed **four-tab shell** — Home · Songs · Setlists · Daily Word,
 - a **Song Viewer** with a real chord chart — live transpose, key change,
@@ -26,7 +26,7 @@ A few pieces are still stubs or later stages (see [Roadmap](#roadmap)).
 - **Expo SDK 55**, **Expo Router v7**, TypeScript, React Native 0.83.
 - **Theme:** the typed token map from `@lavozmisionera/tokens/native` (iOS light/dark palette), consumed via `useTheme()`. Icons are **SF Symbols only** (iOS/iPadOS).
 - **Native dirs** (`ios/`, `android/`) use Continuous Native Generation — gitignored, regenerated via `npx expo prebuild`. `app.json` is the source of truth for native config.
-- **Backends:** Supabase (auth, stars, setlists) via core's `createGcSupabase` factory — the public anon key, stored with AsyncStorage, token refresh driven by `AppState`; the web app's **Pages Functions** for song/setlist export; Cloudflare **R2** for Daily Word Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists) via core's `createLvmSupabase` factory — the public anon key, stored with AsyncStorage, token refresh driven by `AppState`; the web app's **Pages Functions** for song/setlist export; Cloudflare **R2** for Daily Word Bible JSON.
 
 ## Running it
 Requires macOS + Xcode for the simulator:
@@ -43,7 +43,6 @@ Without a Mac, verify the JS bundle and RN-free logic on any OS with
 - **Password reset / email-confirmation** screens.
 - **Tablet** master-detail layout.
 - **EAS Build / TestFlight** distribution, then **Android** (Android OAuth config is not set up yet).
-- **GraceTracks** practice-stem integration.
 
 ## For developers
 Conventions (theme, primitives, SF Symbols, auth gating, Metro monorepo

@@ -1,47 +1,7 @@
-//
-//  PDFTextExtractor.swift
-//  La Voz Misionera Studio
-//
-//  Positioned text out of a PDF, for the editor's import. Text and geometry only —
-//  every decision about what the text MEANS (chord line or lyric, where a section
-//  starts, which syllable a chord belongs to) lives in
-//  packages/core/src/songs/pdfImport.ts, reached through CoreBridge.
-//
-//  ── Why PDFSelection and not characterBounds(at:) ────────────────────────────
-//  The obvious API for "where is each glyph" is `PDFPage.characterBounds(at:)`, and
-//  it is the wrong one. It has regressed twice: FB14843671 (open — wrong
-//  coordinates from iOS 18 beta 4 through at least 18.5) and FB12951475 against the
-//  sibling `characterIndex(at:)` in shipping iOS 17, whose reported signature was
-//  "accuracy worsening further down the page" — a cumulative index drift. PDFKit is
-//  one implementation across iOS and macOS, and the failure is SILENT: the rects
-//  look plausible and belong to the wrong row, which for a chord sheet means chords
-//  landing confidently in the wrong place.
-//
-//  So line and word geometry come from PDFSelection (`selectionsByLine()`,
-//  `rangeAtIndex(_:onPage:)`, `bounds(for:)`), which the same reports find more
-//  reliable and which needs no per-glyph index trust. Per-character bounds is used
-//  in exactly one place — resolving a mid-word chord split inside a word already
-//  located — where each rect is checked against its enclosing word rect before it
-//  is trusted, and the whole attempt is abandoned if it does not fit.
-//
-//  ── Fragments ────────────────────────────────────────────────────────────────
-//  A real chord chart does not store a lyric line as one text run. PraiseCharts and
-//  OnSong emit a separate positioned run under each chord, so one visual line
-//  arrives as several ranges on a single `selectionsByLine()` selection — 43 of 77
-//  lines in one chart, 78 of 129 in another. Treating each range as its own line is
-//  fatal: every chord line then has no lyric line beneath it to pair with, and the
-//  multi-range count stops meaning "PDFKit merged two columns" because it is true of
-//  ordinary lines too.
-//
-//  So fragments are merged back into one line here, joined with single spaces, and
-//  each word keeps its true rect. Nothing downstream reads horizontal position out
-//  of the text — the aligner works from `word.x` — so collapsing the whitespace
-//  costs nothing and keeps lyrics clean. A line is split again only at a detected
-//  gutter, and only when it really has a gap there.
-//
-//  Not thread-safe. Run `extract` off the main thread, then hop back to the main
-//  thread for the bridge call.
-//
+// Native PDFKit extraction for the platform-neutral importer in packages/core.
+// This layer emits text, style and geometry only. PDFSelection is used instead of
+// characterBounds(at:) so all measurements share one PDFKit index space. Fragmented
+// text runs are regrouped visually and all offsets crossing JSON are UTF-16.
 
 import AppKit
 import Foundation
@@ -53,6 +13,7 @@ enum PDFImportError: Error, LocalizedError {
     case copyingRestricted
     case noPages
     case noExtractableText
+    case invalidExtraction
 
     var errorDescription: String? {
         switch self {
@@ -69,6 +30,8 @@ enum PDFImportError: Error, LocalizedError {
             That PDF has no extractable text — it is most likely a scan or a photo of a \
             chart. Import works on PDFs whose text can be selected.
             """
+        case .invalidExtraction:
+            return "The PDF text could not be represented safely for import."
         }
     }
 }
@@ -139,7 +102,13 @@ nonisolated struct PDFTextExtractor {
         }
 
         guard !lines.isEmpty else { throw PDFImportError.noExtractableText }
-        return PDFExtraction(lines: lines, pages: pages, diagnostics: diagnostics)
+        let extraction = PDFExtraction(lines: lines, pages: pages, diagnostics: diagnostics)
+        do {
+            try extraction.validateContract()
+        } catch {
+            throw PDFImportError.invalidExtraction
+        }
+        return extraction
     }
 
     // MARK: - Intermediate model
@@ -175,6 +144,25 @@ nonisolated struct PDFTextExtractor {
         var lines: [PDFExtractedLine]
         var page: PDFExtractedPage
         var diagnostics: [String]
+    }
+
+    /// Builds the bridge string and offsets in one UTF-16 index space. Recounting a
+    /// Swift String after every append is both quadratic and easy to accidentally
+    /// change to grapheme-counting.
+    private struct LineAssembler {
+        private(set) var text = ""
+        private(set) var utf16Length = 0
+
+        mutating func append(_ word: String) -> Range<Int> {
+            if !text.isEmpty {
+                text.append(" ")
+                utf16Length += 1
+            }
+            let start = utf16Length
+            text.append(word)
+            utf16Length += word.utf16.count
+            return start..<utf16Length
+        }
     }
 
     // MARK: - One page
@@ -410,14 +398,11 @@ nonisolated struct PDFTextExtractor {
         startsBlock: Bool,
         cropBox: CGRect
     ) -> PDFExtractedLine {
-        var text = ""
+        var assembler = LineAssembler()
         var words: [PDFExtractedWord] = []
 
         for word in line.words {
-            if !text.isEmpty { text += " " }
-            let start = text.utf16.count
-            text += word.text
-            let end = text.utf16.count
+            let offsets = assembler.append(word.text)
             words.append(
                 PDFExtractedWord(
                     text: word.text,
@@ -425,9 +410,9 @@ nonisolated struct PDFTextExtractor {
                     y: Double(cropBox.maxY - word.rect.maxY),
                     w: Double(word.rect.width),
                     h: Double(word.rect.height),
-                    start: start,
-                    end: end,
-                    charX: !word.isEstimated && end - start >= midWordMinimumLength
+                    start: offsets.lowerBound,
+                    end: offsets.upperBound,
+                    charX: !word.isEstimated && offsets.count >= midWordMinimumLength
                         ? characterOrigins(word.pageRange, page: page, transform: transform, within: word.rect)
                         : nil
                 )
@@ -436,7 +421,7 @@ nonisolated struct PDFTextExtractor {
 
         let rect = line.rect
         return PDFExtractedLine(
-            text: text,
+            text: assembler.text,
             words: words,
             x: Double(rect.minX),
             // Flip to top-down so "above" is "smaller y" on both sides of the bridge.
@@ -465,20 +450,36 @@ nonisolated struct PDFTextExtractor {
         transform: CGAffineTransform,
         within word: CGRect
     ) -> [Double]? {
+        guard let source = page.string as NSString?,
+              range.location >= 0,
+              range.location + range.length <= source.length
+        else { return nil }
+
         let slack = word.insetBy(dx: -word.width, dy: -word.height)
         var origins: [Double] = []
         origins.reserveCapacity(range.length)
         var previous = -Double.greatestFiniteMagnitude
 
-        for offset in 0..<range.length {
-            let single = NSRange(location: range.location + offset, length: 1)
+        var offset = 0
+        while offset < range.length {
+            let location = range.location + offset
+            let first = source.character(at: location)
+            let isHighSurrogate = first >= 0xD800 && first <= 0xDBFF
+            let hasLowSurrogate =
+                offset + 1 < range.length &&
+                source.character(at: location + 1) >= 0xDC00 &&
+                source.character(at: location + 1) <= 0xDFFF
+            let unitCount = isHighSurrogate && hasLowSurrogate ? 2 : 1
+            let single = NSRange(location: location, length: unitCount)
             guard let rect = rect(for: single, page: page, transform: transform) else { return nil }
             guard slack.intersects(rect) else { return nil }
             let x = Double(rect.minX)
             if x < previous - 0.5 { return nil }
             previous = x
-            origins.append(x)
+            origins.append(contentsOf: repeatElement(x, count: unitCount))
+            offset += unitCount
         }
+        guard origins.count == range.length else { return nil }
         guard let first = origins.first, let last = origins.last,
               abs(first - Double(word.minX)) <= word.width * 0.25,
               last <= Double(word.maxX) + 1

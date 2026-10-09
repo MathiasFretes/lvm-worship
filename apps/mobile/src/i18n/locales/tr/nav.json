@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "home": "Ana Sayfa",
   "songs": "İlahiler",
   "setlists": "Set Listeleri",
-  "dailyWord": "Kutsal Kitap",
+  "dailyWord": "Günün Sözü",
   "utilities": "Araçlar"
 }

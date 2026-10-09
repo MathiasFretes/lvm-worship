@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { View, type StyleProp, type ViewStyle } from 'react-native'
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 
 // A raised surface container with the theme's card radius and a hairline
@@ -14,20 +14,21 @@ export default function Card({
   style?: StyleProp<ViewStyle>
 }) {
   const t = useTheme()
+  const themedSurface = {
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radii.card,
+    borderColor: t.colors.border,
+  }
   return (
-    <View
-      style={[
-        {
-          backgroundColor: t.colors.surface,
-          borderRadius: t.radii.card,
-          borderWidth: 1,
-          borderColor: t.colors.border,
-          overflow: 'hidden',
-        },
-        style,
-      ]}
-    >
+    <View style={[styles.frame, themedSurface, style]}>
       {children}
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  frame: {
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+})

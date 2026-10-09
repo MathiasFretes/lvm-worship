@@ -1,4 +1,4 @@
-// Run the PDF importer's heuristics over a saved extraction, without Xcode.
+// Run the PDF importer's heuristics over a saved extraction on any Node platform.
 //
 //   node "apps/studio/js/pdf-draft.mjs" <extraction.json>
 //   node "apps/studio/js/pdf-draft.mjs" <extraction.json> --json

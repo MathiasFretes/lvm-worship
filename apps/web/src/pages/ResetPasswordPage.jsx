@@ -7,17 +7,6 @@ import '../styles/auth.css'
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
 
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.dataset.theme === 'dark'
-  )
-  useEffect(() => {
-    const observer = new MutationObserver(() =>
-      setIsDark(document.documentElement.dataset.theme === 'dark')
-    )
-    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
-
   // 'checking' | 'valid' | 'invalid'
   const [sessionState, setSessionState] = useState('checking')
 
@@ -90,43 +79,43 @@ export default function ResetPasswordPage() {
   if (sessionState === 'checking') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--gc-text-secondary)' }}>Verifying link…</p>
+        <p style={{ color: 'var(--lvm-text-secondary)' }}>Verifying link…</p>
       </div>
     )
   }
 
   return (
-    <div className="gc-auth-page">
-      <div className="gc-auth-card">
+    <div className="lvm-auth-page">
+      <div className="lvm-auth-card">
         <img
-          src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
-           alt="La Voz Misionera"
-          className="gc-auth-card__wordmark"
+          src="/lvm-mark.svg"
+          alt="La Voz Misionera"
+          className="lvm-auth-card__wordmark"
         />
 
         {sessionState === 'invalid' ? (
           <>
-            <h1 className="gc-auth-card__title">Link expired</h1>
-            <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
+            <h1 className="lvm-auth-card__title">Link expired</h1>
+            <p className="lvm-auth-card__subtitle" style={{ marginBottom: 0 }}>
               This link has expired or is invalid.{' '}
               <Link to="/forgot-password">Request a new one</Link>
             </p>
           </>
         ) : success ? (
           <>
-            <h1 className="gc-auth-card__title">Password updated</h1>
-            <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
+            <h1 className="lvm-auth-card__title">Password updated</h1>
+            <p className="lvm-auth-card__subtitle" style={{ marginBottom: 0 }}>
               Password updated. Redirecting…
             </p>
           </>
         ) : (
           <>
-            <h1 className="gc-auth-card__title">Reset password</h1>
-            <p className="gc-auth-card__subtitle">Choose a new password for your account</p>
+            <h1 className="lvm-auth-card__title">Reset password</h1>
+            <p className="lvm-auth-card__subtitle">Choose a new password for your account</p>
 
-            <form onSubmit={handleSubmit} className="gc-auth-form">
-              {error && <div className="gc-auth-error">{error}</div>}
-              <div className="gc-form-field gc-pw-field-wrapper">
+            <form onSubmit={handleSubmit} className="lvm-auth-form">
+              {error && <div className="lvm-auth-error">{error}</div>}
+              <div className="lvm-form-field lvm-pw-field-wrapper">
                 <label htmlFor="new-password">New password</label>
                 <input
                   id="new-password"
@@ -146,7 +135,7 @@ export default function ResetPasswordPage() {
                 />
                 {newPasswordFocused && <PasswordStrengthPopover password={newPassword} />}
               </div>
-              <div className="gc-form-field">
+              <div className="lvm-form-field">
                 <label htmlFor="confirm-password">Confirm new password</label>
                 <input
                   id="confirm-password"
@@ -160,7 +149,7 @@ export default function ResetPasswordPage() {
               </div>
               <button
                 type="submit"
-                className="gc-btn gc-btn--primary"
+                className="lvm-btn lvm-btn--primary"
                 disabled={submitting}
                 style={{ width: '100%', justifyContent: 'center' }}
               >
@@ -170,7 +159,7 @@ export default function ResetPasswordPage() {
           </>
         )}
 
-        <p className="gc-auth-card__footer">
+        <p className="lvm-auth-card__footer">
           <Link to="/login">Back to sign in</Link>
         </p>
       </div>

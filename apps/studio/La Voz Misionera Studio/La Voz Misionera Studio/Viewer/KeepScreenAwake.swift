@@ -28,36 +28,51 @@ extension View {
 private struct KeepScreenAwakeModifier: ViewModifier {
     let enabled: Bool
 
-    @State private var assertion = DisplaySleepAssertion()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var lease = DisplaySleepLease()
 
     func body(content: Content) -> some View {
         content
-            .onAppear { assertion.setEnabled(enabled) }
-            .onChange(of: enabled) { _, isEnabled in assertion.setEnabled(isEnabled) }
-            .onDisappear { assertion.setEnabled(false) }
+            .onAppear { synchronize() }
+            .onChange(of: enabled) { _, _ in synchronize() }
+            .onChange(of: scenePhase) { _, _ in synchronize() }
+            .onDisappear { lease.release() }
+    }
+
+    private func synchronize() {
+        lease.update(shouldPreventSleep: enabled && scenePhase == .active)
     }
 }
 
 /// Holds at most one activity token. A class so `@State` keeps the same instance
 /// across body re-evaluations, and so `deinit` is a backstop for the case where
 /// `onDisappear` never runs.
-private final class DisplaySleepAssertion {
+private final class DisplaySleepLease {
     private var token: NSObjectProtocol?
 
-    func setEnabled(_ enabled: Bool) {
-        guard enabled != (token != nil) else { return }
-        if enabled {
-            token = ProcessInfo.processInfo.beginActivity(
-                options: [.idleDisplaySleepDisabled],
-                reason: "Displaying a chord chart"
-            )
-        } else if let token = token {
-            ProcessInfo.processInfo.endActivity(token)
-            self.token = nil
+    func update(shouldPreventSleep: Bool) {
+        if shouldPreventSleep {
+            acquire()
+        } else {
+            release()
         }
     }
 
+    private func acquire() {
+        guard token == nil else { return }
+        token = ProcessInfo.processInfo.beginActivity(
+            options: .idleDisplaySleepDisabled,
+            reason: "La Voz Misionera is displaying a chord chart"
+        )
+    }
+
+    func release() {
+        guard let token else { return }
+        ProcessInfo.processInfo.endActivity(token)
+        self.token = nil
+    }
+
     deinit {
-        if let token = token { ProcessInfo.processInfo.endActivity(token) }
+        release()
     }
 }

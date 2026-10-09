@@ -43,7 +43,7 @@ function eligibleInput(over: Partial<EligibilityInput> = {}): EligibilityInput {
   }
 }
 
-describe('daysBetweenDayKeys', () => {
+describe.each([{ product: 'LVM' }])('$product · daysBetweenDayKeys', () => {
   it('counts whole days and ignores DST by working in UTC', () => {
     expect(daysBetweenDayKeys('2026-03-01', '2026-03-31')).toBe(30)
     expect(daysBetweenDayKeys('2026-08-07', '2026-08-07')).toBe(0)
@@ -55,7 +55,7 @@ describe('daysBetweenDayKeys', () => {
   })
 })
 
-describe('evaluateReviewEligibility — triggers', () => {
+describe.each([{ product: 'LVM' }])('$product · evaluateReviewEligibility — triggers', () => {
   it('is eligible after a long song-viewer read', () => {
     const d = evaluateReviewEligibility(eligibleInput())
     expect(d.eligible).toBe(true)
@@ -146,7 +146,7 @@ describe('evaluateReviewEligibility — triggers', () => {
   })
 })
 
-describe('evaluateReviewEligibility — ambient gates', () => {
+describe.each([{ product: 'LVM' }])('$product · evaluateReviewEligibility — ambient gates', () => {
   it('blocks a non-production build', () => {
     const d = evaluateReviewEligibility(eligibleInput({ isProductionBuild: false }))
     expect(!d.eligible && d.gate).toBe('production')

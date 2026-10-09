@@ -29,7 +29,7 @@ function makeStore(seed: Record<string, string> = {}) {
 
 beforeEach(__resetReviewStateForTest)
 
-describe('hydrateReviewState', () => {
+describe.each([{ product: 'LVM' }])('$product · hydrateReviewState', () => {
   it('falls back to the zeroed default when unset', async () => {
     const { store } = makeStore()
     expect(await hydrateReviewState(store)).toEqual(DEFAULT_REVIEW_STATE)
@@ -69,7 +69,7 @@ describe('hydrateReviewState', () => {
   })
 })
 
-describe('recordAppOpen', () => {
+describe.each([{ product: 'LVM' }])('$product · recordAppOpen', () => {
   it('seeds the first-launch date and counts the first day', async () => {
     const { store, data } = makeStore()
     await hydrateReviewState(store)
@@ -123,7 +123,7 @@ describe('recordAppOpen', () => {
   })
 })
 
-describe('recordReviewRequest', () => {
+describe.each([{ product: 'LVM' }])('$product · recordReviewRequest', () => {
   it('stamps the time and increments the lifetime count immediately', async () => {
     const { store, data } = makeStore()
     await hydrateReviewState(store)

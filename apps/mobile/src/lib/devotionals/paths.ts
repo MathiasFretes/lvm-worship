@@ -15,19 +15,26 @@ export const DEVOTIONALS_ROOT = 'devotionals'
 /** Root for in-progress writes, staged before the atomic move into place. */
 export const DEVOTIONALS_TMP_ROOT = '.devotionals-tmp'
 
+function joinPath(...segments: string[]): string {
+  return segments
+    .map((segment) => segment.replace(/^\/+|\/+$/g, ''))
+    .filter(Boolean)
+    .join('/')
+}
+
 /** Cached manifest, e.g. `devotionals/manifest.json`. */
 export function manifestRelPath(): string {
-  return `${DEVOTIONALS_ROOT}/manifest.json`
+  return joinPath(DEVOTIONALS_ROOT, 'manifest.json')
 }
 
 /** Cached month file, e.g. `devotionals/month/01.json`. */
 export function monthRelPath(monthKey: string): string {
-  return `${DEVOTIONALS_ROOT}/month/${monthKey}.json`
+  return joinPath(DEVOTIONALS_ROOT, 'month', `${monthKey}.json`)
 }
 
 /** Staging path for a file being written, e.g. `.devotionals-tmp/01.json`. */
 export function tmpRelPath(name: string): string {
-  return `${DEVOTIONALS_TMP_ROOT}/${name}`
+  return joinPath(DEVOTIONALS_TMP_ROOT, name)
 }
 
 /**
@@ -36,10 +43,10 @@ export function tmpRelPath(name: string): string {
  * makes remote month objects immutable and cache invalidation unnecessary.
  */
 export function monthUrl(base: string, file: string): string {
-  return `${base}/${DEVOTIONALS_ROOT}/${file}`
+  return joinPath(base, DEVOTIONALS_ROOT, file)
 }
 
 /** Remote URL for the manifest — the only mutable object. */
 export function manifestUrl(base: string): string {
-  return `${base}/${DEVOTIONALS_ROOT}/manifest.json`
+  return joinPath(base, DEVOTIONALS_ROOT, 'manifest.json')
 }

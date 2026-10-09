@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useReducer, useState } from 'react'
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -17,6 +17,11 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSongList, type Song } from '../lib/useSongList'
 import { exportSongbook } from '../lib/exportSong'
 import { actionFailureMessage } from '../lib/errors'
+import {
+  createSongbookDraft,
+  reduceSongbookDraft,
+  selectedSongbookSongs,
+} from '../lib/songbookModel'
 
 // Utilities tool: build a songbook PDF. Pick songs (reusing the setlist
 // AddSongsModal), optionally name it / add a cover image / toggle a numbered
@@ -41,31 +46,25 @@ function defaultDate() {
 
 export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
-  const { t: tx } = useTranslation(['utilities', 'export', 'nav', 'common'])
+  const { t: tx, i18n } = useTranslation(['utilities', 'export', 'nav', 'common'])
   const insets = useSafeAreaInsets()
   const { songs, loading } = useSongList()
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [addOpen, setAddOpen] = useState(false)
   const [optionsOpen, setOptionsOpen] = useState(false)
-  const [title, setTitle] = useState(() => tx('songbook.defaultTitle'))
-  const [subtitle, setSubtitle] = useState(defaultDate)
-  const [includeTOC, setIncludeTOC] = useState(true)
-  const [coverImageDataUrl, setCoverImageDataUrl] = useState<string | null>(null)
-  const [coverName, setCoverName] = useState<string | null>(null)
+  const [draft, dispatch] = useReducer(
+    reduceSongbookDraft,
+    undefined,
+    () => createSongbookDraft(tx('songbook.defaultTitle'), defaultDate()),
+  )
 
   const selectedSongs = useMemo(
-    () => songs.filter((s) => selectedIds.has(s.id)).sort((a, b) => a.title.localeCompare(b.title)),
-    [songs, selectedIds],
+    () => selectedSongbookSongs(songs, draft.selectedIds, i18n.language),
+    [songs, draft.selectedIds, i18n.language],
   )
 
   const toggleSong = useCallback((song: Song) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(song.id)) next.delete(song.id)
-      else next.add(song.id)
-      return next
-    })
+    dispatch({ type: 'toggleSong', id: song.id })
   }, [])
 
   const pickCover = useCallback(async () => {
@@ -84,16 +83,18 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
         Alert.alert(tx('songbook.coverTooLargeTitle'), tx('songbook.coverTooLarge'))
         return
       }
-      setCoverImageDataUrl(dataUrl)
-      setCoverName(asset.fileName || tx('songbook.coverLabel'))
+      dispatch({
+        type: 'cover',
+        dataUrl,
+        name: asset.fileName || tx('songbook.coverLabel'),
+      })
     } catch (err: unknown) {
       Alert.alert(tx('songbook.pickCoverErrorTitle'), actionFailureMessage('SongbookBuilder.pickCover', err, tx))
     }
   }, [tx])
 
   const clearCover = useCallback(() => {
-    setCoverImageDataUrl(null)
-    setCoverName(null)
+    dispatch({ type: 'clearCover' })
   }, [])
 
   const onExport = useCallback(async () => {
@@ -101,16 +102,16 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
     try {
       const uri = await exportSongbook({
         items: selectedSongs.map((s) => ({ songId: s.id })),
-        title: title.trim(),
-        subtitle: subtitle.trim(),
-        includeTOC,
-        coverImageDataUrl,
+        title: draft.title.trim(),
+        subtitle: draft.subtitle.trim(),
+        includeTOC: draft.includeTOC,
+        coverImageDataUrl: draft.coverImageDataUrl,
       })
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
       Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SongbookBuilder.export', err, tx))
     }
-  }, [selectedSongs, title, subtitle, includeTOC, coverImageDataUrl, tx])
+  }, [selectedSongs, draft, tx])
 
   const body = (
     <>
@@ -188,7 +189,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
         visible={addOpen}
         onClose={() => setAddOpen(false)}
         songs={songs}
-        addedSongIds={selectedIds}
+        addedSongIds={draft.selectedIds}
         onToggle={toggleSong}
       />
 
@@ -196,14 +197,14 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
         visible={optionsOpen}
         onClose={() => setOptionsOpen(false)}
         songCount={selectedSongs.length}
-        title={title}
-        onChangeTitle={setTitle}
-        subtitle={subtitle}
-        onChangeSubtitle={setSubtitle}
-        includeTOC={includeTOC}
-        onToggleTOC={setIncludeTOC}
-        coverImageDataUrl={coverImageDataUrl}
-        coverName={coverName}
+        title={draft.title}
+        onChangeTitle={(value) => dispatch({ type: 'title', value })}
+        subtitle={draft.subtitle}
+        onChangeSubtitle={(value) => dispatch({ type: 'subtitle', value })}
+        includeTOC={draft.includeTOC}
+        onToggleTOC={(value) => dispatch({ type: 'includeTOC', value })}
+        coverImageDataUrl={draft.coverImageDataUrl}
+        coverName={draft.coverName}
         onPickCover={pickCover}
         onClearCover={clearCover}
         onExport={onExport}

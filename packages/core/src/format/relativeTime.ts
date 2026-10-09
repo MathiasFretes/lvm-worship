@@ -5,20 +5,27 @@
 
 export type Translator = (key: string, options?: Record<string, unknown>) => string
 
+const MINUTE_MS = 60_000
+const RELATIVE_UNITS = [
+  { ceiling: 60, divisor: 1, key: 'timeAgo.minutes' },
+  { ceiling: 24 * 60, divisor: 60, key: 'timeAgo.hours' },
+  { ceiling: 31 * 24 * 60, divisor: 24 * 60, key: 'timeAgo.days' },
+] as const
+
 export function timeAgo(
   iso: string | null | undefined,
   t: Translator,
   locale?: string
 ): string | null {
   if (!iso) return null
-  const then = new Date(iso).getTime()
+  const date = new Date(iso)
+  const then = date.getTime()
   if (Number.isNaN(then)) return null
-  const mins = Math.floor((Date.now() - then) / 60_000)
+  const mins = Math.floor((Date.now() - then) / MINUTE_MS)
   if (mins < 1) return t('timeAgo.justNow')
-  if (mins < 60) return t('timeAgo.minutes', { count: mins })
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return t('timeAgo.hours', { count: hours })
-  const days = Math.floor(hours / 24)
-  if (days < 31) return t('timeAgo.days', { count: days })
-  return new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+  const relative = RELATIVE_UNITS.find(({ ceiling }) => mins < ceiling)
+  if (relative) {
+    return t(relative.key, { count: Math.floor(mins / relative.divisor) })
+  }
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
 }

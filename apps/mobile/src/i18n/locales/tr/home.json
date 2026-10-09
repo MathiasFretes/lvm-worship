@@ -1,11 +1,15 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
   "greeting": {
     "morning": "Günaydın",
     "afternoon": "İyi günler",
     "evening": "İyi akşamlar",
     "hello": "{{greeting}}, {{name}}",
-    "friend": "dostum"
+    "friend": "tapınan dost"
   },
   "subGreetings": [
     "Her şey bıraktığın yerde.",
@@ -24,31 +28,31 @@
     "O'nun lütfu yeter.",
     "Her zaman sevinin."
   ],
-  "profileAndSettings": "Profil ve ayarlar",
+  "profileAndSettings": "Profiliniz ve ayarlarınız",
   "lastSet": {
     "label": "Son set",
     "meta_one": "{{count}} ilahi · ~{{min}} dk",
     "meta_other": "{{count}} ilahi · ~{{min}} dk",
     "keys": "Tonlar: {{keys}}",
-    "resume": "Devam et",
+    "resume": "Provaya devam et",
     "editSet": "Seti düzenle"
   },
   "continueCard": {
-    "label": "Kaldığın yerden devam et"
+    "label": "Kaldığınız yerden sürdürün"
   },
   "starredCard": {
     "label": "Yıldızlı ilahiler",
-    "empty": "Yıldızladığın ilahiler burada görünecek."
+    "empty": "Kolayca bulmak istediğiniz ilahileri yıldızlayın."
   },
   "dailyWordCard": {
     "label": "Kutsal Kitap",
-    "empty": "Bugünün okumasını aç.",
+    "empty": "Bugünün okumasına zaman ayırın.",
     "open": "Bugünün Kutsal Kitap bölümünü aç",
     "streak_one": "{{count}} günlük seri",
     "streak_other": "{{count}} günlük seri"
   },
   "recentSongsCard": {
     "label": "Son ilahiler",
-    "empty": "Açtığın ilahiler burada görünecek."
+    "empty": "Açtığınız ilahiler burada birikir."
   }
 }

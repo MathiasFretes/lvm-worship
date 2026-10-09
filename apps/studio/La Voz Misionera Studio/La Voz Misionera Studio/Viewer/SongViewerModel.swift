@@ -57,8 +57,7 @@ final class SongViewerModel: ObservableObject {
     @Published var chordStyle: ChordStyle {
         didSet {
             guard chordStyle != oldValue else { return }
-            refreshDerived()
-            refreshChart()
+            rebuildPresentation()
         }
     }
     @Published private(set) var accidental: Accidental = .sharp
@@ -108,14 +107,14 @@ final class SongViewerModel: ObservableObject {
     /// wants a real key — never the solfège *label* the key pill shows.
     var effectiveKey: String {
         guard steps != 0, !nativeKey.isEmpty else { return nativeKey }
-        return (try? services.bridge?.transpose(nativeKey, steps: steps, preferFlat: preferFlat))
-            .flatMap { $0 } ?? nativeKey
+        guard let bridge = services.bridge else { return nativeKey }
+        return (try? bridge.transpose(nativeKey, steps: steps, preferFlat: preferFlat)) ?? nativeKey
     }
 
     func transpose(by direction: Int) {
+        guard direction != 0 else { return }
         delta += direction
-        refreshDerived()
-        refreshChart()
+        rebuildPresentation()
     }
 
     /// Jump straight to a chosen key, or back to the song's own key when `key` is
@@ -126,13 +125,16 @@ final class SongViewerModel: ObservableObject {
             delta = -seedSteps
             accidentalTouched = false
             accidental = Accidental.default(for: nativeKey)
-            refreshDerived()
-            refreshChart()
+            rebuildPresentation()
             return
         }
         let target = (try? services.bridge?.stepsBetween(from: nativeKey, to: key)).flatMap { $0 } ?? 0
         delta = target - seedSteps
-        setAccidental(key.contains("b") ? .flat : .sharp)
+        accidentalTouched = true
+        accidental = key.contains("b") ? .flat : .sharp
+        // Picking a new key still requires a rebuild when its accidental happens
+        // to match the current one.
+        rebuildPresentation()
     }
 
     /// Explicit user choice of accidental — latches, so the key no longer reseeds it.
@@ -140,8 +142,7 @@ final class SongViewerModel: ObservableObject {
         accidentalTouched = true
         guard accidental != value else { return }
         accidental = value
-        refreshDerived()
-        refreshChart()
+        rebuildPresentation()
     }
 
     func stepFontScale(by direction: Int) {
@@ -160,23 +161,31 @@ final class SongViewerModel: ObservableObject {
     // MARK: - Loading
 
     func load() async {
-        isLoading = true
-        errorText = nil
-        parseErrorText = nil
-        doc = nil
+        beginLoading()
 
         do {
             let fetched = try await services.songs.fetchSong(slug: slug)
             song = fetched
-            if let fetched = fetched {
-                prepare(fetched)
-            }
+            if let fetched { prepare(fetched) }
         } catch SongsRepositoryError.sessionExpired {
             onSessionExpired?()
         } catch {
             errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
         }
         isLoading = false
+    }
+
+    private func beginLoading() {
+        isLoading = true
+        errorText = nil
+        parseErrorText = nil
+        song = nil
+        doc = nil
+        nativeKey = ""
+        seedSteps = 0
+        delta = 0
+        keyLabel = ""
+        capoText = nil
     }
 
     /// Called when a query reports a rejected token so the shell can return to
@@ -190,30 +199,37 @@ final class SongViewerModel: ObservableObject {
         guard let bridge = services.bridge else {
             parseErrorText = services.bridgeErrorText ?? "The ChordPro parser is unavailable."
             nativeKey = song.defaultKey ?? ""
-            seedAccidentalAndSeedSteps(bridge: nil)
+            configureInitialView(bridge: nil)
             return
         }
         let body = song.chordproContent ?? ""
         guard !body.isEmpty else {
             nativeKey = song.defaultKey ?? ""
-            seedAccidentalAndSeedSteps(bridge: bridge)
+            configureInitialView(bridge: bridge)
             return
         }
-        // A plain parse first, only to read meta.key. `render` preserves meta, but
-        // the seed has to exist before the first render can be asked for.
+
+        nativeKey = resolveNativeKey(from: body, fallback: song.defaultKey, bridge: bridge)
+        configureInitialView(bridge: bridge)
+        renderChart()
+    }
+
+    private func resolveNativeKey(
+        from body: String,
+        fallback: String?,
+        bridge: CoreBridge
+    ) -> String {
         do {
             let plain = try bridge.parse(body)
             let metaKey = plain.meta.key ?? ""
-            nativeKey = metaKey.isEmpty ? (song.defaultKey ?? "") : metaKey
+            return metaKey.isEmpty ? (fallback ?? "") : metaKey
         } catch {
             parseErrorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
-            nativeKey = song.defaultKey ?? ""
+            return fallback ?? ""
         }
-        seedAccidentalAndSeedSteps(bridge: bridge)
-        refreshChart()
     }
 
-    private func seedAccidentalAndSeedSteps(bridge: CoreBridge?) {
+    private func configureInitialView(bridge: CoreBridge?) {
         if let initialKey = initialKey, !initialKey.isEmpty, !nativeKey.isEmpty, let bridge = bridge {
             seedSteps = (try? bridge.stepsBetween(from: nativeKey, to: initialKey)) ?? 0
         } else {
@@ -222,11 +238,11 @@ final class SongViewerModel: ObservableObject {
         if !accidentalTouched {
             accidental = Accidental.default(for: nativeKey)
         }
-        refreshDerived()
+        updateDisplayValues()
     }
 
     /// Re-render the chart for the current transpose and chord style.
-    private func refreshChart() {
+    private func renderChart() {
         guard let bridge = services.bridge, let body = song?.chordproContent, !body.isEmpty else { return }
         do {
             doc = try bridge.render(body, steps: steps, preferFlat: preferFlat, style: chordStyle)
@@ -237,8 +253,13 @@ final class SongViewerModel: ObservableObject {
         }
     }
 
+    private func rebuildPresentation() {
+        updateDisplayValues()
+        renderChart()
+    }
+
     /// Recompute the key pill and capo chip.
-    private func refreshDerived() {
+    private func updateDisplayValues() {
         let key = effectiveKey
         guard let bridge = services.bridge, !key.isEmpty else {
             keyLabel = key

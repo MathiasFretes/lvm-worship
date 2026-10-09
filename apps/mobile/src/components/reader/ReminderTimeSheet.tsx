@@ -34,7 +34,12 @@ type ReminderTimeProps = {
 /** A local Date carrying only the reminder's hour/minute (today's date). */
 function toDate(hour: number, minute: number): Date {
   const d = new Date()
-  d.setHours(hour, minute, 0, 0)
+  d.setHours(
+    Math.min(23, Math.max(0, Math.trunc(hour))),
+    Math.min(59, Math.max(0, Math.trunc(minute))),
+    0,
+    0,
+  )
   return d
 }
 
@@ -58,8 +63,8 @@ function ReminderTimeContent({ hour, minute, onConfirm, onClose }: ReminderTimeP
   // Draft time — mounts from props on open, commits on Done.
   const [draft, setDraft] = useState(() => toDate(hour, minute))
 
-  const confirm = () => {
-    onConfirm(draft.getHours(), draft.getMinutes())
+  const commit = (value: Date) => {
+    onConfirm(value.getHours(), value.getMinutes())
     onClose()
   }
 
@@ -73,7 +78,7 @@ function ReminderTimeContent({ hour, minute, onConfirm, onClose }: ReminderTimeP
     <FormSheetShell
       title={tx('reminder.timeSheetTitle')}
       actionLabel={tx('common:done')}
-      onAction={confirm}
+      onAction={() => commit(draft)}
     >
       <View
         style={{
@@ -122,7 +127,9 @@ function AndroidReminderTimeDialog({ visible, hour, minute, onConfirm, onClose }
       value: toDate(hour, minute),
       is24Hour: usesTwentyFourHourClock(i18n.language),
       onChange: (event, date) => {
-        if (event.type === 'set' && date) latest.current.onConfirm(date.getHours(), date.getMinutes())
+        if (event.type === 'set' && date) {
+          latest.current.onConfirm(date.getHours(), date.getMinutes())
+        }
         latest.current.onClose()
       },
     })

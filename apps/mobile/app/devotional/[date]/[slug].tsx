@@ -8,7 +8,14 @@ import DevotionalScreen from '../../../src/screens/DevotionalScreen'
 // 13 recur across the year, so a slug alone cannot identify an entry. Both params
 // are untrusted (this route is deep-linkable via Android App Links), and the
 // screen renders a not-found state for anything it cannot resolve.
-export default function DevotionalRoute() {
-  const { date, slug } = useLocalSearchParams<{ date?: string, slug?: string }>()
-  return <DevotionalScreen dayKey={date} slug={slug} />
+function LvmDevotionalRoute() {
+  const params = useLocalSearchParams<{
+    date?: string | string[]
+    slug?: string | string[]
+  }>()
+  const dayKey = Array.isArray(params.date) ? params.date[0] : params.date
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug
+  return <DevotionalScreen dayKey={dayKey} slug={slug} />
 }
+
+export default LvmDevotionalRoute

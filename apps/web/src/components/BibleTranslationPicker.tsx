@@ -71,12 +71,12 @@ export default function BibleTranslationPicker({
   return (
     <div
       ref={rootRef}
-      className={`gc-translation-picker ${fullWidth ? 'is-full' : ''}`.trim()}
+      className={`lvm-translation-picker ${fullWidth ? 'is-full' : ''}`.trim()}
     >
       <button
         id={id}
         type="button"
-        className="gc-translation-picker__button"
+        className="lvm-translation-picker__button"
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open ? 'true' : 'false'}
@@ -86,10 +86,10 @@ export default function BibleTranslationPicker({
       </button>
 
       {open ? (
-        <div className="gc-translation-picker__menu" role="listbox" aria-label={ariaLabel}>
+        <div className="lvm-translation-picker__menu" role="listbox" aria-label={ariaLabel}>
           {groups.map((group) => (
-            <div key={group.languageCode} className="gc-translation-picker__group">
-              <div className="gc-translation-picker__group-label" role="presentation">
+            <div key={group.languageCode} className="lvm-translation-picker__group">
+              <div className="lvm-translation-picker__group-label" role="presentation">
                 {group.languageLabel}
               </div>
               {group.translations.map((translation) => {
@@ -100,7 +100,7 @@ export default function BibleTranslationPicker({
                     type="button"
                     role="option"
                     aria-selected={selected ? 'true' : 'false'}
-                    className={`gc-translation-picker__option ${selected ? 'is-selected' : ''}`.trim()}
+                    className={`lvm-translation-picker__option ${selected ? 'is-selected' : ''}`.trim()}
                     onClick={() => {
                       onChange(translation.id)
                       setOpen(false)

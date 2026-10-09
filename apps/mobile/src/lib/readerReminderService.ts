@@ -23,6 +23,15 @@ const ANDROID_CHANNEL_ID = 'reader-reminders'
 // The passages nudge deep-links straight to the Daily Word tab on tap.
 const REMINDER_DEEP_LINK = '/daily'
 
+function dailyTrigger(hour: number, minute: number): Notifications.DailyTriggerInput {
+  return {
+    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+    hour,
+    minute,
+    ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
+  }
+}
+
 /** Localized notification copy — rebuilt on each (re)schedule so it follows the
  * current UI language. */
 function reminderContent(): ReminderContent {
@@ -58,20 +67,16 @@ const backend: NotificationBackend = {
     }
   },
   async scheduleDaily(id, hour, minute, content) {
+    const notificationContent: Notifications.NotificationContentInput = {
+      title: content.title,
+      body: content.body,
+      sound: true,
+      data: { url: REMINDER_DEEP_LINK },
+    }
     await Notifications.scheduleNotificationAsync({
       identifier: id,
-      content: {
-        title: content.title,
-        body: content.body,
-        sound: true,
-        data: { url: REMINDER_DEEP_LINK },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute,
-        ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
-      },
+      content: notificationContent,
+      trigger: dailyTrigger(hour, minute),
     })
   },
 }

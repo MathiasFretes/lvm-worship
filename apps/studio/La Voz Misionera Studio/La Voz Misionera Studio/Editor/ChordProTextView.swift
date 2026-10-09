@@ -100,7 +100,7 @@ struct ChordProTextView: NSViewRepresentable {
         textView.autoresizingMask = [NSView.AutoresizingMask.width]
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: .greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        textView.textContainerInset = NSSize(width: GCSpacing.md, height: GCSpacing.sm)
+        textView.textContainerInset = NSSize(width: LVMSpacing.md, height: LVMSpacing.sm)
         textView.drawsBackground = true
 
         textView.onEffectiveAppearanceChange = { [weak coordinator = context.coordinator] view in
@@ -193,7 +193,7 @@ struct ChordProTextView: NSViewRepresentable {
         }
 
         func applyTheme(from parent: ChordProTextView, to textView: ChordProNSTextView, repaint: Bool) {
-            // Resolve the tokens against the view's own appearance. `GCColor` values
+            // Resolve the tokens against the view's own appearance. `LVMColor` values
             // are dynamic `NSColor`s underneath (see Theme.swift), but going through
             // SwiftUI's `Color` on the way here can flatten one to whichever
             // appearance was current — doing it inside the drawing appearance means
@@ -202,14 +202,14 @@ struct ChordProTextView: NSViewRepresentable {
             var background = NSColor.textBackgroundColor
             textView.effectiveAppearance.performAsCurrentDrawingAppearance {
                 palette = ChordProHighlighter.Palette(
-                    body: NSColor(GCColor.ink),
-                    chord: NSColor(GCColor.textAccent),
-                    punctuation: NSColor(GCColor.muted),
-                    structure: NSColor(GCColor.spotlight),
-                    value: NSColor(GCColor.ink),
-                    comment: NSColor(GCColor.muted)
+                    body: NSColor(LVMColor.ink),
+                    chord: NSColor(LVMColor.textAccent),
+                    punctuation: NSColor(LVMColor.muted),
+                    structure: NSColor(LVMColor.spotlight),
+                    value: NSColor(LVMColor.ink),
+                    comment: NSColor(LVMColor.muted)
                 )
-                background = NSColor(GCColor.bg)
+                background = NSColor(LVMColor.bg)
             }
             guard let palette = palette else { return }
 

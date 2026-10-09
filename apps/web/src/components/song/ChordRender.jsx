@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { transposeSymPrefer } from '../../utils/chordpro'
 import { formatChord } from '../../utils/chordpro/solfege'
 import { transposeInstrumental, formatInstrumental } from '../../utils/songs/instrumental'
@@ -21,7 +21,7 @@ export function InstrumentalRow({ spec, steps, split, preferFlat, chordStyle = '
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: 'var(--gc-font-chords)',
+            fontFamily: 'var(--lvm-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -40,7 +40,7 @@ export function ChordLine({ plain, chords, steps, showChords, preferFlat, chordS
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hostRef.current) return
     if (!canvasRef.current) {
       const cv = document.createElement('canvas')
@@ -55,7 +55,7 @@ export function ChordLine({ plain, chords, steps, showChords, preferFlat, chordS
     }
     const cs = window.getComputedStyle(lyr)
 
-    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--lvm-font-chords')
     const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     const lyricFont = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
@@ -90,9 +90,17 @@ export function ChordLine({ plain, chords, steps, showChords, preferFlat, chordS
   useEffect(() => {
     const el = hostRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => setMeasureKey(k => k + 1))
+    let frame = 0
+    const scheduleMeasure = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => setMeasureKey(k => k + 1))
+    }
+    const ro = new ResizeObserver(scheduleMeasure)
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => {
+      cancelAnimationFrame(frame)
+      ro.disconnect()
+    }
   }, [])
 
   useEffect(() => {
@@ -111,7 +119,7 @@ export function ChordLine({ plain, chords, steps, showChords, preferFlat, chordS
           {showChords && row.offsets.length > 0 && (
             <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
               {row.offsets.map((c, i)=>(
-                <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: 'var(--gc-font-chords)', fontWeight: 700 }}>
+                <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: 'var(--lvm-font-chords)', fontWeight: 700 }}>
                   {c.sym}
                 </span>
               ))}

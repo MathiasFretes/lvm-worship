@@ -40,13 +40,12 @@ export function nearestString(
   tuning: readonly TunerString[] = STANDARD_TUNING
 ): StringReading | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null
-  let best: StringReading | null = null
-  for (const string of tuning) {
-    const cents = centsBetween(frequency, string.frequency)
-    if (best === null || Math.abs(cents) < Math.abs(best.cents)) {
-      best = { string, cents }
-    }
-  }
+  const best = tuning.reduce<StringReading | null>((nearest, string) => {
+    const candidate = { string, cents: centsBetween(frequency, string.frequency) }
+    return nearest === null || Math.abs(candidate.cents) < Math.abs(nearest.cents)
+      ? candidate
+      : nearest
+  }, null)
   // More than ~4 semitones from every string: not a plausible string pitch.
   if (best && Math.abs(best.cents) > 400) return null
   return best
@@ -63,7 +62,7 @@ export function stringReading(
   lock: TunerString | null,
   tuning: readonly TunerString[] = STANDARD_TUNING
 ): StringReading | null {
-  if (lock === null) return nearestString(frequency, tuning)
   if (!Number.isFinite(frequency) || frequency <= 0) return null
+  if (!lock) return nearestString(frequency, tuning)
   return { string: lock, cents: centsBetween(frequency, lock.frequency) }
 }

@@ -1,21 +1,38 @@
 import { describe, expect, it } from 'vitest'
-import { buildTagMap, canonicalizeTags, normalizeTagKey, tagLabelFromKey } from '../tags'
+import {
+  buildTagMap,
+  canonicalizeTags,
+  filterDisplayTags,
+  normalizeTagKey,
+  tagLabelFromKey,
+} from '../tags'
 
-describe('tag normalization', () => {
-  it('normalizes keys case-insensitively', () => {
-    expect(normalizeTagKey('  HYmN  ')).toBe('hymn')
+describe('LVM ministry tag vocabulary', () => {
+  it.each([
+    ['  MISIONES  ', 'misiones'],
+    ['Adoración Congregacional', 'adoración congregacional'],
+    ['  HYmN  ', 'hymn'],
+  ])('normalizes %j to catalog key %j', (raw, key) => {
+    expect(normalizeTagKey(raw)).toBe(key)
   })
 
-  it('uses sentence case by default but preserves known acronyms', () => {
-    expect(tagLabelFromKey('hymn')).toBe('Hymn')
-    expect(tagLabelFromKey('icp')).toBe('ICP')
+  it.each([
+    ['misiones', 'Misiones'],
+    ['hymn', 'Hymn'],
+    ['icp', 'ICP'],
+  ])('labels %j as %j', (key, label) => {
+    expect(tagLabelFromKey(key)).toBe(label)
   })
 
-  it('dedupes tags across casing and emits canonical labels', () => {
-    const map = buildTagMap([{ tags: ['HYMN', 'hymn', 'ICP', 'icp'] }])
-    const { keys, labels } = canonicalizeTags(['Hymn', 'HYMN', 'icp'], map)
-    expect(keys).toEqual(['hymn', 'icp'])
-    expect(labels).toEqual(['Hymn', 'ICP'])
+  it('deduplicates editor input while hiding internal catalog markers', () => {
+    const map = buildTagMap([{ tags: ['MISIONES', 'misiones', 'ICP', 'icp'] }])
+    const normalized = canonicalizeTags(['Misiones', 'MISIONES', 'icp'], map)
+
+    expect(normalized).toEqual({
+      keys: ['misiones', 'icp'],
+      labels: ['Misiones', 'ICP'],
+    })
+    expect(filterDisplayTags(normalized.labels)).toEqual(['Misiones'])
   })
 })
 

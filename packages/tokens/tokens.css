@@ -2,29 +2,29 @@
 
 :root {
   /* Typography */
-  --gc-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
-  --gc-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
-  --gc-font-lyrics: "Noto Sans", "Inter 18", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --gc-font-chords: "Noto Sans Mono", "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Roboto Mono", monospace;
+  --lvm-font-family: Poppins, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --lvm-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
+  --lvm-font-lyrics: "Noto Sans", "Inter 18", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --lvm-font-chords: "Noto Sans Mono", "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Roboto Mono", monospace;
 
   /* Type scale */
-  --gc-font-title: clamp(32px, 4vw, 36px);
-  --gc-font-h2: 20px;
-  --gc-font-body: 16px;
-  --gc-font-sub: 14px;
-  --gc-font-cap: 12px;
+  --lvm-font-title: clamp(32px, 4vw, 36px);
+  --lvm-font-h2: 20px;
+  --lvm-font-body: 16px;
+  --lvm-font-sub: 14px;
+  --lvm-font-cap: 12px;
 
-  --gc-weight-title: 700;
-  --gc-weight-h2: 700;
-  --gc-weight-body: 450;
-  --gc-weight-sub: 450;
-  --gc-weight-cap: 450;
+  --lvm-weight-title: 700;
+  --lvm-weight-h2: 700;
+  --lvm-weight-body: 450;
+  --lvm-weight-sub: 450;
+  --lvm-weight-cap: 450;
 
-  --gc-lh-title: 1.15;
-  --gc-lh-h2: 1.25;
-  --gc-lh-body: 1.55;
-  --gc-lh-sub: 1.4;
-  --gc-lh-cap: 1.35;
+  --lvm-lh-title: 1.15;
+  --lvm-lh-h2: 1.25;
+  --lvm-lh-body: 1.55;
+  --lvm-lh-sub: 1.4;
+  --lvm-lh-cap: 1.35;
 
   /* Spacing */
   --space-1: 4px;
@@ -41,114 +41,135 @@
   --radius-pill: 999px;
 
   /* Control sizing */
-  --gc-control-h: 36px;
-  --gc-control-h-mobile: 44px;
-  --gc-btn-gap: 6px;
-  --gc-btn-pad-y: 6px;
-  --gc-btn-pad-x: 12px;
-  --gc-btn-font-size: 15px;
-  --gc-btn-pad-y-sm: 5px;
-  --gc-btn-pad-x-sm: 9px;
-  --gc-btn-font-size-sm: 13px;
-  --gc-btn-pad-y-lg: 8px;
-  --gc-btn-pad-x-lg: 14px;
-  --gc-btn-font-size-lg: 16px;
-  --gc-btn-icon-pad: 6px;
-  --gc-btn-icon-size: 16px;
-  --gc-mobile-dock-z: 120;
-  --gc-mobile-sheet-z: 170;
-  --gc-mobile-dim-opacity: 0.48;
+  --lvm-control-h: 36px;
+  --lvm-control-h-mobile: 44px;
+  --lvm-btn-gap: 6px;
+  --lvm-btn-pad-y: 6px;
+  --lvm-btn-pad-x: 12px;
+  --lvm-btn-font-size: 15px;
+  --lvm-btn-pad-y-sm: 5px;
+  --lvm-btn-pad-x-sm: 9px;
+  --lvm-btn-font-size-sm: 13px;
+  --lvm-btn-pad-y-lg: 8px;
+  --lvm-btn-pad-x-lg: 14px;
+  --lvm-btn-font-size-lg: 16px;
+  --lvm-btn-icon-pad: 6px;
+  --lvm-btn-icon-size: 16px;
+  --lvm-mobile-dock-z: 120;
+  --lvm-mobile-sheet-z: 170;
+  --lvm-mobile-dim-opacity: 0.48;
 
   /* Motion */
-  --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --gc-dur-quick: 180ms;
-  --gc-dur: 220ms;
+  --lvm-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --lvm-dur-quick: 180ms;
+  --lvm-dur: 220ms;
 
   /* Focus ring */
-  --gc-focus-size: 2px;
-  --gc-focus-offset: 2px;
+  --lvm-focus-size: 2px;
+  --lvm-focus-offset: 2px;
 
-  /* ===== Colors (Light) - Signal Blue palette ===== */
-  --gc-primary: #1F84C9;
-  --gc-primary-hover: #1A72B0;
-  --gc-success: #34C759;
-  --gc-warning: #FF9500;
-  --gc-danger: #FF3B30;
+  /* LVM Design System 0.1 — shared brand foundation for the new web shell. */
+  --lvm-brand-navy: #1c2a39;
+  --lvm-brand-navy-raised: #172033;
+  --lvm-brand-gold: #c6a15b;
+  --lvm-gold-text-on-light: #825c18;
+  --lvm-focus-ring: #b4872e;
+  --lvm-space-1: 4px;
+  --lvm-space-2: 8px;
+  --lvm-space-3: 12px;
+  --lvm-space-4: 16px;
+  --lvm-space-6: 24px;
+  --lvm-space-8: 32px;
+  --lvm-space-12: 48px;
+  --lvm-radius-control: 8px;
+  --lvm-radius-card: 12px;
+  --lvm-radius-panel: 16px;
+  --lvm-motion-fast: 180ms;
+  --lvm-motion-normal: 220ms;
+  --lvm-on-dark: #ffffff;
+  --lvm-border-subtle: #e4e7ec;
+
+  /* ===== Colors (Light) - V0-derived LVM navy/gold palette ===== */
+  --lvm-primary: #c6a15b;
+  --lvm-primary-hover: #b48f4a;
+  --lvm-success: #34C759;
+  --lvm-warning: #FF9500;
+  --lvm-danger: #b42318;
 
   /* Optional accents */
-  --gc-indigo: #5856D6;
-  --gc-purple: #AF52DE;
-  --gc-teal: #5AC8FA;
-  --gc-yellow: #FFCC00;
+  --lvm-indigo: #5856D6;
+  --lvm-purple: #AF52DE;
+  --lvm-teal: #5AC8FA;
+  --lvm-yellow: #FFCC00;
 
   /* Neutrals / surfaces */
-  --gc-bg: #F5F7F9;
-  --gc-surface-1: #FFFFFF;
-  --gc-surface-2: #EEF1F4;
-  --gc-surface-3: #E3E8EC;
+  --lvm-bg: #f6f7f9;
+  --lvm-surface-1: #FFFFFF;
+  --lvm-surface-2: #f0f2f5;
+  --lvm-surface-3: #e4e7ec;
 
   /* Text */
-  --gc-text: #1E2227;
-  --gc-text-secondary: #5C656F;
-  --gc-text-tertiary: #8A929B;
+  --lvm-text: #2d3748;
+  --lvm-text-secondary: #596474;
+  --lvm-text-tertiary: #8A929B;
 
   /* Borders / separators */
-  --gc-separator: #E3E8EC;
+  --lvm-separator: #e4e7ec;
 
   /* Derived / common */
-  --gc-text-accent: #15619A;
-  --gc-link: var(--gc-text-accent);
-  --gc-focus: var(--gc-primary);
-  --gc-selection-bg: color-mix(in srgb, #1F84C9 12%, #F5F7F9);
+  --lvm-text-accent: #3e6ba5;
+  --lvm-link: var(--lvm-text-accent);
+  --lvm-focus: var(--lvm-primary);
+  --lvm-selection-bg: color-mix(in srgb, #c6a15b 18%, #f6f7f9);
 
   /* Shadows */
-  --gc-shadow-1: 0 1px 4px rgba(20, 28, 38, 0.08);
-  --gc-shadow-2: 0 4px 16px rgba(20, 28, 38, 0.12);
-  --gc-shadow-3: 0 16px 44px rgba(20, 28, 38, 0.18);
+  --lvm-shadow-1: 0 1px 4px rgba(20, 28, 38, 0.08);
+  --lvm-shadow-2: 0 4px 16px rgba(20, 28, 38, 0.12);
+  --lvm-shadow-3: 0 16px 44px rgba(20, 28, 38, 0.18);
 
   /* Overlays */
-  --gc-overlay: rgba(0, 0, 0, 0.45);
-  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.35);
+  --lvm-overlay: rgba(0, 0, 0, 0.45);
+  --lvm-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.35);
 }
 
 /* Dark theme (assumes app toggles [data-theme="dark"] on html or body) */
 [data-theme="dark"] {
-  --gc-primary: #4EA6E6;
-  --gc-primary-hover: #66B4EA;
-  --gc-text-accent: #6FB6EA;
-  --gc-success: #30D158;
-  --gc-warning: #FF9F0A;
-  --gc-danger: #FF453A;
+  --lvm-primary: #e2c58a;
+  --lvm-primary-hover: #c6a15b;
+  --lvm-text-accent: #e2c58a;
+  --lvm-success: #30D158;
+  --lvm-warning: #FF9F0A;
+  --lvm-danger: #FF453A;
 
-  --gc-indigo: #5E5CE6;
-  --gc-purple: #BF5AF2;
-  --gc-teal: #64D2FF;
-  --gc-yellow: #FFD60A;
+  --lvm-indigo: #5E5CE6;
+  --lvm-purple: #BF5AF2;
+  --lvm-teal: #64D2FF;
+  --lvm-yellow: #FFD60A;
 
-  --gc-bg: #14171A;
-  --gc-surface-1: #1E2227;
-  --gc-surface-2: #242A30;
-  --gc-surface-3: #2A3036;
+  --lvm-bg: #0f1729;
+  --lvm-surface-1: #1c2a39;
+  --lvm-surface-2: #26394d;
+  --lvm-surface-3: #354960;
 
-  --gc-text: #E8ECF0;
-  --gc-text-secondary: #AEB6BE;
-  --gc-text-tertiary: #7C858E;
+  --lvm-text: #E8ECF0;
+  --lvm-text-secondary: #AEB6BE;
+  --lvm-text-tertiary: #7C858E;
 
-  --gc-separator: #2A3036;
+  --lvm-separator: #354960;
 
-  --gc-shadow-1: 0 1px 4px rgba(0, 0, 0, 0.35);
-  --gc-shadow-2: 0 4px 20px rgba(0, 0, 0, 0.5);
-  --gc-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.65);
+  --lvm-shadow-1: 0 1px 4px rgba(0, 0, 0, 0.35);
+  --lvm-shadow-2: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --lvm-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.65);
 
-  --gc-selection-bg: color-mix(in srgb, #4EA6E6 16%, #1E2227);
+  --lvm-selection-bg: color-mix(in srgb, #e2c58a 16%, #1c2a39);
 
-  --gc-overlay: rgba(0, 0, 0, 0.6);
-  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);
+  --lvm-overlay: rgba(0, 0, 0, 0.6);
+  --lvm-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --gc-dur-quick: 0ms;
-    --gc-dur: 0ms;
+    --lvm-dur-quick: 0ms;
+    --lvm-dur: 0ms;
   }
 }

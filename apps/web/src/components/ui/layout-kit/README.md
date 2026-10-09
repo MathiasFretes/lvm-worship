@@ -11,5 +11,5 @@ Usage highlights
 - `Field` for label + input + help/error text.
 - `IconButton` for 44px hit targets.
 
-All classes are `gc-*` and token-driven via `src/styles/tokens.css`.
+All classes are `lvm-*` and token-driven via `src/styles/tokens.css`.
 Styles are loaded globally in `src/main.jsx`.

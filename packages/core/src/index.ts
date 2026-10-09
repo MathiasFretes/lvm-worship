@@ -27,6 +27,7 @@ export * from './songs/instrumental'
 export * from './songs/verseRef'
 export * from './songs/songMetadata'
 export * from './songs/sort'
+export * from './songs/search'
 export * from './songs/songsRepo'
 // Shared song-authoring form model + slug helpers (web + mobile editors)
 export * from './songs/songAuthoring'
@@ -64,7 +65,7 @@ export * from './auth/authErrorKey'
 export * from './rbac/roles'
 export * from './rbac/userRole'
 
-// Supabase factory (createGcSupabase). Web imports it via the
+// Supabase factory (createLvmSupabase). Web imports it via the
 // '@lavozmisionera/core/supabase/client' subpath, which works under Vite; exposing
 // it on the barrel too lets Metro (React Native) consume the same factory
 // without the extensionless subpath its package-exports resolver rejects.

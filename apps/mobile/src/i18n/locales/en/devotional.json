@@ -1,14 +1,14 @@
 {
   "_meta": {
-    "reviewer": "",
-    "reviewedAt": ""
+    "reviewer": "LVM Worship product copy",
+    "reviewedAt": "2026-10-07"
   },
   "card": {
     "label": "Devotional",
-    "open": "Open devotional on {{reference}}"
+    "open": "Read the devotional for {{reference}}"
   },
   "placeholder": {
-    "none": "No devotional for today's readings."
+    "none": "There isn’t a devotional paired with today’s passages."
   },
   "screen": {
     "back": "Back",
@@ -17,6 +17,6 @@
   },
   "notFound": {
     "title": "Devotional not found",
-    "body": "This devotional isn't available. It may have moved, or the link may be out of date."
+    "body": "We can’t open this devotional right now. The link may be old or the reading may have moved."
   }
 }

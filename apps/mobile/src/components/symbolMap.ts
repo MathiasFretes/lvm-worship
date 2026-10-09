@@ -9,6 +9,11 @@
 // regenerate the codepoints, then commit the .ttf files alongside this file.
 
 export type MaterialGlyph = { md: string; filled: boolean }
+export type ResolvedMaterialGlyph = {
+  name: string | undefined
+  codepoint: number | undefined
+  filled: boolean
+}
 
 /** Codepoint for every Material Symbols glyph bundled in the subset fonts. */
 export const MATERIAL_CODEPOINTS: Record<string, number> = {
@@ -140,4 +145,18 @@ export const SF_TO_MATERIAL: Record<string, MaterialGlyph> = {
   'wrench.and.screwdriver': { md: 'handyman', filled: false },
   'xmark': { md: 'close', filled: false },
   'xmark.circle.fill': { md: 'cancel', filled: true },
+}
+
+/** Resolve the Android glyph without exposing lookup policy to renderers. */
+export function resolveMaterialGlyph(
+  sfName: string,
+  override?: string,
+): ResolvedMaterialGlyph {
+  const mapped = SF_TO_MATERIAL[sfName]
+  const name = override ?? mapped?.md
+  return {
+    name,
+    codepoint: name ? MATERIAL_CODEPOINTS[name] : undefined,
+    filled: mapped?.filled ?? sfName.endsWith('.fill'),
+  }
 }

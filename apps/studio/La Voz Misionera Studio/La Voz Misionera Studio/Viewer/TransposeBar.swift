@@ -27,10 +27,10 @@ struct TransposeBar: View {
             if let capoText = capoText {
                 Text(capoText)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(GCColor.textAccent)
+                    .foregroundStyle(LVMColor.textAccent)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(GCColor.accentSoft, in: Capsule())
+                    .background(LVMColor.accentSoft, in: Capsule())
             }
             pill
         }
@@ -45,7 +45,7 @@ struct TransposeBar: View {
             } label: {
                 Text(keyLabel)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(GCColor.ink)
+                    .foregroundStyle(LVMColor.ink)
                     .frame(minWidth: 38)
                     .padding(.vertical, 4)
                     .contentShape(Rectangle())
@@ -66,9 +66,9 @@ struct TransposeBar: View {
         .background(.regularMaterial, in: Capsule())
         .overlay {
             // Hairline for definition where the material meets a light chart.
-            Capsule().strokeBorder(GCColor.border.opacity(0.5), lineWidth: 0.5)
+            Capsule().strokeBorder(LVMColor.border.opacity(0.5), lineWidth: 0.5)
         }
-        // Fixed black, NOT a theme token: `GCColor.ink` is a *foreground* color, so
+        // Fixed black, NOT a theme token: `LVMColor.ink` is a *foreground* color, so
         // in dark mode it resolves near-white and the "shadow" became a glow. A
         // shadow is a shadow in both appearances.
         .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 2)
@@ -78,7 +78,7 @@ struct TransposeBar: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(GCColor.accent)
+                .foregroundStyle(LVMColor.accent)
                 .frame(width: 30, height: 26)
                 .contentShape(Rectangle())
         }

@@ -1,15 +1,15 @@
 {
   "_meta": {
-    "reviewer": "",
-    "reviewedAt": "",
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
     "needsReview": true
   },
   "card": {
     "label": "Devocional",
-    "open": "Abrir devocional sobre {{reference}}"
+    "open": "Leer el devocional de {{reference}}"
   },
   "placeholder": {
-    "none": "No hay devocional para las lecturas de hoy."
+    "none": "No hay un devocional para las lecturas de hoy."
   },
   "screen": {
     "back": "Atrás",
@@ -18,6 +18,6 @@
   },
   "notFound": {
     "title": "Devocional no encontrado",
-    "body": "Este devocional no está disponible. Puede haber cambiado de lugar o el enlace ya no es válido."
+    "body": "No podemos abrir este devocional. Puede que el enlace sea antiguo o que la lectura haya cambiado de lugar."
   }
 }

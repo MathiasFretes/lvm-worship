@@ -16,18 +16,17 @@
 // credential alive to save a form fill is the cheap version of auto-sign-in that
 // the deep-link work exists to avoid.
 
-let email: string | null = null
+const signUpDraft: { email: string | null } = { email: null }
 
 export function rememberSignUpEmail(value: string): void {
-  const trimmed = value.trim()
-  email = trimmed || null
+  signUpDraft.email = value.trim() || null
 }
 
 /** Read without clearing: the sign-in form may mount more than once. */
 export function getLastSignUpEmail(): string | null {
-  return email
+  return signUpDraft.email
 }
 
 export function clearLastSignUpEmail(): void {
-  email = null
+  signUpDraft.email = null
 }

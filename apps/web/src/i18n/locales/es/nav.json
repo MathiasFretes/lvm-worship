@@ -5,16 +5,16 @@
   "setlist": "Repertorio",
   "songbook": "Cancionero",
   "dailyWord": "Palabra del día",
-  "blog": "Blog",
   "editorPortal": "Portal del editor",
   "profile": "Perfil",
   "songEditor": "Editor de canciones",
-  "postEditor": "Editor de publicaciones",
   "adminPortal": "Portal del administrador",
   "signIn": "Iniciar sesión",
   "signOut": "Cerrar sesión",
   "openMainMenu": "Abrir menú principal",
   "userMenu": "Menú de usuario",
   "mobileMenu": "Menú móvil",
+  "mainNavigation": "Navegación principal",
+  "closeMainMenu": "Cerrar menú principal",
   "laVozMisioneraHome": "Inicio de La Voz Misionera"
 }

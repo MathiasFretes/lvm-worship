@@ -101,7 +101,7 @@ function scalar(n) {
 
 function rgbaLiteral(value, label) {
   const { r, g, b, a } = parseColor(value, label)
-  return `GCRGBA(red: ${float(r)}, green: ${float(g)}, blue: ${float(b)}, alpha: ${float(a)})`
+  return `LVMRGBA(red: ${float(r)}, green: ${float(g)}, blue: ${float(b)}, alpha: ${float(a)})`
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +223,7 @@ function emitColors(lightColors, darkColors, lightBoost, darkBoost, docs) {
       const indent = '    '
       return (
         docComment(docs, key, indent) +
-        `${indent}static let ${key} = GCDynamicColor(\n` +
+        `${indent}static let ${key} = LVMDynamicColor(\n` +
         `${indent}    light: ${rgbaLiteral(lightColors[key], `lightColors.${key}`)},\n` +
         `${indent}    dark: ${rgbaLiteral(darkColors[key], `darkColors.${key}`)},\n` +
         `${indent}    lightIncreasedContrast: ${rgbaLiteral(lightHC[key], `lightContrastBoost.${key}`)},\n` +
@@ -303,7 +303,7 @@ function emitTypography(typography, docs) {
       const tracking = spec.letterSpacing ?? 0
       return (
         docComment(docs, role, indent) +
-        `${indent}static let ${role} = GCTextSpec(\n` +
+        `${indent}static let ${role} = LVMTextSpec(\n` +
         `${indent}    size: ${scalar(spec.fontSize)},\n` +
         `${indent}    weight: ${weight},\n` +
         `${indent}    tracking: ${scalar(tracking)}\n` +
@@ -369,7 +369,7 @@ function buildSwift(tokens, docs) {
 //  GENERATED FILE — DO NOT EDIT.
 //
 //  Source of truth: packages/tokens/native.ts (the same map apps/mobile consumes,
-//  so the Signal-blue palette cannot drift between the iOS app and Studio).
+//  so the LVM navy/gold palette cannot drift between the iOS app and Studio).
 //  Regenerate with: ${REGEN_COMMAND}
 //
 //  Every color carries all four macOS appearance variants — light and dark, each
@@ -383,39 +383,39 @@ import SwiftUI
 // MARK: - Colors
 
 /// The palette, as dynamic colors that follow the system appearance.
-enum GCColor {
+enum LVMColor {
 ${colors}}
 
 // MARK: - Gradients
 
 /// The sanctioned gradients. Locations differ per appearance, so these take an
 /// explicit \`ColorScheme\` rather than resolving dynamically like colors do.
-enum GCGradient {
+enum LVMGradient {
 ${gradients}}
 
 // MARK: - Spacing
 
 /// 4-pt spacing scale.
-enum GCSpacing {
+enum LVMSpacing {
 ${emitScale('spacing', spacing, docs)}}
 
 // MARK: - Radii
 
 /// Corner radii.
-enum GCRadius {
+enum LVMRadius {
 ${emitScale('radii', radii, docs)}}
 
 // MARK: - Layout
 
 /// Content-width caps and layout constants.
-enum GCLayout {
+enum LVMLayout {
 ${emitLayout(layout, docs)}}
 
 // MARK: - Typography
 
-/// The canonical type ramp, in the iOS points native.ts declares. \`GCTextSpec\`
-/// scales these for macOS — see \`GCTypeScale\` in Theme.swift.
-extension GCTextSpec {
+/// The canonical type ramp, in the iOS points native.ts declares. \`LVMTextSpec\`
+/// scales these for macOS — see \`LVMTypeScale\` in Theme.swift.
+extension LVMTextSpec {
 ${emitTypography(typography, docs)}}
 `
 }

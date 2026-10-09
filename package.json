@@ -21,7 +21,8 @@
     "generate:sitemap": "npm run generate:sitemap -w @lavozmisionera/web",
     "generate:licenses": "npm run generate:licenses -w @lavozmisionera/web",
     "tokens:swift": "npm run generate:swift -w @lavozmisionera/tokens",
-    "tokens:swift:check": "npm run generate:swift:check -w @lavozmisionera/tokens"
+    "tokens:swift:check": "npm run generate:swift:check -w @lavozmisionera/tokens",
+    "studio:icons": "node apps/studio/js/generate-appicon.mjs"
   },
   "dependencies": {
     "patch-package": "^8.0.1"

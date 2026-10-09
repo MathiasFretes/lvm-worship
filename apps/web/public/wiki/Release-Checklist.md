@@ -7,10 +7,9 @@ Use this checklist to ship changes to La Voz Misionera confidently and avoid sta
 - PDF fonts present under `apps/web/src/assets/fonts/` (Noto Sans + Noto Mono)
 - `.env` file configured with Supabase credentials and service role key
 
-## 1) Song & Post Changes
-Songs and posts are managed via the Supabase database:
+## 1) Song Changes
+Songs are managed via the Supabase database:
 - **Songs** — use the Editor Portal (`/editor`) to add/edit songs directly in Supabase
-- **Posts** — use the Post editor (`/portal/posts`) to create or update blog posts
 - **PPTX slides** — upload via the PPTX widget in the song editor (stored in R2)
 
 ## 2) Run Tests

@@ -94,7 +94,7 @@ export default function Bundle(){
         {/* Back link removed; use navbar Home */}
         <h1 style={{margin:0}}>Build PDF Bundle</h1>
       </div>
-      <div className="gc-card" style={{display:'grid', gap:10}}>
+      <div className="lvm-card" style={{display:'grid', gap:10}}>
         {entries.map(it=>{
           const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
           return (
@@ -118,7 +118,7 @@ export default function Bundle(){
         })}
       </div>
       <div style={{display:'flex', gap:8, marginTop:10}}>
-        <button className="gc-btn" onClick={()=>{ localStorage.removeItem('bundleSelection'); navigate('/') }}>Clear</button>
+        <button className="lvm-btn" onClick={()=>{ localStorage.removeItem('bundleSelection'); navigate('/') }}>Clear</button>
         <button className="btn primary" disabled={loading} onClick={handleDownload}>{loading? `Preparing ${progress}/${entries.length}…`:'Download PDF ('+entries.length+')'}</button>
       </div>
     </div>

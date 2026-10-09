@@ -5,6 +5,14 @@
 
 // Anchored at both ends with no repetition before it, so this cannot backtrack.
 const DIGITS_ONLY_RE = /^\d+$/
+const normalizedName = (value: string): string => value.trim().toLowerCase()
+
+function copySuffixStart(name: string): number | null {
+  if (!name.endsWith(')')) return null
+  const open = name.lastIndexOf('(')
+  if (open < 0 || !DIGITS_ONLY_RE.test(name.slice(open + 1, -1))) return null
+  return open
+}
 
 /**
  * The stem a copy number hangs off. Duplicating "Set (2)" yields "Set (3)", not
@@ -22,12 +30,8 @@ const DIGITS_ONLY_RE = /^\d+$/
  */
 export function copyNameStem(name: string): string {
   const trimmed = (name || '').trim()
-  if (!trimmed.endsWith(')')) return trimmed
-  const open = trimmed.lastIndexOf('(')
-  if (open < 0) return trimmed
-  const inner = trimmed.slice(open + 1, -1)
-  if (!DIGITS_ONLY_RE.test(inner)) return trimmed
-  return trimmed.slice(0, open).trim()
+  const suffixStart = copySuffixStart(trimmed)
+  return suffixStart === null ? trimmed : trimmed.slice(0, suffixStart).trim()
 }
 
 /**
@@ -42,12 +46,11 @@ export function copyNameStem(name: string): string {
  */
 export function nextCopyName(name: string, existingNames: readonly string[]): string {
   const stem = copyNameStem(name) || 'New Setlist'
-  const key = (value: string) => value.trim().toLowerCase()
-  const taken = new Set(existingNames.map(key))
+  const taken = new Set(existingNames.map(normalizedName))
 
   for (let n = 2; n < 1000; n += 1) {
     const candidate = `${stem} (${n})`
-    if (!taken.has(key(candidate))) return candidate
+    if (!taken.has(normalizedName(candidate))) return candidate
   }
   // Unreachable for any real list; a unique-enough fallback beats looping.
   return `${stem} (${Date.now()})`
@@ -61,7 +64,6 @@ export function nextCopyName(name: string, existingNames: readonly string[]): st
  * second one that day becomes "9/12 Worship (2)".
  */
 export function uniqueName(base: string, existingNames: readonly string[]): string {
-  const key = (value: string) => value.trim().toLowerCase()
-  const taken = new Set(existingNames.map(key))
-  return taken.has(key(base)) ? nextCopyName(base, existingNames) : base.trim()
+  const taken = new Set(existingNames.map(normalizedName))
+  return taken.has(normalizedName(base)) ? nextCopyName(base, existingNames) : base.trim()
 }

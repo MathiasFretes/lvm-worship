@@ -41,7 +41,7 @@ supabase/       SQL migrations
 Pure, DOM-free, bundler-free TypeScript/JS shared across web and mobile — the
 ChordPro **parser** (not the renderer), transposition, chord placement, verse
 refs, song metadata/sort, the setlist codec, the role hierarchy, and the Supabase
-**factory** (`supabase/client.js`, `createGcSupabase({ url, anonKey, storage })`).
+**factory** (`supabase/client.js`, `createLvmSupabase({ url, anonKey, storage })`).
 Consumed as **source, no build step** via the `@lavozmisionera/core` alias
 (`apps/web/vite.config.js`) plus the workspace symlink; Metro transpiles it for
 mobile.
@@ -52,14 +52,14 @@ mobile.
 
 ### `packages/tokens` (`@lavozmisionera/tokens`)
 The single home for every platform's design tokens. Web imports `tokens.css`
-(the `--gc-*` Signal Blue palette, via `apps/web/src/styles/index.css`); React
-Native imports the typed map from `@lavozmisionera/tokens/native` (`native.ts`, the
-iOS Signal Blue palette). Both platforms now share the same accent
-(`#1F84C9` light / `#4EA6E6` dark — `--gc-primary` on web, `accent` on native);
-the neutrals and surfaces still differ per platform. Don't hardcode token values
+(the V0-derived navy/gold palette, via `apps/web/src/styles/index.css`); React
+Native imports the typed map from `@lavozmisionera/tokens/native` (`native.ts`).
+Both use the same brand navy (`#1C2A39`) and gold (`#C6A15B`). Native controls
+use the darker gold text role (`#825C18`) so white labels meet contrast; dark
+surfaces and neutrals still follow platform needs. Don't hardcode token values
 in any app.
 
-- **`apps/studio` (macOS) shares the mobile palette**, not the web one. It is a
+- **`apps/studio` (macOS) shares the mobile token map.** It is a
   native SwiftUI target and not an npm workspace member, so it cannot import
   `native.ts`; instead `generate-swift.mjs` mirrors it into **committed Swift**
   (`apps/studio/…/Design/DesignTokens.generated.swift` plus the `AccentColor`

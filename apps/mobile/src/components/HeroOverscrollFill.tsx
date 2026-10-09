@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Fills the top overscroll region of a ScrollView whose first child is the hero
@@ -13,11 +13,18 @@ export default function HeroOverscrollFill() {
   return (
     <View
       pointerEvents="none"
-      style={{
-        height: 600,
-        marginTop: -600,
-        backgroundColor: t.colors.heroGradient.colors[0],
-      }}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[styles.overscroll, { backgroundColor: t.colors.heroGradient.colors[0] }]}
     />
   )
 }
+
+const OVERSCROLL_DEPTH = 600
+
+const styles = StyleSheet.create({
+  overscroll: {
+    height: OVERSCROLL_DEPTH,
+    marginTop: -OVERSCROLL_DEPTH,
+  },
+})

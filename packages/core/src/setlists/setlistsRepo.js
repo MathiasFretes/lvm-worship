@@ -3,7 +3,7 @@
 // This is the canonical, client-injected counterpart to the web-side module at
 // apps/web/src/hooks/useSetlists.js — same semantics (personal sets only,
 // wipe-and-replace updates where position = array index), but callers inject
-// the Supabase client created via createGcSupabase(), like songsRepo. Errors
+// the Supabase client created via createLvmSupabase(), like songsRepo. Errors
 // throw (songsRepo convention); callers catch. The per-entry setlist-scoped
 // key lives in setlist_songs.key_override and is exposed app-side as `toKey`.
 
@@ -58,6 +58,24 @@ const SETLIST_SELECT_LEGACY =
   'setlist_songs(id, song_id, position, key_override, notes, ' +
   'songs(slug, title, artist, default_key, tempo, time_signature))'
 
+function toSetlistEntry(row) {
+  const verse = Boolean(row.verse_ref)
+  const personal = !verse && Boolean(row.personal_song_id)
+  const songId = verse
+    ? row.verse_ref
+    : personal
+      ? `personal:${row.personal_song_id}`
+      : row.song_id
+  return {
+    id: row.id,
+    song_id: songId,
+    position: row.position,
+    toKey: row.key_override || null,
+    notes: row.notes || null,
+    song: verse ? null : personal ? row.personal_songs || null : row.songs || null,
+  }
+}
+
 export async function fetchSetlist(client, setlistId) {
   // Embed each entry's song metadata so the builder/performer can render rows
   // immediately without waiting on the full song catalog to load. The chart
@@ -82,25 +100,7 @@ export async function fetchSetlist(client, setlistId) {
   // exposes song_id as its `v:...` id, so the builder's single opaque-id model
   // round-trips; updateSetlist decodes both on save.
   const rows = /** @type {any[]} */ (data.setlist_songs || [])
-  const entries = rows
-    .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((row) => {
-      const isVerse = !!row.verse_ref
-      const isPersonal = !isVerse && !!row.personal_song_id
-      let songId
-      if (isVerse) songId = row.verse_ref
-      else if (isPersonal) songId = `personal:${row.personal_song_id}`
-      else songId = row.song_id
-      return {
-        id: row.id,
-        song_id: songId,
-        position: row.position,
-        toKey: row.key_override || null,
-        notes: row.notes || null,
-        song: isVerse ? null : isPersonal ? row.personal_songs || null : row.songs || null,
-      }
-    })
+  const entries = rows.slice().sort((a, b) => a.position - b.position).map(toSetlistEntry)
   return {
     id: data.id,
     name: data.name,
@@ -120,8 +120,9 @@ export async function fetchSetlist(client, setlistId) {
  * @returns {Promise<{ id: string, name: string, service_date: string|null, created_at: string, updated_at: string }>}
  */
 export async function createSetlist(client, opts = {}) {
-  const { data: userData, error: authError } = await client.auth.getUser()
-  const user = userData && userData.user
+  const auth = await client.auth.getUser()
+  const authError = auth.error
+  const user = auth.data && auth.data.user
   if (authError || !user) throw authError || new Error('Not authenticated')
 
   const row = {
@@ -173,25 +174,25 @@ export async function updateSetlist(client, setlistId, input = {}) {
     // public catalog song. Only personal rows carry personal_song_id, so a
     // catalog-only set writes the exact legacy row shape and keeps working
     // against a database that hasn't had the personal-songs migration applied.
-    const rows = songs.map((song, i) => {
-      // A `v:...` id is a bible verse; a `personal:<uuid>` id targets the
-      // personal_songs FK; anything else is a public catalog song.
-      const isVerse = isVerseId(song.id)
-      const isPersonal = !isVerse && typeof song.id === 'string' && song.id.startsWith('personal:')
-      const row = {
-        setlist_id: setlistId,
-        position: i,
-        key_override: song.toKey || null,
-        notes: null,
-      }
-      if (isVerse) row.verse_ref = song.id
-      else if (isPersonal) row.personal_song_id = song.id.slice('personal:'.length)
-      else row.song_id = song.id
-      return row
-    })
+    const rows = songs.map((song, position) => setlistSongRow(setlistId, song, position))
     const { error: songsError } = await client.from('setlist_songs').insert(rows)
     if (songsError) throw songsError
   }
+}
+
+function setlistSongRow(setlistId, song, position) {
+  const verse = isVerseId(song.id)
+  const personal = !verse && typeof song.id === 'string' && song.id.startsWith('personal:')
+  const row = {
+    setlist_id: setlistId,
+    position,
+    key_override: song.toKey || null,
+    notes: null,
+  }
+  if (verse) row.verse_ref = song.id
+  else if (personal) row.personal_song_id = song.id.slice('personal:'.length)
+  else row.song_id = song.id
+  return row
 }
 
 /**

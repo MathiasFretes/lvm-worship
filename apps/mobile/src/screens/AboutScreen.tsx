@@ -14,11 +14,8 @@ import GlassSurface from '../components/GlassSurface'
 import { useTheme } from '../theme/ThemeProvider'
 
 // About La Voz Misionera — reached from Settings → Support. Shows the app version +
-// build (via expo-constants), links out to the legal pages (privacy, terms,
-// licenses) and a contact mailto, and shows the copyright line.
+// build (via expo-constants), dependency acknowledgements, contact, and copyright.
 
-const PRIVACY_URL = 'https://lavozmisionera.com/privacy'
-const TERMS_URL = 'https://lavozmisionera.com/terms'
 const LICENSES_URL = 'https://lavozmisionera.com/licenses'
 const CONTACT_EMAIL = 'admin@lavozmisionera.com'
 
@@ -84,7 +81,7 @@ export default function AboutScreen() {
               }}
             >
               <Text style={{ fontSize: 24, fontWeight: '700', letterSpacing: 0.5, color: t.colors.onAccent }}>
-                GC
+                LVM
               </Text>
             </View>
             <Text style={{ fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
@@ -94,18 +91,8 @@ export default function AboutScreen() {
           </View>
         </Card>
 
-        <SectionHeader label={tx('about.sectionLegal')} />
+        <SectionHeader label={tx('about.sectionSupport')} />
         <Card>
-          <ListRow
-            title={tx('about.privacyPolicy')}
-            chevron
-            onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
-          />
-          <ListRow
-            title={tx('about.termsOfUse')}
-            chevron
-            onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
-          />
           <ListRow
             title={tx('about.acknowledgements')}
             chevron

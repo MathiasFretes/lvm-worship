@@ -2,7 +2,7 @@
 //
 // Client-injected counterpart to the mobile hook at
 // apps/mobile/src/lib/useReflections.ts — callers inject the Supabase client
-// created via createGcSupabase() (like setlistsRepo/songsRepo). Errors throw;
+// created via createLvmSupabase() (like setlistsRepo/songsRepo). Errors throw;
 // callers catch.
 //
 // Reflections are PRIVATE-ONLY. createReflection hard-codes visibility =
@@ -12,6 +12,9 @@
 
 const REFLECTION_COLUMNS =
   'id, user_id, reflection_date, content_key, visibility, body, created_at'
+
+const privateReflections = (client) =>
+  client.from('reflections').select(REFLECTION_COLUMNS).eq('visibility', 'private')
 
 /**
  * Fetch the current user's own reflections, newest day first, for the journal.
@@ -27,10 +30,7 @@ const REFLECTION_COLUMNS =
  * @returns {Promise<import('./types').Reflection[]>}
  */
 export async function fetchReflections(client) {
-  const { data, error } = await client
-    .from('reflections')
-    .select(REFLECTION_COLUMNS)
-    .eq('visibility', 'private')
+  const { data, error } = await privateReflections(client)
     .order('reflection_date', { ascending: false })
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -45,10 +45,7 @@ export async function fetchReflections(client) {
  * @returns {Promise<import('./types').Reflection|null>}
  */
 export async function fetchReflectionForDate(client, dateKey) {
-  const { data, error } = await client
-    .from('reflections')
-    .select(REFLECTION_COLUMNS)
-    .eq('visibility', 'private')
+  const { data, error } = await privateReflections(client)
     .eq('reflection_date', dateKey)
     .maybeSingle()
   if (error) throw error
@@ -66,8 +63,9 @@ export async function fetchReflectionForDate(client, dateKey) {
  * @returns {Promise<import('./types').Reflection>}
  */
 export async function createReflection(client, input = {}) {
-  const { data: userData, error: authError } = await client.auth.getUser()
-  const user = userData && userData.user
+  const auth = await client.auth.getUser()
+  const authError = auth.error
+  const user = auth.data && auth.data.user
   if (authError || !user) throw authError || new Error('Not authenticated')
 
   const row = {
@@ -124,5 +122,8 @@ export async function deleteReflection(client, id) {
 
 /** True when an error is the one-reflection-per-day unique-index violation. */
 export function isDuplicateReflectionError(err) {
-  return err?.code === '23505' || String(err?.message || '').includes('reflections_one_per_day')
+  if (!err) return false
+  const uniqueCode = err.code === '23505'
+  const namedConstraint = String(err.message || '').includes('reflections_one_per_day')
+  return uniqueCode || namedConstraint
 }

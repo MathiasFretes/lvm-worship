@@ -3,7 +3,7 @@
 //  La Voz Misionera Studio
 //
 //  Favorite toggle for the Viewer header. Hollow muted outline when not starred,
-//  filled gold when it is — `GCColor.star` is in the token set for exactly this.
+//  filled gold when it is — `LVMColor.star` is in the token set for exactly this.
 //
 //  Port of apps/mobile/src/components/StarButton.tsx, including its optimistic
 //  write: the icon flips immediately and reverts if the row does not land. A
@@ -28,7 +28,7 @@ struct StarButton: View {
         } label: {
             Image(systemName: model.isStarred ? "star.fill" : "star")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(model.isStarred ? GCColor.star : GCColor.muted)
+                .foregroundStyle(model.isStarred ? LVMColor.star : LVMColor.muted)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

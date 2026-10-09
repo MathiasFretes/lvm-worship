@@ -1,8 +1,12 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "banner": "Çevrimdışısınız. Kaydedilen içerik çalışmaya devam ediyor.",
+  "_meta": {
+    "reviewer": "LVM Worship · native review pending",
+    "reviewedAt": "2026-10-07",
+    "needsReview": true
+  },
+  "banner": "Çevrimdışısınız; bu cihaza kaydettikleriniz yine de kullanılabilir.",
   "title": "Çevrimdışı ve İndirmeler",
-  "onThisDeviceStorage": "Bu cihazdaki çeviriler",
+  "onThisDeviceStorage": "Bu cihaza kaydedilen Kutsal Kitap çevirileri",
   "downloadedCount": "{{total}} çeviriden {{count}} tanesi indirildi",
   "mb": "{{value}} MB",
   "percent": "%{{value}}",
@@ -20,15 +24,15 @@
   "deleteDownload": "İndirmeyi sil",
   "download": "{{name}} indir",
   "wifiOnly": "Yalnızca Wi-Fi ile indir",
-  "footer": "İndirilen çeviriler bağlantı olmadan okunabilir.",
+  "footer": "Bir çeviriyi cihazınıza kaydedin, nerede olursanız olun okuyun.",
   "back": "Ayarlar",
   "backToSettings": "Ayarlara dön",
   "alerts": {
     "wifiRequiredTitle": "Wi-Fi gerekli",
-    "wifiRequiredMessage": "\"Yalnızca Wi-Fi ile indir\" seçeneği açık. Wi-Fi'ye bağlanın veya hücresel veriyle indirmek için seçeneği kapatın.",
+    "wifiRequiredMessage": "Yalnızca Wi-Fi ile indirme açık. Wi-Fi’ye bağlanın veya mobil veri kullanmak için bu seçeneği kapatın.",
     "downloadFailedTitle": "İndirme başarısız",
-    "downloadFailedMessage": "Bu çeviri indirilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "downloadFailedMessage": "Bu çevirinin indirilmesi tamamlanmadı. Bağlantınızı kontrol edip yeniden deneyin.",
     "deleteTitle": "İndirmeyi sil",
-    "deleteMessage": "\"{{name}}\" bu cihazdan kaldırılsın mı? İstediğiniz zaman tekrar indirebilirsiniz."
+    "deleteMessage": "“{{name}}” bu cihazdan kaldırılsın mı? Gerektiğinde yeniden indirebilirsiniz."
   }
 }

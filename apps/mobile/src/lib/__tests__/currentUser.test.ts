@@ -93,6 +93,21 @@ describe('setCurrentUserFromSession', () => {
     expect(getCurrentUserSnapshot()).toBe(before)
   })
 
+  it('ignores unrelated provider metadata changes', () => {
+    setCurrentUserFromSession(
+      session(user({ id: 'u1', user_metadata: { full_name: 'Ada', provider_id: 'first' } })),
+    )
+    const before = getCurrentUserSnapshot()
+    expect(
+      countEmissions(() =>
+        setCurrentUserFromSession(
+          session(user({ id: 'u1', user_metadata: { full_name: 'Ada', provider_id: 'second' } })),
+        ),
+      ),
+    ).toBe(0)
+    expect(getCurrentUserSnapshot()).toBe(before)
+  })
+
   it.each([
     ['display name', { full_name: 'Ada B' }],
     ['legacy name field', { name: 'Ada B' }],

@@ -21,21 +21,21 @@ export default function ShortcutsDialog({ open, onClose }) {
 
   return (
     <div
-      className="gc-modal-overlay"
+      className="lvm-modal-overlay"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="gc-shortcuts-title"
+      aria-labelledby="lvm-shortcuts-title"
     >
-      <div className="gc-modal gc-shortcuts-modal">
-        <h2 id="gc-shortcuts-title">{t('setlist.shortcutsTitle')}</h2>
-        <table className="gc-shortcuts-table">
+      <div className="lvm-modal lvm-shortcuts-modal">
+        <h2 id="lvm-shortcuts-title">{t('setlist.shortcutsTitle')}</h2>
+        <table className="lvm-shortcuts-table">
           <tbody>
             {ROWS.map((row) => (
               <tr key={row.key}>
-                <td className="gc-shortcut-keys">
+                <td className="lvm-shortcut-keys">
                   {row.keys.map((k, i) => (
                     <React.Fragment key={k}>
-                      {i > 0 ? <span className="gc-shortcut-plus">+</span> : null}
+                      {i > 0 ? <span className="lvm-shortcut-plus">+</span> : null}
                       <kbd>{k}</kbd>
                     </React.Fragment>
                   ))}
@@ -45,7 +45,7 @@ export default function ShortcutsDialog({ open, onClose }) {
             ))}
           </tbody>
         </table>
-        <div className="gc-modal-actions">
+        <div className="lvm-modal-actions">
           <Button variant="secondary" onClick={onClose}>
             {t('setlist.close')}
           </Button>

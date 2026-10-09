@@ -1,10 +1,30 @@
-// RFC-4122 v4 UUID. Used for optimistic setlist creation: the client mints the
-// id so it can navigate into the builder immediately while the INSERT is still
-// in flight. Not security-sensitive (it's a row id), so Math.random is fine.
+const UUID_BYTE_COUNT = 16
+
+function randomBytes(): Uint8Array {
+  const bytes = new Uint8Array(UUID_BYTE_COUNT)
+  const crypto = globalThis.crypto
+
+  if (typeof crypto?.getRandomValues === 'function') {
+    return crypto.getRandomValues(bytes)
+  }
+
+  for (let index = 0; index < bytes.length; index++) {
+    bytes[index] = Math.floor(Math.random() * 256)
+  }
+  return bytes
+}
+
 export function uuidv4(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  const bytes = randomBytes()
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+  return [
+    hex.slice(0, 4).join(''),
+    hex.slice(4, 6).join(''),
+    hex.slice(6, 8).join(''),
+    hex.slice(8, 10).join(''),
+    hex.slice(10).join(''),
+  ].join('-')
 }

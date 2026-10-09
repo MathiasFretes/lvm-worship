@@ -1,4 +1,6 @@
-[
+{
+  "schemaVersion": 1,
+  "entries": [
   {
     "mmdd": "0101",
     "readings": [
@@ -7664,4 +7666,5 @@
       }
     ]
   }
-]
+  ]
+}

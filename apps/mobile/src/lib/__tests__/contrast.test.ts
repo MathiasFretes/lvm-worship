@@ -66,7 +66,7 @@ describe.each(MODES)('$name mode', ({ colors, boost }) => {
   })
 
   // What the 19 accent-as-text sites were promoted to. It is also the web app's
-  // link colour (`--gc-link` in tokens.css), which is why it is the right token.
+  // link colour in tokens.css, which is why it is the right token.
   it.each(BACKGROUNDS)('textAccent clears normal-text contrast on %s', (bg) => {
     expect(contrastRatio(colors.textAccent, colors[bg])).toBeGreaterThanOrEqual(NORMAL_TEXT)
   })
@@ -149,13 +149,11 @@ describe('light mode specifics', () => {
     expect(contrastRatio(lightColors.muted, lightColors.bg)).toBeLessThan(LARGE_TEXT)
   })
 
-  it('records white-on-accent as the accepted deviation it is', () => {
-    // Deliberately NOT raised: iOS system blue ships near 3.6:1, and #1F84C9
-    // cascades to apps/web, apps/studio, store assets and the brand monogram.
-    // Pinned so a change to `accent` is a conscious act, not a side effect.
+  it('keeps white-on-gold controls above normal-text contrast', () => {
+    // Native controls use a deeper gold role while decorative brand gold stays
+    // #C6A15B. The fill must support white text at ordinary control sizes.
     const ratio = contrastRatio(lightColors.onAccent, lightColors.accent)
-    expect(ratio).toBeGreaterThanOrEqual(NON_TEXT)
-    expect(ratio).toBeLessThan(NORMAL_TEXT)
+    expect(ratio).toBeGreaterThanOrEqual(NORMAL_TEXT)
   })
 })
 

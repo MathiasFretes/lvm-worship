@@ -18,16 +18,16 @@ export function PillToggle({
   return (
     <button
       type="button"
-      className={`gc-pill-toggle gc-pill-toggle--${variant} ${isRight ? 'is-right' : 'is-left'} ${className}`}
+      className={`lvm-pill-toggle lvm-pill-toggle--${variant} ${isRight ? 'is-right' : 'is-left'} ${className}`}
       role="switch"
       aria-checked={isRight}
       aria-label={ariaLabel}
       onClick={handleClick}
     >
-      <span className="gc-pill-toggle__track" aria-hidden="true">
-        <span className="gc-pill-toggle__thumb" />
-        <span className="gc-pill-toggle__option gc-pill-toggle__option--left">{leftContent}</span>
-        <span className="gc-pill-toggle__option gc-pill-toggle__option--right">{rightContent}</span>
+      <span className="lvm-pill-toggle__track" aria-hidden="true">
+        <span className="lvm-pill-toggle__thumb" />
+        <span className="lvm-pill-toggle__option lvm-pill-toggle__option--left">{leftContent}</span>
+        <span className="lvm-pill-toggle__option lvm-pill-toggle__option--right">{rightContent}</span>
       </span>
     </button>
   )
@@ -71,13 +71,13 @@ export function LocalePicker({ className = '' }) {
   const { language, setLanguage, supportedLocales } = useLocale()
   const { t } = useTranslation('common')
   return (
-    <div className={`gc-locale-picker ${className}`}>
-      <GlobeIcon className="gc-locale-picker__icon" width={16} height={16} aria-hidden="true" />
+    <div className={`lvm-locale-picker ${className}`}>
+      <GlobeIcon className="lvm-locale-picker__icon" width={16} height={16} aria-hidden="true" />
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
         aria-label={t('language')}
-        className="gc-locale-picker__select"
+        className="lvm-locale-picker__select"
       >
         {supportedLocales.map(loc => (
           <option key={loc.code} value={loc.code}>{loc.label}</option>
@@ -94,7 +94,7 @@ export default function SettingsCluster({
   const { t } = useTranslation('common')
   return (
     <div
-      className={`gc-settings-cluster gc-settings-cluster--${orientation} ${className}`}
+      className={`lvm-settings-cluster lvm-settings-cluster--${orientation} ${className}`}
       role="group"
       aria-label={t('settings', { defaultValue: 'Settings' })}
     >

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import SetlistsRail from '../SetlistsRail'
+import SetlistsRail from '../LvmSetlistsRail'
 
 const SETS = [
   {
@@ -62,7 +62,7 @@ describe('SetlistsRail', () => {
   it('marks the open set as current', () => {
     renderRail()
     const open = screen.getByRole('button', { name: /^Sunday Morning/ })
-    expect(open).toHaveAttribute('aria-current', 'true')
+    expect(open).toHaveAttribute('aria-current', 'page')
   })
 
   it('opens a set on click', async () => {
@@ -89,6 +89,17 @@ describe('SetlistsRail', () => {
     await user.clear(input)
     await user.type(input, 'Evening Service{Enter}')
     expect(onRename).toHaveBeenCalledWith('s1', 'Evening Service')
+  })
+
+  it('cancels a rename with Escape without saving it', async () => {
+    const user = userEvent.setup()
+    const { onRename } = renderRail()
+    await user.click(screen.getByRole('button', { name: 'Actions for Sunday Morning' }))
+    await user.click(screen.getByRole('menuitem', { name: /Rename/ }))
+    const input = screen.getByRole('textbox', { name: 'Name' })
+    await user.clear(input)
+    await user.type(input, 'Discard me{Escape}')
+    expect(onRename).not.toHaveBeenCalled()
   })
 
   it('confirms before deleting', async () => {

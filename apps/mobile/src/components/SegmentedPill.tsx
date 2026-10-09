@@ -40,6 +40,15 @@ export type SegmentedPillOption<T extends string | number> = {
 const ANDROID_CELL_HEIGHT = 38
 const IOS_CELL_HEIGHT = 30
 
+function segmentHitSlop(first: boolean, last: boolean, vertical: number) {
+  return {
+    top: vertical,
+    bottom: vertical,
+    left: first ? 12 : 0,
+    right: last ? 12 : 0,
+  }
+}
+
 export default function SegmentedPill<T extends string | number>({
   options,
   value,
@@ -104,12 +113,7 @@ export default function SegmentedPill<T extends string | number>({
             // shipped locale — the narrowest interior label is ko "보통" (~52pt) —
             // but a very short future translation of a 3-option pill's MIDDLE
             // option would need its own fix, since it can borrow no slop.
-            hitSlop={{
-              top: verticalSlop,
-              bottom: verticalSlop,
-              left: first ? 12 : 0,
-              right: last ? 12 : 0,
-            }}
+            hitSlop={segmentHitSlop(first, last, verticalSlop)}
             style={{
               height: cellHeight,
               paddingHorizontal: 12,

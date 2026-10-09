@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { View, type StyleProp, type ViewStyle } from 'react-native'
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native'
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -21,9 +21,18 @@ export default function Screen({
   return (
     <SafeAreaView
       edges={edges}
-      style={[{ flex: 1, backgroundColor: t.colors.bg }, style]}
+      style={[styles.viewport, { backgroundColor: t.colors.bg }, style]}
     >
-      <View style={{ flex: 1 }}>{children}</View>
+      <View style={styles.content}>{children}</View>
     </SafeAreaView>
   )
 }
+
+const styles = StyleSheet.create({
+  viewport: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+})

@@ -20,9 +20,9 @@ export type KVStorage = {
   removeItem(key: string): Promise<void>
 }
 
-const STORAGE_KEY = 'gc.intro.seen.v1'
+const STORAGE_KEY = 'lvm.intro.seen.v1'
 
-// '1' is the only truthy value, matching gc.defaults.keepAwake. Anything else
+// '1' is the only truthy value, matching the keep-awake preference. Anything else
 // (absent, '0', garbage) means "not seen" — the safe direction to fail, since a
 // spurious extra intro is recoverable and a silently skipped one is not.
 const SEEN_VALUE = '1'

@@ -69,6 +69,12 @@ function toPermission(status: string): TunerPermission {
   return 'undetermined'
 }
 
+function appendAudio(window: Float32Array, chunk: Float32Array): void {
+  const count = Math.min(window.length, chunk.length)
+  window.copyWithin(0, count)
+  window.set(chunk.subarray(chunk.length - count), window.length - count)
+}
+
 export function useTuner(options: UseTunerOptions = {}): Tuner {
   const [permission, setPermission] = useState<TunerPermission>('unknown')
   const [running, setRunning] = useState(false)
@@ -158,8 +164,7 @@ export function useTuner(options: UseTunerOptions = {}): Tuner {
       { sampleRate: CAPTURE_RATE, bufferLength: CALLBACK_LENGTH, channelCount: 1 },
       (event) => {
         const chunk = decimate(event.buffer.getChannelData(0), DECIMATION)
-        ring.copyWithin(0, chunk.length)
-        ring.set(chunk, WINDOW - chunk.length)
+        appendAudio(ring, chunk)
         filled = Math.min(WINDOW, filled + chunk.length)
         if (filled < WINDOW) return
 

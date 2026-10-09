@@ -52,6 +52,8 @@ export default function TextField({
   const { t: tx } = useTranslation('common')
   const [focused, setFocused] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const passwordHidden = secureTextEntry && !revealed
+  const togglePasswordVisibility = () => setRevealed((current) => !current)
 
   return (
     <View style={style}>
@@ -77,7 +79,7 @@ export default function TextField({
       </View>
       <View
         style={{
-          height: 52,
+          minHeight: 52,
           flexDirection: 'row',
           alignItems: 'center',
           gap: t.spacing.sm + 2,
@@ -90,16 +92,18 @@ export default function TextField({
       >
         <SymbolIcon name={icon} size={18} color={t.colors.sec} />
         <TextInput
+          accessibilityLabel={label}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={t.colors.sec}
-          secureTextEntry={secureTextEntry && !revealed}
+          secureTextEntry={passwordHidden}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
           autoComplete={autoComplete}
           textContentType={textContentType}
+          selectionColor={t.colors.accent}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={{
@@ -112,10 +116,17 @@ export default function TextField({
         />
         {secureTextEntry ? (
           <Pressable
-            onPress={() => setRevealed((r) => !r)}
+            onPress={togglePasswordVisibility}
             accessibilityRole="button"
             accessibilityLabel={revealed ? tx('hidePassword') : tx('showPassword')}
-            hitSlop={8}
+            accessibilityState={{ expanded: revealed }}
+            hitSlop={6}
+            style={{
+              width: 36,
+              height: 44,
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+            }}
           >
             <SymbolIcon name={revealed ? 'eye.slash' : 'eye'} size={18} color={t.colors.sec} />
           </Pressable>

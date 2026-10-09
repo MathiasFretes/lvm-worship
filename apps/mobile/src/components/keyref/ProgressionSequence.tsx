@@ -74,7 +74,7 @@ function ChordCell({
         numberOfLines={1}
         style={{
           fontSize: CHORD_SIZE,
-          // White on Signal Blue is only ever semibold or heavier.
+          // Keep selected text legible on the gold control fill.
           fontWeight: '700',
           letterSpacing: -0.2,
           color: solid ? t.colors.onAccent : outlined ? t.colors.textAccent : t.colors.ink,
@@ -103,12 +103,19 @@ export default function ProgressionSequence({
   t: tx,
 }: ProgressionSequenceProps) {
   const t = useTheme()
-  let index = 0
+  const phraseStarts = progression.phrases.reduce<number[]>((starts, phrase) => {
+    const previous = starts.at(-1) ?? 0
+    const previousLength = starts.length > 0
+      ? progression.phrases[starts.length - 1].chords.length
+      : 0
+    starts.push(previous + previousLength)
+    return starts
+  }, [])
+
   return (
     <View>
       {progression.phrases.map((phrase, phraseIndex) => {
-        const start = index
-        index += phrase.chords.length
+        const start = phraseStarts[phraseIndex]
         return (
           <ScrollView
             key={phraseIndex}

@@ -4,7 +4,7 @@ import { hasMinRole as checkHasMinRole } from '../lib/roles'
 
 const AuthContext = createContext(null)
 
-const PROFILE_CACHE_KEY = 'gc_profile_cache'
+const PROFILE_CACHE_KEY = 'lvm_profile_cache'
 
 function getCachedProfile() {
   try {
@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
         // Only mark profileLoading when there is no profile to show yet.
         setAuthState(prev => ({
           session: newSession,
-          profile: prev.profile,
-          profileLoading: prev.profile === null,
+          profile: prev.profile?.id === newSession.user.id ? prev.profile : null,
+          profileLoading: prev.profile?.id !== newSession.user.id,
         }))
         fetchProfile(newSession.user.id, () => ignore)
       } else {

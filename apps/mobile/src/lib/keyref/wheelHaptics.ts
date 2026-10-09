@@ -46,19 +46,21 @@ export type WheelHaptics = {
  * cross to JS to be fired.
  */
 export function createWheelHaptics(now: () => number): WheelHaptics {
-  let lastTickAt: number | null = null
+  let lastTickAt: number | undefined
+  const reset = () => {
+    lastTickAt = undefined
+  }
+
   return {
     tick() {
       lastTickAt = now()
       return 'tick'
     },
     lock() {
-      const fire = shouldFireLock(now(), lastTickAt)
-      lastTickAt = null
+      const fire = shouldFireLock(now(), lastTickAt ?? null)
+      reset()
       return fire ? 'lock' : 'none'
     },
-    reset() {
-      lastTickAt = null
-    },
+    reset,
   }
 }

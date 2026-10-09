@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, useImperativeHandle } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Passage } from './types'
 import { buildCopyText, sortedVerses, toggleSelection } from './selection'
 import { fetchBibleChapter, type ChapterData } from '../../utils/bible/chapters'
@@ -26,6 +27,8 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   const [chapter, setChapter] = useState<ChapterData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const { t } = useTranslation(['errors', 'home'])
   const touchRef = useRef({ x: 0, y: 0, active: false })
 
   useEffect(() => {
@@ -43,12 +46,12 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
       .then((json) => setChapter(json))
       .catch((err) => {
         if (err.name === 'AbortError') return
-        setError(err.message || 'Failed to load passage')
+        setError('unavailable')
       })
       .finally(() => setLoading(false))
 
     return () => controller.abort()
-  }, [translationId, passage.bookNumber, passage.chapter])
+  }, [translationId, passage.bookNumber, passage.chapter, retryCount])
 
   const versesInScope = useMemo(() => {
     if (!chapter) return []
@@ -93,7 +96,7 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   return (
     <div
       ref={readerRef}
-      className={`gc-card readings-reader ${rtl ? 'is-rtl' : ''}`.trim()}
+      className={`lvm-card readings-reader ${rtl ? 'is-rtl' : ''}`.trim()}
       dir={rtl ? 'rtl' : 'ltr'}
       tabIndex={0}
       onKeyDown={onKeyDown}
@@ -117,8 +120,15 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
         else onNavigate?.('prev')
       }}
     >
-      {loading ? <p className="readings-status">Loading passage...</p> : null}
-      {error ? <p className="readings-status readings-status--error">{error}</p> : null}
+      {loading ? <p className="readings-status" role="status">{t('home:loading')}</p> : null}
+      {error ? (
+        <div role="alert" className="readings-status readings-status--error">
+          <p>{t('errors:generic')}</p>
+          <button type="button" onClick={() => setRetryCount((count) => count + 1)}>
+            {t('home:retry')}
+          </button>
+        </div>
+      ) : null}
 
       {!loading && !error ? (
         <div className="readings-verses">

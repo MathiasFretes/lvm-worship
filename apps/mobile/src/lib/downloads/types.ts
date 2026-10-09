@@ -49,6 +49,8 @@ export type AbortToken = { aborted: boolean }
 
 /** Thrown by the downloader when a cancel token trips mid-download. */
 export class DownloadCancelledError extends Error {
+  readonly code = 'DOWNLOAD_CANCELLED'
+
   constructor() {
     super('download_cancelled')
     this.name = 'DownloadCancelledError'
