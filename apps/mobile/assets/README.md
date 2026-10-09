@@ -2,8 +2,8 @@
 
 ## `icon.png` — the La Voz Misionera brand app icon
 
-`icon.png` is generated from the original `lvm-mark.svg`: an LVM monogram with
-voice waves on the Signal-blue/dark brand field. The same source generates the
+`icon.png` is generated from the original `lvm-mark.svg`: the LVM white cross
+inside a gold circle on a navy field. The same source generates the
 macOS Studio AppIcon, so Mobile and Studio remain one product family.
 
 - **Requirements:** 1024×1024, **no alpha channel** (flat RGB PNG), no rounded
@@ -19,12 +19,11 @@ macOS Studio AppIcon, so Mobile and Studio remain one product family.
 ## `splash-icon*.png` — the launch-screen mark (**keeps its alpha**)
 
 Note the opposite requirement to `icon.png` above: the splash images **must be
-transparent**. Reusing `icon.png` as the splash image is exactly what made the
-launch screen show a hard-edged dark square floating on the splash background —
-the icon's opaque `#1E2227` tile does not match `#14171A`/`#F5F7F9`.
+transparent**. Reusing `icon.png` as the splash image would show a hard-edged
+navy square floating on the splash background instead of the transparent mark.
 
-- `splash-icon.png` — mark for the **light** splash background (`#F5F7F9`).
-- `splash-icon-dark.png` — mark for the **dark** splash background (`#14171A`).
+- `splash-icon.png` — mark for the **light** splash background (`#F6F7F9`).
+- `splash-icon-dark.png` — mark for the **dark** splash background (`#111C28`).
 - **Requirements:** 1024×1024, alpha channel intact, no background fill. Wired via
   the `expo-splash-screen` plugin in `apps/mobile/app.json`.
 - `imageWidth` in that plugin config (200) and `SPLASH_IMAGE_WIDTH` in
