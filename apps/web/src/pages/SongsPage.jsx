@@ -355,6 +355,7 @@ export default function Songs(){
         <div className="lvm-song-library__heading">
           <h1 title={t('songs.titleTooltip')}>{t('songs.title')}</h1>
           <Button as={Link} to="/tablature">{t('tablature.title')}</Button>
+          <Button as={Link} to="/mixer">{t('mixer.title')}</Button>
           {languageChipCodes.length > 0 ? (
             <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (

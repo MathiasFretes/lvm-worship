@@ -1,5 +1,33 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "mixer": {
+    "title": "Mezclador de pistas",
+    "back": "Volver a canciones",
+    "description": "Reproducí hasta ocho pistas de audio locales alineadas. La velocidad también modifica el tono.",
+    "import": "Importar pistas",
+    "loading": "Importando…",
+    "empty": "Elegí archivos de audio que comiencen en el mismo punto de la canción.",
+    "transport": "Reproducción",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "stop": "Detener",
+    "speed": "Velocidad",
+    "position": "Posición (s)",
+    "start": "Inicio del bucle (s)",
+    "end": "Fin del bucle (s)",
+    "apply": "Activar bucle",
+    "clear": "Quitar bucle",
+    "loop": "Bucle de {{start}} a {{end}} s",
+    "volume": "Volumen",
+    "volumeFor": "Volumen de {{name}}",
+    "mute": "Silenciar",
+    "muted": "Silenciado",
+    "solo": "Solo",
+    "remove": "Quitar",
+    "removeFor": "Quitar {{name}}",
+    "audioError": "No pudimos iniciar el audio.",
+    "importError": "No pudimos cargar {{files}}. Revisá el formato y el tamaño."
+  },
   "tablature": {
     "playback": {
       "metronome": "Metrónomo",

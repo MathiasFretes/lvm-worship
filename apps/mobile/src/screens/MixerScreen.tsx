@@ -1,0 +1,181 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AppState, ScrollView, Text, TextInput, View } from 'react-native'
+import { Stack, useFocusEffect } from 'expo-router'
+import * as DocumentPicker from 'expo-document-picker'
+import { File } from 'expo-file-system'
+import { AudioContext, AudioManager, type AudioBuffer } from 'react-native-audio-api'
+import { useTranslation } from 'react-i18next'
+import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerAudio } from '@lavozmisionera/core/music/stemMixer'
+import Button from '../components/Button'
+import Screen from '../components/Screen'
+import { useTheme } from '../theme/ThemeProvider'
+
+function nativeAudio(): MixerAudio<AudioBuffer> {
+  const audio = new AudioContext()
+  return {
+    clock: () => audio.currentTime,
+    decode: bytes => audio.decodeAudioData(bytes),
+    async resume() {
+      AudioManager.setAudioSessionOptions({ iosCategory: 'playback', iosMode: 'default', iosOptions: ['mixWithOthers'] })
+      await AudioManager.setAudioSessionActivity(true)
+      await audio.resume()
+    },
+    close: () => { void audio.close().catch(() => {}) },
+    play(buffer, at, offset, duration, rate, volume) {
+      const source = audio.createBufferSource()
+      const gain = audio.createGain()
+      source.buffer = buffer
+      source.playbackRate.value = rate
+      gain.gain.value = volume
+      source.connect(gain)
+      gain.connect(audio.destination)
+      source.start(at, offset, duration)
+      return {
+        gain: value => gain.gain.setTargetAtTime(value, audio.currentTime, 0.008),
+        stop: () => {
+          gain.disconnect()
+          source.disconnect()
+          source.stop()
+        },
+      }
+    },
+  }
+}
+
+export default function MixerScreen({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation('utilities', { keyPrefix: 'mixer' })
+  const theme = useTheme()
+  const [state, setState] = useState(emptyMixer)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [start, setStart] = useState('0')
+  const [end, setEnd] = useState('')
+  const [seek, setSeek] = useState('')
+  const mixer = useRef<ReturnType<typeof createStemMixer<AudioBuffer>> | null>(null)
+  const mounted = useRef(false)
+  const importing = useRef(false)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      mixer.current?.dispose()
+      mixer.current = null
+    }
+  }, [])
+  useFocusEffect(useCallback(() => {
+    const subscription = AppState.addEventListener('change', status => {
+      if (status !== 'active') mixer.current?.pause()
+    })
+    return () => { subscription.remove(); if (mounted.current) mixer.current?.pause() }
+  }, []))
+
+  async function importFiles() {
+    if (importing.current) return
+    importing.current = true
+    setBusy(true)
+    setError('')
+    const failures: string[] = []
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: 'audio/*', multiple: true, copyToCacheDirectory: true })
+      if (result.canceled || !mounted.current) return
+      mixer.current ??= createStemMixer(nativeAudio(), setState, () => setError(t('audioError')))
+      const engine = mixer.current
+      for (const { uri, name } of result.assets) {
+        if (!mounted.current) break
+        try {
+          const file = new File(uri)
+          if (file.size > MIXER_FILE_BYTES || !await engine.add(name, await file.arrayBuffer())) failures.push(name)
+        } catch {
+          failures.push(name)
+        }
+      }
+      if (mounted.current && failures.length) setError(t('importError', { files: failures.join(', ') }))
+    } catch {
+      if (mounted.current) setError(t('audioError'))
+    } finally {
+      importing.current = false
+      if (mounted.current) setBusy(false)
+    }
+  }
+
+  function applyLoop() {
+    const valid = start.trim() && mixer.current?.setLoop(Number(start.replace(',', '.')), end.trim() ? Number(end.replace(',', '.')) : state.duration)
+    setError(valid ? '' : t('loopError'))
+  }
+
+  const ink = { color: theme.colors.ink }
+  const row = { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.spacing.sm } as const
+  const panel = { backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.md, padding: theme.spacing.md, gap: theme.spacing.md }
+  function field(label: string, value: string, onChangeText: (text: string) => void, placeholder?: string) {
+    return <View style={{ gap: theme.spacing.xs }}>
+      <Text style={ink}>{label}</Text>
+      <TextInput accessibilityLabel={label} keyboardType="decimal-pad" value={value}
+        placeholder={placeholder} placeholderTextColor={theme.colors.sec} maxLength={10} onChangeText={onChangeText}
+        style={{ ...ink, minHeight: 44, minWidth: 80, paddingHorizontal: theme.spacing.sm,
+          borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.md }} />
+    </View>
+  }
+
+  const content = (
+    <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
+      <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
+      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      {error ? <Text accessibilityRole="alert" style={ink}>{error}</Text> : null}
+      {state.tracks.length > 0 ? <>
+        <View style={panel}>
+          <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('transport')}</Text>
+          <View style={row}>
+            <Button title={t(state.playing ? 'pause' : 'play')} onPress={() => state.playing ? mixer.current?.pause() : void mixer.current?.play()} />
+            <Button title={t('stop')} variant="secondary" onPress={() => mixer.current?.stop()} />
+          </View>
+          <Text style={ink}>{t('position')} {state.time.toFixed(1)} / {state.duration.toFixed(1)} s</Text>
+          <View style={row}>
+            {field(t('position'), seek, setSeek)}
+            <Button title={t('seek')} variant="secondary" disabled={!seek.trim()} onPress={() => mixer.current?.seek(Number(seek.replace(',', '.')))} />
+          </View>
+          <Text style={ink}>{t('speed')} {Math.round(state.rate * 100)}%</Text>
+          <View style={row}>
+            <Button title="−" accessibilityLabel={t('slower')} variant="secondary" disabled={state.rate <= 0.5} onPress={() => mixer.current?.setRate(state.rate - 0.25)} />
+            <Button title="+" accessibilityLabel={t('faster')} variant="secondary" disabled={state.rate >= 1.5} onPress={() => mixer.current?.setRate(state.rate + 0.25)} />
+          </View>
+          <View style={row}>
+            {field(t('start'), start, setStart)}
+            {field(t('end'), end, setEnd, state.duration.toFixed(1))}
+          </View>
+          <View style={row}>
+            <Button title={t('apply')} variant="secondary" onPress={applyLoop} />
+            <Button title={t('clear')} variant="secondary" disabled={!state.loop} onPress={() => { mixer.current?.clearLoop(); setError('') }} />
+          </View>
+          {state.loop && <Text style={ink}>{t('loop', { start: state.loop.start.toFixed(1), end: state.loop.end.toFixed(1) })}</Text>}
+        </View>
+        {state.tracks.map(track => (
+          <View key={track.id} style={panel}>
+            <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{track.name}</Text>
+            <Text style={ink}>{t('volume')} {Math.round(track.volume * 100)}%</Text>
+            <View style={row}>
+              <Button title="−" accessibilityLabel={t('quieter', { name: track.name })} variant="secondary" disabled={track.volume <= 0}
+                onPress={() => mixer.current?.update(track.id, { volume: Math.round((track.volume - 0.1) * 10) / 10 })} />
+              <Button title="+" accessibilityLabel={t('louder', { name: track.name })} variant="secondary" disabled={track.volume >= 1}
+                onPress={() => mixer.current?.update(track.id, { volume: Math.round((track.volume + 0.1) * 10) / 10 })} />
+            </View>
+            <View style={row}>
+              <Button title={t(track.muted ? 'muted' : 'mute')} variant={track.muted ? 'primary' : 'secondary'}
+                onPress={() => mixer.current?.update(track.id, { muted: !track.muted })} />
+              <Button title={t(track.solo ? 'soloOn' : 'solo')} variant={track.solo ? 'primary' : 'secondary'}
+                onPress={() => mixer.current?.update(track.id, { solo: !track.solo })} />
+              <Button title={t('remove')} accessibilityLabel={t('removeFor', { name: track.name })} variant="secondary"
+                onPress={() => mixer.current?.remove(track.id)} />
+            </View>
+          </View>
+        ))}
+      </> : <Text style={{ color: theme.colors.sec }}>{t('empty')}</Text>}
+    </ScrollView>
+  )
+  if (embedded) return content
+  return <Screen edges={['left', 'right', 'bottom']}>
+    <Stack.Screen options={{ headerShown: true, title: t('title') }} />
+    {content}
+  </Screen>
+}

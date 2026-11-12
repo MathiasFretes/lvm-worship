@@ -20,6 +20,7 @@ const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
 const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./features/song-editor/LvmSongEditorPage'))
 const TablaturePage = lazyRoute(() => import('./features/tablature/TablaturePage'))
+const MixerPage = lazyRoute(() => import('./features/mixer/MixerPage'))
 const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
 const DownloadPage = lazyRoute(() => import('./pages/DownloadPage'))
 const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
@@ -42,6 +43,7 @@ export default function App(){
             <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />
             <Route path="/tablature" element={<TablaturePage />} />
+            <Route path="/mixer" element={<MixerPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/licenses" element={<LicensesPage />} />
             <Route path="/download" element={<DownloadPage />} />

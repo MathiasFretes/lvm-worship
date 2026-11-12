@@ -1,5 +1,33 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "mixer": {
+    "title": "Parça mikseri",
+    "back": "Şarkılara dön",
+    "description": "Başlangıcı hizalı sekiz yerel ses parçasına kadar çalın. Hız değişince perde de değişir.",
+    "import": "Parçaları içe aktar",
+    "loading": "İçe aktarılıyor…",
+    "empty": "Şarkının aynı noktasında başlayan ses dosyalarını seçin.",
+    "transport": "Oynatma",
+    "play": "Oynat",
+    "pause": "Duraklat",
+    "stop": "Durdur",
+    "speed": "Hız",
+    "position": "Konum (sn)",
+    "start": "Döngü başlangıcı (sn)",
+    "end": "Döngü sonu (sn)",
+    "apply": "Döngüyü ayarla",
+    "clear": "Döngüyü kaldır",
+    "loop": "{{start}}–{{end}} sn döngü",
+    "volume": "Ses düzeyi",
+    "volumeFor": "{{name}} ses düzeyi",
+    "mute": "Sustur",
+    "muted": "Susturuldu",
+    "solo": "Solo",
+    "remove": "Kaldır",
+    "removeFor": "{{name}} parçasını kaldır",
+    "audioError": "Ses başlatılamadı.",
+    "importError": "{{files}} yüklenemedi. Dosya biçimini ve boyutunu kontrol edin."
+  },
   "tablature": {
     "playback": {
       "metronome": "Metronom",

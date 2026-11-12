@@ -1,5 +1,33 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
+  "mixer": {
+    "title": "Track mixer",
+    "back": "Back to songs",
+    "description": "Play up to eight aligned local audio tracks. Playback speed also changes pitch.",
+    "import": "Import tracks",
+    "loading": "Importing…",
+    "empty": "Choose audio files that start at the same point in the song.",
+    "transport": "Playback",
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "speed": "Speed",
+    "position": "Position (s)",
+    "start": "Loop start (s)",
+    "end": "Loop end (s)",
+    "apply": "Set loop",
+    "clear": "Clear loop",
+    "loop": "Loop {{start}}–{{end}} s",
+    "volume": "Volume",
+    "volumeFor": "Volume for {{name}}",
+    "mute": "Mute",
+    "muted": "Muted",
+    "solo": "Solo",
+    "remove": "Remove",
+    "removeFor": "Remove {{name}}",
+    "audioError": "Could not start audio.",
+    "importError": "Could not load {{files}}. Check the audio format and file size."
+  },
   "tablature": {
     "playback": {
       "metronome": "Metronome",
