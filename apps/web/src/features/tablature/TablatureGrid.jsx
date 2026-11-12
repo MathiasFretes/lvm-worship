@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appendTabMeasure, getTabMeasure, getTabSystems, replaceTabFret } from '@lavozmisionera/core/music/tablature'
 import { Button } from '../../components/ui/layout-kit'
 
-export default function TablatureGrid({ source, onChange }) {
+export default function TablatureGrid({ source, onChange, position }) {
   const { t } = useTranslation('pages', { keyPrefix: 'tablature' })
   const [systemIndex, setSystemIndex] = useState(0)
   const [measureIndex, setMeasureIndex] = useState(0)
@@ -11,12 +11,26 @@ export default function TablatureGrid({ source, onChange }) {
   const [fret, setFret] = useState('')
   const [error, setError] = useState(false)
   const [appendError, setAppendError] = useState(false)
-  const systems = getTabSystems(source)
-  const system = systems[Math.min(systemIndex, systems.length - 1)]
+  const scrollRef = useRef(null)
+  const activeSystem = position?.system ?? systemIndex
+  const systems = useMemo(() => getTabSystems(source), [source])
+  const system = systems[Math.min(activeSystem, systems.length - 1)]
   const measureCount = Math.max(...system.map(row => row.measures.length))
-  const activeMeasure = Math.min(measureIndex, measureCount - 1)
-  const rows = getTabMeasure(system, activeMeasure)
-  const cell = selection && rows[selection.row]?.cells?.find(candidate => candidate.offset === selection.offset)
+  const activeMeasure = Math.min(position?.measure ?? measureIndex, measureCount - 1)
+  const rows = useMemo(() => getTabMeasure(system, activeMeasure), [system, activeMeasure])
+  const cell = !position && selection ? rows[selection.row]?.cells?.find(candidate => candidate.offset === selection.offset) : null
+
+  useEffect(() => {
+    const scroll = scrollRef.current
+    if (!position || !scroll) return
+    const indicator = scroll.querySelector('[data-sounding="true"]')
+    if (!indicator) return
+    const windowBounds = scroll.getBoundingClientRect()
+    const noteBounds = indicator.getBoundingClientRect()
+    if (noteBounds.right > windowBounds.right || noteBounds.left < windowBounds.left + 48) {
+      scroll.scrollLeft += noteBounds.left - windowBounds.left - 48
+    }
+  }, [position])
 
   function apply(value) {
     if (!cell) return
@@ -41,22 +55,25 @@ export default function TablatureGrid({ source, onChange }) {
   return (
     <div className="lvm-tablature__grid">
       <div className="lvm-tablature__actions">
-        <label>{t('system')} <select value={Math.min(systemIndex, systems.length - 1)}
+        <label>{t('system')} <select disabled={Boolean(position)} value={Math.min(activeSystem, systems.length - 1)}
           onChange={event => { setSystemIndex(Number(event.target.value)); setMeasureIndex(0); setSelection(null); setError(false); setAppendError(false) }}>
           {systems.map((_, index) => <option key={index} value={index}>{index + 1}</option>)}
         </select></label>
-        <label>{t('measure')} <select value={activeMeasure}
+        <label>{t('measure')} <select disabled={Boolean(position)} value={activeMeasure}
           onChange={event => { setMeasureIndex(Number(event.target.value)); setSelection(null); setError(false) }}>
           {Array.from({ length: measureCount }, (_, index) => <option key={index} value={index}>{index + 1}</option>)}
         </select></label>
-        <Button onClick={addMeasure}>{t('addMeasure')}</Button>
+        <Button disabled={Boolean(position)} onClick={addMeasure}>{t('addMeasure')}</Button>
       </div>
       {rows.some(row => !row.cells) ? <p>{t('gridLimit')}</p> : (
-        <div className="lvm-tablature__strings">
+        <div className="lvm-tablature__strings" ref={scrollRef}>
           {rows.map(({ tuning, cells }, row) => (
             <div className="lvm-tablature__string" key={row}>
               <span className="lvm-tablature__tuning">{tuning}</span>
-              {cells.map(candidate => candidate.editable ? (
+              {cells.map(candidate => {
+                const start = candidate.offset - cells[0].offset
+                const sounding = position && position.column >= start && position.column < start + candidate.text.length
+                return candidate.editable && !position ? (
                 <button key={candidate.offset} type="button" className="lvm-tablature__cell"
                   style={{ '--tab-width': candidate.text.length }}
                   aria-label={t('cell', { string: row + 1, tuning, position: candidate.offset - cells[0].offset + 1, note: candidate.text })}
@@ -66,7 +83,9 @@ export default function TablatureGrid({ source, onChange }) {
                     setFret(candidate.text === '-' ? '' : candidate.text)
                     setError(false)
                   }}>{candidate.text}</button>
-              ) : <span key={candidate.offset} className="lvm-tablature__cell" style={{ '--tab-width': candidate.text.length }}>{candidate.text}</span>)}
+                ) : <span key={candidate.offset} data-sounding={sounding || undefined} className="lvm-tablature__cell"
+                  style={{ '--tab-width': candidate.text.length }}>{candidate.text}</span>
+              })}
             </div>
           ))}
         </div>

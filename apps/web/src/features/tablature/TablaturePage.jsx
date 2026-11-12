@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -6,6 +6,7 @@ import { EMPTY_GUITAR_TAB, TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@
 import { Button, PageHeader } from '../../components/ui/layout-kit'
 import './tablature.css'
 import TablatureGrid from './TablatureGrid'
+import TabPlayback from './TabPlayback'
 
 const draftKey = 'lvm.worship.tablature.draft'
 
@@ -19,9 +20,10 @@ export default function TablaturePage() {
   const [storageError, setStorageError] = useState(false)
   const [zoom, setZoom] = useState(100)
   const [gridVersion, setGridVersion] = useState(0)
+  const [position, setPosition] = useState(null)
   const picker = useRef(null)
   const importRequest = useRef(0)
-  const parsed = parseTablature(draft)
+  const parsed = useMemo(() => parseTablature(draft), [draft])
   const preview = imported?.source ?? draft
 
   useEffect(() => {
@@ -76,7 +78,8 @@ export default function TablaturePage() {
       {importError && <p role="alert">{t(importError)}</p>}
       {parsed.ok && !imported && <section className="lvm-tablature__editor" aria-labelledby="lvm-tab-grid">
         <h2 id="lvm-tab-grid">{t('grid')}</h2>
-        <TablatureGrid key={gridVersion} source={parsed.source} onChange={setDraft} />
+        <TabPlayback source={parsed.source} onPosition={setPosition} />
+        <TablatureGrid key={gridVersion} source={parsed.source} onChange={setDraft} position={position} />
       </section>}
       <div className="lvm-tablature__workspace">
         <div className="lvm-tablature__panel">

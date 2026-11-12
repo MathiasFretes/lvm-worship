@@ -77,6 +77,27 @@
   margin-block: 0 var(--space-6);
 }
 
+.lvm-tablature__transport {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.lvm-tablature__transport input[type='number'] {
+  width: 7ch;
+}
+
+.lvm-tablature__playback-help {
+  margin: 0;
+  color: var(--lvm-text-secondary);
+}
+
+.lvm-tablature__cell[data-sounding='true'] {
+  background: var(--lvm-surface-2);
+  border-inline-start: 2px solid currentColor;
+  font-weight: 700;
+}
+
 .lvm-tablature__strings {
   overflow-x: auto;
   border: 1px solid var(--lvm-separator);

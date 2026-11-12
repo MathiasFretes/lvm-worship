@@ -1,6 +1,22 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "tablature": {
+    "playback": {
+      "metronome": "Metrónomo",
+      "title": "Ensayo de tablatura",
+      "play": "Reproducir",
+      "pause": "Pausar",
+      "stop": "Detener",
+      "loop": "Bucle de compases",
+      "bpm": "Tempo (BPM)",
+      "speed": "Velocidad (%)",
+      "pitch": "Tono (semitonos)",
+      "first": "Compás inicial",
+      "last": "Compás final",
+      "help": "Notas sintetizadas en 4/4. El ritmo se estima a partir del espaciado de la tablatura.",
+      "error": "No pudimos reproducir el audio.",
+      "invalidRange": "Elegí un rango válido de compases."
+    },
     "addMeasure": "Agregar compás",
     "appendError": "No pudimos agregar el compás. Revisá que todas las cuerdas tengan la misma cantidad de compases y que el archivo esté dentro del límite de tamaño.",
     "newGrid": "Crear tablatura de guitarra",

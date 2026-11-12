@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Platform, ScrollView, Text, TextInput, View } from 'react-native'
 import { Stack } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -10,6 +10,8 @@ import { EMPTY_GUITAR_TAB, TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@
 import Button from '../components/Button'
 import Screen from '../components/Screen'
 import TablatureGrid from '../components/TablatureGrid'
+import TabPlayback from '../components/TabPlayback'
+import type { TabPlaybackPosition } from '@lavozmisionera/core/music/tablaturePlayback'
 import { useTheme } from '../theme/ThemeProvider'
 
 const draftKey = 'lvm.worship.tablature.draft'
@@ -25,7 +27,8 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
   const [message, setMessage] = useState('')
   const [zoom, setZoom] = useState(16)
   const [gridVersion, setGridVersion] = useState(0)
-  const parsed = parseTablature(draft)
+  const [position, setPosition] = useState<TabPlaybackPosition | null>(null)
+  const parsed = useMemo(() => parseTablature(draft), [draft])
   const preview = imported ?? draft
 
   useEffect(() => {
@@ -82,8 +85,11 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={text}>{t('tablature.description')}</Text>
-      {parsed.ok && imported === null && !busy && <TablatureGrid key={gridVersion} source={parsed.source}
-        onChange={value => { setDraft(value); setMessage('') }} />}
+      {parsed.ok && imported === null && !busy && <>
+        <TabPlayback source={parsed.source} onPosition={setPosition} />
+        <TablatureGrid key={gridVersion} source={parsed.source} position={position}
+          onChange={value => { setDraft(value); setMessage('') }} />
+      </>}
       <Text accessibilityRole="header" style={heading}>{t('tablature.source')}</Text>
       <TextInput accessibilityLabel={t('tablature.source')} multiline editable={!busy}
         autoCapitalize="none" autoCorrect={false} spellCheck={false} maxLength={TAB_MAX_LENGTH}

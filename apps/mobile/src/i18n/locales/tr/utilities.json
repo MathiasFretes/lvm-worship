@@ -8,6 +8,22 @@
   "sectionTools": "ARAÇLAR",
   "pickTool": "Prova veya ibadet için ekibinizin ihtiyaç duyduğu aracı seçin",
   "tablature": {
+    "playback": {
+      "metronome": "Metronom",
+      "title": "Tablatür provası",
+      "play": "Oynat",
+      "pause": "Duraklat",
+      "stop": "Durdur",
+      "loop": "Ölçü döngüsü",
+      "bpm": "Tempo (BPM)",
+      "speed": "Hız (%)",
+      "pitch": "Perde (yarım ses)",
+      "first": "İlk ölçü",
+      "last": "Son ölçü",
+      "help": "4/4 ölçüde sentezlenmiş notalar. Zamanlama tablatürdeki aralıklardan tahmin edilir.",
+      "error": "Ses oynatılamadı.",
+      "invalidRange": "Geçerli bir ölçü aralığı seçin."
+    },
     "addMeasure": "Ölçü ekle",
     "appendError": "Ölçü eklenemedi. Her telde ölçü sayısının aynı ve dosya boyutunun sınır içinde olduğunu kontrol edin.",
     "newGrid": "Gitar tablatürü başlat",

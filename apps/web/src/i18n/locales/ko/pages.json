@@ -1,6 +1,22 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "tablature": {
+    "playback": {
+      "metronome": "메트로놈",
+      "title": "타브 연습",
+      "play": "재생",
+      "pause": "일시 정지",
+      "stop": "정지",
+      "loop": "마디 반복",
+      "bpm": "템포 (BPM)",
+      "speed": "속도 (%)",
+      "pitch": "음정 (반음)",
+      "first": "첫 마디",
+      "last": "마지막 마디",
+      "help": "4/4 합성음입니다. 타브의 간격으로 타이밍을 추정합니다.",
+      "error": "오디오를 재생할 수 없습니다.",
+      "invalidRange": "유효한 마디 범위를 선택하세요."
+    },
     "addMeasure": "마디 추가",
     "appendError": "마디를 추가할 수 없습니다. 각 현의 마디 수가 같고 파일 크기가 제한 이내인지 확인하세요.",
     "newGrid": "기타 타브 시작",
