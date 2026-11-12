@@ -6,9 +6,10 @@ import * as DocumentPicker from 'expo-document-picker'
 import { File, Paths } from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
 import { useTranslation } from 'react-i18next'
-import { TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@lavozmisionera/core/music/tablature'
+import { EMPTY_GUITAR_TAB, TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@lavozmisionera/core/music/tablature'
 import Button from '../components/Button'
 import Screen from '../components/Screen'
+import TablatureGrid from '../components/TablatureGrid'
 import { useTheme } from '../theme/ThemeProvider'
 
 const draftKey = 'lvm.worship.tablature.draft'
@@ -23,6 +24,7 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
   const [busy, setBusy] = useState(true)
   const [message, setMessage] = useState('')
   const [zoom, setZoom] = useState(16)
+  const [gridVersion, setGridVersion] = useState(0)
   const parsed = parseTablature(draft)
   const preview = imported ?? draft
 
@@ -80,13 +82,16 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={text}>{t('tablature.description')}</Text>
+      {parsed.ok && imported === null && !busy && <TablatureGrid key={gridVersion} source={parsed.source}
+        onChange={value => { setDraft(value); setMessage('') }} />}
       <Text accessibilityRole="header" style={heading}>{t('tablature.source')}</Text>
       <TextInput accessibilityLabel={t('tablature.source')} multiline editable={!busy}
         autoCapitalize="none" autoCorrect={false} spellCheck={false} maxLength={TAB_MAX_LENGTH}
-        value={draft} onChangeText={value => { setDraft(value); setMessage('') }}
+        value={draft} onChangeText={value => { setDraft(value); setMessage(''); setGridVersion(version => version + 1) }}
         placeholder={TAB_EXAMPLE} placeholderTextColor={theme.colors.sec}
         style={{ ...panel, fontFamily: monospace, color: theme.colors.ink, minHeight: 168, textAlignVertical: 'top' }} />
       <View style={actions}>
+        {!draft && <Button title={t('tablature.newGrid')} disabled={busy} variant="secondary" onPress={() => setDraft(EMPTY_GUITAR_TAB)} />}
         <Button title={t('tablature.save')} disabled={busy || draft === saved} onPress={() => void run(async () => {
           await AsyncStorage.setItem(draftKey, draft)
           setSaved(draft)
@@ -109,7 +114,7 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
       </ScrollView>
       {imported !== null && <View style={actions}>
         <Button title={t('common:cancel')} variant="secondary" onPress={() => setImported(null)} />
-        <Button title={t('tablature.applyImport')} onPress={() => { setDraft(imported); setImported(null); setMessage('') }} />
+        <Button title={t('tablature.applyImport')} onPress={() => { setDraft(imported); setImported(null); setMessage(''); setGridVersion(version => version + 1) }} />
       </View>}
     </ScrollView>
   )

@@ -1,6 +1,18 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "tablature": {
+    "addMeasure": "Ölçü ekle",
+    "appendError": "Ölçü eklenemedi. Her telde ölçü sayısının aynı ve dosya boyutunun sınır içinde olduğunu kontrol edin.",
+    "newGrid": "Gitar tablatürü başlat",
+    "grid": "Perde düzenleyici",
+    "system": "Blok",
+    "measure": "Ölçü",
+    "cell": "Tel {{string}} ({{tuning}}), konum {{position}}, {{note}}",
+    "fret": "Perde (0–36)",
+    "applyFret": "Uygula",
+    "removeFret": "Notayı kaldır",
+    "fretError": "0 ile 36 arasında bir perde seçin ve bitişik notalar arasında boşluk bırakın.",
+    "gridLimit": "Bu ölçüyü metin alanında düzenleyin. Izgara, sekme karakteri olmadan 128 sütuna kadar destekler.",
     "title": "Tablatür",
     "back": "Şarkılara dön",
     "description": "Düz metin tablatür yazın, içe veya dışa aktarın.",

@@ -1,6 +1,18 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "tablature": {
+    "addMeasure": "Agregar compás",
+    "appendError": "No pudimos agregar el compás. Revisá que todas las cuerdas tengan la misma cantidad de compases y que el archivo esté dentro del límite de tamaño.",
+    "newGrid": "Crear tablatura de guitarra",
+    "grid": "Editor de trastes",
+    "system": "Bloque",
+    "measure": "Compás",
+    "cell": "Cuerda {{string}} ({{tuning}}), posición {{position}}, {{note}}",
+    "fret": "Traste (0–36)",
+    "applyFret": "Aplicar",
+    "removeFret": "Quitar nota",
+    "fretError": "Elegí un traste del 0 al 36 y dejá espacio entre notas consecutivas.",
+    "gridLimit": "Editá este compás en el campo de texto. La rejilla admite hasta 128 columnas sin caracteres de tabulación.",
     "title": "Tablatura",
     "back": "Volver a canciones",
     "description": "Escribí, importá y exportá tablaturas de texto.",

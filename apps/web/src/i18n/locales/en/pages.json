@@ -1,6 +1,18 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
   "tablature": {
+    "addMeasure": "Add measure",
+    "appendError": "Could not add a measure. Check that each string has the same number of measures and that the file fits the size limit.",
+    "newGrid": "Start guitar tablature",
+    "grid": "Fret editor",
+    "system": "System",
+    "measure": "Measure",
+    "cell": "String {{string}} ({{tuning}}), position {{position}}, {{note}}",
+    "fret": "Fret (0–36)",
+    "applyFret": "Apply",
+    "removeFret": "Remove note",
+    "fretError": "Choose a fret from 0 to 36 and leave space between adjacent notes.",
+    "gridLimit": "Edit this measure in the text field. The grid supports up to 128 columns without tab characters.",
     "title": "Tablature",
     "back": "Back to songs",
     "description": "Write, import, and export plain-text tablature.",

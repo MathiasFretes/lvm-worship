@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeProvider'
 
 export type ButtonProps = {
   title: string
+  accessibilityLabel?: string
   onPress?: () => void
   variant?: 'primary' | 'secondary'
   disabled?: boolean
@@ -14,6 +15,7 @@ export type ButtonProps = {
 
 export default function Button({
   title,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   disabled = false,
@@ -30,6 +32,8 @@ export default function Button({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled }}
       // foreground:true draws the ripple ABOVE the fill, so it stays visible on
       // the filled accent variant. iOS ignores this prop entirely.
       android_ripple={disabled ? undefined : { borderless: false, foreground: true }}

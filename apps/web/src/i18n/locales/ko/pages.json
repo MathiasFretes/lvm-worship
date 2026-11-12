@@ -1,6 +1,18 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "tablature": {
+    "addMeasure": "마디 추가",
+    "appendError": "마디를 추가할 수 없습니다. 각 현의 마디 수가 같고 파일 크기가 제한 이내인지 확인하세요.",
+    "newGrid": "기타 타브 시작",
+    "grid": "프렛 편집기",
+    "system": "단",
+    "measure": "마디",
+    "cell": "{{string}}번 현 ({{tuning}}), 위치 {{position}}, {{note}}",
+    "fret": "프렛 (0–36)",
+    "applyFret": "적용",
+    "removeFret": "음표 제거",
+    "fretError": "0~36 사이의 프렛을 선택하고 인접한 음표 사이를 띄우세요.",
+    "gridLimit": "이 마디는 텍스트 필드에서 편집하세요. 그리드는 탭 문자 없이 최대 128열을 지원합니다.",
     "title": "기타 타브",
     "back": "곡 목록으로",
     "description": "텍스트 타브를 작성하고 가져오거나 내보내세요.",
