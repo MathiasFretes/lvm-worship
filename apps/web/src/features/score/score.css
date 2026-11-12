@@ -1,6 +1,7 @@
 .lvm-score { display: grid; gap: var(--space-3); padding-block: var(--space-4) var(--space-6); }
 .lvm-score > .lvm-btn { justify-self: start; }
 .lvm-score__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lvm-score__edit { border: 0; margin: 0; padding: 0; min-width: 0; }
 .lvm-score__row input[type='number'] { width: 7ch; }
 .lvm-score__row input:not([type]) { max-width: min(55vw, 18rem); }
 .lvm-score__panel {
@@ -16,6 +17,7 @@
 .lvm-score__clef { left: 6px; }
 .lvm-score__note { position: relative; flex: 0 0 44px; color: inherit; background: transparent; border: 0; cursor: pointer; }
 .lvm-score__note[aria-pressed='true'] { outline: 2px solid currentColor; outline-offset: -2px; }
+.lvm-score__note[aria-current='true'] { background: var(--lvm-surface-2); box-shadow: inset 3px 0 currentColor; }
 .lvm-score__head, .lvm-score__stem, .lvm-score__ledger, .lvm-score__dot, .lvm-score__flag, .lvm-score__accidental { position: absolute; }
 .lvm-score__head { left: 17px; width: 11px; height: 8px; border: 2px solid currentColor; border-radius: 50%; background: currentColor; transform: rotate(-18deg); }
 .lvm-score__head.is-open { background: var(--lvm-surface-2); }

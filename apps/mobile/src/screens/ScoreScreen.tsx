@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native'
 import { Stack } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -12,9 +12,12 @@ import {
   type Score, type ScoreDuration, type ScoreNote, type ScorePitch,
 } from '@lavozmisionera/core/music/score'
 import { readMusicXml, writeMusicXml } from '@lavozmisionera/core/music/musicXml'
+import { scoreEventAt } from '@lavozmisionera/core/music/scorePlayback'
+import type { TabPlaybackPosition } from '@lavozmisionera/core/music/tablaturePlayback'
 import Button from '../components/Button'
 import Chip from '../components/Chip'
 import Screen from '../components/Screen'
+import TabPlayback from '../components/TabPlayback'
 import { useTheme } from '../theme/ThemeProvider'
 
 const draftKey = 'lvm.worship.score.v1'
@@ -33,7 +36,13 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [tempoInput, setTempoInput] = useState('96')
-  const notes = score.measures[measure]
+  const [position, setPosition] = useState<TabPlaybackPosition | null>(null)
+  const staffScroll = useRef<ScrollView>(null)
+  const scrollX = useRef(0)
+  const [staffWidth, setStaffWidth] = useState(0)
+  const visibleMeasure = Math.min(position?.measure ?? measure, score.measures.length - 1)
+  const notes = score.measures[visibleMeasure]
+  const sounding = position ? scoreEventAt(notes, position.column) : -1
   const staff = scoreStaff(notes, score.clef)
   const ticks = measureTicks(notes)
   const capacity = meterTicks(score.meter)
@@ -53,6 +62,14 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (sounding < 0 || !staffWidth) return
+    const x = 48 + sounding * 44
+    if (x < scrollX.current || x + 44 > scrollX.current + staffWidth) {
+      staffScroll.current?.scrollTo({ x, animated: false })
+    }
+  }, [visibleMeasure, sounding, staffWidth])
 
   function changeMeasure(index: number) {
     setMeasure(index)
@@ -154,22 +171,26 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
           <Chip label={t('treble')} selected={score.clef === 'G'} onPress={() => updateScore({ ...score, clef: 'G' })} />
           <Chip label={t('bass')} selected={score.clef === 'F'} onPress={() => updateScore({ ...score, clef: 'F' })} />
         </View>
+        <TabPlayback score={score} onPosition={setPosition} />
         <View style={row}>
-          <Text accessibilityRole="header" style={heading}>{t('measure')} {measure + 1}/{score.measures.length}</Text>
-          <Button title="−" accessibilityLabel={t('previousMeasure')} variant="secondary" disabled={measure === 0} onPress={() => changeMeasure(measure - 1)} />
-          <Button title="+" accessibilityLabel={t('nextMeasure')} variant="secondary" disabled={measure === score.measures.length - 1} onPress={() => changeMeasure(measure + 1)} />
+          <Text accessibilityRole="header" style={heading}>{t('measure')} {visibleMeasure + 1}/{score.measures.length}</Text>
+          <Button title="−" accessibilityLabel={t('previousMeasure')} variant="secondary" disabled={Boolean(position) || measure === 0} onPress={() => changeMeasure(measure - 1)} />
+          <Button title="+" accessibilityLabel={t('nextMeasure')} variant="secondary" disabled={Boolean(position) || measure === score.measures.length - 1} onPress={() => changeMeasure(measure + 1)} />
         </View>
         <View style={row}>
-          <Button title={t('addMeasure')} variant="secondary" disabled={score.measures.length >= SCORE_MAX_MEASURES} onPress={() => {
+          <Button title={t('addMeasure')} variant="secondary" disabled={Boolean(position) || score.measures.length >= SCORE_MAX_MEASURES} onPress={() => {
             updateScore({ ...score, measures: [...score.measures, []] }); changeMeasure(score.measures.length)
           }} />
-          <Button title={t('deleteMeasure')} variant="secondary" disabled={score.measures.length < 2 || notes.length > 0} onPress={() => {
+          <Button title={t('deleteMeasure')} variant="secondary" disabled={Boolean(position) || score.measures.length < 2 || notes.length > 0} onPress={() => {
             updateScore({ ...score, measures: score.measures.filter((_, index) => index !== measure) }); changeMeasure(Math.max(0, measure - 1))
           }} />
-          <Button title={t('fill')} variant="secondary" disabled={ticks === capacity} onPress={() => { updateScore(fillScoreMeasure(score, measure)); setError('') }} />
+          <Button title={t('fill')} variant="secondary" disabled={Boolean(position) || ticks === capacity} onPress={() => { updateScore(fillScoreMeasure(score, measure)); setError('') }} />
         </View>
         <Text style={ink}>{t('pulses', { used: ticks / 8, total: capacity / 8 })}</Text>
-        <ScrollView horizontal style={{ backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.md }}>
+        <ScrollView ref={staffScroll} horizontal scrollEventThrottle={16}
+          onLayout={event => setStaffWidth(event.nativeEvent.layout.width)}
+          onScroll={event => { scrollX.current = event.nativeEvent.contentOffset.x }}
+          style={{ backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.md }}>
           <View style={{ minWidth: 240, height: staff.height, paddingLeft: 48, flexDirection: 'row' }}>
             {staff.lines.map(y => <View key={y} style={{ ...line, left: 0, right: 0, top: y }} />)}
             <View style={{ ...line, right: 0, top: staff.lines[4], width: 1, height: staff.lines[0] - staff.lines[4] }} />
@@ -181,10 +202,13 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
             {notes.map((value, index) => {
               const { y, ledgers, stemDown, accidental } = staff.notes[index]
               const pitch = value.pitch ? `${value.pitch.step}${value.pitch.alter === 1 ? '♯' : value.pitch.alter === -1 ? '♭' : ''}${value.pitch.octave}` : t('rest')
-              return <Pressable key={index} accessibilityRole="button" accessibilityState={{ selected: selection === index }}
+              return <Pressable key={index} accessibilityRole="button" disabled={Boolean(position)}
+                accessibilityState={{ selected: position ? sounding === index : selection === index, disabled: Boolean(position) }}
                 accessibilityLabel={t('noteLabel', { index: index + 1, pitch, duration: t(`duration.${value.type}`), dot: value.dotted ? t('dot') : '' })}
                 onPress={() => { setNote(value); setSelection(index); setError('') }}
-                style={{ width: 44, height: staff.height, borderWidth: selection === index ? 2 : 0, borderColor: theme.colors.accent }}>
+                style={{ width: 44, height: staff.height, borderWidth: !position && selection === index ? 2 : 0,
+                  borderColor: theme.colors.accent, borderLeftWidth: sounding === index ? 3 : undefined,
+                  backgroundColor: sounding === index ? theme.colors.accentSoft : undefined }}>
                 {ledgers.map(ledger => <View key={ledger} style={{ ...line, width: 21, left: 12, top: ledger }} />)}
                 {value.pitch ? <>
                   {accidental ? <Text style={{ position: 'absolute', left: 4, top: y - 11, ...ink }}>{accidental}</Text> : null}
@@ -225,9 +249,9 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
           <Switch accessibilityLabel={t('dot')} disabled={note.type === '32nd'} value={note.dotted} onValueChange={dotted => setNote({ ...note, dotted })} />
         </View>
         <View style={row}>
-          <Button title={t(selection === null ? 'add' : 'apply')} disabled={busy} onPress={() => apply(note)} />
+          <Button title={t(selection === null ? 'add' : 'apply')} disabled={busy || Boolean(position)} onPress={() => apply(note)} />
           {selection !== null && <>
-            <Button title={t('remove')} variant="secondary" disabled={busy} onPress={() => apply(null)} />
+            <Button title={t('remove')} variant="secondary" disabled={busy || Boolean(position)} onPress={() => apply(null)} />
             <Button title={t('cancel')} variant="secondary" onPress={() => setSelection(null)} />
           </>}
         </View>

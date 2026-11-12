@@ -84,6 +84,8 @@
   },
   "tablature": {
     "playback": {
+      "scoreTitle": "악보 연습",
+      "scoreHelp": "기보된 길이로 재생합니다. 마디 끝의 빈 부분은 무음입니다.",
       "metronome": "메트로놈",
       "title": "타브 연습",
       "play": "재생",

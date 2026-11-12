@@ -7,6 +7,8 @@ import {
   buildTabPlayback, createTabSession, tabLoopMeasures, tabMidiFrequency, tabPlaybackSettings,
   type TabAudio, type TabPlaybackPosition,
 } from '@lavozmisionera/core/music/tablaturePlayback'
+import { buildScorePlayback } from '@lavozmisionera/core/music/scorePlayback'
+import type { Score } from '@lavozmisionera/core/music/score'
 import Button from './Button'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -22,26 +24,32 @@ async function openAudio(): Promise<TabAudio> {
   }
   return {
     clock: () => audio.currentTime,
-    note(at, midi, decay, click) {
+    note(at, midi, decay, click, sustain) {
       const oscillator = audio.createOscillator()
       const gain = audio.createGain()
       oscillator.type = click ? 'sine' : 'triangle'
       oscillator.frequency.setValueAtTime(tabMidiFrequency(midi), at)
       gain.gain.setValueAtTime(0.0001, at)
-      gain.gain.exponentialRampToValueAtTime(0.065, at + 0.006)
+      gain.gain.exponentialRampToValueAtTime(0.065, at + Math.min(0.006, decay / 4))
+      if (sustain) gain.gain.setValueAtTime(0.065, at + decay - Math.min(0.025, decay / 4))
       gain.gain.exponentialRampToValueAtTime(0.0001, at + decay)
       oscillator.connect(gain)
       gain.connect(audio.destination)
       oscillator.start(at)
       oscillator.stop(at + decay)
-      return () => gain.disconnect()
+      return () => { gain.disconnect(); oscillator.stop() }
     },
     close: () => { void audio.close().catch(() => {}) },
   }
 }
 
-export default function TabPlayback({ source, onPosition }: {
+export default function TabPlayback({ source, score, onPosition }: ({
   source: string
+  score?: never
+} | {
+  source?: never
+  score: Score
+}) & {
   onPosition: (position: TabPlaybackPosition | null) => void
 }) {
   const { t } = useTranslation('utilities', { keyPrefix: 'tablature.playback' })
@@ -54,13 +62,14 @@ export default function TabPlayback({ source, onPosition }: {
   const [metronome, setMetronome] = useState(false)
   const [first, setFirst] = useState('1')
   const [last, setLast] = useState('')
-  const measures = useMemo(() => buildTabPlayback(source), [source])
+  const measures = useMemo(() => score ? buildScorePlayback(score) : buildTabPlayback(source ?? ''), [score, source])
   const session = useMemo(() => createTabSession({ open: openAudio, onPosition, onStatus: setStatus }), [onPosition])
   const active = status === 'opening' || status === 'playing' || status === 'paused'
   const range = loop ? tabLoopMeasures(measures, first, last) : measures
+  const canPlay = range.length > 0 && (metronome || range.some(bar => bar.notes.length))
 
   useEffect(() => () => { session.dispose(); onPosition(null) }, [session, onPosition])
-  useEffect(() => { session.stop() }, [session, source])
+  useEffect(() => { session.stop() }, [session, measures])
   useFocusEffect(useCallback(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active') session.stop()
@@ -69,8 +78,8 @@ export default function TabPlayback({ source, onPosition }: {
   }, [session]))
 
   function play() {
-    const settings = tabPlaybackSettings(tempo, speed, transpose)
-    setTempo(String(settings.bpm))
+    const settings = tabPlaybackSettings(score ? String(score.tempo) : tempo, speed, transpose)
+    if (!score) setTempo(String(settings.bpm))
     setSpeed(String(settings.speed))
     setTranspose(String(settings.transpose))
     void session.play(range, settings.bpm, settings.speed, settings.transpose, loop, metronome)
@@ -91,11 +100,11 @@ export default function TabPlayback({ source, onPosition }: {
   const row = { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.spacing.sm } as const
   return (
     <View style={{ gap: theme.spacing.sm }}>
-      <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, color: theme.colors.ink }}>{t('title')}</Text>
+      <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, color: theme.colors.ink }}>{t(score ? 'scoreTitle' : 'title')}</Text>
       <View style={row}>
         {status === 'playing'
           ? <Button title={t('pause')} onPress={session.pause} />
-          : <Button title={t('play')} disabled={status === 'opening' || !range.some(bar => bar.notes.length)} onPress={play} />}
+          : <Button title={t('play')} disabled={status === 'opening' || !canPlay} onPress={play} />}
         <Button title={t('stop')} variant="secondary" disabled={!active} onPress={session.stop} />
         <Text style={{ color: theme.colors.ink }}>{t('loop')}</Text>
         <Switch accessibilityLabel={t('loop')} value={loop} disabled={active} onValueChange={setLoop} />
@@ -103,7 +112,7 @@ export default function TabPlayback({ source, onPosition }: {
         <Switch accessibilityLabel={t('metronome')} value={metronome} disabled={active} onValueChange={setMetronome} />
       </View>
       <View style={row}>
-        {field('bpm', tempo, setTempo)}
+        {!score && field('bpm', tempo, setTempo)}
         {field('speed', speed, setSpeed)}
         {field('pitch', transpose, setTranspose)}
       </View>
@@ -111,7 +120,7 @@ export default function TabPlayback({ source, onPosition }: {
         {field('first', first, setFirst)}
         {field('last', last, setLast, String(measures.length))}
       </View>}
-      <Text style={{ color: theme.colors.sec }}>{t('help')}</Text>
+      <Text style={{ color: theme.colors.sec }}>{t(score ? 'scoreHelp' : 'help')}</Text>
       {status === 'error' && <Text accessibilityRole="alert" style={{ color: theme.colors.ink }}>{t('error')}</Text>}
       {loop && !range.length && <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.ink }}>{t('invalidRange')}</Text>}
     </View>

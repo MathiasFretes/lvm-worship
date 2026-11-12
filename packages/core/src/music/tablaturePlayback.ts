@@ -20,7 +20,9 @@ export type TabPlaybackMeasure = {
   system: number
   measure: number
   columns: number
-  notes: { column: number; midi: number }[]
+  notes: { column: number; midi: number; length?: number }[]
+  quarterBeats?: number
+  clicks?: number
 }
 
 export type TabPlaybackPosition = {
@@ -66,7 +68,7 @@ export function tabLoopMeasures(measures: TabPlaybackMeasure[], first: string, l
   return measures.slice(from - 1, to)
 }
 
-type ScheduledNote = (at: number, midi: number, decay: number, click: boolean) => () => void
+type ScheduledNote = (at: number, midi: number, decay: number, click: boolean, sustain?: boolean) => () => void
 
 export function createTabTransport({
   measures, secondsPerMeasure, transpose, loop, metronome = false, clock, note, onPosition, onEnd, onError,
@@ -86,8 +88,9 @@ export function createTabTransport({
   const events = measures.map(measure => {
     const notes = measure.notes.map(note => ({ ...note, midi: note.midi + transpose, click: false }))
     if (metronome) {
-      for (let beat = 0; beat < 4; beat++) {
-        notes.push({ column: beat * measure.columns / 4, midi: beat === 0 ? 93 : 81, click: true })
+      const clicks = measure.clicks ?? 4
+      for (let beat = 0; beat < clicks; beat++) {
+        notes.push({ column: beat * measure.columns / clicks, midi: beat === 0 ? 93 : 81, click: true })
       }
       notes.sort((a, b) => a.column - b.column)
     }
@@ -142,6 +145,12 @@ export function createTabTransport({
           const at = start + next.column / entry.columns * secondsPerMeasure
           if (at > horizon) return
           noteIndex++
+          if (next.length !== undefined) {
+            const end = at + next.length / entry.columns * secondsPerMeasure
+            const startAt = Math.max(now, startsAt, at)
+            if (startAt < end) sounding.set(note(startAt, next.midi, end - startAt, false, true), end)
+            continue
+          }
           if (at < startsAt - 0.000001 || at < now - 0.02) continue
           const decay = next.click ? 0.04 : Math.min(0.35, Math.max(0.055, 2 * secondsPerMeasure / entry.columns))
           sounding.set(note(Math.max(now, at), next.midi, decay, next.click), Math.max(now, at) + decay)
@@ -229,7 +238,7 @@ export function createTabSession({
         }
         audio = driver
         transport = createTabTransport({
-          measures, secondsPerMeasure: 24000 / (bpm * speed), transpose, loop, metronome,
+          measures, secondsPerMeasure: 6000 * (measures[0].quarterBeats ?? 4) / (bpm * speed), transpose, loop, metronome,
           clock: driver.clock, note: driver.note, onPosition,
           onEnd: () => finish('idle'), onError: () => finish('error'),
         })

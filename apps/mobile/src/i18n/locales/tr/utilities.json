@@ -104,6 +104,8 @@
   },
   "tablature": {
     "playback": {
+      "scoreTitle": "Nota provası",
+      "scoreHelp": "Çalma yazılı süreleri izler. Ölçü sonunda doldurulmayan kısım sessiz kalır.",
       "metronome": "Metronom",
       "title": "Tablatür provası",
       "play": "Oynat",

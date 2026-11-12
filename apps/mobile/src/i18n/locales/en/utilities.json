@@ -103,6 +103,8 @@
   },
   "tablature": {
     "playback": {
+      "scoreTitle": "Score rehearsal",
+      "scoreHelp": "Playback uses the written durations. Unfilled space at the end of a measure is silent.",
       "metronome": "Metronome",
       "title": "Tablature rehearsal",
       "play": "Play",

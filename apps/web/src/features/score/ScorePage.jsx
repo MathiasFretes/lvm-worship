@@ -7,7 +7,9 @@ import {
   editScoreNote, fillScoreMeasure, measureTicks, meterTicks, parseScoreDraft, scoreStaff,
 } from '@lavozmisionera/core/music/score'
 import { readMusicXml, writeMusicXml } from '@lavozmisionera/core/music/musicXml'
+import { scoreEventAt } from '@lavozmisionera/core/music/scorePlayback'
 import { Button, PageHeader } from '../../components/ui/layout-kit'
+import TabPlayback from '../tablature/TabPlayback'
 import './score.css'
 
 const draftKey = 'lvm.worship.score.v1'
@@ -26,10 +28,14 @@ export default function ScorePage() {
   const [note, setNote] = useState(DEFAULT_SCORE_NOTE)
   const [incoming, setIncoming] = useState(null)
   const [error, setError] = useState('')
+  const [position, setPosition] = useState(null)
   const [storageFailed, setStorageFailed] = useState(false)
   const picker = useRef(null)
   const importId = useRef(0)
-  const notes = score.measures[measure]
+  const viewport = useRef(null)
+  const visibleMeasure = Math.min(position?.measure ?? measure, score.measures.length - 1)
+  const notes = score.measures[visibleMeasure]
+  const sounding = position ? scoreEventAt(notes, position.column) : -1
   const staff = scoreStaff(notes, score.clef)
   const ticks = measureTicks(notes)
   const capacity = meterTicks(score.meter)
@@ -39,6 +45,17 @@ export default function ScorePage() {
   useEffect(() => {
     try { localStorage.setItem(draftKey, JSON.stringify(score)); setStorageFailed(false) } catch { setStorageFailed(true) }
   }, [score])
+
+  useEffect(() => {
+    const container = viewport.current
+    const current = container?.querySelector('[aria-current="true"]')
+    if (!container || !current) return
+    const bounds = container.getBoundingClientRect()
+    const event = current.getBoundingClientRect()
+    if (event.left < bounds.left || event.right > bounds.right) {
+      container.scrollLeft += event.left - bounds.left
+    }
+  }, [visibleMeasure, sounding])
 
   function changeMeasure(index) {
     setMeasure(index)
@@ -137,22 +154,23 @@ export default function ScorePage() {
         </select></label>
       </div>
       <div className="lvm-score__panel">
+        <TabPlayback score={score} onPosition={setPosition} />
         <div className="lvm-score__row">
-          <label>{t('measure')} <select aria-label={t('measure')} value={measure} onChange={event => changeMeasure(Number(event.target.value))}>
+          <label>{t('measure')} <select aria-label={t('measure')} disabled={Boolean(position)} value={visibleMeasure} onChange={event => changeMeasure(Number(event.target.value))}>
             {score.measures.map((_, index) => <option key={index} value={index}>{index + 1}</option>)}
           </select></label>
-          <Button disabled={score.measures.length >= SCORE_MAX_MEASURES} onClick={() => {
+          <Button disabled={Boolean(position) || score.measures.length >= SCORE_MAX_MEASURES} onClick={() => {
             setScore({ ...score, measures: [...score.measures, []] })
             changeMeasure(score.measures.length)
           }}>{t('addMeasure')}</Button>
-          <Button disabled={score.measures.length < 2 || notes.length > 0} onClick={() => {
+          <Button disabled={Boolean(position) || score.measures.length < 2 || notes.length > 0} onClick={() => {
             setScore({ ...score, measures: score.measures.filter((_, index) => index !== measure) })
             changeMeasure(Math.max(0, measure - 1))
           }}>{t('deleteMeasure')}</Button>
-          <Button disabled={ticks === capacity} onClick={() => { setScore(fillScoreMeasure(score, measure)); setError('') }}>{t('fill')}</Button>
+          <Button disabled={Boolean(position) || ticks === capacity} onClick={() => { setScore(fillScoreMeasure(score, measure)); setError('') }}>{t('fill')}</Button>
           <span>{t('pulses', { used: ticks / 8, total: capacity / 8 })}</span>
         </div>
-        <div className="lvm-score__viewport">
+        <div className="lvm-score__viewport" ref={viewport}>
           <div className="lvm-score__staff" style={{ height: staff.height }}>
             {staff.lines.map(y => <span key={y} className="lvm-score__line" style={{ top: y }} aria-hidden />)}
             <span className="lvm-score__barline" style={{ top: staff.lines[4], height: staff.lines[0] - staff.lines[4] }} aria-hidden />
@@ -161,7 +179,8 @@ export default function ScorePage() {
             {notes.map((value, index) => {
               const { y, ledgers, stemDown, accidental } = staff.notes[index]
               return <button key={index} type="button" className="lvm-score__note" aria-label={noteName(value, index)}
-                aria-pressed={selection === index} onClick={() => { setNote(value); setSelection(index); setError('') }}>
+                disabled={Boolean(position)} aria-current={sounding === index ? 'true' : undefined}
+                aria-pressed={!position && selection === index} onClick={() => { setNote(value); setSelection(index); setError('') }}>
                 {ledgers.map(line => <span key={line} className="lvm-score__ledger" style={{ top: line }} aria-hidden />)}
                 {value.pitch ? <>
                   {accidental && <span className="lvm-score__accidental" style={{ top: y - 11 }} aria-hidden>{accidental}</span>}
@@ -175,28 +194,30 @@ export default function ScorePage() {
             })}
           </div>
         </div>
-        <form className="lvm-score__row" onSubmit={event => { event.preventDefault(); apply(note) }}>
-          <label><input type="checkbox" checked={!note.pitch} onChange={event => setNote({ ...note, pitch: event.target.checked ? null : DEFAULT_SCORE_NOTE.pitch })} /> {t('rest')}</label>
-          {note.pitch && <>
-            <label>{t('pitch')} <select aria-label={t('pitch')} value={note.pitch.step} onChange={event => setPitch({ step: event.target.value })}>
-              {STEPS.map(step => <option key={step}>{step}</option>)}
+        <form onSubmit={event => { event.preventDefault(); apply(note) }}>
+          <fieldset className="lvm-score__row lvm-score__edit" disabled={Boolean(position)}>
+            <label><input type="checkbox" checked={!note.pitch} onChange={event => setNote({ ...note, pitch: event.target.checked ? null : DEFAULT_SCORE_NOTE.pitch })} /> {t('rest')}</label>
+            {note.pitch && <>
+              <label>{t('pitch')} <select aria-label={t('pitch')} value={note.pitch.step} onChange={event => setPitch({ step: event.target.value })}>
+                {STEPS.map(step => <option key={step}>{step}</option>)}
+              </select></label>
+              <label>{t('alter')} <select aria-label={t('alter')} value={note.pitch.alter} onChange={event => setPitch({ alter: Number(event.target.value) })}>
+                <option value="0">♮</option><option value="1">♯</option><option value="-1">♭</option>
+              </select></label>
+              <label>{t('octave')} <select aria-label={t('octave')} value={note.pitch.octave} onChange={event => setPitch({ octave: Number(event.target.value) })}>
+                {[2, 3, 4, 5, 6, 7].map(octave => <option key={octave}>{octave}</option>)}
+              </select></label>
+            </>}
+            <label>{t('value')} <select aria-label={t('value')} value={note.type} onChange={event => setNote({ ...note, type: event.target.value, dotted: event.target.value === '32nd' ? false : note.dotted })}>
+              {Object.keys(DURATIONS).map(value => <option key={value} value={value}>{t(`duration.${value}`)}</option>)}
             </select></label>
-            <label>{t('alter')} <select aria-label={t('alter')} value={note.pitch.alter} onChange={event => setPitch({ alter: Number(event.target.value) })}>
-              <option value="0">♮</option><option value="1">♯</option><option value="-1">♭</option>
-            </select></label>
-            <label>{t('octave')} <select aria-label={t('octave')} value={note.pitch.octave} onChange={event => setPitch({ octave: Number(event.target.value) })}>
-              {[2, 3, 4, 5, 6, 7].map(octave => <option key={octave}>{octave}</option>)}
-            </select></label>
-          </>}
-          <label>{t('value')} <select aria-label={t('value')} value={note.type} onChange={event => setNote({ ...note, type: event.target.value, dotted: event.target.value === '32nd' ? false : note.dotted })}>
-            {Object.keys(DURATIONS).map(value => <option key={value} value={value}>{t(`duration.${value}`)}</option>)}
-          </select></label>
-          <label><input type="checkbox" checked={note.dotted} disabled={note.type === '32nd'} onChange={event => setNote({ ...note, dotted: event.target.checked })} /> {t('dot')}</label>
-          <Button type="submit" variant="primary">{t(selection === null ? 'add' : 'apply')}</Button>
-          {selection !== null && <>
-            <Button onClick={() => apply(null)}>{t('remove')}</Button>
-            <Button onClick={() => setSelection(null)}>{t('cancel')}</Button>
-          </>}
+            <label><input type="checkbox" checked={note.dotted} disabled={note.type === '32nd'} onChange={event => setNote({ ...note, dotted: event.target.checked })} /> {t('dot')}</label>
+            <Button type="submit" variant="primary">{t(selection === null ? 'add' : 'apply')}</Button>
+            {selection !== null && <>
+              <Button onClick={() => apply(null)}>{t('remove')}</Button>
+              <Button onClick={() => setSelection(null)}>{t('cancel')}</Button>
+            </>}
+          </fieldset>
         </form>
       </div>
       {!complete && <p>{t('incomplete')}</p>}

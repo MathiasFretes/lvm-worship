@@ -84,6 +84,8 @@
   },
   "tablature": {
     "playback": {
+      "scoreTitle": "Ensayo de partitura",
+      "scoreHelp": "La reproducción sigue las duraciones escritas. El espacio sin completar al final de un compás queda en silencio.",
       "metronome": "Metrónomo",
       "title": "Ensayo de tablatura",
       "play": "Reproducir",
