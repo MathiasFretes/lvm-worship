@@ -11,6 +11,7 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.98.0"
+    "@supabase/supabase-js": "^2.98.0",
+    "@xmldom/xmldom": "0.9.12"
   }
 }
