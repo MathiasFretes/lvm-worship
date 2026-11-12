@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createStemMixer, type MixerBuffer, type MixerSnapshot } from '@lavozmisionera/core/music/stemMixer'
-import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
+import { makeMixerProject, parseMixerManifest, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 
 function harness() {
   vi.useFakeTimers()
@@ -10,6 +10,8 @@ function harness() {
     clock: () => (Date.now() - epoch) / 1000,
     decode: async (bytes: ArrayBuffer) => ({ duration: bytes.byteLength, length: bytes.byteLength * 48000, numberOfChannels: 2 }),
     resume: async () => {},
+    prepare: vi.fn(async (buffers: MixerBuffer[], stretch: number, _cancelled: () => boolean) =>
+      buffers.map(buffer => ({ ...buffer, length: Math.round(buffer.length * stretch), duration: buffer.duration * stretch }))),
     play(buffer: MixerBuffer, at: number, offset: number, duration: number, rate: number, volume: number) {
       const voice = { gain: vi.fn(), stop: vi.fn() }
       calls.push({ buffer, at, offset, duration, rate, volume, ...voice })
@@ -47,7 +49,7 @@ describe('synchronized stem mixer', () => {
   })
 
   it('loops both stems on shared boundaries and truncates a shorter stem before the next cycle', async () => {
-    const { mixer, calls, snapshot, onError } = harness()
+    const { mixer, calls, audio, snapshot, onError } = harness()
     await mixer.add('voice', new ArrayBuffer(2))
     await mixer.add('drums', new ArrayBuffer(3))
     expect(mixer.setLoop(1, 2.5)).toBe(true)
@@ -55,8 +57,8 @@ describe('synchronized stem mixer', () => {
     await mixer.play()
     vi.advanceTimersByTime(1000)
     expect(calls).toHaveLength(4)
-    expect(calls[0]).toMatchObject({ at: 0.055, offset: 1, duration: 1, rate: 1.5 })
-    expect(calls[1]).toMatchObject({ at: 0.055, offset: 1, duration: 1.5, rate: 1.5 })
+    expect(calls[0]).toMatchObject({ at: 0.055, offset: 2 / 3, duration: 2 / 3, rate: 1 })
+    expect(calls[1]).toMatchObject({ at: 0.055, offset: 2 / 3, duration: 1, rate: 1 })
     expect(calls[2].at).toBeCloseTo(1.055)
     expect(calls[3].at).toBeCloseTo(1.055)
     mixer.pause()
@@ -65,6 +67,7 @@ describe('synchronized stem mixer', () => {
     vi.advanceTimersByTime(1000)
     expect(calls).toHaveLength(4)
     expect(onError).not.toHaveBeenCalled()
+    expect(audio.prepare).toHaveBeenCalledOnce()
     mixer.dispose()
   })
 
@@ -78,8 +81,10 @@ describe('synchronized stem mixer', () => {
     source.mixer.update(drumsId, { muted: true })
     source.mixer.setLoop(0.5, 2)
     source.mixer.setRate(0.75)
+    source.mixer.setPitch(5)
     source.mixer.seek(1)
     const project = makeMixerProject(source.snapshot(), new Map([[voiceId, voice], [drumsId, drums]]))
+    expect(parseMixerManifest({ ...project.manifest, pitch: undefined }).pitch).toBe(0)
     const target = harness()
     await expect(restoreMixerProject(project.manifest, [drums, voice], target.mixer)).rejects.toThrow('files missing')
     const restored = await restoreMixerProject(JSON.parse(JSON.stringify(project.manifest)), project.files, target.mixer)
@@ -88,5 +93,42 @@ describe('synchronized stem mixer', () => {
     expect(restored.assets.get(drumsId)).toBe(drums)
     source.mixer.dispose()
     target.mixer.dispose()
+  })
+
+  it('keeps source seconds and loop timing when pitch and speed both change', async () => {
+    const { mixer, calls, audio, snapshot } = harness()
+    await mixer.add('voice', new ArrayBuffer(3))
+    await mixer.add('drums', new ArrayBuffer(4))
+    mixer.setRate(0.5)
+    mixer.setPitch(12)
+    mixer.setLoop(1, 2)
+    await mixer.play()
+    expect(snapshot()).toMatchObject({ time: 1, rate: 0.5, pitch: 12 })
+    expect(audio.prepare.mock.calls[0][1]).toBe(4)
+    expect(calls.map(call => [call.at, call.offset, call.duration, call.rate]))
+      .toEqual([[0.055, 4, 4, 2], [0.055, 4, 4, 2]])
+    vi.advanceTimersByTime(2000)
+    expect(calls[2].at).toBeCloseTo(2.055)
+    expect(calls[3].at).toBeCloseTo(2.055)
+    mixer.dispose()
+  })
+
+  it('cancels pending processing without starting a voice when stopped', async () => {
+    const { mixer, calls, audio, snapshot } = harness()
+    let finish!: () => void
+    audio.prepare.mockImplementationOnce((buffers, _, cancelled) => new Promise(resolve => {
+      finish = () => resolve(cancelled() ? null : buffers)
+    }))
+    await mixer.add('voice', new ArrayBuffer(3))
+    mixer.setPitch(6)
+    const pending = mixer.play()
+    await Promise.resolve()
+    expect(snapshot().preparing).toBe(true)
+    mixer.stop()
+    finish()
+    await pending
+    expect(snapshot()).toMatchObject({ preparing: false, playing: false, time: 0 })
+    expect(calls).toEqual([])
+    mixer.dispose()
   })
 })

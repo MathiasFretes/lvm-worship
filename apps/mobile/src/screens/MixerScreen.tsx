@@ -7,6 +7,7 @@ import { AudioContext, AudioManager, type AudioBuffer } from 'react-native-audio
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerAudio } from '@lavozmisionera/core/music/stemMixer'
 import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
+import { stretchMixerAudio } from '@lavozmisionera/core/music/stretchMixerAudio'
 import Button from '../components/Button'
 import Screen from '../components/Screen'
 import { readMixerProject, writeMixerProject } from '../lib/mixerStore'
@@ -17,6 +18,7 @@ function nativeAudio(): MixerAudio<AudioBuffer> {
   return {
     clock: () => audio.currentTime,
     decode: bytes => audio.decodeAudioData(bytes),
+    prepare: (buffers, stretch, cancelled) => stretchMixerAudio(buffers, stretch, audio.createBuffer.bind(audio), cancelled),
     async resume() {
       AudioManager.setAudioSessionOptions({ iosCategory: 'playback', iosMode: 'default', iosOptions: ['mixWithOthers'] })
       await AudioManager.setAudioSessionActivity(true)
@@ -76,7 +78,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
         candidate = createStemMixer(nativeAudio(), next => {
           latest = next
           if (!cancelled && mixer.current === candidate) setState(next)
-        }, () => setDraftError('audioError'))
+        }, reason => setDraftError(reason === 'processing' ? 'processingError' : 'audioError'))
         const result = await restoreMixerProject(draft.manifest, draft.files, candidate)
         if (cancelled) return
         assets.current = result.assets
@@ -119,7 +121,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: 'audio/*', multiple: true, copyToCacheDirectory: true })
       if (result.canceled || !mounted.current) return
-      mixer.current ??= createStemMixer(nativeAudio(), setState, () => setError(t('audioError')))
+      mixer.current ??= createStemMixer(nativeAudio(), setState, reason => setDraftError(reason === 'processing' ? 'processingError' : 'audioError'))
       const engine = mixer.current
       for (const { uri, name } of result.assets) {
         if (!mounted.current) break
@@ -183,7 +185,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
-      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || restoring || saving || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
       {(stored || state.tracks.length > 0) && <Button title={t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
         variant="secondary" disabled={busy || restoring || saving} onPress={() => void saveDraft()} />}
       {error ? <Text accessibilityRole="alert" style={ink}>{error}</Text> : null}
@@ -193,26 +195,43 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
         <View style={panel}>
           <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('transport')}</Text>
           <View style={row}>
-            <Button title={t(state.playing ? 'pause' : 'play')} onPress={() => state.playing ? mixer.current?.pause() : void mixer.current?.play()} />
+            <Button title={t(state.preparing ? 'preparing' : state.playing ? 'pause' : 'play')} disabled={state.preparing} onPress={() => {
+              setDraftError('')
+              if (state.playing) mixer.current?.pause()
+              else void mixer.current?.play()
+            }} />
             <Button title={t('stop')} variant="secondary" onPress={() => mixer.current?.stop()} />
           </View>
           <Text style={ink}>{t('position')} {state.time.toFixed(1)} / {state.duration.toFixed(1)} s</Text>
           <View style={row}>
             {field(t('position'), seek, setSeek)}
-            <Button title={t('seek')} variant="secondary" disabled={!seek.trim()} onPress={() => mixer.current?.seek(Number(seek.replace(',', '.')))} />
+            <Button title={t('seek')} variant="secondary" disabled={state.preparing || !seek.trim()} onPress={() => mixer.current?.seek(Number(seek.replace(',', '.')))} />
           </View>
           <Text style={ink}>{t('speed')} {Math.round(state.rate * 100)}%</Text>
           <View style={row}>
-            <Button title="−" accessibilityLabel={t('slower')} variant="secondary" disabled={state.rate <= 0.5} onPress={() => mixer.current?.setRate(state.rate - 0.25)} />
-            <Button title="+" accessibilityLabel={t('faster')} variant="secondary" disabled={state.rate >= 1.5} onPress={() => mixer.current?.setRate(state.rate + 0.25)} />
+            <Button title="−" accessibilityLabel={t('slower')} variant="secondary" disabled={state.preparing || state.rate <= 0.5} onPress={() => {
+              setDraftError(''); mixer.current?.setRate(state.rate - 0.25)
+            }} />
+            <Button title="+" accessibilityLabel={t('faster')} variant="secondary" disabled={state.preparing || state.rate >= 1.5} onPress={() => {
+              setDraftError(''); mixer.current?.setRate(state.rate + 0.25)
+            }} />
+          </View>
+          <Text style={ink}>{t('pitch')} {state.pitch > 0 ? `+${state.pitch}` : state.pitch}</Text>
+          <View style={row}>
+            <Button title="−" accessibilityLabel={t('lowerPitch')} variant="secondary" disabled={state.preparing || state.pitch <= -12} onPress={() => {
+              setDraftError(''); mixer.current?.setPitch(state.pitch - 1)
+            }} />
+            <Button title="+" accessibilityLabel={t('raisePitch')} variant="secondary" disabled={state.preparing || state.pitch >= 12} onPress={() => {
+              setDraftError(''); mixer.current?.setPitch(state.pitch + 1)
+            }} />
           </View>
           <View style={row}>
             {field(t('start'), start, setStart)}
             {field(t('end'), end, setEnd, state.duration.toFixed(1))}
           </View>
           <View style={row}>
-            <Button title={t('apply')} variant="secondary" onPress={applyLoop} />
-            <Button title={t('clear')} variant="secondary" disabled={!state.loop} onPress={() => { mixer.current?.clearLoop(); setError('') }} />
+            <Button title={t('apply')} variant="secondary" disabled={state.preparing} onPress={applyLoop} />
+            <Button title={t('clear')} variant="secondary" disabled={state.preparing || !state.loop} onPress={() => { mixer.current?.clearLoop(); setError('') }} />
           </View>
           {state.loop && <Text style={ink}>{t('loop', { start: state.loop.start.toFixed(1), end: state.loop.end.toFixed(1) })}</Text>}
         </View>
@@ -232,7 +251,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
               <Button title={t(track.solo ? 'soloOn' : 'solo')} variant={track.solo ? 'primary' : 'secondary'}
                 onPress={() => mixer.current?.update(track.id, { solo: !track.solo })} />
               <Button title={t('remove')} accessibilityLabel={t('removeFor', { name: track.name })} variant="secondary"
-                disabled={saving} onPress={() => { mixer.current?.remove(track.id); assets.current.delete(track.id) }} />
+                disabled={saving || state.preparing} onPress={() => { mixer.current?.remove(track.id); assets.current.delete(track.id) }} />
             </View>
           </View>
         ))}

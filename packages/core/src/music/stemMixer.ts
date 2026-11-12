@@ -8,6 +8,7 @@ export type MixerAudio<Buffer extends MixerBuffer> = {
   clock: () => number
   decode: (file: ArrayBuffer) => Promise<Buffer>
   resume: () => Promise<void>
+  prepare: (buffers: Buffer[], stretch: number, cancelled: () => boolean) => Promise<Buffer[] | null>
   play: (buffer: Buffer, at: number, offset: number, duration: number, rate: number, gain: number) => Voice
   close: () => void
 }
@@ -17,24 +18,29 @@ export type MixerSnapshot = {
   time: number
   duration: number
   rate: number
+  pitch: number
+  preparing: boolean
   playing: boolean
   loop: { start: number; end: number } | null
 }
 
 export const emptyMixer: MixerSnapshot = {
-  tracks: [], time: 0, duration: 0, rate: 1, playing: false, loop: null,
+  tracks: [], time: 0, duration: 0, rate: 1, pitch: 0, preparing: false, playing: false, loop: null,
 }
 
 export function createStemMixer<Buffer extends MixerBuffer>(
   audio: MixerAudio<Buffer>,
   onChange: (state: MixerSnapshot) => void,
-  onError: () => void,
+  onError: (reason: 'audio' | 'processing') => void,
 ) {
   const tracks = new Map<number, MixerTrack & { buffer: Buffer }>()
   const voices: { id: number; end: number; voice: Voice }[] = []
   let nextId = 0
   let duration = 0
   let rate = 1
+  let pitch = 0
+  let prepared: Map<number, Buffer> | null = null
+  let pendingPreparation: Promise<Buffer[] | null> | null = null
   let loop: MixerSnapshot['loop'] = null
   let position = 0
   let baseTime = 0
@@ -44,6 +50,11 @@ export function createStemMixer<Buffer extends MixerBuffer>(
   let disposed = false
   let playRequest = 0
   let opening = false
+  let preparing = false
+
+  const playbackRate = () => 2 ** (pitch / 12)
+  const stretchFactor = () => playbackRate() / rate
+  const requiresPreparation = () => Math.abs(stretchFactor() - 1) > 1e-6 && !prepared
 
   function currentTime() {
     if (ticker === null) return position
@@ -57,7 +68,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
     if (disposed) return
     onChange({
       tracks: Array.from(tracks.values(), ({ id, name, duration, volume, muted, solo }) => ({ id, name, duration, volume, muted, solo })),
-      time: currentTime(), duration, rate, playing: ticker !== null, loop,
+      time: currentTime(), duration, rate, pitch, preparing, playing: ticker !== null, loop,
     })
   }
 
@@ -67,10 +78,16 @@ export function createStemMixer<Buffer extends MixerBuffer>(
 
   function schedule(at: number, offset: number, end: number) {
     const solo = Array.from(tracks.values()).some(track => track.solo)
+    const stretch = stretchFactor()
+    const sourceRate = playbackRate()
     for (const track of tracks.values()) {
       const length = Math.min(track.duration, end) - offset
       if (length <= 0) continue
-      const voice = audio.play(track.buffer, at, offset, length, rate, level(track, solo))
+      const buffer = prepared?.get(track.id) ?? track.buffer
+      const sourceOffset = offset * stretch
+      const sourceLength = Math.min(buffer.duration - sourceOffset, length * stretch)
+      if (sourceLength <= 0) continue
+      const voice = audio.play(buffer, at, sourceOffset, sourceLength, sourceRate, level(track, solo))
       voices.push({ id: track.id, end: at + length / rate, voice })
     }
   }
@@ -109,7 +126,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       publish()
     } catch {
       clear()
-      onError()
+      onError('audio')
       publish()
     }
   }
@@ -125,7 +142,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       ticker = setInterval(tick, 30)
     } catch {
       clear()
-      onError()
+      onError('audio')
     }
     publish()
   }
@@ -133,17 +150,63 @@ export function createStemMixer<Buffer extends MixerBuffer>(
   function pause() {
     playRequest++
     opening = false
+    preparing = false
     position = currentTime()
     clear()
     publish()
   }
 
-  function adjust(change: () => void) {
+  function adjust(change: () => void, rebuild = false) {
     const wasPlaying = ticker !== null
+    const shouldResume = wasPlaying || opening
     pause()
     change()
-    if (wasPlaying && duration > 0) start()
+    if (rebuild) prepared = null
+    if (shouldResume && duration > 0) {
+      if (!wasPlaying || requiresPreparation()) void play()
+      else start()
+    }
     else publish()
+  }
+
+  async function play() {
+    if (disposed || !duration || ticker !== null || opening) return
+    const request = ++playRequest
+    const cancelled = () => request !== playRequest || disposed
+    opening = true
+    const needsProcessing = requiresPreparation()
+    let stage: 'audio' | 'processing' = 'audio'
+    try {
+      if (needsProcessing) {
+        preparing = true
+        publish()
+      }
+      await audio.resume()
+      if (cancelled()) return
+      if (needsProcessing) {
+        stage = 'processing'
+        if (pendingPreparation) await pendingPreparation.catch(() => null)
+        if (cancelled()) return
+        const entries = Array.from(tracks.values())
+        const job = audio.prepare(entries.map(track => track.buffer), stretchFactor(), cancelled)
+        pendingPreparation = job
+        let buffers
+        try { buffers = await job } finally { if (pendingPreparation === job) pendingPreparation = null }
+        if (cancelled()) return
+        if (!buffers || buffers.length !== entries.length) throw new Error('Incomplete mixer processing')
+        prepared = new Map(entries.map((track, index) => [track.id, buffers[index]]))
+      }
+      preparing = false
+      start()
+    } catch {
+      if (!cancelled()) onError(stage)
+    } finally {
+      if (!cancelled()) {
+        opening = false
+        preparing = false
+        publish()
+      }
+    }
   }
 
   return {
@@ -158,7 +221,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       adjust(() => {
         tracks.set(id, { id, name, duration: buffer.duration, volume: 1, muted: false, solo: false, buffer })
         duration = Math.max(duration, buffer.duration)
-      })
+      }, true)
       return id
     },
     remove(id: number) {
@@ -168,21 +231,9 @@ export function createStemMixer<Buffer extends MixerBuffer>(
         duration = Math.max(0, ...Array.from(tracks.values(), track => track.duration))
         position = Math.min(position, duration)
         if (loop && loop.end > duration) loop = null
-      })
+      }, true)
     },
-    async play() {
-      if (disposed || !duration || ticker !== null || opening) return
-      const request = ++playRequest
-      opening = true
-      try {
-        await audio.resume()
-        if (request === playRequest && !disposed) start()
-      } catch {
-        if (request === playRequest && !disposed) onError()
-      } finally {
-        if (request === playRequest) opening = false
-      }
-    },
+    play,
     pause,
     stop() {
       pause()
@@ -195,7 +246,12 @@ export function createStemMixer<Buffer extends MixerBuffer>(
     },
     setRate(value: number) {
       if (!Number.isFinite(value) || value < 0.5 || value > 1.5) return
-      adjust(() => { rate = value })
+      if (value !== rate) adjust(() => { rate = value }, true)
+    },
+    setPitch(value: number) {
+      if (Number.isInteger(value) && value >= -12 && value <= 12 && value !== pitch) {
+        adjust(() => { pitch = value }, true)
+      }
     },
     setLoop(start: number, end: number) {
       if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > duration + 0.001) return false
@@ -221,6 +277,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       playRequest++
       clear()
       tracks.clear()
+      prepared = null
       audio.close()
     },
   }

@@ -6,6 +6,7 @@ export type MixerManifest = {
   version: 1
   tracks: (TrackSettings & { bytes: number })[]
   rate: number
+  pitch: number
   time: number
   loop: MixerSnapshot['loop']
 }
@@ -19,7 +20,7 @@ export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot,
     return { name, volume, muted, solo, bytes: file.size }
   })
   return {
-    manifest: { version: 1, tracks, rate: state.rate, time: state.time, loop: state.loop } satisfies MixerManifest,
+    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop } satisfies MixerManifest,
     files,
   }
 }
@@ -54,7 +55,9 @@ export function parseMixerManifest(input: unknown): MixerManifest {
     if (end - start < 0.25) throw new Error('Invalid mixer loop')
     loop = { start, end }
   }
-  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), time: number(value.time, 0), loop }
+  const pitch = value.pitch === undefined ? 0 : number(value.pitch, -12, 12)
+  if (!Number.isInteger(pitch)) throw new Error('Invalid mixer pitch')
+  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop }
 }
 
 export async function restoreMixerProject<Asset extends MixerAsset>(
@@ -64,6 +67,7 @@ export async function restoreMixerProject<Asset extends MixerAsset>(
     add: (name: string, bytes: ArrayBuffer) => Promise<number | null>
     update: (id: number, track: TrackSettings) => void
     setRate: (rate: number) => void
+    setPitch: (pitch: number) => void
     setLoop: (start: number, end: number) => boolean
     seek: (time: number) => void
   },
@@ -81,6 +85,7 @@ export async function restoreMixerProject<Asset extends MixerAsset>(
     engine.update(id, track)
   }
   engine.setRate(manifest.rate)
+  engine.setPitch(manifest.pitch)
   if (manifest.loop && !engine.setLoop(manifest.loop.start, manifest.loop.end)) throw new Error('Mixer loop exceeds audio length')
   engine.seek(manifest.time)
   return { manifest, assets }
