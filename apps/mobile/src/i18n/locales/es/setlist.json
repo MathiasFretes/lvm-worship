@@ -1,5 +1,22 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "service": {
+    "title": "Repertorio de LVM Service",
+    "import": "Importar contexto de Service",
+    "export": "Compartir WorshipPlan",
+    "noContext": "Importá el archivo de contexto exportado desde LVM Service.",
+    "empty": "Abrí una canción y usá Añadir al repertorio de Service para incluirla en este plan.",
+    "add": "Añadir al repertorio de Service",
+    "addError": "No se pudo añadir esta canción al repertorio.",
+    "importError": "No se pudo abrir este archivo WorshipContext 0.1.",
+    "exportError": "No se pudo compartir el WorshipPlan.",
+    "storageError": "No se pudo acceder al repertorio guardado en este dispositivo.",
+    "replaceTitle": "¿Reemplazar el repertorio actual?",
+    "replaceBody": "Al abrir otro contexto se borra la lista actual. Compartila primero si querés conservarla.",
+    "up": "Subir {{title}}",
+    "down": "Bajar {{title}}",
+    "remove": "Quitar {{title}}"
+  },
   "title": "Repertorios",
   "newSet": "Nuevo repertorio",
   "defaultName": "Alabanza {{date}}",

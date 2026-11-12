@@ -17,12 +17,13 @@ type Props = {
   onEdit: () => void
   onOptions: () => void
   onExport: () => void
+  onAddToService?: () => void
 }
 
 /** Song identity and actions stay visible above the projected chart. */
 export default function LvmViewerHeader(props: Props) {
   const theme = useTheme()
-  const { t } = useTranslation(['song', 'common', 'export', 'nav'])
+  const { t } = useTranslation(['song', 'common', 'export', 'nav', 'setlist'])
   return <>
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
       <Pressable accessibilityRole="button" onPress={props.onBack} hitSlop={8}
@@ -31,6 +32,7 @@ export default function LvmViewerHeader(props: Props) {
         <Text style={{ fontSize: 16, color: theme.colors.accent }}>{t('nav:songs')}</Text>
       </Pressable>
       <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+        {props.onAddToService && <HeaderIconButton icon="list.bullet" label={t('setlist:service.add')} onPress={props.onAddToService} />}
         {props.personal && <HeaderIconButton icon="square.and.pencil" label={t('song:viewer.editSong')} onPress={props.onEdit} />}
         <HeaderIconButton icon="ellipsis" label={t('song:viewer.viewOptions')} onPress={props.onOptions} />
         <HeaderIconButton icon="square.and.arrow.up" iconSize={22}

@@ -1,5 +1,22 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
+  "service": {
+    "title": "LVM Service repertoire",
+    "import": "Import Service context",
+    "export": "Share WorshipPlan",
+    "noContext": "Import the context file exported by LVM Service.",
+    "empty": "Open a song and use Add to Service repertoire to include it in this plan.",
+    "add": "Add to Service repertoire",
+    "addError": "Couldn’t add this song to the repertoire.",
+    "importError": "Couldn’t open this WorshipContext 0.1 file.",
+    "exportError": "Couldn’t share the WorshipPlan.",
+    "storageError": "Couldn’t access the saved repertoire on this device.",
+    "replaceTitle": "Replace the current repertoire?",
+    "replaceBody": "Opening a different context clears the current song list. Share it first if you want to keep it.",
+    "up": "Move {{title}} up",
+    "down": "Move {{title}} down",
+    "remove": "Remove {{title}}"
+  },
   "title": "Setlists",
   "newSet": "New set",
   "defaultName": "{{date}} Worship",

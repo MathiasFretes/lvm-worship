@@ -1,5 +1,22 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "service": {
+    "title": "LVM Service repertuvarı",
+    "import": "Service bağlamını içe aktar",
+    "export": "WorshipPlan paylaş",
+    "noContext": "LVM Service’ten dışa aktarılan bağlam dosyasını içe aktarın.",
+    "empty": "Bir ilahi açın ve bu plana eklemek için Service repertuvarına ekle seçeneğini kullanın.",
+    "add": "Service repertuvarına ekle",
+    "addError": "Bu ilahi repertuvara eklenemedi.",
+    "importError": "Bu WorshipContext 0.1 dosyası açılamadı.",
+    "exportError": "WorshipPlan paylaşılamadı.",
+    "storageError": "Bu cihazdaki kayıtlı repertuvara erişilemedi.",
+    "replaceTitle": "Geçerli repertuvar değiştirilsin mi?",
+    "replaceBody": "Farklı bir bağlam açmak mevcut listeyi temizler. Saklamak istiyorsanız önce paylaşın.",
+    "up": "{{title}} yukarı taşı",
+    "down": "{{title}} aşağı taşı",
+    "remove": "{{title}} kaldır"
+  },
   "title": "Set Listeleri",
   "newSet": "Yeni set",
   "defaultName": "{{date}} İbadeti",
