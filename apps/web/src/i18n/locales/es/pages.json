@@ -1,6 +1,14 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "mixer": {
+    "restoring": "Abriendo el ensayo guardado…",
+    "save": "Guardar ensayo",
+    "saving": "Guardando ensayo…",
+    "saved": "Ensayo guardado en este dispositivo.",
+    "deleteSaved": "Eliminar ensayo guardado",
+    "deleted": "Ensayo guardado eliminado.",
+    "restoreError": "No pudimos abrir el ensayo guardado.",
+    "saveError": "No pudimos guardar el ensayo. Revisá el espacio disponible y volvé a intentar.",
     "title": "Mezclador de pistas",
     "back": "Volver a canciones",
     "description": "Reproducí hasta ocho pistas de audio locales alineadas. La velocidad también modifica el tono.",

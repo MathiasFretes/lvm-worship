@@ -1,6 +1,14 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "mixer": {
+    "restoring": "저장된 연습 열기 중…",
+    "save": "연습 저장",
+    "saving": "연습 저장 중…",
+    "saved": "이 기기에 연습을 저장했습니다.",
+    "deleteSaved": "저장된 연습 삭제",
+    "deleted": "저장된 연습을 삭제했습니다.",
+    "restoreError": "저장된 연습을 열 수 없습니다.",
+    "saveError": "연습을 저장할 수 없습니다. 저장 공간을 확인한 후 다시 시도하세요.",
     "title": "트랙 믹서",
     "back": "곡 목록으로",
     "description": "시작점을 맞춘 로컬 오디오 트랙을 최대 8개 재생하세요. 재생 속도를 바꾸면 음정도 바뀝니다.",

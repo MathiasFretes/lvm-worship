@@ -148,18 +148,18 @@ export function createStemMixer<Buffer extends MixerBuffer>(
 
   return {
     async add(name: string, bytes: ArrayBuffer) {
-      if (disposed || bytes.byteLength > MIXER_FILE_BYTES || tracks.size >= MIXER_TRACK_LIMIT) return false
+      if (disposed || bytes.byteLength > MIXER_FILE_BYTES || tracks.size >= MIXER_TRACK_LIMIT) return null
       const buffer = await audio.decode(bytes)
-      if (disposed || tracks.size >= MIXER_TRACK_LIMIT) return false
+      if (disposed || tracks.size >= MIXER_TRACK_LIMIT) return null
       const existingBytes = Array.from(tracks.values()).reduce((sum, track) => sum + track.buffer.length * track.buffer.numberOfChannels * 4, 0)
       if (!Number.isFinite(buffer.duration) || buffer.duration <= 0 ||
-          existingBytes + buffer.length * buffer.numberOfChannels * 4 > MAX_DECODED_BYTES) return false
+          existingBytes + buffer.length * buffer.numberOfChannels * 4 > MAX_DECODED_BYTES) return null
       const id = nextId++
       adjust(() => {
         tracks.set(id, { id, name, duration: buffer.duration, volume: 1, muted: false, solo: false, buffer })
         duration = Math.max(duration, buffer.duration)
       })
-      return true
+      return id
     },
     remove(id: number) {
       if (!tracks.has(id)) return
@@ -198,8 +198,10 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       adjust(() => { rate = value })
     },
     setLoop(start: number, end: number) {
-      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end - start < 0.25 || end > duration) return false
-      adjust(() => { loop = { start, end } })
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > duration + 0.001) return false
+      const clampedEnd = Math.min(end, duration)
+      if (clampedEnd - start < 0.25) return false
+      adjust(() => { loop = { start, end: clampedEnd } })
       return true
     },
     clearLoop() { adjust(() => { loop = null }) },

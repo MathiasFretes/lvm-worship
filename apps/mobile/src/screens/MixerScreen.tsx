@@ -6,8 +6,10 @@ import { File } from 'expo-file-system'
 import { AudioContext, AudioManager, type AudioBuffer } from 'react-native-audio-api'
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerAudio } from '@lavozmisionera/core/music/stemMixer'
+import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 import Button from '../components/Button'
 import Screen from '../components/Screen'
+import { readMixerProject, writeMixerProject } from '../lib/mixerStore'
 import { useTheme } from '../theme/ThemeProvider'
 
 function nativeAudio(): MixerAudio<AudioBuffer> {
@@ -48,19 +50,57 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
   const [state, setState] = useState(emptyMixer)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [restoring, setRestoring] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [stored, setStored] = useState(false)
+  const [draftStatus, setDraftStatus] = useState('')
+  const [draftError, setDraftError] = useState('')
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [seek, setSeek] = useState('')
   const mixer = useRef<ReturnType<typeof createStemMixer<AudioBuffer>> | null>(null)
+  const assets = useRef(new Map<number, File>())
   const mounted = useRef(false)
   const importing = useRef(false)
 
   useEffect(() => {
     mounted.current = true
+    let cancelled = false
+    let candidate: ReturnType<typeof createStemMixer<AudioBuffer>> | undefined
+    async function restore() {
+      try {
+        const draft = await readMixerProject()
+        if (cancelled || !draft) return
+        setStored(true)
+        let latest = emptyMixer
+        candidate = createStemMixer(nativeAudio(), next => {
+          latest = next
+          if (!cancelled && mixer.current === candidate) setState(next)
+        }, () => setDraftError('audioError'))
+        const result = await restoreMixerProject(draft.manifest, draft.files, candidate)
+        if (cancelled) return
+        assets.current = result.assets
+        mixer.current = candidate
+        setState(latest)
+        if (result.manifest.loop) {
+          setStart(String(result.manifest.loop.start))
+          setEnd(String(result.manifest.loop.end))
+        }
+      } catch {
+        candidate?.dispose()
+        if (!cancelled) setDraftError('restoreError')
+      } finally {
+        if (!cancelled) setRestoring(false)
+      }
+    }
+    void restore()
     return () => {
+      cancelled = true
       mounted.current = false
+      candidate?.dispose()
       mixer.current?.dispose()
       mixer.current = null
+      assets.current.clear()
     }
   }, [])
   useFocusEffect(useCallback(() => {
@@ -71,7 +111,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
   }, []))
 
   async function importFiles() {
-    if (importing.current) return
+    if (importing.current || restoring || saving) return
     importing.current = true
     setBusy(true)
     setError('')
@@ -85,7 +125,9 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
         if (!mounted.current) break
         try {
           const file = new File(uri)
-          if (file.size > MIXER_FILE_BYTES || !await engine.add(name, await file.arrayBuffer())) failures.push(name)
+          const id = file.size <= MIXER_FILE_BYTES ? await engine.add(name, await file.arrayBuffer()) : null
+          if (id === null) failures.push(name)
+          else if (mounted.current && mixer.current === engine) assets.current.set(id, file)
         } catch {
           failures.push(name)
         }
@@ -96,6 +138,26 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     } finally {
       importing.current = false
       if (mounted.current) setBusy(false)
+    }
+  }
+
+  async function saveDraft() {
+    if (busy || restoring || saving) return
+    setSaving(true)
+    setDraftError('')
+    setDraftStatus('')
+    try {
+      const project = makeMixerProject(state, assets.current)
+      const files = await writeMixerProject(project)
+      if (mounted.current) {
+        state.tracks.forEach(({ id }, index) => assets.current.set(id, files[index]))
+        setStored(files.length > 0)
+        setDraftStatus(files.length ? 'saved' : 'deleted')
+      }
+    } catch {
+      if (mounted.current) setDraftError('saveError')
+    } finally {
+      if (mounted.current) setSaving(false)
     }
   }
 
@@ -121,8 +183,12 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
-      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || restoring || saving || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      {(stored || state.tracks.length > 0) && <Button title={t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
+        variant="secondary" disabled={busy || restoring || saving} onPress={() => void saveDraft()} />}
       {error ? <Text accessibilityRole="alert" style={ink}>{error}</Text> : null}
+      {draftError ? <Text accessibilityRole="alert" style={ink}>{t(draftError)}</Text> : null}
+      {draftStatus ? <Text accessibilityLiveRegion="polite" style={ink}>{t(draftStatus)}</Text> : null}
       {state.tracks.length > 0 ? <>
         <View style={panel}>
           <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('transport')}</Text>
@@ -166,11 +232,11 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
               <Button title={t(track.solo ? 'soloOn' : 'solo')} variant={track.solo ? 'primary' : 'secondary'}
                 onPress={() => mixer.current?.update(track.id, { solo: !track.solo })} />
               <Button title={t('remove')} accessibilityLabel={t('removeFor', { name: track.name })} variant="secondary"
-                onPress={() => mixer.current?.remove(track.id)} />
+                disabled={saving} onPress={() => { mixer.current?.remove(track.id); assets.current.delete(track.id) }} />
             </View>
           </View>
         ))}
-      </> : <Text style={{ color: theme.colors.sec }}>{t('empty')}</Text>}
+      </> : <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.sec }}>{t(restoring ? 'restoring' : 'empty')}</Text>}
     </ScrollView>
   )
   if (embedded) return content

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createStemMixer, type MixerBuffer, type MixerSnapshot } from '@lavozmisionera/core/music/stemMixer'
+import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 
 function harness() {
   vi.useFakeTimers()
@@ -65,5 +66,27 @@ describe('synchronized stem mixer', () => {
     expect(calls).toHaveLength(4)
     expect(onError).not.toHaveBeenCalled()
     mixer.dispose()
+  })
+
+  it('round-trips ordered files and playback settings and rejects an incomplete save before decoding', async () => {
+    const source = harness()
+    const voice = { size: 2, arrayBuffer: async () => new ArrayBuffer(2) }
+    const drums = { size: 3, arrayBuffer: async () => new ArrayBuffer(3) }
+    const voiceId = (await source.mixer.add('voice', await voice.arrayBuffer()))!
+    const drumsId = (await source.mixer.add('drums', await drums.arrayBuffer()))!
+    source.mixer.update(voiceId, { volume: 0.37, solo: true })
+    source.mixer.update(drumsId, { muted: true })
+    source.mixer.setLoop(0.5, 2)
+    source.mixer.setRate(0.75)
+    source.mixer.seek(1)
+    const project = makeMixerProject(source.snapshot(), new Map([[voiceId, voice], [drumsId, drums]]))
+    const target = harness()
+    await expect(restoreMixerProject(project.manifest, [drums, voice], target.mixer)).rejects.toThrow('files missing')
+    const restored = await restoreMixerProject(JSON.parse(JSON.stringify(project.manifest)), project.files, target.mixer)
+    expect(target.snapshot()).toEqual(source.snapshot())
+    expect(restored.assets.get(voiceId)).toBe(voice)
+    expect(restored.assets.get(drumsId)).toBe(drums)
+    source.mixer.dispose()
+    target.mixer.dispose()
   })
 })

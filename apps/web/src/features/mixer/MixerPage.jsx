@@ -3,7 +3,9 @@ import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT } from '@lavozmisionera/core/music/stemMixer'
+import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 import { Button, PageHeader } from '../../components/ui/layout-kit'
+import { readMixerProject, writeMixerProject } from './mixerStore'
 import './mixer.css'
 
 function browserAudio() {
@@ -39,28 +41,66 @@ export default function MixerPage() {
   const [state, setState] = useState(emptyMixer)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [restoring, setRestoring] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [stored, setStored] = useState(false)
+  const [draftStatus, setDraftStatus] = useState('')
+  const [draftError, setDraftError] = useState('')
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [scrub, setScrub] = useState(null)
   const scrubbing = useRef(false)
   const mixer = useRef(null)
+  const assets = useRef(new Map())
   const picker = useRef(null)
   const active = useRef(false)
   const importing = useRef(false)
 
   useEffect(() => {
     active.current = true
+    let cancelled = false
+    let candidate
+    async function restore() {
+      try {
+        const draft = await readMixerProject()
+        if (cancelled || !draft) return
+        setStored(true)
+        let latest = emptyMixer
+        candidate = createStemMixer(browserAudio(), next => {
+          latest = next
+          if (!cancelled && mixer.current === candidate) setState(next)
+        }, () => setDraftError('audioError'))
+        const result = await restoreMixerProject(draft.manifest, draft.files, candidate)
+        if (cancelled) return
+        assets.current = result.assets
+        mixer.current = candidate
+        setState(latest)
+        if (result.manifest.loop) {
+          setStart(String(result.manifest.loop.start))
+          setEnd(String(result.manifest.loop.end))
+        }
+      } catch {
+        candidate?.dispose()
+        if (!cancelled) setDraftError('restoreError')
+      } finally {
+        if (!cancelled) setRestoring(false)
+      }
+    }
+    void restore()
     return () => {
+      cancelled = true
       active.current = false
+      candidate?.dispose()
       mixer.current?.dispose()
       mixer.current = null
+      assets.current.clear()
     }
   }, [])
 
   async function importFiles(event) {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ''
-    if (!files.length || importing.current) return
+    if (!files.length || importing.current || restoring || saving) return
     importing.current = true
     setBusy(true)
     setError('')
@@ -71,7 +111,9 @@ export default function MixerPage() {
       for (const file of files) {
         if (!active.current) break
         try {
-          if (file.size > MIXER_FILE_BYTES || !await engine.add(file.name, await file.arrayBuffer())) failures.push(file.name)
+          const id = file.size <= MIXER_FILE_BYTES ? await engine.add(file.name, await file.arrayBuffer()) : null
+          if (id === null) failures.push(file.name)
+          else if (active.current && mixer.current === engine) assets.current.set(id, file)
         } catch {
           failures.push(file.name)
         }
@@ -82,6 +124,25 @@ export default function MixerPage() {
     } finally {
       importing.current = false
       if (active.current) setBusy(false)
+    }
+  }
+
+  async function saveDraft() {
+    if (busy || restoring || saving) return
+    setSaving(true)
+    setDraftError('')
+    setDraftStatus('')
+    try {
+      const project = makeMixerProject(state, assets.current)
+      await writeMixerProject(project)
+      if (active.current) {
+        setStored(project.files.length > 0)
+        setDraftStatus(project.files.length ? 'saved' : 'deleted')
+      }
+    } catch {
+      if (active.current) setDraftError('saveError')
+    } finally {
+      if (active.current) setSaving(false)
     }
   }
 
@@ -103,10 +164,15 @@ export default function MixerPage() {
       <Button as={Link} to="/songs" variant="ghost">{t('back')}</Button>
       <PageHeader title={t('title')} subtitle={t('description')} actions={<>
         <input ref={picker} type="file" accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg,.aac" multiple hidden onChange={importFiles} />
-        <Button variant="primary" disabled={busy || state.tracks.length >= MIXER_TRACK_LIMIT}
+        <Button variant="primary" disabled={busy || restoring || saving || state.tracks.length >= MIXER_TRACK_LIMIT}
           onClick={() => picker.current?.click()}>{t(busy ? 'loading' : 'import')}</Button>
+        {(stored || state.tracks.length > 0) && <Button disabled={busy || restoring || saving} onClick={() => void saveDraft()}>
+          {t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
+        </Button>}
       </>} />
       {error && <p role="alert">{error}</p>}
+      {draftError && <p role="alert">{t(draftError)}</p>}
+      {draftStatus && <p role="status">{t(draftStatus)}</p>}
       {state.tracks.length > 0 ? <>
         <section className="lvm-mixer__panel" aria-label={t('transport')}>
           <div className="lvm-mixer__row">
@@ -156,12 +222,12 @@ export default function MixerPage() {
                 onClick={() => mixer.current.update(track.id, { muted: !track.muted })}>{t(track.muted ? 'muted' : 'mute')}</Button>
               <Button aria-pressed={track.solo} variant={track.solo ? 'primary' : 'secondary'}
                 onClick={() => mixer.current.update(track.id, { solo: !track.solo })}>{t('solo')}</Button>
-              <Button aria-label={t('removeFor', { name: track.name })} variant="ghost"
-                onClick={() => mixer.current.remove(track.id)}>{t('remove')}</Button>
+              <Button aria-label={t('removeFor', { name: track.name })} variant="ghost" disabled={saving}
+                onClick={() => { mixer.current.remove(track.id); assets.current.delete(track.id) }}>{t('remove')}</Button>
             </div>
           </li>)}
         </ul>
-      </> : <p>{t('empty')}</p>}
+      </> : <p role="status">{t(restoring ? 'restoring' : 'empty')}</p>}
     </section>
   )
 }

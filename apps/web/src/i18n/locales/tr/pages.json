@@ -1,6 +1,14 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "mixer": {
+    "restoring": "Kayıtlı prova açılıyor…",
+    "save": "Provayı kaydet",
+    "saving": "Prova kaydediliyor…",
+    "saved": "Prova bu cihaza kaydedildi.",
+    "deleteSaved": "Kayıtlı provayı sil",
+    "deleted": "Kayıtlı prova silindi.",
+    "restoreError": "Kayıtlı prova açılamadı.",
+    "saveError": "Prova kaydedilemedi. Boş alanı kontrol edip tekrar deneyin.",
     "title": "Parça mikseri",
     "back": "Şarkılara dön",
     "description": "Başlangıcı hizalı sekiz yerel ses parçasına kadar çalın. Hız değişince perde de değişir.",
