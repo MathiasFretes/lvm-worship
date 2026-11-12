@@ -1,5 +1,25 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
+  "tablature": {
+    "title": "Tablature",
+    "back": "Back to songs",
+    "description": "Write, import, and export plain-text tablature.",
+    "import": "Import file",
+    "export": "Export TXT",
+    "source": "Tablature text",
+    "draft": "Draft saved in this browser.",
+    "storageError": "This browser could not save your draft.",
+    "invalid": "Enter 4–8 string lines per system, with the same string count in each system.",
+    "tooLarge": "This file is too large.",
+    "readError": "Could not read this file.",
+    "preview": "Preview",
+    "importPreview": "Import preview",
+    "empty": "Write or import a tablature to preview it here.",
+    "cancel": "Cancel",
+    "applyImport": "Replace draft",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in"
+  },
   "songs": {
     "title": "Songs",
     "titleTooltip": "Browse Songs",

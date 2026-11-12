@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigationType, useSearchParams } from 'react-router-dom'
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { normalizeSongSearch, searchSongs } from '../utils/songs/search'
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
-import { Chip, Input } from '../components/ui/layout-kit'
+import { Button, Chip, Input } from '../components/ui/layout-kit'
 import { SearchIcon } from '../components/Icons'
 import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -354,6 +354,7 @@ export default function Songs(){
       <div className="lvm-song-library__header">
         <div className="lvm-song-library__heading">
           <h1 title={t('songs.titleTooltip')}>{t('songs.title')}</h1>
+          <Button as={Link} to="/tablature">{t('tablature.title')}</Button>
           {languageChipCodes.length > 0 ? (
             <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (

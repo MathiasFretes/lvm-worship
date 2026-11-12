@@ -1,5 +1,25 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "tablature": {
+    "title": "Tablatür",
+    "back": "Şarkılara dön",
+    "description": "Düz metin tablatür yazın, içe veya dışa aktarın.",
+    "import": "Dosya içe aktar",
+    "export": "TXT dışa aktar",
+    "source": "Tablatür metni",
+    "draft": "Taslak bu tarayıcıya kaydedildi.",
+    "storageError": "Tarayıcı taslağı kaydedemedi.",
+    "invalid": "Her blokta 4–8 tel satırı kullanın. Tüm bloklardaki tel sayısı aynı olmalı.",
+    "tooLarge": "Dosya çok büyük.",
+    "readError": "Dosya okunamadı.",
+    "preview": "Önizleme",
+    "importPreview": "İçe aktarma önizlemesi",
+    "empty": "Burada görmek için tablatür yazın veya içe aktarın.",
+    "cancel": "İptal",
+    "applyImport": "Taslağı değiştir",
+    "zoomOut": "Uzaklaştır",
+    "zoomIn": "Yakınlaştır"
+  },
   "songs": {
     "title": "İlahiler",
     "titleTooltip": "İlahileri keşfet",

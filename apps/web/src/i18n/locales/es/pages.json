@@ -1,5 +1,25 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "tablature": {
+    "title": "Tablatura",
+    "back": "Volver a canciones",
+    "description": "Escribí, importá y exportá tablaturas de texto.",
+    "import": "Importar archivo",
+    "export": "Exportar TXT",
+    "source": "Texto de la tablatura",
+    "draft": "Borrador guardado en este navegador.",
+    "storageError": "El navegador no pudo guardar el borrador.",
+    "invalid": "Escribí de 4 a 8 líneas de cuerda por bloque, con la misma cantidad en cada bloque.",
+    "tooLarge": "El archivo es demasiado grande.",
+    "readError": "No pudimos leer este archivo.",
+    "preview": "Vista previa",
+    "importPreview": "Vista previa de importación",
+    "empty": "Escribí o importá una tablatura para verla acá.",
+    "cancel": "Cancelar",
+    "applyImport": "Reemplazar borrador",
+    "zoomOut": "Alejar",
+    "zoomIn": "Acercar"
+  },
   "songs": {
     "title": "Canciones",
     "titleTooltip": "Explorar canciones",

@@ -1,0 +1,68 @@
+.lvm-tablature {
+  padding-block: 1rem 2rem;
+}
+
+.lvm-tablature__workspace {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.lvm-tablature__panel {
+  display: grid;
+  align-content: start;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.lvm-tablature__heading,
+.lvm-tablature__zoom,
+.lvm-tablature__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.lvm-tablature__heading {
+  justify-content: space-between;
+}
+
+.lvm-tablature__heading h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.lvm-tablature__panel label {
+  font-weight: 600;
+}
+
+.lvm-tablature__panel textarea,
+.lvm-tablature__panel pre {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 19rem;
+  margin: 0;
+  padding: 1rem;
+  overflow: auto;
+  border: 1px solid var(--lvm-separator);
+  border-radius: var(--radius-md);
+  background: var(--lvm-surface-2);
+  color: inherit;
+  font: 1rem/1.65 ui-monospace, Consolas, monospace;
+  tab-size: 4;
+}
+
+.lvm-tablature__panel textarea {
+  resize: vertical;
+}
+
+.lvm-tablature__panel pre {
+  max-height: 32rem;
+}
+
+@media (max-width: 720px) {
+  .lvm-tablature__workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
