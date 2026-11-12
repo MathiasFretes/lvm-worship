@@ -122,11 +122,11 @@ export function useDraftSetlist() {
     })
   }, [])
 
-  const addSong = useCallback((song) => {
+  const addSong = useCallback((song, { toKey = null } = {}) => {
     setEntries((prev) => [...prev, {
       entryKey: makeEntryKey(song.id),
       songId: song.id,
-      toKey: null,
+      toKey,
       sectionOrderText: '',
       song: entrySongFromCatalog(song),
       sourceSong: song,

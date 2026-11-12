@@ -65,7 +65,12 @@ export default function SongLibraryScreen() {
     })),
     [sections, columns],
   )
-  const results = useMemo(() => findLibrarySongs(visibleSongs, query), [visibleSongs, query])
+  const results = useMemo(() => {
+    const matches = findLibrarySongs(visibleSongs, query)
+    if (sortKey === 'title' && sortDir === 'asc') return matches
+    return makeLibrarySections(matches, sortKey, sortDir, (key) => key)
+      .flatMap((section) => section.data)
+  }, [visibleSongs, query, sortKey, sortDir])
   const resultRows = useMemo<Row[]>(
     () => columns === 1 ? results : chunkRows(results, columns),
     [results, columns],
@@ -147,6 +152,12 @@ export default function SongLibraryScreen() {
             <ListRow
               title={song.title}
               subtitle={Array.isArray(item) ? song.artist || ' ' : song.artist}
+              leading={<View accessible={false} style={{ width: 32, height: 32,
+                borderRadius: theme.radii.sm, backgroundColor: theme.colors.surfaceAlt,
+                alignItems: 'center', justifyContent: 'center' }}>
+                <SymbolIcon name="music.note" size={16} color={theme.colors.textAccent} />
+              </View>}
+              chevron
               badge={songBadge(song.source, song.reviewStatus)}
               trailingTop={song.default_key ?? undefined}
               trailingBottom={song.time_signature ?? undefined}
@@ -174,8 +185,7 @@ export default function SongLibraryScreen() {
       actionLabel={t('common:retry')} onAction={reload} />
     if (!songs.length) return message(t('library.empty'))
 
-    if (searching) {
-      if (!query.trim()) return <View style={{ flex: 1 }} />
+    if (query.trim()) {
       if (!results.length) return message(t('library.noMatchesForQuery', { query: query.trim() }))
       return <SectionList
         sections={[{ key: '__results', title: '', letter: null, data: resultRows }]}
@@ -209,41 +219,42 @@ export default function SongLibraryScreen() {
 
   return <Screen edges={['top', 'left', 'right']}>
     <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.sm, paddingBottom: theme.spacing.sm }}>
-      {!searching && <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.md }}>
         <Text style={{ ...theme.typography.largeTitle, color: theme.colors.ink }}>{t('library.title')}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={t('library.addSong')} onPress={addSong}
           hitSlop={8} style={{ width: 44, height: 44, borderRadius: theme.radii.pill,
             backgroundColor: theme.colors.accent, alignItems: 'center', justifyContent: 'center' }}>
           <SymbolIcon name="plus" size={20} color={theme.colors.onAccent} weight="semibold" />
         </Pressable>
-      </View>}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-          height: 44, paddingHorizontal: 12, backgroundColor: theme.colors.surfaceAlt,
-          borderRadius: theme.radii.sm }}>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm,
+          minHeight: 44, paddingHorizontal: theme.spacing.md, backgroundColor: theme.colors.surfaceAlt,
+          borderRadius: theme.radii.pill }}>
           <SymbolIcon name="magnifyingglass" size={18} color={theme.colors.sec} />
           <TextInput ref={input} value={query} onChangeText={setQuery} onFocus={() => setSearching(true)}
+            accessibilityLabel={t('library.searchPlaceholder')}
             placeholder={t('library.searchPlaceholder')} placeholderTextColor={theme.colors.sec}
             autoCorrect={false} returnKeyType="search" style={{ flex: 1, fontSize: 16, color: theme.colors.ink, padding: 0 }} />
         </View>
-        {searching
-          ? <Pressable accessibilityRole="button" onPress={cancelSearch} hitSlop={8}>
+        {searching && <Pressable accessibilityRole="button" onPress={cancelSearch}
+            style={{ minHeight: 44, justifyContent: 'center' }}>
               <Text style={{ color: theme.colors.textAccent, fontSize: 16 }}>{t('common:cancel')}</Text>
-            </Pressable>
-          : <Pressable accessibilityRole="button" accessibilityLabel={t('library.filterAndSort')}
+            </Pressable>}
+        <Pressable accessibilityRole="button" accessibilityLabel={t('library.filterAndSort')}
               onPress={() => setFilterOpen(true)} style={{ width: 44, height: 44,
                 borderRadius: theme.radii.sm, backgroundColor: theme.colors.surfaceAlt,
                 alignItems: 'center', justifyContent: 'center' }}>
               <SymbolIcon name="line.3.horizontal.decrease" size={22} color={theme.colors.accent} />
               {filtersActive && <View style={{ position: 'absolute', top: 8, right: 8, width: 9, height: 9,
                 borderRadius: theme.radii.pill, backgroundColor: theme.colors.accent }} />}
-            </Pressable>}
+            </Pressable>
       </View>
     </View>
     {body()}
     <FilterSortSheet visible={filterOpen} onClose={() => setFilterOpen(false)}
       sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} availableTags={allTags}
-      selectedTags={tags} onToggleTag={toggleTag} resultCount={visibleSongs.length}
+      selectedTags={tags} onToggleTag={toggleTag} resultCount={query.trim() ? results.length : visibleSongs.length}
       onReset={() => { setSortKey('title'); setSortDir('asc'); setTags(new Set()) }} />
   </Screen>
 }

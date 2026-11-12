@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { MusicIcon } from '../../components/Icons'
 import { filterDisplayTags } from '../../utils/songs/tags'
 import './song-library.css'
 
@@ -12,8 +13,12 @@ export const SongLibraryCard = React.forwardRef(function SongLibraryCard({ song,
       to={song.to || `/song/${song.id}`}
       className={`lvm-song-library-card${active ? ' is-active' : ''}`}
     >
+      <span className="lvm-song-library-card__art" aria-hidden="true"><MusicIcon size={20} /></span>
       <span className="lvm-song-library-card__body">
         <strong>{song.title}</strong>
+        {song.authors?.length ? (
+          <span className="lvm-song-library-card__meta">{song.authors.join(', ')}</span>
+        ) : null}
         <span className="lvm-song-library-card__meta">
           {song.originalKey || '—'}{tags.length ? ` · ${tags.join(', ')}` : ''}
         </span>

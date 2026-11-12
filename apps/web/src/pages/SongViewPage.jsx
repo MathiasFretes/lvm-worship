@@ -15,7 +15,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
-import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
+import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon, SetlistIcon } from '../components/Icons'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -98,7 +98,7 @@ function buildSongSeo(entry, parsed, id){
 }
 
 export default function SongView(){
-  const { t } = useTranslation('song')
+  const { t } = useTranslation(['song', 'pages'])
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -510,6 +510,20 @@ export default function SongView(){
 
   const editHref = personalParam ? `/portal/editor?p=${personalParam}` : null
 
+  const addToSetlist = (iconOnly = false) => (
+    <Button
+      onClick={() => navigate('/setlist', {
+        state: { addSongToDraft: { song: isPersonal ? { ...entry, id: `p_${personalParam}` } : entry, toKey } },
+      })}
+      variant="secondary"
+      iconOnly={iconOnly}
+      leftIcon={<SetlistIcon />}
+      aria-label={t('pages:setlist.addSongsTab')}
+    >
+      {t('pages:setlist.addSongsTab')}
+    </Button>
+  )
+
   const desktopToolbar = !isNarrow ? (
     <Toolbar className="lvm-song-toolbar">
       <div className="lvm-toolbar__group">
@@ -537,6 +551,7 @@ export default function SongView(){
         </IconButton>
       </div>
       <div className="lvm-toolbar__actions">
+        {addToSetlist()}
         {isPersonal ? (
           <Button variant="primary" as={Link} to={editHref} leftIcon={<EyeIcon />} title="Edit song">
             Edit
@@ -743,6 +758,7 @@ export default function SongView(){
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
+          {addToSetlist(true)}
           {!isPersonal && (<>
             <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
             <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>

@@ -37,6 +37,20 @@
   gap: var(--space-2);
 }
 .lvm-song-library__toggles { justify-content: space-between; }
+.lvm-song-library__search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+}
+.lvm-song-library__search > svg {
+  color: var(--lvm-text-secondary);
+}
+.lvm-song-library__search input {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: var(--radius-pill);
+}
 .lvm-song-library__tags { min-width: 0; }
 .lvm-song-library__feedback {
   display: flex;
@@ -88,7 +102,6 @@
 .lvm-song-library-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-3);
@@ -110,7 +123,17 @@
   outline-offset: 2px;
 }
 
-.lvm-song-library-card__body { display: grid; gap: var(--space-1); min-width: 0; }
+.lvm-song-library-card__art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--lvm-surface-2);
+  color: var(--lvm-text-secondary);
+}
+.lvm-song-library-card__body { display: grid; flex: 1; gap: var(--space-1); min-width: 0; }
 .lvm-song-library-card__body strong { overflow-wrap: anywhere; }
 .lvm-song-library-card__meta { color: var(--lvm-text-secondary); font-size: var(--lvm-font-sub); }
 .lvm-song-library-card__badge {

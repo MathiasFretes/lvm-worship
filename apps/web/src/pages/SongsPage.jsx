@@ -7,6 +7,7 @@ import { normalizeSongSearch, searchSongs } from '../utils/songs/search'
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
 import { Chip, Input } from '../components/ui/layout-kit'
+import { SearchIcon } from '../components/Icons'
 import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
@@ -371,16 +372,21 @@ export default function Songs(){
         </div>
 
         <div className="lvm-song-library__filters">
-          <Input
-            id="search"
-            type="search"
-            ref={searchRef}
-            value={q}
-            onChange={(e)=> setQ(e.target.value)}
-            onKeyDown={onSearchKeyDown}
-            placeholder={t('songs.searchPlaceholder')}
-            aria-label={t('songs.searchAria')}
-          />
+          <div className="lvm-song-library__search">
+            <SearchIcon size={20} aria-hidden="true" />
+            <Input
+              id="search"
+              name="q"
+              type="search"
+              autoComplete="off"
+              ref={searchRef}
+              value={q}
+              onChange={(e)=> setQ(e.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder={t('songs.searchPlaceholder')}
+              aria-label={t('songs.searchAria')}
+            />
+          </div>
           <div className="lvm-song-library__toggles">
             <label>
               <input

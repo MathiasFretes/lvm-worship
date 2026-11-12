@@ -179,6 +179,15 @@ export default function SetlistWorkspacePage() {
   const searchRef = useRef(null)
   const hydratedFromRoute = useRef(false)
   const quickApplied = useRef(false)
+  const addedFromViewer = useRef(null)
+
+  useEffect(() => {
+    const addition = location.state?.addSongToDraft
+    if (routeId || routeCode || routeSongIds || !addition?.song?.id || addedFromViewer.current === location.key) return
+    addedFromViewer.current = location.key
+    controller.addSong(addition.song, { toKey: addition.toKey || null })
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
+  }, [controller, location, navigate, routeCode, routeId, routeSongIds])
 
   useEffect(() => {
     try {
