@@ -62,6 +62,11 @@
     }
   },
   "mixer": {
+    "click": "동기화 메트로놈",
+    "clickBpm": "녹음 BPM",
+    "clickMeter": "메트로놈 박자표",
+    "clickAnchor": "여기를 첫 박자로 지정",
+    "clickAnchorAt": "첫 박자 {{time}}초",
     "chart": "가사와 코드",
     "chartSection": "{{index}}구간",
     "chartSectionLabel": "가사에 연결",

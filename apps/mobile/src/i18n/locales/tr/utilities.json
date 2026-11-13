@@ -62,6 +62,11 @@
     }
   },
   "mixer": {
+    "click": "Eşzamanlı metronom",
+    "clickBpm": "Kaydın BPM değeri",
+    "clickMeter": "Metronom ölçüsü",
+    "clickAnchor": "İlk vuruşu burada ayarla",
+    "clickAnchorAt": "İlk vuruş {{time}} sn",
     "chart": "Sözler ve akorlar",
     "chartSection": "{{index}}. bölüm",
     "chartSectionLabel": "Sözlere bağla",

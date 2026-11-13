@@ -1,4 +1,4 @@
-import { MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerSnapshot, type MixerTrack } from './stemMixer'
+import { defaultMixerMetronome, isMixerMetronome, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerSnapshot, type MixerTrack } from './stemMixer'
 
 export type MixerAsset = { size: number; arrayBuffer: () => Promise<ArrayBuffer> }
 export type MixerMarker = { label: string; time: number; section?: number }
@@ -40,6 +40,7 @@ export type MixerManifest = {
   markers: MixerMarker[]
   chart?: string
   chartKey?: { steps: number; preferFlat: boolean }
+  metronome?: MixerSnapshot['metronome']
 }
 
 export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot, assets: Map<number, Asset>, markers: MixerMarker[] = [], chart?: string, chartKey?: MixerManifest['chartKey']) {
@@ -51,7 +52,7 @@ export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot,
     return { name, volume, muted, solo, bytes: file.size }
   })
   return {
-    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop, markers, chart, chartKey } satisfies MixerManifest,
+    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop, markers, chart, chartKey, metronome: state.metronome } satisfies MixerManifest,
     files,
   }
 }
@@ -105,7 +106,9 @@ export function parseMixerManifest(input: unknown): MixerManifest {
     if (!Number.isInteger(steps) || typeof key.preferFlat !== 'boolean') throw new Error('Invalid mixer chart key')
     chartKey = { steps, preferFlat: key.preferFlat }
   }
-  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop, markers: ordered, chart, chartKey }
+  const metronome = value.metronome ?? defaultMixerMetronome
+  if (!isMixerMetronome(metronome)) throw new Error('Invalid mixer metronome')
+  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop, markers: ordered, chart, chartKey, metronome }
 }
 
 export async function restoreMixerProject<Asset extends MixerAsset>(
@@ -116,6 +119,7 @@ export async function restoreMixerProject<Asset extends MixerAsset>(
     update: (id: number, track: TrackSettings) => void
     setRate: (rate: number) => void
     setPitch: (pitch: number) => void
+    setMetronome: (metronome: MixerSnapshot['metronome']) => void
     setLoop: (start: number, end: number) => boolean
     seek: (time: number) => void
   },
@@ -134,6 +138,7 @@ export async function restoreMixerProject<Asset extends MixerAsset>(
   }
   engine.setRate(manifest.rate)
   engine.setPitch(manifest.pitch)
+  engine.setMetronome(manifest.metronome ?? defaultMixerMetronome)
   if (manifest.loop && !engine.setLoop(manifest.loop.start, manifest.loop.end)) throw new Error('Mixer loop exceeds audio length')
   engine.seek(manifest.time)
   return { manifest, assets }

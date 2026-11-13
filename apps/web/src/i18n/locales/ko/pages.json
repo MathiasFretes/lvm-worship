@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "click": "동기화 메트로놈",
+    "clickBpm": "녹음 BPM",
+    "clickMeter": "메트로놈 박자표",
+    "clickAnchor": "여기를 첫 박자로 지정",
+    "clickAnchorAt": "첫 박자 {{time}}초",
     "separation": {
       "title": "보컬과 반주 분리",
       "help": "이 컴퓨터의 분리 도구를 사용합니다. 최대 140초의 모노 또는 스테레오 WAV를 선택하세요.",

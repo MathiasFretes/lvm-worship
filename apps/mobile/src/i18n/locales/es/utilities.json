@@ -62,6 +62,11 @@
     }
   },
   "mixer": {
+    "click": "Metrónomo sincronizado",
+    "clickBpm": "BPM de la grabación",
+    "clickMeter": "Compás del metrónomo",
+    "clickAnchor": "Marcar primer pulso aquí",
+    "clickAnchorAt": "Primer pulso en {{time}} s",
     "chart": "Letra y acordes",
     "chartSection": "Sección {{index}}",
     "chartSectionLabel": "Vincular con la letra",

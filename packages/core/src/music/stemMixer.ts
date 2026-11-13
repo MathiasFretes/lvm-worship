@@ -1,3 +1,5 @@
+import { beatEmphasis, beatIntervalSec, beatsInMeasure, MAX_BPM, MIN_BPM, TIME_SIGNATURES, type BeatEmphasis, type TimeSignatureId } from './metronomePattern'
+
 export const MIXER_FILE_BYTES = 24 * 1024 * 1024
 const MAX_DECODED_BYTES = 192 * 1024 * 1024
 export const MIXER_TRACK_LIMIT = 8
@@ -10,9 +12,20 @@ export type MixerAudio<Buffer extends MixerBuffer> = {
   resume: () => Promise<void>
   prepare: (buffers: Buffer[], stretch: number, cancelled: () => boolean) => Promise<Buffer[] | null>
   play: (buffer: Buffer, at: number, offset: number, duration: number, rate: number, gain: number) => Voice
+  click?: (at: number, emphasis: BeatEmphasis) => () => void
   close: () => void
 }
 export type MixerTrack = { id: number; name: string; duration: number; volume: number; muted: boolean; solo: boolean }
+export type MixerMetronome = { enabled: boolean; bpm: number; meter: TimeSignatureId; offset: number }
+export const defaultMixerMetronome: MixerMetronome = { enabled: false, bpm: 100, meter: '4/4', offset: 0 }
+
+export function isMixerMetronome(value: unknown): value is MixerMetronome {
+  if (!value || typeof value !== 'object') return false
+  const { enabled, bpm, meter, offset } = value as Partial<MixerMetronome>
+  return typeof enabled === 'boolean' && typeof bpm === 'number' && Number.isInteger(bpm) && bpm >= MIN_BPM && bpm <= MAX_BPM &&
+    TIME_SIGNATURES.some(signature => signature.id === meter) && typeof offset === 'number' && Number.isFinite(offset) && offset >= 0
+}
+
 export type MixerSnapshot = {
   tracks: MixerTrack[]
   time: number
@@ -22,10 +35,11 @@ export type MixerSnapshot = {
   preparing: boolean
   playing: boolean
   loop: { start: number; end: number } | null
+  metronome: MixerMetronome
 }
 
 export const emptyMixer: MixerSnapshot = {
-  tracks: [], time: 0, duration: 0, rate: 1, pitch: 0, preparing: false, playing: false, loop: null,
+  tracks: [], time: 0, duration: 0, rate: 1, pitch: 0, preparing: false, playing: false, loop: null, metronome: defaultMixerMetronome,
 }
 
 export function createStemMixer<Buffer extends MixerBuffer>(
@@ -35,10 +49,13 @@ export function createStemMixer<Buffer extends MixerBuffer>(
 ) {
   const tracks = new Map<number, MixerTrack & { buffer: Buffer }>()
   const voices: { id: number; end: number; voice: Voice }[] = []
+  const segments: { at: number; offset: number; end: number; beat: number }[] = []
+  const clicks: { end: number; stop: () => void }[] = []
   let nextId = 0
   let duration = 0
   let rate = 1
   let pitch = 0
+  let metronome = defaultMixerMetronome
   let prepared: Map<number, Buffer> | null = null
   let pendingPreparation: Promise<Buffer[] | null> | null = null
   let loop: MixerSnapshot['loop'] = null
@@ -68,7 +85,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
     if (disposed) return
     onChange({
       tracks: Array.from(tracks.values(), ({ id, name, duration, volume, muted, solo }) => ({ id, name, duration, volume, muted, solo })),
-      time: currentTime(), duration, rate, pitch, preparing, playing: ticker !== null, loop,
+      time: currentTime(), duration, rate, pitch, preparing, playing: ticker !== null, loop, metronome,
     })
   }
 
@@ -77,6 +94,10 @@ export function createStemMixer<Buffer extends MixerBuffer>(
   }
 
   function schedule(at: number, offset: number, end: number) {
+    if (metronome.enabled && audio.click) {
+      const beat = Math.max(0, Math.ceil((offset - metronome.offset) / beatIntervalSec(metronome.bpm) - 1e-8))
+      segments.push({ at, offset, end, beat })
+    }
     const solo = Array.from(tracks.values()).some(track => track.solo)
     const stretch = stretchFactor()
     const sourceRate = playbackRate()
@@ -97,6 +118,32 @@ export function createStemMixer<Buffer extends MixerBuffer>(
     ticker = null
     for (const { voice } of voices) voice.stop()
     voices.length = 0
+    for (const click of clicks) click.stop()
+    clicks.length = 0
+    segments.length = 0
+  }
+
+  function scheduleClicks(now: number) {
+    const interval = beatIntervalSec(metronome.bpm)
+    for (let index = clicks.length - 1; index >= 0; index--) {
+      if (clicks[index].end <= now) clicks.splice(index, 1)
+    }
+    for (const segment of segments) {
+      if (segment.at + (segment.end - segment.offset) / rate <= now) continue
+      const sourceNow = segment.offset + Math.max(0, now - segment.at) * rate
+      segment.beat = Math.max(segment.beat, Math.ceil((sourceNow - metronome.offset) / interval - 1e-8))
+      while (true) {
+        const sourceTime = metronome.offset + segment.beat * interval
+        const time = segment.at + Math.max(0, sourceTime - segment.offset) / rate
+        if (sourceTime >= segment.end - 1e-8 || time > now + 0.12) break
+        if (time >= now && audio.click) {
+          const beat = segment.beat % beatsInMeasure(metronome.meter)
+          clicks.push({ end: time + 0.05, stop: audio.click(time, beatEmphasis(metronome.meter, beat, true)) })
+        }
+        segment.beat++
+      }
+    }
+    while (segments.length && segments[0].at + (segments[0].end - segments[0].offset) / rate <= now) segments.shift()
   }
 
   function tick() {
@@ -123,6 +170,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
         clear()
         position = duration
       }
+      scheduleClicks(now)
       publish()
     } catch {
       clear()
@@ -139,6 +187,7 @@ export function createStemMixer<Buffer extends MixerBuffer>(
     nextCycle = loop ? baseTime + (end - basePosition) / rate : Infinity
     try {
       schedule(baseTime, basePosition, end)
+      scheduleClicks(audio.clock())
       ticker = setInterval(tick, 30)
     } catch {
       clear()
@@ -252,6 +301,12 @@ export function createStemMixer<Buffer extends MixerBuffer>(
       if (Number.isInteger(value) && value >= -12 && value <= 12 && value !== pitch) {
         adjust(() => { pitch = value }, true)
       }
+    },
+    setMetronome(value: MixerMetronome) {
+      if (!isMixerMetronome(value)) return
+      const { enabled, bpm, meter, offset } = value
+      if (enabled === metronome.enabled && bpm === metronome.bpm && meter === metronome.meter && offset === metronome.offset) return
+      adjust(() => { metronome = { enabled, bpm, meter, offset } })
     },
     setLoop(start: number, end: number) {
       if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > duration + 0.001) return false

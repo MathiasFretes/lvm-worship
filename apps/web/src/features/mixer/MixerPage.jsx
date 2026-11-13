@@ -6,6 +6,7 @@ import { fetchPersonalSongById, fetchSongBySlug, parseChordProOrLegacy } from '@
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT } from '@lavozmisionera/core/music/stemMixer'
 import { currentMixerMarker, makeMixerProject, MIXER_CHART_LIMIT, putMixerMarker, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 import { stretchMixerAudio } from '@lavozmisionera/core/music/stretchMixerAudio'
+import { clampBpm, MAX_BPM, MIN_BPM, MIXER_CLICK, TIME_SIGNATURES } from '@lavozmisionera/core/music/metronomePattern'
 import { Button, Input, PageHeader } from '../../components/ui/layout-kit'
 import { InstrumentalLine, MeasuredLine } from '../../components/song/SongChartLines'
 import { useChordStyle } from '../../hooks/useSettings'
@@ -22,6 +23,20 @@ function browserAudio() {
     resume: () => audio.resume(),
     prepare: (buffers, stretch, cancelled) => stretchMixerAudio(buffers, stretch, audio.createBuffer.bind(audio), cancelled),
     close: () => { void audio.close().catch(() => {}) },
+    click(at, emphasis) {
+      const oscillator = audio.createOscillator()
+      const gain = audio.createGain()
+      const { frequency, peak } = MIXER_CLICK[emphasis]
+      oscillator.frequency.setValueAtTime(frequency, at)
+      gain.gain.setValueAtTime(0.0001, at)
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.003)
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.044)
+      oscillator.connect(gain).connect(audio.destination)
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect() }
+      oscillator.start(at)
+      oscillator.stop(at + 0.05)
+      return () => { gain.disconnect(); oscillator.stop() }
+    },
     play(buffer, at, offset, duration, rate, volume) {
       const source = audio.createBufferSource()
       const gain = audio.createGain()
@@ -64,6 +79,7 @@ function MixerWorkspace({ songId, songTitle, songSlug, personal, incoming }) {
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [scrub, setScrub] = useState(null)
+  const [clickBpm, setClickBpm] = useState(null)
   const [markers, setMarkers] = useState([])
   const [markerLabel, setMarkerLabel] = useState('')
   const [section, setSection] = useState('')
@@ -302,6 +318,22 @@ function MixerWorkspace({ songId, songTitle, songSlug, personal, incoming }) {
             <Button disabled={state.preparing || !state.loop} onClick={() => { mixer.current.clearLoop(); setError('') }}>{t('clear')}</Button>
           </div>
           {state.loop && <p>{t('loop', { start: state.loop.start.toFixed(1), end: state.loop.end.toFixed(1) })}</p>}
+          <div className="lvm-mixer__row">
+            <Button aria-pressed={state.metronome.enabled} disabled={state.preparing} onClick={() => mixer.current.setMetronome({ ...state.metronome, enabled: !state.metronome.enabled })}>{t('click')}</Button>
+            {state.metronome.enabled && <>
+              <Input label={t('clickBpm')} type="number" min={MIN_BPM} max={MAX_BPM} value={clickBpm ?? state.metronome.bpm}
+                disabled={state.preparing} onChange={event => setClickBpm(event.target.value)} onBlur={() => {
+                  if (clickBpm?.trim()) mixer.current.setMetronome({ ...state.metronome, bpm: clampBpm(Number(clickBpm)) })
+                  setClickBpm(null)
+                }} />
+              <label>{t('clickMeter')} <select value={state.metronome.meter} disabled={state.preparing}
+                onChange={event => mixer.current.setMetronome({ ...state.metronome, meter: event.target.value })}>
+                {TIME_SIGNATURES.map(({ id }) => <option key={id}>{id}</option>)}
+              </select></label>
+              <Button disabled={state.preparing || state.playing} onClick={() => mixer.current.setMetronome({ ...state.metronome, offset: state.time })}>{t('clickAnchor')}</Button>
+              <p>{t('clickAnchorAt', { time: state.metronome.offset.toFixed(2) })}</p>
+            </>}
+          </div>
         </section>
         <section className="lvm-mixer__panel" aria-label={t('markers')}>
           <h2>{t('markers')}</h2>

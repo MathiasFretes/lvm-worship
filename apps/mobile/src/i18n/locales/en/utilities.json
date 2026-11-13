@@ -61,6 +61,11 @@
     }
   },
   "mixer": {
+    "click": "Synchronized metronome",
+    "clickBpm": "Recording BPM",
+    "clickMeter": "Metronome time signature",
+    "clickAnchor": "Set first beat here",
+    "clickAnchorAt": "First beat at {{time}} s",
     "chart": "Lyrics and chords",
     "chartSection": "Section {{index}}",
     "chartSectionLabel": "Link to lyrics",

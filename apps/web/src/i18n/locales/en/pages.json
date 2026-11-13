@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "click": "Synchronized metronome",
+    "clickBpm": "Recording BPM",
+    "clickMeter": "Metronome time signature",
+    "clickAnchor": "Set first beat here",
+    "clickAnchorAt": "First beat at {{time}} s",
     "separation": {
       "title": "Separate vocals and accompaniment",
       "help": "Use the separator on this computer. Choose a mono or stereo WAV up to 140 seconds.",

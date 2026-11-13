@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "click": "Eşzamanlı metronom",
+    "clickBpm": "Kaydın BPM değeri",
+    "clickMeter": "Metronom ölçüsü",
+    "clickAnchor": "İlk vuruşu burada ayarla",
+    "clickAnchorAt": "İlk vuruş {{time}} sn",
     "separation": {
       "title": "Vokali ve eşliği ayır",
       "help": "Bu bilgisayardaki ayırıcıyı kullanın. En fazla 140 saniyelik mono veya stereo WAV seçin.",

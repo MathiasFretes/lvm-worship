@@ -10,6 +10,7 @@ function harness() {
     clock: () => (Date.now() - epoch) / 1000,
     decode: async (bytes: ArrayBuffer) => ({ duration: bytes.byteLength, length: bytes.byteLength * 48000, numberOfChannels: 2 }),
     resume: async () => {},
+    click: vi.fn((_at: number, _emphasis: string) => vi.fn()),
     prepare: vi.fn(async (buffers: MixerBuffer[], stretch: number, _cancelled: () => boolean) =>
       buffers.map(buffer => ({ ...buffer, length: Math.round(buffer.length * stretch), duration: buffer.duration * stretch }))),
     play(buffer: MixerBuffer, at: number, offset: number, duration: number, rate: number, volume: number) {
@@ -82,11 +83,13 @@ describe('synchronized stem mixer', () => {
     source.mixer.setLoop(0.5, 2)
     source.mixer.setRate(0.75)
     source.mixer.setPitch(5)
+    source.mixer.setMetronome({ enabled: true, bpm: 128, meter: '3/4', offset: 0.25 })
     source.mixer.seek(1)
     const markers = putMixerMarker(putMixerMarker([], 'Coro', 1.5), 'Intro', 0)
     const project = makeMixerProject(source.snapshot(), new Map([[voiceId, voice], [drumsId, drums]]), markers)
     expect(parseMixerManifest({ ...project.manifest, pitch: undefined }).pitch).toBe(0)
     expect(parseMixerManifest({ ...project.manifest, markers: undefined }).markers).toEqual([])
+    expect(parseMixerManifest({ ...project.manifest, metronome: undefined }).metronome?.enabled).toBe(false)
     expect(mixerProjectKey('draft')).not.toBe(mixerProjectKey())
     expect(mixerProjectKey('A/B')).not.toBe(mixerProjectKey('A%2FB'))
     const target = harness()
@@ -115,6 +118,40 @@ describe('synchronized stem mixer', () => {
     vi.advanceTimersByTime(2000)
     expect(calls[2].at).toBeCloseTo(2.055)
     expect(calls[3].at).toBeCloseTo(2.055)
+    mixer.dispose()
+  })
+
+  it('schedules the metronome against the original audio grid through speed, pitch and loop boundaries', async () => {
+    const { mixer, calls, audio } = harness()
+    await mixer.add('voice', new ArrayBuffer(4))
+    mixer.setMetronome({ enabled: true, bpm: 120, meter: '2/4', offset: 0.5 })
+    mixer.setLoop(0.5, 1.5)
+    mixer.setRate(0.5)
+    mixer.setPitch(5)
+    await mixer.play()
+    expect(audio.click).toHaveBeenNthCalledWith(1, calls[0].at, 'primary')
+    vi.advanceTimersByTime(2000)
+    expect(audio.click.mock.calls.map(([time, accent]) => [Number(time.toFixed(3)), accent]))
+      .toEqual([[0.055, 'primary'], [1.055, 'normal'], [2.055, 'primary']])
+    mixer.pause()
+    expect(audio.click.mock.results.at(-1)?.value).toHaveBeenCalledOnce()
+    mixer.dispose()
+  })
+
+  it('seeks to the next grid beat and stops queued clicks when disabled', async () => {
+    const { mixer, audio } = harness()
+    await mixer.add('voice', new ArrayBuffer(4))
+    mixer.setMetronome({ enabled: true, bpm: 120, meter: '4/4', offset: 0.5 })
+    mixer.seek(0.8)
+    await mixer.play()
+    expect(audio.click).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(180)
+    expect(audio.click.mock.calls[0][0]).toBeCloseTo(0.255)
+    expect(audio.click.mock.calls[0][1]).toBe('normal')
+    mixer.setMetronome({ enabled: false, bpm: 120, meter: '4/4', offset: 0.5 })
+    expect(audio.click.mock.results[0].value).toHaveBeenCalledOnce()
+    vi.advanceTimersByTime(1000)
+    expect(audio.click).toHaveBeenCalledOnce()
     mixer.dispose()
   })
 

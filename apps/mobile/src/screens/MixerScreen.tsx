@@ -9,6 +9,7 @@ import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type 
 import { currentMixerMarker, makeMixerProject, MIXER_CHART_LIMIT, putMixerMarker, restoreMixerProject, type MixerManifest, type MixerMarker } from '@lavozmisionera/core/music/mixerProject'
 import { parseChordProOrLegacy } from '@lavozmisionera/core'
 import { stretchMixerAudio } from '@lavozmisionera/core/music/stretchMixerAudio'
+import { clampBpm, MIXER_CLICK, TIME_SIGNATURES } from '@lavozmisionera/core/music/metronomePattern'
 import Button from '../components/Button'
 import Chip from '../components/Chip'
 import { ChartSection } from '../components/ChordChart'
@@ -29,6 +30,21 @@ function nativeAudio(): MixerAudio<AudioBuffer> {
       await audio.resume()
     },
     close: () => { void audio.close().catch(() => {}) },
+    click(at, emphasis) {
+      const oscillator = audio.createOscillator()
+      const gain = audio.createGain()
+      const { frequency, peak } = MIXER_CLICK[emphasis]
+      oscillator.frequency.setValueAtTime(frequency, at)
+      gain.gain.setValueAtTime(0.0001, at)
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.003)
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.044)
+      oscillator.connect(gain)
+      gain.connect(audio.destination)
+      oscillator.onEnded = () => { oscillator.disconnect(); gain.disconnect() }
+      oscillator.start(at)
+      oscillator.stop(at + 0.05)
+      return () => { gain.disconnect(); oscillator.stop() }
+    },
     play(buffer, at, offset, duration, rate, volume) {
       const source = audio.createBufferSource()
       const gain = audio.createGain()
@@ -66,6 +82,7 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [seek, setSeek] = useState('')
+  const [clickBpm, setClickBpm] = useState<string | null>(null)
   const [markers, setMarkers] = useState<MixerMarker[]>([])
   const [markerLabel, setMarkerLabel] = useState('')
   const [section, setSection] = useState<number>()
@@ -263,6 +280,27 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
             <Button title={t('clear')} variant="secondary" disabled={state.preparing || !state.loop} onPress={() => { mixer.current?.clearLoop(); setError('') }} />
           </View>
           {state.loop && <Text style={ink}>{t('loop', { start: state.loop.start.toFixed(1), end: state.loop.end.toFixed(1) })}</Text>}
+          <View style={row}>
+            <Chip label={t('click')} selected={state.metronome.enabled} disabled={state.preparing}
+              onPress={() => mixer.current?.setMetronome({ ...state.metronome, enabled: !state.metronome.enabled })} />
+          </View>
+          {state.metronome.enabled && <>
+            <Text style={ink}>{t('clickBpm')}</Text>
+            <TextInput accessibilityLabel={t('clickBpm')} keyboardType="number-pad" maxLength={3}
+              editable={!state.preparing}
+              value={clickBpm ?? String(state.metronome.bpm)} onChangeText={setClickBpm} onBlur={() => {
+                if (clickBpm?.trim()) mixer.current?.setMetronome({ ...state.metronome, bpm: clampBpm(Number(clickBpm)) })
+                setClickBpm(null)
+              }} style={{ ...ink, minHeight: 44, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: theme.spacing.sm }} />
+            <Text style={ink}>{t('clickMeter')}</Text>
+            <View style={row}>
+              {TIME_SIGNATURES.map(({ id }) => <Chip key={id} label={id} selected={state.metronome.meter === id} disabled={state.preparing}
+                onPress={() => mixer.current?.setMetronome({ ...state.metronome, meter: id })} />)}
+            </View>
+            <Button title={t('clickAnchor')} disabled={state.preparing || state.playing} variant="secondary"
+              onPress={() => mixer.current?.setMetronome({ ...state.metronome, offset: state.time })} />
+            <Text style={ink}>{t('clickAnchorAt', { time: state.metronome.offset.toFixed(2) })}</Text>
+          </>}
         </View>
         <View style={panel}>
           <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('markers')}</Text>
