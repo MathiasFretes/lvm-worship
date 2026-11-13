@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createTapTempo } from '../tapTempo'
+import { createTapTempo } from '@lavozmisionera/core/music/tapTempo'
 
 function tapSeries(tapper: ReturnType<typeof createTapTempo>, start: number, intervals: number[]) {
   let now = start

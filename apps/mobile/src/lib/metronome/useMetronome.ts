@@ -15,7 +15,7 @@ import {
   clampBpm,
   type BeatEmphasis,
   type TimeSignatureId,
-} from './pattern'
+} from '@lavozmisionera/core/music/metronomePattern'
 
 const LOOKAHEAD_MS = 25
 const SCHEDULE_AHEAD_S = 0.12

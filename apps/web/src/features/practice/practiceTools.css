@@ -1,0 +1,86 @@
+.lvm-practice {
+  padding-block: var(--space-4) var(--space-6);
+}
+
+.lvm-practice__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.lvm-practice__card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.lvm-practice__card :is(h2, p) {
+  margin: 0;
+}
+
+.lvm-practice__row,
+.lvm-practice__beats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.lvm-practice__row label {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.lvm-practice__row :is(button, a, input, select),
+.lvm-practice__check {
+  min-height: 2.75rem;
+}
+
+.lvm-practice__row input {
+  width: 8ch;
+}
+
+.lvm-practice__row select {
+  color: var(--lvm-text);
+  background: var(--lvm-surface-2);
+  border: var(--lvm-focus-size) solid var(--lvm-separator);
+  border-radius: var(--radius-md);
+  padding-inline: var(--space-2);
+  font: inherit;
+}
+
+.lvm-practice__check {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lvm-practice__beats span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: var(--lvm-surface-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lvm-practice__beats .is-current,
+.lvm-practice__row [aria-pressed='true'] {
+  color: var(--lvm-text-accent);
+  box-shadow: inset 0 0 0 var(--lvm-focus-size) currentColor;
+  font-weight: 700;
+}
+
+.lvm-practice meter {
+  width: 100%;
+  height: 1.25rem;
+}
+
+.lvm-practice :focus-visible {
+  outline: var(--lvm-focus-size) solid var(--lvm-focus-ring);
+  outline-offset: var(--lvm-focus-offset);
+}

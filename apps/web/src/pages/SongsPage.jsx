@@ -357,6 +357,7 @@ export default function Songs(){
           <Button as={Link} to="/tablature">{t('tablature.title')}</Button>
           <Button as={Link} to="/mixer">{t('mixer.title')}</Button>
           <Button as={Link} to="/score">{t('score.title')}</Button>
+          <Button as={Link} to="/practice">{t('practiceTools.title')}</Button>
           {languageChipCodes.length > 0 ? (
             <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { STANDARD_TUNING, centsBetween, nearestString, stringReading } from '../notes'
+import { STANDARD_TUNING, centsBetween, nearestString, stringReading } from '@lavozmisionera/core/music/tunerNotes'
 import { createInTuneHold } from '../hold'
-import { createYinDetector, rmsLevel } from '../yin'
+import { createYinDetector, rmsLevel } from '@lavozmisionera/core/music/tunerYin'
 import { createCentsSmoother } from '../smoothing'
 
 describe('centsBetween', () => {

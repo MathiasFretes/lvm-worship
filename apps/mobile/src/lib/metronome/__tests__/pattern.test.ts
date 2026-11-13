@@ -9,7 +9,7 @@ import {
   clampBpm,
   type BeatEmphasis,
   type TimeSignatureId,
-} from '../pattern'
+} from '@lavozmisionera/core/music/metronomePattern'
 
 function measurePattern(sig: TimeSignatureId, accent: boolean): BeatEmphasis[] {
   return Array.from({ length: beatsInMeasure(sig) }, (_, i) => beatEmphasis(sig, i, accent))

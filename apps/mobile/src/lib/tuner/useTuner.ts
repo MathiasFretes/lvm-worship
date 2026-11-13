@@ -10,8 +10,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AudioManager, AudioRecorder } from 'react-native-audio-api'
-import { stringReading, type StringReading, type TunerString } from './notes'
-import { createYinDetector, decimate, rmsLevel } from './yin'
+import { stringReading, type StringReading, type TunerString } from '@lavozmisionera/core/music/tunerNotes'
+import { createYinDetector, decimate, rmsLevel } from '@lavozmisionera/core/music/tunerYin'
 import { createCentsSmoother } from './smoothing'
 import { createInTuneHold, type HoldState } from './hold'
 

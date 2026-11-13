@@ -12,8 +12,8 @@ import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@lavozmisionera/tokens/native'
-import { createTapTempo } from '../lib/tapTempo'
-import { beatEmphasis, beatsInMeasure, TIME_SIGNATURES } from '../lib/metronome/pattern'
+import { createTapTempo } from '@lavozmisionera/core/music/tapTempo'
+import { beatEmphasis, beatsInMeasure, TIME_SIGNATURES } from '@lavozmisionera/core/music/metronomePattern'
 import { useMetronome } from '../lib/metronome/useMetronome'
 
 // Tap Tempo + Metronome (Utilities) — one tool: the tap pad sets the
