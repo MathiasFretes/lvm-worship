@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "chart": "Lyrics and chords",
+    "chartSection": "Section {{index}}",
+    "chartSectionLabel": "Link to lyrics",
+    "unlinkedMarker": "Unlinked",
+    "currentSection": "Current section: {{name}}",
     "loopMarker": "Loop {{name}}",
     "songAudio": "Rehearsal audio",
     "songRehearsal": "Rehearsing {{title}}",

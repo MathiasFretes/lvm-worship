@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "chart": "Sözler ve akorlar",
+    "chartSection": "{{index}}. bölüm",
+    "chartSectionLabel": "Sözlere bağla",
+    "unlinkedMarker": "Bağlantısız",
+    "currentSection": "Geçerli bölüm: {{name}}",
     "loopMarker": "{{name}} bölümünü döngüye al",
     "songAudio": "Prova sesi",
     "songRehearsal": "{{title}} provası",

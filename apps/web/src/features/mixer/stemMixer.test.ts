@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createStemMixer, type MixerBuffer, type MixerSnapshot } from '@lavozmisionera/core/music/stemMixer'
-import { makeMixerProject, mixerProjectKey, parseMixerManifest, putMixerMarker, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
+import { currentMixerMarker, makeMixerProject, mixerProjectKey, parseMixerManifest, putMixerMarker, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 
 function harness() {
   vi.useFakeTimers()
@@ -115,6 +115,25 @@ describe('synchronized stem mixer', () => {
     vi.advanceTimersByTime(2000)
     expect(calls[2].at).toBeCloseTo(2.055)
     expect(calls[3].at).toBeCloseTo(2.055)
+    mixer.dispose()
+  })
+
+  it('restores linked chart sections and follows source time across seeks and unlinked markers', async () => {
+    const { mixer, snapshot } = harness()
+    const voice = { size: 4, arrayBuffer: async () => new ArrayBuffer(4) }
+    const id = (await mixer.add('voice', await voice.arrayBuffer()))!
+    let markers = putMixerMarker([], 'Coro', 2.25, 1)
+    markers = putMixerMarker(markers, 'Verso', 0.5, 0)
+    markers = putMixerMarker(markers, 'Anotación', 3)
+    const chart = '{sov: Verso}\n[C]Uno\n{eov}\n{soc: Coro}\n[G]Dos\n{eoc}'
+    const project = makeMixerProject(snapshot(), new Map([[id, voice]]), markers, chart, { steps: 2, preferFlat: false })
+    const saved = parseMixerManifest(JSON.parse(JSON.stringify(project.manifest)))
+    expect(saved).toMatchObject({ chart, chartKey: { steps: 2, preferFlat: false } })
+    expect(currentMixerMarker(saved.markers, 0)).toBeUndefined()
+    expect(currentMixerMarker(saved.markers, 2.24)?.section).toBe(0)
+    expect(currentMixerMarker(saved.markers, 2.25)?.section).toBe(1)
+    expect(currentMixerMarker(saved.markers, 3.5)?.section).toBe(1)
+    expect(currentMixerMarker(saved.markers, 0.7)?.section).toBe(0)
     mixer.dispose()
   })
 

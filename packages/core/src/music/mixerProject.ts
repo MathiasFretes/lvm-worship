@@ -1,19 +1,32 @@
 import { MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerSnapshot, type MixerTrack } from './stemMixer'
 
 export type MixerAsset = { size: number; arrayBuffer: () => Promise<ArrayBuffer> }
-export type MixerMarker = { label: string; time: number }
+export type MixerMarker = { label: string; time: number; section?: number }
+export const MIXER_CHART_LIMIT = 256 * 1024
 
 export function mixerProjectKey(songId?: string | null) {
   return songId ? `song:${encodeURIComponent(songId)}` : 'draft'
 }
 
-export function putMixerMarker(markers: MixerMarker[], label: string, time: number): MixerMarker[] {
+export function putMixerMarker(markers: MixerMarker[], label: string, time: number, section?: number): MixerMarker[] {
   const name = label.trim()
   if (!name || name.length > 100 || !Number.isFinite(time) || time < 0) throw new Error('Invalid mixer marker')
+  if (section !== undefined && (!Number.isSafeInteger(section) || section < 0)) throw new Error('Invalid chart section')
   const rounded = Math.round(time * 1000) / 1000
   const next = markers.filter(marker => marker.time !== rounded)
   if (next.length >= 100) throw new Error('Too many mixer markers')
-  return [...next, { label: name, time: rounded }].sort((a, b) => a.time - b.time)
+  return [...next, { label: name, time: rounded, ...(section !== undefined ? { section } : {}) }].sort((a, b) => a.time - b.time)
+}
+
+export function currentMixerMarker(markers: MixerMarker[], time: number) {
+  for (let index = markers.length - 1; index >= 0; index -= 1) {
+    if (markers[index].section !== undefined && markers[index].time <= time) return markers[index]
+  }
+}
+
+export function mixerChartSteps(value: unknown) {
+  const steps = typeof value === 'string' ? Number(value) : 0
+  return Number.isInteger(steps) && Math.abs(steps) <= 24 ? steps : 0
 }
 
 type TrackSettings = Pick<MixerTrack, 'name' | 'volume' | 'muted' | 'solo'>
@@ -25,9 +38,11 @@ export type MixerManifest = {
   time: number
   loop: MixerSnapshot['loop']
   markers: MixerMarker[]
+  chart?: string
+  chartKey?: { steps: number; preferFlat: boolean }
 }
 
-export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot, assets: Map<number, Asset>, markers: MixerMarker[] = []) {
+export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot, assets: Map<number, Asset>, markers: MixerMarker[] = [], chart?: string, chartKey?: MixerManifest['chartKey']) {
   const files: Asset[] = []
   const tracks = state.tracks.map(({ id, name, volume, muted, solo }) => {
     const file = assets.get(id)
@@ -36,7 +51,7 @@ export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot,
     return { name, volume, muted, solo, bytes: file.size }
   })
   return {
-    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop, markers } satisfies MixerManifest,
+    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop, markers, chart, chartKey } satisfies MixerManifest,
     files,
   }
 }
@@ -78,9 +93,19 @@ export function parseMixerManifest(input: unknown): MixerManifest {
   const ordered = markers.reduce<MixerMarker[]>((result, input) => {
     const marker = object(input)
     if (typeof marker.label !== 'string') throw new Error('Invalid mixer marker label')
-    return putMixerMarker(result, marker.label, number(marker.time, 0))
+    const section = marker.section === undefined ? undefined : number(marker.section, 0)
+    return putMixerMarker(result, marker.label, number(marker.time, 0), section)
   }, [])
-  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop, markers: ordered }
+  const chart = value.chart
+  if (chart !== undefined && (typeof chart !== 'string' || chart.length > MIXER_CHART_LIMIT)) throw new Error('Invalid mixer chart')
+  let chartKey: MixerManifest['chartKey']
+  if (value.chartKey !== undefined) {
+    const key = object(value.chartKey)
+    const steps = number(key.steps, -24, 24)
+    if (!Number.isInteger(steps) || typeof key.preferFlat !== 'boolean') throw new Error('Invalid mixer chart key')
+    chartKey = { steps, preferFlat: key.preferFlat }
+  }
+  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop, markers: ordered, chart, chartKey }
 }
 
 export async function restoreMixerProject<Asset extends MixerAsset>(

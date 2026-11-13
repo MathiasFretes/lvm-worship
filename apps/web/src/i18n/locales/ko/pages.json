@@ -80,6 +80,11 @@
     }
   },
   "mixer": {
+    "chart": "가사와 코드",
+    "chartSection": "{{index}}구간",
+    "chartSectionLabel": "가사에 연결",
+    "unlinkedMarker": "연결 안 함",
+    "currentSection": "현재 구간: {{name}}",
     "loopMarker": "{{name}} 반복",
     "songAudio": "연습 오디오",
     "songRehearsal": "{{title}} 연습",

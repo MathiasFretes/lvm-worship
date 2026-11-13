@@ -64,3 +64,11 @@
 .lvm-mixer__panel h2 {
   font-size: 1.125rem;
 }
+
+.lvm-mixer__panel + .lvm-mixer__panel {
+  margin-block-start: var(--space-3);
+}
+
+.lvm-mixer__chart {
+  min-width: 0;
+}

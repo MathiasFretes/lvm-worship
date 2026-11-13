@@ -62,6 +62,11 @@
     }
   },
   "mixer": {
+    "chart": "Letra y acordes",
+    "chartSection": "Sección {{index}}",
+    "chartSectionLabel": "Vincular con la letra",
+    "unlinkedMarker": "Sin vincular",
+    "currentSection": "Sección actual: {{name}}",
     "loopMarker": "Repetir {{name}}",
     "songAudio": "Audio de ensayo",
     "songRehearsal": "Ensayo de {{title}}",
