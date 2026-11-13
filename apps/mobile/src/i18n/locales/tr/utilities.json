@@ -183,6 +183,12 @@
     "autoModeOn": "Otomatik mod açık"
   },
   "metronome": {
+    "division": "Vuruş başına bölme",
+    "countIn": "Ön sayım",
+    "countIn0": "Kapalı",
+    "countIn1": "1 ölçü",
+    "countIn2": "2 ölçü",
+    "audioError": "Ses başlatılamadı.",
     "title": "Metronom",
     "bpm": "BPM",
     "slower": "Daha yavaş",

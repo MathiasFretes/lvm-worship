@@ -1,5 +1,10 @@
 {
   "practiceTools": {
+    "division": "Subdivisión por pulso",
+    "countIn": "Cuenta de entrada",
+    "countIn0": "Sin entrada",
+    "countIn1": "1 compás",
+    "countIn2": "2 compases",
     "title": "Herramientas",
     "metronome": "Metrónomo",
     "tuner": "Afinador de guitarra",

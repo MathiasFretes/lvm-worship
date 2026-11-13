@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { Pressable, Switch, Text, View } from 'react-native'
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
@@ -14,6 +14,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@lavozmisionera/tokens/native'
 import { createTapTempo } from '@lavozmisionera/core/music/tapTempo'
 import { beatEmphasis, beatsInMeasure, TIME_SIGNATURES } from '@lavozmisionera/core/music/metronomePattern'
+import { METRONOME_COUNT_IN, METRONOME_DIVISIONS } from '@lavozmisionera/core/music/metronomeClock'
 import { useMetronome } from '../lib/metronome/useMetronome'
 
 // Tap Tempo + Metronome (Utilities) — one tool: the tap pad sets the
@@ -92,6 +93,12 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
     accentEnabled,
     setAccentEnabled,
     currentBeat,
+    remaining,
+    division,
+    setDivision,
+    countIn,
+    setCountIn,
+    error,
   } = metronome
 
   // Silence the clicks whenever the screen loses focus (back, app switch).
@@ -110,9 +117,9 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
 
   return (
     <Screen edges={['left', 'right']}>
-      <View
-        style={{
-          flex: 1,
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
           paddingTop: barH + t.spacing.lg,
           paddingHorizontal: t.spacing.lg,
           paddingBottom: insets.bottom + t.spacing.xl,
@@ -152,6 +159,9 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
             )
           })}
         </View>
+        {remaining > 0 && <Text accessibilityLiveRegion="polite" style={{ color: t.colors.ink, textAlign: 'center' }}>
+          {tx('metronome.countIn')}: {tx(`metronome.countIn${remaining}`)}
+        </Text>}
 
         {/* BPM readout + steppers */}
         <View
@@ -189,6 +199,21 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
             </Text>
           </View>
           <StepButton icon="plus" label={tx('metronome.faster')} onStep={() => stepBpm(1)} t={t} />
+        </View>
+
+        <View style={{ marginTop: t.spacing.md, gap: t.spacing.sm }}>
+          <Text style={{ color: t.colors.ink }}>{tx('metronome.division')}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
+            {METRONOME_DIVISIONS.map(value => (
+              <Chip key={value} label={`${value}×`} selected={division === value} onPress={() => setDivision(value)} />
+            ))}
+          </View>
+          <Text style={{ color: t.colors.ink }}>{tx('metronome.countIn')}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
+            {METRONOME_COUNT_IN.map(value => (
+              <Chip key={value} label={tx(`metronome.countIn${value}`)} selected={countIn === value} disabled={running} onPress={() => setCountIn(value)} />
+            ))}
+          </View>
         </View>
 
         {/* Tap tempo — a large, forgiving pad; tapping sets the tempo above. */}
@@ -258,12 +283,13 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
 
         <View style={{ flex: 1 }} />
 
+        {error && <Text accessibilityRole="alert" style={{ color: t.colors.ink }}>{tx('metronome.audioError')}</Text>}
         <Button
           title={running ? tx('metronome.stop') : tx('metronome.start')}
           variant={running ? 'secondary' : 'primary'}
           onPress={() => (running ? stop() : void start())}
         />
-      </View>
+      </ScrollView>
 
       {/* Scroll-behind top bar, same pattern as Tuner/Settings. */}
       <GlassSurface

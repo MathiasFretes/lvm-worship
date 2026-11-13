@@ -1,5 +1,10 @@
 {
   "practiceTools": {
+    "division": "Subdivisions per beat",
+    "countIn": "Count-in",
+    "countIn0": "Off",
+    "countIn1": "1 measure",
+    "countIn2": "2 measures",
     "title": "Utilities",
     "metronome": "Metronome",
     "tuner": "Guitar Tuner",

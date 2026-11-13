@@ -1,5 +1,10 @@
 {
   "practiceTools": {
+    "division": "Vuruş başına bölme",
+    "countIn": "Ön sayım",
+    "countIn0": "Kapalı",
+    "countIn1": "1 ölçü",
+    "countIn2": "2 ölçü",
     "title": "Araçlar",
     "metronome": "Metronom",
     "tuner": "Gitar Akort Aleti",

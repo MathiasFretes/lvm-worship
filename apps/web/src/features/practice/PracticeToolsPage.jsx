@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { clampBpm, MAX_BPM, MIN_BPM, TIME_SIGNATURES } from '@lavozmisionera/core/music/metronomePattern'
+import { METRONOME_COUNT_IN, METRONOME_DIVISIONS } from '@lavozmisionera/core/music/metronomeClock'
 import { createTapTempo } from '@lavozmisionera/core/music/tapTempo'
 import { STANDARD_TUNING, stringReading } from '@lavozmisionera/core/music/tunerNotes'
 import { Button, Card, Input, PageHeader } from '../../components/ui/layout-kit'
@@ -20,7 +21,9 @@ export default function PracticeToolsPage() {
   const [bpm, setBpm] = useState('100')
   const [meter, setMeter] = useState('4/4')
   const [accent, setAccent] = useState(true)
-  const [beat, setBeat] = useState(null)
+  const [pulse, setPulse] = useState(null)
+  const [division, setDivision] = useState(1)
+  const [countIn, setCountIn] = useState(0)
   const [frequency, setFrequency] = useState(null)
   const [lock, setLock] = useState(null)
   const [mode, setMode] = useState(null)
@@ -30,7 +33,7 @@ export default function PracticeToolsPage() {
   const tapTempo = useRef(null)
   const settings = useRef({})
   const tempo = bpm === '' ? 100 : clampBpm(Number(bpm))
-  settings.current = { bpm: tempo, meter, accent }
+  settings.current = { bpm: tempo, meter, accent, division, countIn }
   const beats = TIME_SIGNATURES.find(signature => signature.id === meter).beats
   const reading = frequency ? stringReading(frequency, lock) : null
   const cents = reading ? Math.round(reading.cents) : 0
@@ -49,7 +52,7 @@ export default function PracticeToolsPage() {
     closeSession(active)
     setOpening(false)
     setMode(null)
-    setBeat(null)
+    setPulse(null)
     setFrequency(null)
   }
 
@@ -84,7 +87,7 @@ export default function PracticeToolsPage() {
         }, { once: true }))
         active.stop = openTuner(active.audio, stream, setFrequency)
       } else {
-        active.stop = openMetronome(active.audio, () => settings.current, setBeat)
+        active.stop = openMetronome(active.audio, () => settings.current, setPulse)
       }
       setOpening(false)
     } catch (failure) {
@@ -116,8 +119,16 @@ export default function PracticeToolsPage() {
           <h2 id="practice-metronome">{label('metronome')}</h2>
           <div className="lvm-practice__beats" aria-hidden="true">
             {Array.from({ length: beats }, (_, index) => (
-              <span key={index} className={beat === index ? 'is-current' : undefined}>{index + 1}</span>
+              <span key={index} className={pulse?.beat === index ? 'is-current' : undefined}>{index + 1}</span>
             ))}
+          </div>
+          <div className="lvm-practice__row">
+            <label>{label('division')} <select value={division} onChange={event => setDivision(Number(event.target.value))}>
+              {METRONOME_DIVISIONS.map(value => <option key={value} value={value}>{value}×</option>)}
+            </select></label>
+            <label>{label('countIn')} <select value={countIn} disabled={mode === 'metronome'} onChange={event => setCountIn(Number(event.target.value))}>
+              {METRONOME_COUNT_IN.map(value => <option key={value} value={value}>{label(`countIn${value}`)}</option>)}
+            </select></label>
           </div>
           <div className="lvm-practice__row">
             <Input label={label('tempo')} type="number" min={MIN_BPM} max={MAX_BPM} value={bpm} onChange={event => setBpm(event.target.value)} onBlur={() => setBpm(String(tempo))} />
@@ -130,7 +141,9 @@ export default function PracticeToolsPage() {
             <Button variant="primary" onClick={() => mode === 'metronome' ? stop() : void start('metronome')}>{label(mode === 'metronome' ? 'stop' : 'start')}</Button>
             <Button onClick={tap}>{label('tapTempo')}</Button>
           </div>
-          <p role="status">{label(mode !== 'metronome' ? 'stopped' : opening ? 'opening' : 'running')}</p>
+          <p role="status">{mode === 'metronome' && !opening && (pulse?.remaining ?? countIn) > 0
+            ? `${label('countIn')} · ${label(`countIn${pulse?.remaining ?? countIn}`)}`
+            : label(mode !== 'metronome' ? 'stopped' : opening ? 'opening' : 'running')}</p>
           {error?.mode === 'metronome' && <p role="alert">{label(error.key)}</p>}
         </Card>
         <Card as="section" className="lvm-practice__card" aria-labelledby="practice-tuner">

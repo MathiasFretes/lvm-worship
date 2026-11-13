@@ -183,6 +183,12 @@
     "autoModeOn": "Modo automático activado"
   },
   "metronome": {
+    "division": "Subdivisión por pulso",
+    "countIn": "Cuenta de entrada",
+    "countIn0": "Sin entrada",
+    "countIn1": "1 compás",
+    "countIn2": "2 compases",
+    "audioError": "No pudimos iniciar el audio.",
     "title": "Metrónomo",
     "bpm": "BPM",
     "slower": "Más lento",

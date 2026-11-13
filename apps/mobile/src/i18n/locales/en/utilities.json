@@ -182,6 +182,12 @@
     "autoModeOn": "Auto-mode on"
   },
   "metronome": {
+    "division": "Subdivisions per beat",
+    "countIn": "Count-in",
+    "countIn0": "Off",
+    "countIn1": "1 measure",
+    "countIn2": "2 measures",
+    "audioError": "Could not start audio.",
     "title": "Metronome",
     "bpm": "BPM",
     "slower": "Slower",

@@ -1,5 +1,10 @@
 {
   "practiceTools": {
+    "division": "박자 세분",
+    "countIn": "예비 박자",
+    "countIn0": "끄기",
+    "countIn1": "1마디",
+    "countIn2": "2마디",
     "title": "도구",
     "metronome": "메트로놈",
     "tuner": "기타 튜너",

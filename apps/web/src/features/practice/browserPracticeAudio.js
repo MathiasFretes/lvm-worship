@@ -1,47 +1,22 @@
-import { beatEmphasis, beatIntervalSec, beatsInMeasure } from '@lavozmisionera/core/music/metronomePattern'
+import { runMetronome } from '@lavozmisionera/core/music/metronomeClock'
 import { createYinDetector, rmsLevel } from '@lavozmisionera/core/music/tunerYin'
 
-const CLICK_FREQUENCY = { primary: 1760, secondary: 1320, normal: 1000 }
+const CLICK_FREQUENCY = { primary: 1760, secondary: 1320, normal: 1000, countIn: 2200, subdivision: 740 }
+const CLICK_LEVEL = { primary: 0.24, secondary: 0.18, normal: 0.14, countIn: 0.18, subdivision: 0.07 }
 
 export function openMetronome(audio, settings, publish) {
-  let next = audio.currentTime + 0.04
-  let beat = 0
-  let current = null
-  let signature
-  const queue = []
-  function tick() {
-    const { bpm, meter, accent } = settings()
-    const now = audio.currentTime
-    if (meter !== signature) {
-      signature = meter
-      beat = 0
-    }
-    if (next < now) {
-      beat = 0
-      next = now + 0.025
-    }
-    while (queue.length && queue[0].time <= now) current = queue.shift().beat
-    publish(current)
-    while (next < now + 0.1) {
-      const osc = audio.createOscillator()
-      const gain = audio.createGain()
-      const emphasis = beatEmphasis(meter, beat, accent)
-      osc.frequency.value = CLICK_FREQUENCY[emphasis]
-      gain.gain.setValueAtTime(0.0001, next)
-      gain.gain.exponentialRampToValueAtTime(emphasis === 'primary' ? 0.24 : 0.14, next + 0.003)
-      gain.gain.exponentialRampToValueAtTime(0.0001, next + 0.044)
-      osc.connect(gain).connect(audio.destination)
-      osc.onended = () => { osc.disconnect(); gain.disconnect() }
-      osc.start(next)
-      osc.stop(next + 0.05)
-      queue.push({ time: next, beat })
-      next += beatIntervalSec(bpm)
-      beat = (beat + 1) % beatsInMeasure(meter)
-    }
-  }
-  tick()
-  const timer = setInterval(tick, 25)
-  return () => clearInterval(timer)
+  return runMetronome(() => audio.currentTime, settings, (next, emphasis) => {
+    const osc = audio.createOscillator()
+    const gain = audio.createGain()
+    osc.frequency.value = CLICK_FREQUENCY[emphasis]
+    gain.gain.setValueAtTime(0.0001, next)
+    gain.gain.exponentialRampToValueAtTime(CLICK_LEVEL[emphasis], next + 0.003)
+    gain.gain.exponentialRampToValueAtTime(0.0001, next + 0.044)
+    osc.connect(gain).connect(audio.destination)
+    osc.onended = () => { osc.disconnect(); gain.disconnect() }
+    osc.start(next)
+    osc.stop(next + 0.05)
+  }, publish)
 }
 
 export function openTuner(audio, stream, publish) {

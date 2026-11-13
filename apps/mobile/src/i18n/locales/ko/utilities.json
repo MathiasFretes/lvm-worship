@@ -183,6 +183,12 @@
     "autoModeOn": "자동 모드 켜짐"
   },
   "metronome": {
+    "division": "박자 세분",
+    "countIn": "예비 박자",
+    "countIn0": "끄기",
+    "countIn1": "1마디",
+    "countIn2": "2마디",
+    "audioError": "오디오를 시작할 수 없습니다.",
     "title": "메트로놈",
     "bpm": "BPM",
     "slower": "느리게",
