@@ -11,6 +11,7 @@ import { InstrumentalLine, MeasuredLine } from '../../components/song/SongChartL
 import { useChordStyle } from '../../hooks/useSettings'
 import { supabase } from '../../lib/supabase'
 import { readMixerProject, writeMixerProject } from './mixerStore'
+import SeparationPanel from './SeparationPanel'
 import './mixer.css'
 
 function browserAudio() {
@@ -188,6 +189,33 @@ function MixerWorkspace({ songId, songTitle, songSlug, personal, incoming }) {
     }
   }
 
+  async function addSeparatedTracks(files) {
+    if (importing.current || restoring || saving || state.preparing || state.tracks.length + files.length > MIXER_TRACK_LIMIT) return false
+    importing.current = true
+    setBusy(true)
+    const added = []
+    try {
+      mixer.current ??= createStemMixer(browserAudio(), setState, reason => setDraftError(reason === 'processing' ? 'processingError' : 'audioError'))
+      const engine = mixer.current
+      for (const file of files) {
+        const id = await engine.add(file.name, await file.arrayBuffer())
+        if (id === null || !active.current) throw new Error()
+        added.push(id)
+        assets.current.set(id, file)
+      }
+      return true
+    } catch {
+      for (const id of added) {
+        mixer.current?.remove(id)
+        assets.current.delete(id)
+      }
+      return false
+    } finally {
+      importing.current = false
+      if (active.current) setBusy(false)
+    }
+  }
+
   function applyLoop() {
     const valid = start.trim() && mixer.current?.setLoop(Number(start), end.trim() ? Number(end) : state.duration)
     setError(valid ? '' : t('loopError'))
@@ -213,6 +241,7 @@ function MixerWorkspace({ songId, songTitle, songSlug, personal, incoming }) {
         </Button>}
       </>} />
       {songId && <p>{t('songRehearsal', { title: songTitle || songId })}</p>}
+      <SeparationPanel disabled={busy || restoring || saving || state.preparing || state.tracks.length > MIXER_TRACK_LIMIT - 2} onAdd={addSeparatedTracks} />
       {error && <p role="alert">{error}</p>}
       {draftError && <p role="alert">{t(draftError)}</p>}
       {draftStatus && <p role="status">{t(draftStatus)}</p>}

@@ -80,6 +80,26 @@
     }
   },
   "mixer": {
+    "separation": {
+      "title": "Separar voz y acompañamiento",
+      "help": "Usá el separador local en esta computadora. Elegí un WAV mono o estéreo de hasta 140 segundos.",
+      "file": "Archivo WAV",
+      "start": "Separar",
+      "cancel": "Dejar de esperar",
+      "cancelled": "Se cerró la espera. El separador puede seguir procesando hasta terminar.",
+      "invalid": "Elegí un WAV válido de hasta 140 segundos y 64 MiB.",
+      "running": "Separando audio…",
+      "engineBusy": "El separador está ocupado. Volvé a intentar cuando termine.",
+      "unavailable": "No se pudo usar el separador local. Revisá que esté iniciado y que el navegador permita la conexión.",
+      "ready": "Las pistas están listas para escuchar.",
+      "voice": "Voz",
+      "backing": "Acompañamiento",
+      "voiceFile": "Voz.wav",
+      "backingFile": "Acompañamiento.wav",
+      "add": "Agregar al mezclador",
+      "added": "Se agregaron las dos pistas.",
+      "addError": "No pudimos agregar las pistas al mezclador."
+    },
     "chart": "Letra y acordes",
     "chartSection": "Sección {{index}}",
     "chartSectionLabel": "Vincular con la letra",

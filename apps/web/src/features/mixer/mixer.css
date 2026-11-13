@@ -72,3 +72,21 @@
 .lvm-mixer__chart {
   min-width: 0;
 }
+
+.lvm-mixer__separation {
+  margin-block: var(--space-3);
+}
+
+.lvm-mixer__separation > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lvm-mixer__separation :is(input, audio) {
+  max-width: 100%;
+}
+
+.lvm-mixer__preview {
+  display: grid;
+  gap: var(--space-2);
+}

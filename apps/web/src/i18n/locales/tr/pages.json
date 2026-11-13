@@ -80,6 +80,26 @@
     }
   },
   "mixer": {
+    "separation": {
+      "title": "Vokali ve eşliği ayır",
+      "help": "Bu bilgisayardaki ayırıcıyı kullanın. En fazla 140 saniyelik mono veya stereo WAV seçin.",
+      "file": "WAV dosyası",
+      "start": "Ayır",
+      "cancel": "Beklemeyi durdur",
+      "cancelled": "Bekleme durdu. Ayırıcı işlemi tamamlayana kadar çalışabilir.",
+      "invalid": "En fazla 140 saniye ve 64 MiB boyutunda geçerli bir WAV seçin.",
+      "running": "Ses ayrılıyor…",
+      "engineBusy": "Ayırıcı meşgul. İşlem bitince tekrar deneyin.",
+      "unavailable": "Yerel ayırıcı kullanılamadı. Çalıştığını ve tarayıcının bağlantıya izin verdiğini kontrol edin.",
+      "ready": "Parçalar önizlemeye hazır.",
+      "voice": "Vokal",
+      "backing": "Eşlik",
+      "voiceFile": "Vokal.wav",
+      "backingFile": "Eşlik.wav",
+      "add": "Miksere ekle",
+      "added": "İki parça da eklendi.",
+      "addError": "Parçalar miksere eklenemedi."
+    },
     "chart": "Sözler ve akorlar",
     "chartSection": "{{index}}. bölüm",
     "chartSectionLabel": "Sözlere bağla",

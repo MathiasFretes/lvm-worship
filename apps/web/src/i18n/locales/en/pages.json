@@ -80,6 +80,26 @@
     }
   },
   "mixer": {
+    "separation": {
+      "title": "Separate vocals and accompaniment",
+      "help": "Use the separator on this computer. Choose a mono or stereo WAV up to 140 seconds.",
+      "file": "WAV file",
+      "start": "Separate",
+      "cancel": "Stop waiting",
+      "cancelled": "Stopped waiting. The separator may continue processing until it finishes.",
+      "invalid": "Choose a valid WAV up to 140 seconds and 64 MiB.",
+      "running": "Separating audio…",
+      "engineBusy": "The separator is busy. Try again when it finishes.",
+      "unavailable": "Could not use the local separator. Check that it is running and the browser allows the connection.",
+      "ready": "The tracks are ready to preview.",
+      "voice": "Vocals",
+      "backing": "Accompaniment",
+      "voiceFile": "Vocals.wav",
+      "backingFile": "Accompaniment.wav",
+      "add": "Add to mixer",
+      "added": "Both tracks were added.",
+      "addError": "Could not add the tracks to the mixer."
+    },
     "chart": "Lyrics and chords",
     "chartSection": "Section {{index}}",
     "chartSectionLabel": "Link to lyrics",

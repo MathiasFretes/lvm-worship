@@ -15,6 +15,18 @@ curl.exe --fail --location 'https://huggingface.co/redbaty/ytm-vocal-separator/r
 
 Usá un directorio de salida nuevo. El proceso publica ambos WAV juntos al terminar. El progreso se escribe como JSON por tramos en la consola. La descarga del modelo es de aproximadamente 236 MB y la herramienta valida su SHA-256 antes de cargarlo.
 
+## Desde Worship Web
+
+Con el entorno y el modelo del ejemplo anterior, iniciá el separador en la misma computadora que el navegador. Para desarrollo, usá el origen exacto que imprime Vite. Para una web publicada, usá su origen HTTPS:
+
+```powershell
+& $python tools/audio-separation/serve.py --model $model --origin http://127.0.0.1:5173
+```
+
+En el mezclador abrí **Separar voz y acompañamiento**, elegí el WAV y pulsá **Separar**. Podés reproducir ambos resultados individualmente antes de elegir **Agregar al mezclador**. El navegador puede pedir permiso para conectarse al separador local. [Permisos de red local en Chromium](https://developer.chrome.com/docs/modern-web-guidance/guides/security/local-network-access)
+
+## Importación de archivos generados
+
 1. Abrí **Audio de ensayo** desde la canción en Worship Web o Expo.
 2. Elegí **Importar pistas** y seleccioná los dos WAV juntos en un mezclador vacío.
 3. Usá **Solo** en cada pista para escuchar el resultado. Guardá el ensayo si querés conservarlo junto a la canción.

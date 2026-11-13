@@ -105,6 +105,13 @@ def separate(mix, infer, progress):
     return vocals, mix - vocals
 
 
+def encode_stems(vocals, backing, vocals_target, backing_target):
+    # Apply a single gain before PCM encoding to preserve balance between stems.
+    peak = max(1, float(np.max(np.abs(vocals))), float(np.max(np.abs(backing))))
+    for stem, target in ((vocals, vocals_target), (backing, backing_target)):
+        wavfile.write(target, RATE, np.rint(stem.T * (32767 / peak)).astype(np.int16))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', type=Path)
@@ -119,10 +126,7 @@ def main():
                                lambda done, total: print(json.dumps({'frames': done, 'total': total}), flush=True))
     staging = Path(tempfile.mkdtemp(prefix='.lvm-separation-', dir=args.output.parent))
     try:
-        # Apply a single gain before PCM encoding to preserve balance between stems.
-        peak = max(1, float(np.max(np.abs(vocals))), float(np.max(np.abs(backing))))
-        wavfile.write(staging / 'vocals.wav', RATE, np.rint(vocals.T * (32767 / peak)).astype(np.int16))
-        wavfile.write(staging / 'accompaniment.wav', RATE, np.rint(backing.T * (32767 / peak)).astype(np.int16))
+        encode_stems(vocals, backing, staging / 'vocals.wav', staging / 'accompaniment.wav')
         staging.rename(args.output)
     finally:
         if staging.exists():
