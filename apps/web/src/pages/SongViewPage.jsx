@@ -682,6 +682,7 @@ export default function SongView(){
             </div>
           )
         })()}
+        <Button as={Link} to={`/mixer?${new URLSearchParams({ song: entry.dbId || personalRow?.id || entry.id, slug: id || entry.id, title, ...(isPersonal ? { personal: '1' } : {}) })}`}>{t('pages:mixer.songAudio')}</Button>
         {desktopToolbar}
       </PageHeader>
 

@@ -80,6 +80,14 @@
     }
   },
   "mixer": {
+    "loopMarker": "Loop {{name}}",
+    "songAudio": "Rehearsal audio",
+    "songRehearsal": "Rehearsing {{title}}",
+    "backToSong": "Back to song",
+    "markers": "Markers",
+    "markerName": "Section name",
+    "markPosition": "Mark current position",
+    "removeMarker": "Remove marker {{name}}",
     "restoring": "Opening the saved rehearsal…",
     "save": "Save rehearsal",
     "saving": "Saving rehearsal…",

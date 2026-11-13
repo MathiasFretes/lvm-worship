@@ -62,6 +62,14 @@
     }
   },
   "mixer": {
+    "loopMarker": "{{name}} bölümünü döngüye al",
+    "songAudio": "Prova sesi",
+    "songRehearsal": "{{title}} provası",
+    "backToSong": "İlahiye dön",
+    "markers": "İşaretler",
+    "markerName": "Bölüm adı",
+    "markPosition": "Geçerli konumu işaretle",
+    "removeMarker": "{{name}} işaretini kaldır",
     "restoring": "Kayıtlı prova açılıyor…",
     "save": "Provayı kaydet",
     "saving": "Prova kaydediliyor…",

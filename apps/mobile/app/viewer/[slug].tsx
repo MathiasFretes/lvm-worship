@@ -324,6 +324,7 @@ export default function ViewerScreen() {
           onEdit={handleEditPersonal}
           onOptions={() => setSheet('options')}
           onExport={() => setSheet('export')}
+          onAudio={song && !loading && !error ? () => router.push({ pathname: '/mixer', params: { song: song.id, title: displayTitle } }) : undefined}
           onAddToService={userId && doc && !loading && !error ? () => void addToService() : undefined}
         />
       </Animated.View>

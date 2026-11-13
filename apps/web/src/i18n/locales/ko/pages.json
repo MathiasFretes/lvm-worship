@@ -80,6 +80,14 @@
     }
   },
   "mixer": {
+    "loopMarker": "{{name}} 반복",
+    "songAudio": "연습 오디오",
+    "songRehearsal": "{{title}} 연습",
+    "backToSong": "곡으로 돌아가기",
+    "markers": "마커",
+    "markerName": "구간 이름",
+    "markPosition": "현재 위치 표시",
+    "removeMarker": "{{name}} 마커 삭제",
     "restoring": "저장된 연습 열기 중…",
     "save": "연습 저장",
     "saving": "연습 저장 중…",

@@ -6,7 +6,7 @@ import { File } from 'expo-file-system'
 import { AudioContext, AudioManager, type AudioBuffer } from 'react-native-audio-api'
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerAudio } from '@lavozmisionera/core/music/stemMixer'
-import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
+import { makeMixerProject, putMixerMarker, restoreMixerProject, type MixerMarker } from '@lavozmisionera/core/music/mixerProject'
 import { stretchMixerAudio } from '@lavozmisionera/core/music/stretchMixerAudio'
 import Button from '../components/Button'
 import Screen from '../components/Screen'
@@ -46,7 +46,7 @@ function nativeAudio(): MixerAudio<AudioBuffer> {
   }
 }
 
-export default function MixerScreen({ embedded = false }: { embedded?: boolean }) {
+export default function MixerScreen({ embedded = false, songId, songTitle }: { embedded?: boolean; songId?: string; songTitle?: string }) {
   const { t } = useTranslation('utilities', { keyPrefix: 'mixer' })
   const theme = useTheme()
   const [state, setState] = useState(emptyMixer)
@@ -60,6 +60,8 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [seek, setSeek] = useState('')
+  const [markers, setMarkers] = useState<MixerMarker[]>([])
+  const [markerLabel, setMarkerLabel] = useState('')
   const mixer = useRef<ReturnType<typeof createStemMixer<AudioBuffer>> | null>(null)
   const assets = useRef(new Map<number, File>())
   const mounted = useRef(false)
@@ -71,7 +73,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     let candidate: ReturnType<typeof createStemMixer<AudioBuffer>> | undefined
     async function restore() {
       try {
-        const draft = await readMixerProject()
+        const draft = await readMixerProject(songId)
         if (cancelled || !draft) return
         setStored(true)
         let latest = emptyMixer
@@ -84,6 +86,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
         assets.current = result.assets
         mixer.current = candidate
         setState(latest)
+        setMarkers(result.manifest.markers)
         if (result.manifest.loop) {
           setStart(String(result.manifest.loop.start))
           setEnd(String(result.manifest.loop.end))
@@ -104,7 +107,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
       mixer.current = null
       assets.current.clear()
     }
-  }, [])
+  }, [songId])
   useFocusEffect(useCallback(() => {
     const subscription = AppState.addEventListener('change', status => {
       if (status !== 'active') mixer.current?.pause()
@@ -149,8 +152,8 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     setDraftError('')
     setDraftStatus('')
     try {
-      const project = makeMixerProject(state, assets.current)
-      const files = await writeMixerProject(project)
+      const project = makeMixerProject(state, assets.current, markers)
+      const files = await writeMixerProject(project, songId)
       if (mounted.current) {
         state.tracks.forEach(({ id }, index) => assets.current.set(id, files[index]))
         setStored(files.length > 0)
@@ -185,6 +188,7 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
+      {songId && <Text accessibilityRole="header" style={ink}>{t('songRehearsal', { title: songTitle || songId })}</Text>}
       <Button title={t(busy ? 'loading' : 'import')} disabled={busy || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
       {(stored || state.tracks.length > 0) && <Button title={t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
         variant="secondary" disabled={busy || restoring || saving} onPress={() => void saveDraft()} />}
@@ -192,6 +196,37 @@ export default function MixerScreen({ embedded = false }: { embedded?: boolean }
       {draftError ? <Text accessibilityRole="alert" style={ink}>{t(draftError)}</Text> : null}
       {draftStatus ? <Text accessibilityLiveRegion="polite" style={ink}>{t(draftStatus)}</Text> : null}
       {state.tracks.length > 0 ? <>
+        <View style={panel}>
+          <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('markers')}</Text>
+          <Text style={ink}>{t('markerName')}</Text>
+          <TextInput accessibilityLabel={t('markerName')} value={markerLabel} onChangeText={setMarkerLabel} maxLength={100}
+            style={{ ...ink, minHeight: 44, paddingHorizontal: theme.spacing.sm, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.md }} />
+          <Button title={t('markPosition')} disabled={!markerLabel.trim() || markers.length >= 100 || saving || state.preparing} onPress={() => {
+            setMarkers(putMixerMarker(markers, markerLabel, state.time))
+            setMarkerLabel('')
+          }} />
+          {markers.map((marker, index) => {
+            const nextTime = Math.min(state.duration, markers[index + 1]?.time ?? state.duration)
+            const selected = state.time >= marker.time && (markers[index + 1]?.time ?? Infinity) > state.time
+            return <View key={marker.time} style={row}>
+              <Button title={`${marker.label} · ${marker.time.toFixed(2)} s`} variant={selected ? 'primary' : 'secondary'} disabled={state.preparing || marker.time > state.duration}
+                onPress={() => {
+                  if (state.loop && (marker.time < state.loop.start || marker.time >= state.loop.end)) mixer.current?.clearLoop()
+                  mixer.current?.seek(marker.time)
+                }} />
+              <Button title={t('loopMarker', { name: marker.label })} variant="secondary" disabled={state.preparing || nextTime - marker.time < 0.25}
+                onPress={() => {
+                  if (mixer.current?.setLoop(marker.time, nextTime)) {
+                    setStart(String(marker.time))
+                    setEnd(String(nextTime))
+                    setError('')
+                  }
+                }} />
+              <Button title={t('removeMarker', { name: marker.label })} variant="secondary" disabled={saving}
+                onPress={() => setMarkers(markers.filter(item => item !== marker))} />
+            </View>
+          })}
+        </View>
         <View style={panel}>
           <Text accessibilityRole="header" style={{ ...theme.typography.rowTitle, ...ink }}>{t('transport')}</Text>
           <View style={row}>

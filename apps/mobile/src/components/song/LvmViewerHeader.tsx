@@ -17,13 +17,14 @@ type Props = {
   onEdit: () => void
   onOptions: () => void
   onExport: () => void
+  onAudio?: () => void
   onAddToService?: () => void
 }
 
 /** Song identity and actions stay visible above the projected chart. */
 export default function LvmViewerHeader(props: Props) {
   const theme = useTheme()
-  const { t } = useTranslation(['song', 'common', 'export', 'nav', 'setlist'])
+  const { t } = useTranslation(['song', 'common', 'export', 'nav', 'setlist', 'utilities'])
   return <>
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
       <Pressable accessibilityRole="button" onPress={props.onBack} hitSlop={8}
@@ -45,7 +46,12 @@ export default function LvmViewerHeader(props: Props) {
       </Text>
       {props.personal ? <PersonalChip /> : <StarButton songId={props.songId} />}
     </View>
-    <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+    <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.spacing.sm }}>
+      {props.onAudio && <Pressable accessibilityRole="button" onPress={props.onAudio}
+        style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+        <SymbolIcon name="music.note" size={17} color={theme.colors.accent} />
+        <Text style={{ color: theme.colors.textAccent }}>{t('utilities:mixer.songAudio')}</Text>
+      </Pressable>}
       {props.keyLabel && <View style={{ paddingHorizontal: 10, paddingVertical: 4,
         borderRadius: theme.radii.pill, backgroundColor: theme.colors.accentSoft }}>
         <Text style={{ color: theme.colors.textAccent, fontSize: 13, fontWeight: '700' }}>

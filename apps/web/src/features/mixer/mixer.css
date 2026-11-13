@@ -22,6 +22,16 @@
   width: 7ch;
 }
 
+.lvm-mixer__row :is(.lvm-field, .lvm-btn) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lvm-mixer__row .lvm-btn__label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .lvm-mixer__timeline {
   display: grid;
   gap: var(--space-1);

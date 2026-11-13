@@ -1,3 +1,5 @@
+import { mixerProjectKey } from '@lavozmisionera/core/music/mixerProject'
+
 let pending = Promise.resolve()
 
 function openStore() {
@@ -23,13 +25,14 @@ async function transaction(mode, operation) {
   }
 }
 
-export async function readMixerProject() {
+export async function readMixerProject(songId) {
   await pending
-  return transaction('readonly', store => store.get('draft'))
+  return transaction('readonly', store => store.get(mixerProjectKey(songId)))
 }
 
-export function writeMixerProject(project) {
-  const write = pending.then(() => transaction('readwrite', store => project.files.length ? store.put(project, 'draft') : store.delete('draft')))
+export function writeMixerProject(project, songId) {
+  const key = mixerProjectKey(songId)
+  const write = pending.then(() => transaction('readwrite', store => project.files.length ? store.put(project, key) : store.delete(key)))
   pending = write.catch(() => undefined)
   return write
 }

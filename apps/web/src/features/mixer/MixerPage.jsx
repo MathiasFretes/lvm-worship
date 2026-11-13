@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT } from '@lavozmisionera/core/music/stemMixer'
-import { makeMixerProject, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
+import { makeMixerProject, putMixerMarker, restoreMixerProject } from '@lavozmisionera/core/music/mixerProject'
 import { stretchMixerAudio } from '@lavozmisionera/core/music/stretchMixerAudio'
-import { Button, PageHeader } from '../../components/ui/layout-kit'
+import { Button, Input, PageHeader } from '../../components/ui/layout-kit'
 import { readMixerProject, writeMixerProject } from './mixerStore'
 import './mixer.css'
 
@@ -39,6 +39,12 @@ function browserAudio() {
 }
 
 export default function MixerPage() {
+  const [params] = useSearchParams()
+  const songId = params.get('song') || null
+  return <MixerWorkspace key={songId ? `song:${songId}` : 'draft'} songId={songId} songTitle={params.get('title')} songSlug={params.get('slug')} personal={params.get('personal') === '1'} />
+}
+
+function MixerWorkspace({ songId, songTitle, songSlug, personal }) {
   const { t } = useTranslation('pages', { keyPrefix: 'mixer' })
   const [state, setState] = useState(emptyMixer)
   const [busy, setBusy] = useState(false)
@@ -51,6 +57,8 @@ export default function MixerPage() {
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('')
   const [scrub, setScrub] = useState(null)
+  const [markers, setMarkers] = useState([])
+  const [markerLabel, setMarkerLabel] = useState('')
   const scrubbing = useRef(false)
   const mixer = useRef(null)
   const assets = useRef(new Map())
@@ -64,7 +72,7 @@ export default function MixerPage() {
     let candidate
     async function restore() {
       try {
-        const draft = await readMixerProject()
+        const draft = await readMixerProject(songId)
         if (cancelled || !draft) return
         setStored(true)
         let latest = emptyMixer
@@ -77,6 +85,7 @@ export default function MixerPage() {
         assets.current = result.assets
         mixer.current = candidate
         setState(latest)
+        setMarkers(result.manifest.markers)
         if (result.manifest.loop) {
           setStart(String(result.manifest.loop.start))
           setEnd(String(result.manifest.loop.end))
@@ -97,7 +106,7 @@ export default function MixerPage() {
       mixer.current = null
       assets.current.clear()
     }
-  }, [])
+  }, [songId])
 
   async function importFiles(event) {
     const files = Array.from(event.target.files ?? [])
@@ -135,8 +144,8 @@ export default function MixerPage() {
     setDraftError('')
     setDraftStatus('')
     try {
-      const project = makeMixerProject(state, assets.current)
-      await writeMixerProject(project)
+      const project = makeMixerProject(state, assets.current, markers)
+      await writeMixerProject(project, songId)
       if (active.current) {
         setStored(project.files.length > 0)
         setDraftStatus(project.files.length ? 'saved' : 'deleted')
@@ -163,7 +172,7 @@ export default function MixerPage() {
   return (
     <section className="container lvm-mixer">
       <Helmet><title>{t('title')} | LVM Worship</title></Helmet>
-      <Button as={Link} to="/songs" variant="ghost">{t('back')}</Button>
+      <Button as={Link} to={songSlug ? `/songs/${encodeURIComponent(songSlug)}${personal && songId ? `?p=${encodeURIComponent(songId)}` : ''}` : '/songs'} variant="ghost">{t(songSlug ? 'backToSong' : 'back')}</Button>
       <PageHeader title={t('title')} subtitle={t('description')} actions={<>
         <input ref={picker} type="file" accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg,.aac" multiple hidden onChange={importFiles} />
         <Button variant="primary" disabled={busy || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT}
@@ -172,10 +181,41 @@ export default function MixerPage() {
           {t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
         </Button>}
       </>} />
+      {songId && <p>{t('songRehearsal', { title: songTitle || songId })}</p>}
       {error && <p role="alert">{error}</p>}
       {draftError && <p role="alert">{t(draftError)}</p>}
       {draftStatus && <p role="status">{t(draftStatus)}</p>}
       {state.tracks.length > 0 ? <>
+        <section className="lvm-mixer__panel" aria-label={t('markers')}>
+          <h2>{t('markers')}</h2>
+          <form className="lvm-mixer__row" onSubmit={event => {
+            event.preventDefault()
+            setMarkers(putMixerMarker(markers, markerLabel, state.time))
+            setMarkerLabel('')
+          }}>
+            <Input label={t('markerName')} value={markerLabel} maxLength={100} onChange={event => setMarkerLabel(event.target.value)} />
+            <Button type="submit" disabled={!markerLabel.trim() || markers.length >= 100 || saving || state.preparing}>{t('markPosition')}</Button>
+          </form>
+          {markers.map((marker, index) => {
+            const nextTime = Math.min(state.duration, markers[index + 1]?.time ?? state.duration)
+            const active = state.time >= marker.time && (markers[index + 1]?.time ?? Infinity) > state.time
+            return <div key={marker.time} className="lvm-mixer__row">
+              <Button aria-current={active ? 'true' : undefined} disabled={state.preparing || marker.time > state.duration}
+                onClick={() => {
+                  if (state.loop && (marker.time < state.loop.start || marker.time >= state.loop.end)) mixer.current.clearLoop()
+                  mixer.current.seek(marker.time)
+                }}>{marker.label} · {marker.time.toFixed(2)} s</Button>
+              <Button disabled={state.preparing || nextTime - marker.time < 0.25} onClick={() => {
+                if (mixer.current.setLoop(marker.time, nextTime)) {
+                  setStart(String(marker.time))
+                  setEnd(String(nextTime))
+                  setError('')
+                }
+              }}>{t('loopMarker', { name: marker.label })}</Button>
+              <Button disabled={saving} onClick={() => setMarkers(markers.filter(item => item !== marker))}>{t('removeMarker', { name: marker.label })}</Button>
+            </div>
+          })}
+        </section>
         <section className="lvm-mixer__panel" aria-label={t('transport')}>
           <div className="lvm-mixer__row">
             <Button variant="primary" disabled={state.preparing} onClick={() => {

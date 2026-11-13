@@ -80,6 +80,14 @@
     }
   },
   "mixer": {
+    "loopMarker": "Repetir {{name}}",
+    "songAudio": "Audio de ensayo",
+    "songRehearsal": "Ensayo de {{title}}",
+    "backToSong": "Volver a la canción",
+    "markers": "Marcadores",
+    "markerName": "Nombre de la sección",
+    "markPosition": "Marcar posición actual",
+    "removeMarker": "Quitar marcador {{name}}",
     "restoring": "Abriendo el ensayo guardado…",
     "save": "Guardar ensayo",
     "saving": "Guardando ensayo…",

@@ -1,6 +1,21 @@
 import { MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerSnapshot, type MixerTrack } from './stemMixer'
 
 export type MixerAsset = { size: number; arrayBuffer: () => Promise<ArrayBuffer> }
+export type MixerMarker = { label: string; time: number }
+
+export function mixerProjectKey(songId?: string | null) {
+  return songId ? `song:${encodeURIComponent(songId)}` : 'draft'
+}
+
+export function putMixerMarker(markers: MixerMarker[], label: string, time: number): MixerMarker[] {
+  const name = label.trim()
+  if (!name || name.length > 100 || !Number.isFinite(time) || time < 0) throw new Error('Invalid mixer marker')
+  const rounded = Math.round(time * 1000) / 1000
+  const next = markers.filter(marker => marker.time !== rounded)
+  if (next.length >= 100) throw new Error('Too many mixer markers')
+  return [...next, { label: name, time: rounded }].sort((a, b) => a.time - b.time)
+}
+
 type TrackSettings = Pick<MixerTrack, 'name' | 'volume' | 'muted' | 'solo'>
 export type MixerManifest = {
   version: 1
@@ -9,9 +24,10 @@ export type MixerManifest = {
   pitch: number
   time: number
   loop: MixerSnapshot['loop']
+  markers: MixerMarker[]
 }
 
-export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot, assets: Map<number, Asset>) {
+export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot, assets: Map<number, Asset>, markers: MixerMarker[] = []) {
   const files: Asset[] = []
   const tracks = state.tracks.map(({ id, name, volume, muted, solo }) => {
     const file = assets.get(id)
@@ -20,7 +36,7 @@ export function makeMixerProject<Asset extends MixerAsset>(state: MixerSnapshot,
     return { name, volume, muted, solo, bytes: file.size }
   })
   return {
-    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop } satisfies MixerManifest,
+    manifest: { version: 1, tracks, rate: state.rate, pitch: state.pitch, time: state.time, loop: state.loop, markers } satisfies MixerManifest,
     files,
   }
 }
@@ -57,7 +73,14 @@ export function parseMixerManifest(input: unknown): MixerManifest {
   }
   const pitch = value.pitch === undefined ? 0 : number(value.pitch, -12, 12)
   if (!Number.isInteger(pitch)) throw new Error('Invalid mixer pitch')
-  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop }
+  const markers = value.markers === undefined ? [] : value.markers
+  if (!Array.isArray(markers) || markers.length > 100) throw new Error('Invalid mixer markers')
+  const ordered = markers.reduce<MixerMarker[]>((result, input) => {
+    const marker = object(input)
+    if (typeof marker.label !== 'string') throw new Error('Invalid mixer marker label')
+    return putMixerMarker(result, marker.label, number(marker.time, 0))
+  }, [])
+  return { version: 1, tracks, rate: number(value.rate, 0.5, 1.5), pitch, time: number(value.time, 0), loop, markers: ordered }
 }
 
 export async function restoreMixerProject<Asset extends MixerAsset>(
