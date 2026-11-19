@@ -13,6 +13,7 @@ import {
 } from '@lavozmisionera/core/music/score'
 import { readMusicXml, writeMusicXml } from '@lavozmisionera/core/music/musicXml'
 import { scoreEventAt } from '@lavozmisionera/core/music/scorePlayback'
+import { songMaterialKey } from '@lavozmisionera/core/music/songMaterial'
 import type { TabPlaybackPosition } from '@lavozmisionera/core/music/tablaturePlayback'
 import Button from '../components/Button'
 import Chip from '../components/Chip'
@@ -20,13 +21,13 @@ import Screen from '../components/Screen'
 import TabPlayback from '../components/TabPlayback'
 import { useTheme } from '../theme/ThemeProvider'
 
-const draftKey = 'lvm.worship.score.v1'
 const flags: Partial<Record<ScoreDuration, number>> = { eighth: 1, '16th': 2, '32nd': 3 }
 
-export default function ScoreScreen({ embedded = false }: { embedded?: boolean }) {
+export default function ScoreScreen({ embedded = false, songId, songTitle }: { embedded?: boolean; songId?: string; songTitle?: string }) {
+  const draftKey = songMaterialKey('score', songId)
   const theme = useTheme()
   const { t } = useTranslation('utilities', { keyPrefix: 'score' })
-  const [score, setScore] = useState<Score>(EMPTY_SCORE)
+  const [score, setScore] = useState<Score>(() => ({ ...EMPTY_SCORE, title: songId ? (songTitle || '').slice(0, 120) : '' }))
   const [measure, setMeasure] = useState(0)
   const [selection, setSelection] = useState<number | null>(null)
   const [note, setNote] = useState<ScoreNote>(DEFAULT_SCORE_NOTE)
@@ -61,7 +62,7 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
       if (active) setError('storageError')
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [draftKey])
 
   useEffect(() => {
     if (sounding < 0 || !staffWidth) return
@@ -129,6 +130,7 @@ export default function ScoreScreen({ embedded = false }: { embedded?: boolean }
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
+      {songId && songTitle && <Text accessibilityRole="header" style={heading}>{songTitle}</Text>}
       {error ? <Text accessibilityRole="alert" style={ink}>{t(error)}</Text> : null}
       {loading ? <Text accessibilityLiveRegion="polite" style={ink}>{t('loading')}</Text> : <>
         <View style={row}>

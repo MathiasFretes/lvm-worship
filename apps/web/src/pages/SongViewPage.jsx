@@ -683,6 +683,10 @@ export default function SongView(){
         })()}
         <Button as={Link} state={{ chart: entry.chordpro_content, steps, preferFlat }}
           to={`/mixer?${new URLSearchParams({ song: entry.dbId || personalRow?.id || entry.id, slug: id || entry.id, title, ...(isPersonal ? { personal: '1' } : {}) })}`}>{t('pages:mixer.songAudio')}</Button>
+        {['tablature', 'score'].map(material => <Button key={material} as={Link}
+          to={`/${material}?${new URLSearchParams({ song: entry.dbId || personalRow?.id || entry.id, slug: id || entry.id, title, ...(isPersonal ? { personal: '1' } : {}) })}`}>
+          {t(`pages:${material}.title`)}
+        </Button>)}
         {desktopToolbar}
       </PageHeader>
 

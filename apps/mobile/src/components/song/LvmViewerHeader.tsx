@@ -18,6 +18,8 @@ type Props = {
   onOptions: () => void
   onExport: () => void
   onAudio?: () => void
+  onTablature?: () => void
+  onScore?: () => void
   onAddToService?: () => void
 }
 
@@ -52,6 +54,13 @@ export default function LvmViewerHeader(props: Props) {
         <SymbolIcon name="music.note" size={17} color={theme.colors.accent} />
         <Text style={{ color: theme.colors.textAccent }}>{t('utilities:mixer.songAudio')}</Text>
       </Pressable>}
+      {(['tablature', 'score'] as const).map(kind => {
+        const action = kind === 'tablature' ? props.onTablature : props.onScore
+        return action ? <Pressable key={kind} accessibilityRole="button" onPress={action}
+          style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: theme.spacing.xs }}>
+          <Text style={{ color: theme.colors.textAccent }}>{t(`utilities:${kind}.title`)}</Text>
+        </Pressable> : null
+      })}
       {props.keyLabel && <View style={{ paddingHorizontal: 10, paddingVertical: 4,
         borderRadius: theme.radii.pill, backgroundColor: theme.colors.accentSoft }}>
         <Text style={{ color: theme.colors.textAccent, fontSize: 13, fontWeight: '700' }}>

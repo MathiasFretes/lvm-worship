@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { songMaterialKey } from '@lavozmisionera/core/music/songMaterial'
+import SongMaterialLinks from '../../components/song/SongMaterialLinks'
 import { useTranslation } from 'react-i18next'
 import { EMPTY_GUITAR_TAB, TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@lavozmisionera/core/music/tablature'
 import { Button, PageHeader } from '../../components/ui/layout-kit'
@@ -8,9 +10,13 @@ import './tablature.css'
 import TablatureGrid from './TablatureGrid'
 import TabPlayback from './TabPlayback'
 
-const draftKey = 'lvm.worship.tablature.draft'
-
 export default function TablaturePage() {
+  const [params] = useSearchParams()
+  return <TablatureWorkspace key={songMaterialKey('tablature', params.get('song'))} songId={params.get('song')} songTitle={params.get('title')} />
+}
+
+function TablatureWorkspace({ songId, songTitle }) {
+  const draftKey = songMaterialKey('tablature', songId)
   const { t } = useTranslation('pages', { keyPrefix: 'tablature' })
   const [draft, setDraft] = useState(() => {
     try { return localStorage.getItem(draftKey) ?? '' } catch { return '' }
@@ -33,7 +39,7 @@ export default function TablaturePage() {
     } catch {
       setStorageError(true)
     }
-  }, [draft])
+  }, [draft, draftKey])
 
   async function readImport(event) {
     const file = event.target.files?.[0]
@@ -70,6 +76,7 @@ export default function TablaturePage() {
     <section className="container lvm-tablature">
       <Helmet><title>{t('title')} | LVM Worship</title></Helmet>
       <Button as={Link} to="/songs" variant="ghost">{t('back')}</Button>
+      {songId && <SongMaterialLinks current="tablature" title={songTitle} />}
       <PageHeader title={t('title')} subtitle={t('description')} actions={<>
         <input ref={picker} type="file" accept=".txt,.tab,text/plain" hidden onChange={readImport} />
         <Button onClick={() => picker.current?.click()}>{t('import')}</Button>

@@ -13,6 +13,7 @@ import { useChordStyle } from '../../hooks/useSettings'
 import { supabase } from '../../lib/supabase'
 import { readMixerProject, writeMixerProject } from './mixerStore'
 import SeparationPanel from './SeparationPanel'
+import SongMaterialLinks from '../../components/song/SongMaterialLinks'
 import './mixer.css'
 
 function browserAudio() {
@@ -248,6 +249,7 @@ function MixerWorkspace({ songId, songTitle, songSlug, personal, incoming }) {
     <section className="container lvm-mixer">
       <Helmet><title>{t('title')} | LVM Worship</title></Helmet>
       <Button as={Link} to={songSlug ? `/songs/${encodeURIComponent(songSlug)}${personal && songId ? `?p=${encodeURIComponent(songId)}` : ''}` : '/songs'} variant="ghost">{t(songSlug ? 'backToSong' : 'back')}</Button>
+      {songId && <SongMaterialLinks current="mixer" title={songTitle} />}
       <PageHeader title={t('title')} subtitle={t('description')} actions={<>
         <input ref={picker} type="file" accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg,.aac" multiple hidden onChange={importFiles} />
         <Button variant="primary" disabled={busy || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT}

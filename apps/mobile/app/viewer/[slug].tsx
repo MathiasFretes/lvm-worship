@@ -327,6 +327,12 @@ export default function ViewerScreen() {
           onAudio={song && !loading && !error ? () => router.push({ pathname: '/mixer', params: {
             song: song.id, title: displayTitle, slug: song.slug, personal: isPersonal ? '1' : '0', transpose: String(steps), flat: preferFlat ? '1' : '0',
           } }) : undefined}
+          onTablature={song && !loading && !error ? () => router.push({ pathname: '/tablature', params: {
+            song: song.id, title: displayTitle,
+          } }) : undefined}
+          onScore={song && !loading && !error ? () => router.push({ pathname: '/score', params: {
+            song: song.id, title: displayTitle,
+          } }) : undefined}
           onAddToService={userId && doc && !loading && !error ? () => void addToService() : undefined}
         />
       </Animated.View>

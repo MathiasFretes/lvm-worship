@@ -7,6 +7,7 @@ import { File, Paths } from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
 import { useTranslation } from 'react-i18next'
 import { EMPTY_GUITAR_TAB, TAB_EXAMPLE, TAB_MAX_LENGTH, parseTablature } from '@lavozmisionera/core/music/tablature'
+import { songMaterialKey } from '@lavozmisionera/core/music/songMaterial'
 import Button from '../components/Button'
 import Screen from '../components/Screen'
 import TablatureGrid from '../components/TablatureGrid'
@@ -14,10 +15,10 @@ import TabPlayback from '../components/TabPlayback'
 import type { TabPlaybackPosition } from '@lavozmisionera/core/music/tablaturePlayback'
 import { useTheme } from '../theme/ThemeProvider'
 
-const draftKey = 'lvm.worship.tablature.draft'
 const monospace = Platform.select({ ios: 'Menlo', default: 'monospace' })
 
-export default function TablatureScreen({ embedded = false }: { embedded?: boolean }) {
+export default function TablatureScreen({ embedded = false, songId, songTitle }: { embedded?: boolean; songId?: string; songTitle?: string }) {
+  const draftKey = songMaterialKey('tablature', songId)
   const theme = useTheme()
   const { t } = useTranslation('utilities')
   const [draft, setDraft] = useState('')
@@ -44,7 +45,7 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
       if (active) setBusy(false)
     })
     return () => { active = false }
-  }, [])
+  }, [draftKey])
 
   async function run(action: () => Promise<void>, failure: string) {
     setBusy(true)
@@ -85,6 +86,7 @@ export default function TablatureScreen({ embedded = false }: { embedded?: boole
     <ScrollView keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={text}>{t('tablature.description')}</Text>
+      {songId && songTitle && <Text accessibilityRole="header" style={heading}>{songTitle}</Text>}
       {parsed.ok && imported === null && !busy && <>
         <TabPlayback source={parsed.source} onPosition={setPosition} />
         <TablatureGrid key={gridVersion} source={parsed.source} position={position}

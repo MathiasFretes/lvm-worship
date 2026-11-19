@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { songMaterialKey } from '@lavozmisionera/core/music/songMaterial'
+import SongMaterialLinks from '../../components/song/SongMaterialLinks'
 import { useTranslation } from 'react-i18next'
 import {
   DEFAULT_SCORE_NOTE, DURATIONS, EMPTY_SCORE, METERS, REST_SYMBOLS, SCORE_MAX_BYTES, SCORE_MAX_MEASURES, STEPS,
@@ -12,15 +14,20 @@ import { Button, PageHeader } from '../../components/ui/layout-kit'
 import TabPlayback from '../tablature/TabPlayback'
 import './score.css'
 
-const draftKey = 'lvm.worship.score.v1'
 const flags = { eighth: 1, '16th': 2, '32nd': 3 }
 
 export default function ScorePage() {
+  const [params] = useSearchParams()
+  return <ScoreWorkspace key={songMaterialKey('score', params.get('song'))} songId={params.get('song')} songTitle={params.get('title')} />
+}
+
+function ScoreWorkspace({ songId, songTitle }) {
+  const draftKey = songMaterialKey('score', songId)
   const { t } = useTranslation('pages', { keyPrefix: 'score' })
   const [score, setScore] = useState(() => {
     try {
       const raw = localStorage.getItem(draftKey)
-      return raw ? parseScoreDraft(raw) : EMPTY_SCORE
+      return raw ? parseScoreDraft(raw) : { ...EMPTY_SCORE, title: songId ? (songTitle || '').slice(0, 120) : '' }
     } catch { return EMPTY_SCORE }
   })
   const [measure, setMeasure] = useState(0)
@@ -44,7 +51,7 @@ export default function ScorePage() {
 
   useEffect(() => {
     try { localStorage.setItem(draftKey, JSON.stringify(score)); setStorageFailed(false) } catch { setStorageFailed(true) }
-  }, [score])
+  }, [score, draftKey])
 
   useEffect(() => {
     const container = viewport.current
@@ -122,6 +129,7 @@ export default function ScorePage() {
     <section className="container lvm-score">
       <Helmet><title>{t('title')} | LVM Worship</title></Helmet>
       <Button as={Link} to="/songs" variant="ghost">{t('back')}</Button>
+      {songId && <SongMaterialLinks current="score" title={songTitle} />}
       <PageHeader title={t('title')} subtitle={t('description')} actions={<>
         <input type="file" ref={picker} accept=".musicxml,.xml,application/xml,text/xml" hidden onChange={readFile} />
         <Button onClick={() => picker.current?.click()}>{t('import')}</Button>

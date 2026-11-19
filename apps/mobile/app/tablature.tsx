@@ -1,1 +1,2 @@
-export { default } from '../src/screens/TablatureScreen'
+import SongMaterialRoute from '../src/screens/SongMaterialRoute'
+export default function TablatureRoute() { return <SongMaterialRoute kind="tablature" /> }
