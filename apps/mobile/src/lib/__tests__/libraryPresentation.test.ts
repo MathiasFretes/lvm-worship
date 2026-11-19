@@ -27,4 +27,9 @@ describe('mobile library model', () => {
     ], 'recent', 'asc', (k) => k)
     expect(sections[0].data.map(({ title }) => title)).toEqual(['Nueva', 'Vieja'])
   })
+
+  it('finds accented artist names alongside titles and tags', () => {
+    const songs = [song('Canto', { artist: 'José Pérez' }), song('José vive'), song('Otro canto')]
+    expect(findLibrarySongs(songs, 'JOSE').map(item => item.title)).toEqual(['José vive', 'Canto'])
+  })
 })

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import * as Crypto from 'expo-crypto'
 import { BLANK_SONG_FORM } from '@lavozmisionera/core'
+import { availableLibraryKeys, EMPTY_LIBRARY_FILTERS, matchesLibraryFilters } from '@lavozmisionera/core/songs/libraryFilters'
 import AlphaScrubber from '../components/AlphaScrubber'
 import EmptyState from '../components/EmptyState'
 import FilterSortSheet, { type SortDir, type SortKey } from '../components/FilterSortSheet'
@@ -42,6 +43,8 @@ export default function SongLibraryScreen() {
   const [sortKey, setSortKey] = useState<SortKey>('title')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [tags, setTags] = useState<Set<string>>(() => new Set())
+  const [musicFilters, setMusicFilters] = useState({ ...EMPTY_LIBRARY_FILTERS })
+  const keys = useMemo(() => availableLibraryKeys(songs), [songs])
   const input = useRef<TextInput>(null)
   const list = useRef<SectionList<Row, Section>>(null)
 
@@ -50,8 +53,9 @@ export default function SongLibraryScreen() {
     [songs],
   )
   const visibleSongs = useMemo(
-    () => tags.size ? songs.filter((song) => song.tags?.some((tag) => tags.has(tag))) : songs,
-    [songs, tags],
+    () => songs.filter(song => matchesLibraryFilters(song, musicFilters) &&
+      (!tags.size || song.tags?.some(tag => tags.has(tag)))),
+    [songs, tags, musicFilters],
   )
   const sections = useMemo(
     () => makeLibrarySections(visibleSongs, sortKey, sortDir,
@@ -96,7 +100,8 @@ export default function SongLibraryScreen() {
   const letters = useMemo(() => new Set(azEnabled
     ? sections.map((section) => section.letter).filter((letter): letter is string => Boolean(letter))
     : []), [azEnabled, sections])
-  const filtersActive = sortKey !== 'title' || sortDir !== 'asc' || tags.size > 0
+  const filtersActive = sortKey !== 'title' || sortDir !== 'asc' || tags.size > 0 ||
+    !!musicFilters.key || !!musicFilters.minBpm || !!musicFilters.maxBpm || musicFilters.source !== 'all'
 
   function openSong(song: Song) {
     router.push({
@@ -255,6 +260,7 @@ export default function SongLibraryScreen() {
     <FilterSortSheet visible={filterOpen} onClose={() => setFilterOpen(false)}
       sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} availableTags={allTags}
       selectedTags={tags} onToggleTag={toggleTag} resultCount={query.trim() ? results.length : visibleSongs.length}
-      onReset={() => { setSortKey('title'); setSortDir('asc'); setTags(new Set()) }} />
+      musicFilters={musicFilters} onMusicFilters={setMusicFilters} availableKeys={keys}
+      onReset={() => { setSortKey('title'); setSortDir('asc'); setTags(new Set()); setMusicFilters({ ...EMPTY_LIBRARY_FILTERS }) }} />
   </Screen>
 }

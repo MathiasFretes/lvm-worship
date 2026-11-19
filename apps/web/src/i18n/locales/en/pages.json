@@ -207,6 +207,19 @@
     "zoomIn": "Zoom in"
   },
   "songs": {
+    "filters": {
+      "title": "Musical filters",
+      "key": "Key",
+      "anyKey": "Any key",
+      "minBpm": "Minimum BPM",
+      "maxBpm": "Maximum BPM",
+      "source": "Song source",
+      "all": "All songs",
+      "catalog": "Catalog",
+      "personal": "My songs",
+      "invalidRange": "Use whole BPM values from 1 to 999, with the minimum no greater than the maximum.",
+      "reset": "Reset musical filters"
+    },
     "title": "Songs",
     "titleTooltip": "Browse Songs",
     "searchPlaceholder": "Search title/tags/authors…",

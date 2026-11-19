@@ -2,6 +2,7 @@
 export type SearchableSong = {
   title: string
   tags?: readonly string[] | null
+  artist?: string | null
 }
 
 export const SONG_TITLE_MATCH = 0
@@ -16,11 +17,12 @@ export function normalizeSongQuery(value: string): string {
     .trim()
 }
 
-/** Null means no match; title matches precede matches found only in tags. */
+/** Title matches precede secondary matches in artist names or tags. */
 export function rankSongMatch(song: SearchableSong, query: string): number | null {
   const needle = normalizeSongQuery(query)
   if (!needle) return null
   if (normalizeSongQuery(song.title).includes(needle)) return SONG_TITLE_MATCH
+  if (song.artist && normalizeSongQuery(song.artist).includes(needle)) return SONG_TAG_MATCH
   for (const tag of song.tags ?? []) {
     if (normalizeSongQuery(tag).includes(needle)) return SONG_TAG_MATCH
   }

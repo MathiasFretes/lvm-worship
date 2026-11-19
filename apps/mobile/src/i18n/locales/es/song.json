@@ -17,6 +17,19 @@
     "noKey": "Sin tono"
   },
   "filterSheet": {
+    "music": {
+      "title": "Filtros musicales",
+      "key": "Tonalidad",
+      "anyKey": "Cualquier tonalidad",
+      "minBpm": "BPM mínimo",
+      "maxBpm": "BPM máximo",
+      "source": "Origen de la canción",
+      "all": "Todas las canciones",
+      "catalog": "Catálogo",
+      "personal": "Mis canciones",
+      "invalidRange": "Usá valores enteros de BPM entre 1 y 999, con el mínimo menor o igual al máximo.",
+      "reset": "Restablecer filtros musicales"
+    },
     "title": "Filtrar y ordenar",
     "sortBy": "Ordenar por",
     "sort": {

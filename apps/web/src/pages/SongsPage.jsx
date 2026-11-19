@@ -6,7 +6,8 @@ import { compareSongsByTitle } from '../utils/songs/sort'
 import { normalizeSongSearch, searchSongs } from '../utils/songs/search'
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
-import { Button, Chip, Input } from '../components/ui/layout-kit'
+import { Button, Chip, Field, Input } from '../components/ui/layout-kit'
+import { availableLibraryKeys, EMPTY_LIBRARY_FILTERS, matchesLibraryFilters, validLibraryRange } from '@lavozmisionera/core/songs/libraryFilters'
 import { SearchIcon } from '../components/Icons'
 import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -93,6 +94,7 @@ export default function Songs(){
         reviewStatus: p.status,
         title: p.title,
         originalKey: p.default_key || '',
+        tempo: p.tempo ?? null,
         tags: labels,
         tagKeys: keys,
         authors,
@@ -133,6 +135,9 @@ export default function Songs(){
   }, [items, tagMap])
 
   const [selectedTags, setSelectedTags] = useState([])
+  const [musicFilters, setMusicFilters] = useState({ ...EMPTY_LIBRARY_FILTERS })
+  const availableKeys = useMemo(() => availableLibraryKeys(items), [items])
+  const musicPass = useCallback(song => matchesLibraryFilters(song, musicFilters), [musicFilters])
   const [lyricsOn, setLyricsOn] = useState(false)
   const [communityOnly, setCommunityOnly] = useState(() => {
     try { return localStorage.getItem('pref:communityOnly') === '1' } catch { return false }
@@ -166,12 +171,13 @@ export default function Songs(){
       list = items.slice()
     }
 
-    list = list.filter(tagPass).filter(communityPass)
+    list = list.filter(tagPass).filter(communityPass).filter(musicPass)
 
     if (lyricsOn && qLower.length) {
       const extra = items
         .filter(tagPass)
         .filter(communityPass)
+        .filter(musicPass)
         .filter(s => normalizeSongSearch(s.chordpro_content).includes(qLower))
       const byId = new Set(list.map((i) => i.id))
       for (const s of extra) {
@@ -201,7 +207,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, qLower, lyricsOn, tagPass, communityPass])
+  }, [items, qLower, lyricsOn, tagPass, communityPass, musicPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
@@ -411,6 +417,28 @@ export default function Songs(){
           </div>
 
           <div className="lvm-song-library__tags">
+            <details className="lvm-song-library__music">
+              <summary>{t('songs.filters.title')}</summary>
+              <div className="lvm-song-library__music-fields">
+                <Field label={t('songs.filters.key')}>
+                  <select className="lvm-input" value={musicFilters.key} onChange={event => setMusicFilters({ ...musicFilters, key: event.target.value })}>
+                    <option value="">{t('songs.filters.anyKey')}</option>
+                    {availableKeys.map(key => <option key={key} value={key}>{key}</option>)}
+                  </select>
+                </Field>
+                <Field label={t('songs.filters.source')}>
+                  <select className="lvm-input" value={musicFilters.source} onChange={event => setMusicFilters({ ...musicFilters, source: event.target.value })}>
+                    {['all', 'catalog', 'personal'].map(source => <option key={source} value={source}>{t(`songs.filters.${source}`)}</option>)}
+                  </select>
+                </Field>
+                {['minBpm', 'maxBpm'].map(field => <Input key={field} id={`library-${field}`} label={t(`songs.filters.${field}`)}
+                  type="number" min="1" max="999" step="1" value={musicFilters[field]}
+                  aria-invalid={!validLibraryRange(musicFilters)}
+                  onChange={event => setMusicFilters({ ...musicFilters, [field]: event.target.value })} />)}
+                {!validLibraryRange(musicFilters) && <p role="alert">{t('songs.filters.invalidRange')}</p>}
+                <Button onClick={() => setMusicFilters({ ...EMPTY_LIBRARY_FILTERS })}>{t('songs.filters.reset')}</Button>
+              </div>
+            </details>
             <div className="tagbar">
               <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>{t('songs.all')}</Chip>
               {allTags.map((tag) => (

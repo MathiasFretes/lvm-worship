@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
@@ -88,7 +88,7 @@ describe('translation linking UI behavior', () => {
     expect(await screen.findByText('Rab Bizi Gönder')).toBeInTheDocument()
     expect(screen.getByText('No Translation in Selected Language')).toBeInTheDocument()
 
-    const options = screen.getAllByRole('option')
+    const options = within(screen.getByRole('listbox')).getAllByRole('option')
     expect(options[0]).toHaveTextContent('Rab Bizi Gönder')
     expect(options[1]).toHaveTextContent('Only English')
 

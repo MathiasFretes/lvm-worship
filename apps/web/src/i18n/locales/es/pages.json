@@ -207,6 +207,19 @@
     "zoomIn": "Acercar"
   },
   "songs": {
+    "filters": {
+      "title": "Filtros musicales",
+      "key": "Tonalidad",
+      "anyKey": "Cualquier tonalidad",
+      "minBpm": "BPM mínimo",
+      "maxBpm": "BPM máximo",
+      "source": "Origen de la canción",
+      "all": "Todas las canciones",
+      "catalog": "Catálogo",
+      "personal": "Mis canciones",
+      "invalidRange": "Usá valores enteros de BPM entre 1 y 999, con el mínimo menor o igual al máximo.",
+      "reset": "Restablecer filtros musicales"
+    },
     "title": "Canciones",
     "titleTooltip": "Explorar canciones",
     "searchPlaceholder": "Buscar título/etiquetas/autores…",

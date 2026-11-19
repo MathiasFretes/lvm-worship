@@ -207,6 +207,19 @@
     "zoomIn": "Yakınlaştır"
   },
   "songs": {
+    "filters": {
+      "title": "Müzik filtreleri",
+      "key": "Ton",
+      "anyKey": "Tüm tonlar",
+      "minBpm": "En düşük BPM",
+      "maxBpm": "En yüksek BPM",
+      "source": "Şarkı kaynağı",
+      "all": "Tüm şarkılar",
+      "catalog": "Katalog",
+      "personal": "Şarkılarım",
+      "invalidRange": "1 ile 999 arasında tam sayı BPM kullanın. Alt sınır üst sınırdan büyük olamaz.",
+      "reset": "Müzik filtrelerini sıfırla"
+    },
     "title": "İlahiler",
     "titleTooltip": "İlahileri keşfet",
     "searchPlaceholder": "Başlık/etiket/yazar ara…",

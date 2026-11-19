@@ -31,8 +31,8 @@ describe('songMatchRank', () => {
     expect(songMatchRank(song({ title: 'Christmas Morning', tags: ['Christmas'] }), 'christmas')).toBe(TITLE_MATCH)
   })
 
-  it('does NOT match on artist', () => {
-    expect(songMatchRank(song({ title: 'Doxology', artist: 'Chris Tomlin' }), 'tomlin')).toBeNull()
+  it('finds artists with the same secondary priority as tags', () => {
+    expect(songMatchRank(song({ title: 'Doxology', artist: 'Chris Tomlin' }), 'tomlin')).toBe(TAG_MATCH)
   })
 
   it('returns null when the query is absent from title and tags', () => {
@@ -58,6 +58,6 @@ describe('songMatchesQuery', () => {
   it('is true for a title or tag match, false otherwise', () => {
     expect(songMatchesQuery(song({ title: 'Grace' }), 'grace')).toBe(true)
     expect(songMatchesQuery(song({ title: 'Grace', tags: ['Hymn'] }), 'hymn')).toBe(true)
-    expect(songMatchesQuery(song({ title: 'Grace', artist: 'Tomlin' }), 'tomlin')).toBe(false)
+    expect(songMatchesQuery(song({ title: 'Grace', artist: 'Tomlin' }), 'tomlin')).toBe(true)
   })
 })

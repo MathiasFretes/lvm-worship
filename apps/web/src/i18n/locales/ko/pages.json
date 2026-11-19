@@ -207,6 +207,19 @@
     "zoomIn": "확대"
   },
   "songs": {
+    "filters": {
+      "title": "음악 필터",
+      "key": "조성",
+      "anyKey": "모든 조성",
+      "minBpm": "최소 BPM",
+      "maxBpm": "최대 BPM",
+      "source": "곡 출처",
+      "all": "모든 곡",
+      "catalog": "카탈로그",
+      "personal": "내 곡",
+      "invalidRange": "1~999 사이의 정수 BPM을 입력하세요. 최소값은 최대값 이하여야 합니다.",
+      "reset": "음악 필터 초기화"
+    },
     "title": "찬양곡",
     "titleTooltip": "찬양곡 둘러보기",
     "searchPlaceholder": "제목/태그/작가 검색…",
