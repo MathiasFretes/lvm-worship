@@ -1,6 +1,6 @@
 # VPS compartido
 
-El servidor aloja proyectos independientes. Su hostname puede conservar el nombre neutral asignado por Hostinger o usar `vps01`; estos scripts no lo cambian. La clave local `hostinger_kvm4_ed25519` y su nombre visible `Admin PC` también son independientes de LVM. Nunca se copia la clave privada al servidor o al repositorio.
+El servidor aloja proyectos independientes. Su hostname puede conservar el nombre neutral asignado por Hostinger o usar `vps01`; estos scripts no lo cambian. La clave local `hostinger_vps_admin_ed25519` y su nombre visible `Admin PC` también son independientes de LVM. Nunca se copia la clave privada al servidor o al repositorio.
 
 ## Acceso e inventario
 
@@ -8,11 +8,13 @@ La clave pública de la PC debe estar autorizada para el usuario remoto. Desde P
 
 ```powershell
 $vpsAddress = '187.41.126.139'
-$vpsKey = "$env:USERPROFILE/.ssh/hostinger_kvm4_ed25519"
+$vpsKey = "$env:USERPROFILE/.ssh/hostinger_vps_admin_ed25519"
 Get-Content -Raw infra/vps/inspect-server.sh | ssh -i $vpsKey -o StrictHostKeyChecking=yes "root@$vpsAddress" 'sh -s'
 ```
 
 El inventario muestra recursos, puertos y contenedores, sin leer contraseñas o variables de los servicios. Si SSH indica `Permission denied (publickey)`, hay que autorizar la clave pública en el servidor antes de continuar. La identidad del host debe estar verificada en `known_hosts`.
+
+Para una clave protegida por frase de paso, cargarla antes en el agente local con `ssh-add $vpsKey`. La frase se introduce en la terminal de la PC. La clave anterior `hostinger_kvm4_ed25519` se conserva hasta verificar el acceso con la nueva.
 
 ## Estructura
 
