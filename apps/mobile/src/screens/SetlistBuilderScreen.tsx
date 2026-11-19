@@ -71,8 +71,12 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const openSong = useCallback((index: number) => {
     const item = items[index]
     if (!item) return
+    const personalId = item.songId.startsWith('personal:')
+      ? item.songId.slice('personal:'.length)
+      : null
     router.push({ pathname: '/viewer/[slug]', params: {
-      slug: item.song.slug, title: item.song.title, songKey: item.song.default_key ?? '',
+      slug: personalId ?? item.song.slug, title: item.song.title, songKey: item.song.default_key ?? '',
+      ...(personalId ? { source: 'personal', personalId } : {}),
       ...(keys[index] ? { initialKey: keys[index] } : {}),
     } })
   }, [items, keys, router])

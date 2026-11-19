@@ -150,7 +150,7 @@ export async function createSetlist(client, opts = {}) {
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {string} setlistId
- * @param {{ name?: string, serviceDate?: string|null, songs?: Array<{ id: string, toKey?: string|null }> }} input
+ * @param {{ name?: string, serviceDate?: string|null, songs?: Array<{ id: string, toKey?: string|null, notes?: string|null }> }} input
  */
 export async function updateSetlist(client, setlistId, input = {}) {
   const { error: updateError } = await client
@@ -187,7 +187,7 @@ function setlistSongRow(setlistId, song, position) {
     setlist_id: setlistId,
     position,
     key_override: song.toKey || null,
-    notes: null,
+    notes: song.notes ?? null,
   }
   if (verse) row.verse_ref = song.id
   else if (personal) row.personal_song_id = song.id.slice('personal:'.length)
@@ -225,7 +225,7 @@ export async function duplicateSetlist(client, setlistId, name) {
     await updateSetlist(client, created.id, {
       name,
       serviceDate: source.service_date,
-      songs: source.entries.map((entry) => ({ id: entry.song_id, toKey: entry.toKey })),
+      songs: source.entries.map((entry) => ({ id: entry.song_id, toKey: entry.toKey, notes: entry.notes })),
     })
   }
 

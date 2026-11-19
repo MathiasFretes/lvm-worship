@@ -30,7 +30,7 @@ export type SetlistItem = {
   song: EntrySong
 }
 
-type WorkingEntry = { entryKey: string; songId: string; toKey: string | null; song: EntrySong | null }
+type WorkingEntry = { entryKey: string; songId: string; toKey: string | null; notes?: string | null; song: EntrySong | null }
 
 const SAVE_DEBOUNCE_MS = 800
 const LOAD_RETRY_MS = 400
@@ -80,7 +80,7 @@ export function useSetlistBuilder(setlistId: string) {
   const makeEntryKey = useCallback((songId: string) => `${songId}:${nextKey.current++}`, [])
 
   // Latest state for the save path (avoids stale closures in timers).
-  const latest = useRef({ name: '', serviceDate: null as string | null, entries: [] as Array<{ songId: string; toKey: string | null }> })
+  const latest = useRef({ name: '', serviceDate: null as string | null, entries: [] as Array<{ songId: string; toKey: string | null; notes?: string | null }> })
   latest.current = { name, serviceDate, entries }
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -117,7 +117,7 @@ export function useSetlistBuilder(setlistId: string) {
       await updateSetlist(supabase, setlistId, {
         name: n,
         serviceDate: d,
-        songs: e.map((item) => ({ id: item.songId, toKey: item.toKey })),
+        songs: e.map((item) => ({ id: item.songId, toKey: item.toKey, notes: item.notes })),
       })
       setError(null)
     } catch (err: unknown) {
@@ -182,6 +182,7 @@ export function useSetlistBuilder(setlistId: string) {
               entryKey: makeEntryKey(entry.song_id),
               songId: entry.song_id,
               toKey: entry.toKey,
+              notes: entry.notes,
               song: entry.song ? { id: entry.song_id, ...entry.song } : null,
             })),
           )
