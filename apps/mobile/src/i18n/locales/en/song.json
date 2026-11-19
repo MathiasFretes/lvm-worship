@@ -4,6 +4,9 @@
     "reviewedAt": "2026-10-07"
   },
   "library": {
+    "searchLyrics": "Search lyrics",
+    "offlineCatalog": "Showing the public catalog saved on this device. A connection is needed to refresh it and load personal songs.",
+    "cacheError": "The catalog could not be saved for offline use. Check available storage and try again.",
     "title": "Song Library",
     "addSong": "Add song",
     "filterAndSort": "Filter and sort",

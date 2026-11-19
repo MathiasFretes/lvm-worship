@@ -5,6 +5,9 @@
     "needsReview": true
   },
   "library": {
+    "searchLyrics": "Şarkı sözlerinde ara",
+    "offlineCatalog": "Bu cihazda kayıtlı herkese açık katalog gösteriliyor. Güncelleme ve kişisel şarkılar için bağlantı gerekir.",
+    "cacheError": "Katalog çevrimdışı kullanım için kaydedilemedi. Depolama alanını kontrol edip yeniden deneyin.",
     "title": "İlahi Kütüphanesi",
     "addSong": "İlahi ekle",
     "filterAndSort": "Filtrele ve sırala",

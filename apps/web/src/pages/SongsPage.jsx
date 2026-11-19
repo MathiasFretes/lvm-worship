@@ -8,6 +8,7 @@ import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
 import { Button, Chip, Field, Input } from '../components/ui/layout-kit'
 import { availableLibraryKeys, EMPTY_LIBRARY_FILTERS, matchesLibraryFilters, validLibraryRange } from '@lavozmisionera/core/songs/libraryFilters'
+import { plainSongLyrics } from '@lavozmisionera/core/songs/search'
 import { SearchIcon } from '../components/Icons'
 import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -66,6 +67,7 @@ export default function Songs(){
       )
       out.push({
         ...display,
+        lyricSearchText: normalizeSongSearch(plainSongLyrics(display.chordpro_content || '')),
         tags: labels,
         tagKeys: keys,
         hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
@@ -106,6 +108,7 @@ export default function Songs(){
         searchText: `${p.title} ${(p.tags || []).join(' ')} ${p.artist || ''}`.toLowerCase(),
         searchTitles: [p.title].filter(Boolean),
         chordpro_content: p.chordpro_content || '',
+        lyricSearchText: normalizeSongSearch(plainSongLyrics(p.chordpro_content || '')),
       })
     }
     return out
@@ -178,7 +181,7 @@ export default function Songs(){
         .filter(tagPass)
         .filter(communityPass)
         .filter(musicPass)
-        .filter(s => normalizeSongSearch(s.chordpro_content).includes(qLower))
+        .filter(s => s.lyricSearchText.includes(qLower))
       const byId = new Set(list.map((i) => i.id))
       for (const s of extra) {
         if (!byId.has(s.id)) list.push(s)

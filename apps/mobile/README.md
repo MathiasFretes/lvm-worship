@@ -79,12 +79,18 @@ var into `.env.example` in the same commit.
 - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` —
   native Google Sign-In (the reversed iOS client id also goes in `app.json`).
 
+## Offline public catalog
+
+The library persists a public catalog snapshot, including ChordPro charts, in the app's document directory with a 16 MiB limit. On launch it shows the saved catalog first and refreshes from Supabase. If the refresh fails, the saved public songs remain searchable and readable. Viewer and Performer prefetches also retain successfully fetched public charts, so opening a song directly can prepare it for later use. Lyric search is opt-in and searches readable lyrics across chord annotations.
+
+Snapshots use a complete file plus a small published pointer. Failed writes keep the preceding snapshot valid and surface a storage message in the library. Personal songs are fetched for the current account and are excluded from this public cache; a cached-catalog notice explains that they require a connection. This cache is separate from Bible downloads and device-local rehearsal audio, tablature and score drafts.
+
 ## Roadmap
 
 Not yet in the build, in rough priority order:
 
-- **Offline downloads for songs/setlists** — on-device persistence beyond Bible
-  translations (Daily Word translation downloads already ship).
+- **Explicit offline downloads for personal songs/setlists** — the public catalog
+  is saved automatically; personal songs and complete setlist downloads still need their own account-scoped flow.
 - **Password reset / email-confirmation** screens (login "Forgot?" is an alert).
 - **Tablet** master-detail layout.
 

@@ -14,6 +14,7 @@ import { songBadge } from '../components/PersonalChip'
 import Screen from '../components/Screen'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
+import Chip from '../components/Chip'
 import { upsertDraft } from '../lib/drafts/draftsStore'
 import { chunkRows } from '../lib/gridRows'
 import { makeLibrarySections, findLibrarySongs, type LibrarySection } from '../lib/libraryPresentation'
@@ -32,12 +33,13 @@ export default function SongLibraryScreen() {
   const insets = useSafeAreaInsets()
   const tablet = useIsTabletWidth()
   const { width, height, fontScale } = useWindowDimensions()
-  const { songs, loading, error, reload } = useSongList()
+  const { songs, loading, error, reload, offline, cacheError } = useSongList()
   const columns = tablet
     ? width > height ? theme.layout.libraryColumns.landscape : theme.layout.libraryColumns.portrait
     : 1
 
   const [query, setQuery] = useState('')
+  const [includeLyrics, setIncludeLyrics] = useState(false)
   const [searching, setSearching] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('title')
@@ -70,11 +72,11 @@ export default function SongLibraryScreen() {
     [sections, columns],
   )
   const results = useMemo(() => {
-    const matches = findLibrarySongs(visibleSongs, query)
+    const matches = findLibrarySongs(visibleSongs, query, includeLyrics)
     if (sortKey === 'title' && sortDir === 'asc') return matches
     return makeLibrarySections(matches, sortKey, sortDir, (key) => key)
       .flatMap((section) => section.data)
-  }, [visibleSongs, query, sortKey, sortDir])
+  }, [visibleSongs, query, sortKey, sortDir, includeLyrics])
   const resultRows = useMemo<Row[]>(
     () => columns === 1 ? results : chunkRows(results, columns),
     [results, columns],
@@ -183,7 +185,7 @@ export default function SongLibraryScreen() {
   }
 
   function body() {
-    if (loading) return <View style={{ flex: 1, justifyContent: 'center' }}>
+    if (loading && !songs.length) return <View style={{ flex: 1, justifyContent: 'center' }}>
       <ActivityIndicator color={theme.colors.accent} />
     </View>
     if (error) return <EmptyState icon="wifi.slash" title={t(error)} subtitle={t('errors:load.hint')}
@@ -256,6 +258,16 @@ export default function SongLibraryScreen() {
             </Pressable>
       </View>
     </View>
+    {(searching || query.trim()) && <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.sm }}>
+      <Chip label={t('library.searchLyrics')} selected={includeLyrics} onPress={() => setIncludeLyrics(value => !value)} />
+    </View>}
+    {offline && <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.sm }}>
+      <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.sec }}>{t('library.offlineCatalog')}</Text>
+      <Pressable accessibilityRole="button" onPress={reload} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: theme.colors.textAccent }}>{t('common:retry')}</Text>
+      </Pressable>
+    </View>}
+    {cacheError && <Text accessibilityRole="alert" style={{ color: theme.colors.ink, paddingHorizontal: theme.spacing.lg }}>{t('library.cacheError')}</Text>}
     {body()}
     <FilterSortSheet visible={filterOpen} onClose={() => setFilterOpen(false)}
       sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} availableTags={allTags}

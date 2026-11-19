@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { fetchSongBySlug, fetchPersonalSongById } from '@lavozmisionera/core'
 import { supabase } from './supabase'
 import { failureDetailKey } from './errors'
+import { findOfflineSong, offlineCatalog } from './offlineCatalog'
 
-// Shape of a single song row as the Viewer needs it: the Library metadata plus
-// the renderable ChordPro body (which the list query deliberately omits).
+// Viewer rows share the renderable ChordPro body with the persistent catalog.
 export type SongDetail = {
   id: string
   slug: string
@@ -54,9 +54,14 @@ export function prefetchSong(slug: string | undefined): void {
     .then((row: unknown) => {
       const detail = (row as SongDetail | null) ?? null
       writeSongCache(slug, detail)
+      if (detail) void Promise.resolve().then(() => offlineCatalog.upsert(detail)).catch(() => {})
       return detail
     })
-    .catch(() => null)
+    .catch(async () => {
+      const detail = await findOfflineSong(slug)
+      if (detail) writeSongCache(slug, detail)
+      return detail
+    })
     .finally(() => inFlight.delete(slug))
   inFlight.set(slug, p)
 }
@@ -84,11 +89,18 @@ export function useSong(slug: string | undefined) {
       return
     }
     let alive = true
+    let fallback: SongDetail | null = null
     setLoading(true)
-    fetchSongBySlug(supabase, slug)
+    void (async () => {
+      fallback = await findOfflineSong(slug)
+      if (!alive) throw new Error('Song request cancelled')
+      if (fallback) { setSong(fallback); setError(null); setLoading(false) }
+      return fetchSongBySlug(supabase, slug)
+    })()
       .then((row: unknown) => {
         const detail = (row as SongDetail | null) ?? null
         writeSongCache(slug, detail)
+        if (detail) void Promise.resolve().then(() => offlineCatalog.upsert(detail)).catch(() => {})
         if (alive) {
           setSong(detail)
           setError(null)
@@ -98,7 +110,8 @@ export function useSong(slug: string | undefined) {
         // An i18n KEY, not raw error text. The Viewer renders this as the detail
         // line under its localized "Couldn't load song" heading, so raw Supabase
         // text (or a request-deadline message) used to land in front of the user.
-        if (alive) setError(failureDetailKey('useSong', err))
+        if (fallback) writeSongCache(slug, fallback)
+        else if (alive) setError(failureDetailKey('useSong', err))
       })
       .finally(() => {
         if (alive) setLoading(false)

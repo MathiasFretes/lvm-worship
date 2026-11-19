@@ -1,6 +1,7 @@
 import { normalizeSongQuery, rankSongMatch } from '@lavozmisionera/core'
 import type { SortDir, SortKey } from '../components/FilterSortSheet'
 import type { Song } from './useSongList'
+import { plainSongLyrics } from '@lavozmisionera/core/songs/search'
 
 export type LibrarySection = {
   key: string
@@ -58,10 +59,22 @@ export function makeLibrarySections(
   return rows.length ? [{ key: '__all', title: '', letter: null, data: rows }] : []
 }
 
-export function findLibrarySongs(songs: Song[], query: string): Song[] {
+const lyricsIndex = new WeakMap<Song, { source: string; text: string }>()
+
+function lyricsFor(song: Song) {
+  const source = song.chordpro_content || ''
+  const previous = lyricsIndex.get(song)
+  if (previous?.source === source) return previous.text
+  const text = normalizeSongQuery(plainSongLyrics(source))
+  lyricsIndex.set(song, { source, text })
+  return text
+}
+
+export function findLibrarySongs(songs: Song[], query: string, includeLyrics = false): Song[] {
   if (!normalizeSongQuery(query)) return []
   return songs
-    .map((song) => ({ song, rank: rankSongMatch(song, query) }))
+    .map((song) => ({ song, rank: rankSongMatch(song, query) ??
+      (includeLyrics && lyricsFor(song).includes(normalizeSongQuery(query)) ? 2 : null) }))
     .filter((entry): entry is { song: Song; rank: number } => entry.rank !== null)
     .sort((a, b) => a.rank - b.rank || byTitle(a.song, b.song))
     .map(({ song }) => song)

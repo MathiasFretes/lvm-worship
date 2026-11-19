@@ -5,6 +5,9 @@
     "needsReview": true
   },
   "library": {
+    "searchLyrics": "Buscar en la letra",
+    "offlineCatalog": "Mostrando el catálogo público guardado en este dispositivo. Se necesita conexión para actualizarlo y cargar canciones personales.",
+    "cacheError": "No pudimos guardar el catálogo para usarlo sin conexión. Revisá el espacio disponible y volvé a intentar.",
     "title": "Biblioteca de canciones",
     "addSong": "Añadir canción",
     "filterAndSort": "Filtrar y ordenar",

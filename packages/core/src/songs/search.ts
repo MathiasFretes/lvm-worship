@@ -1,3 +1,5 @@
+import { parseChordProOrLegacy } from '../chordpro/parser'
+
 /** Minimal song shape used by catalog and setlist pickers on every client. */
 export type SearchableSong = {
   title: string
@@ -7,6 +9,11 @@ export type SearchableSong = {
 
 export const SONG_TITLE_MATCH = 0
 export const SONG_TAG_MATCH = 1
+
+export function plainSongLyrics(source: string) {
+  return parseChordProOrLegacy(source).sections.flatMap(section => section.lines)
+    .map(line => line.lyrics).join(' ').replace(/\s+/g, ' ').trim()
+}
 
 /** Case and accent insensitive text for user-entered catalog searches. */
 export function normalizeSongQuery(value: string): string {

@@ -46,14 +46,14 @@ describe('LVM song library', () => {
   test('finds accented titles and lyrics, and opens the song route', async () => {
     library.songs = [
       { id: 'nino', dbId: 'song-1', title: 'Niño de Belén', language: 'es', tags: ['Navidad'], authors: ['José'], chordpro_content: 'Dios de amor', originalKey: 'G' },
-      { id: 'canto', dbId: 'song-2', title: 'Canto nuevo', language: 'es', tags: [], authors: [], chordpro_content: 'Mañana habrá paz', originalKey: 'D' },
+      { id: 'canto', dbId: 'song-2', title: 'Canto nuevo', language: 'es', tags: [], authors: [], chordpro_content: '[D]Mañana [A]habrá paz', originalKey: 'D' },
     ]
     renderLibrary('/songs?q=nino')
     expect(screen.getByRole('option', { name: /Niño de Belén/ })).toHaveAttribute('href', '/song/nino')
     expect(screen.queryByRole('option', { name: /Canto nuevo/ })).not.toBeInTheDocument()
 
     await userEvent.clear(screen.getByRole('searchbox', { name: 'Search songs' }))
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Search songs' }), 'manana')
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search songs' }), 'manana habra paz')
     await userEvent.click(screen.getByRole('checkbox', { name: 'Lyrics contain' }))
     expect(screen.getByRole('option', { name: /Canto nuevo/ })).toHaveAttribute('href', '/song/canto')
   })
