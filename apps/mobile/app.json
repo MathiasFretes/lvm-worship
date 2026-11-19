@@ -91,6 +91,8 @@
       "./plugins/withBaselineProfile",
       "./plugins/withNativeDebugSymbols",
       "expo-router",
+      "onnxruntime-react-native",
+      "./plugins/withOnnxNewArchitecture",
       [
         "expo-splash-screen",
         {

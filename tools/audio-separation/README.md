@@ -25,6 +25,14 @@ Con el entorno y el modelo del ejemplo anterior, iniciá el separador en la mism
 
 En el mezclador abrí **Separar voz y acompañamiento**, elegí el WAV y pulsá **Separar**. Podés reproducir ambos resultados individualmente antes de elegir **Agregar al mezclador**. El navegador puede pedir permiso para conectarse al separador local. [Permisos de red local en Chromium](https://developer.chrome.com/docs/modern-web-guidance/guides/security/local-network-access)
 
+## Desde Worship Expo
+
+En **Audio de ensayo** o el mezclador, pausá la reproducción y elegí **Elegir WAV y separar**. La app descarga el mismo modelo fijado (236 MB) en su almacenamiento privado y verifica su SHA-256 por bloques. Después funciona sin conexión. El WAV permanece en el teléfono y el resultado permite preescuchar voz y acompañamiento antes de agregar las dos pistas y guardar el ensayo.
+
+Esta función requiere regenerar y compilar el cliente nativo con `onnxruntime-react-native`; una actualización de JavaScript o Expo Go no incorpora ese motor. Usa CPU, ventanas de ocho segundos con solapamiento y el mismo límite de 140 segundos. Cancelar o salir de la pantalla descarta el trabajo cuando termina la inferencia del fragmento actual. El tiempo y consumo de memoria deben verificarse en Android e iOS físicos antes de distribuir la función; la exportación de Metro solo verifica el bundle.
+
+`plugins/withOnnxNewArchitecture.js` adapta la inicialización JSI de la versión fijada 1.24.3 a React Native 0.83: Android obtiene el invocador directamente del contexto y iOS recibe runtime e invocador del gestor de TurboModules. También reemplaza el uso de `VersionNumber`, eliminado en Gradle 9, y fija el AAR de ONNX en 1.24.3. El plugin falla ante una versión distinta para obligar a revisar su compatibilidad antes de actualizar. Windows permite verificar los bundles de ambas plataformas y regenerar Android; regenerar iOS requiere macOS o Linux y compilarlo requiere macOS con Xcode.
+
 ## Importación de archivos generados
 
 1. Abrí **Audio de ensayo** desde la canción en Worship Web o Expo.

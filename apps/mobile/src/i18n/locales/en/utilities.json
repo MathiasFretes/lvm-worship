@@ -60,7 +60,30 @@
       "32nd": "Thirty-second"
     }
   },
+  "separation": {
+    "title": "Separate vocals and accompaniment",
+    "description": "Choose a mono or stereo WAV up to 140 seconds. First use downloads a 236 MB model. Audio is processed on this device. MelBandRoformer (MIT), Kimberley Jensen; redbaty export.",
+    "choose": "Choose WAV and separate",
+    "cancel": "Cancel",
+    "cancelHint": "Cancellation completes after the current chunk finishes.",
+    "download": "Downloading model · {{percent}}%",
+    "verify": "Verifying model · {{percent}}%",
+    "decode": "Opening audio…",
+    "separate": "Separating audio · {{percent}}%",
+    "encode": "Preparing tracks…",
+    "vocals": "Preview vocals",
+    "backing": "Preview accompaniment",
+    "stop": "Stop preview",
+    "add": "Add both tracks",
+    "failed": "Could not separate this audio. Try a shorter excerpt and check available storage.",
+    "nativeBuild": "This feature needs a new app build with the separation engine.",
+    "input": "Choose a mono or stereo WAV up to 140 seconds and 64 MB.",
+    "addFailed": "Could not add the tracks. Leave two free track slots and try again.",
+    "modelError": "Could not download or verify the model. Check your connection and try again."
+  },
   "mixer": {
+    "vocals": "Vocals",
+    "backing": "Accompaniment",
     "click": "Synchronized metronome",
     "clickBpm": "Recording BPM",
     "clickMeter": "Metronome time signature",

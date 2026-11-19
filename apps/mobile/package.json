@@ -24,6 +24,7 @@
   "dependencies": {
     "@lavozmisionera/core": "*",
     "@lavozmisionera/tokens": "*",
+    "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
@@ -60,6 +61,7 @@
     "expo-web-browser": "~55.0.17",
     "i18next": "^26.0.8",
     "intl-pluralrules": "^2.0.1",
+    "onnxruntime-react-native": "1.24.3",
     "react": "19.2.0",
     "react-i18next": "^17.0.6",
     "react-native": "0.83.6",

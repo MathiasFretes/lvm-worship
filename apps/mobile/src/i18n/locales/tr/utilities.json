@@ -61,7 +61,30 @@
       "32nd": "Otuzikilik"
     }
   },
+  "separation": {
+    "title": "Vokal ve eşliği ayır",
+    "description": "En fazla 140 saniyelik mono veya stereo WAV seçin. İlk kullanımda 236 MB model indirilir. Ses bu cihazda işlenir. MelBandRoformer (MIT), Kimberley Jensen; redbaty dışa aktarımı.",
+    "choose": "WAV seç ve ayır",
+    "cancel": "İptal",
+    "cancelHint": "Geçerli bölüm tamamlandığında iptal edilir.",
+    "download": "Model indiriliyor · %{{percent}}",
+    "verify": "Model doğrulanıyor · %{{percent}}",
+    "decode": "Ses açılıyor…",
+    "separate": "Ses ayrılıyor · %{{percent}}",
+    "encode": "Parçalar hazırlanıyor…",
+    "vocals": "Vokali dinle",
+    "backing": "Eşliği dinle",
+    "stop": "Önizlemeyi durdur",
+    "add": "İki parçayı ekle",
+    "failed": "Ses ayrılamadı. Daha kısa bir bölüm deneyin ve depolama alanını kontrol edin.",
+    "nativeBuild": "Bu özellik ayırma motorunu içeren yeni bir uygulama derlemesi gerektirir.",
+    "input": "En fazla 140 saniye ve 64 MB boyutunda mono veya stereo WAV seçin.",
+    "addFailed": "Parçalar eklenemedi. İki boş parça alanı bırakıp yeniden deneyin.",
+    "modelError": "Model indirilemedi veya doğrulanamadı. Bağlantınızı kontrol edip yeniden deneyin."
+  },
   "mixer": {
+    "vocals": "Vokal",
+    "backing": "Eşlik",
     "click": "Eşzamanlı metronom",
     "clickBpm": "Kaydın BPM değeri",
     "clickMeter": "Metronom ölçüsü",

@@ -61,7 +61,30 @@
       "32nd": "Fusa"
     }
   },
+  "separation": {
+    "title": "Separar voz y acompañamiento",
+    "description": "Elegí un WAV mono o estéreo de hasta 140 segundos. La primera vez se descarga un modelo de 236 MB. El audio se procesa en este dispositivo. MelBandRoformer (MIT), Kimberley Jensen; exportación de redbaty.",
+    "choose": "Elegir WAV y separar",
+    "cancel": "Cancelar",
+    "cancelHint": "La cancelación termina al finalizar el fragmento actual.",
+    "download": "Descargando modelo · {{percent}}%",
+    "verify": "Verificando modelo · {{percent}}%",
+    "decode": "Abriendo audio…",
+    "separate": "Separando audio · {{percent}}%",
+    "encode": "Preparando pistas…",
+    "vocals": "Escuchar voz",
+    "backing": "Escuchar acompañamiento",
+    "stop": "Detener escucha",
+    "add": "Agregar ambas pistas",
+    "failed": "No pudimos separar este audio. Probá con un fragmento más corto y revisá el espacio disponible.",
+    "nativeBuild": "Esta función necesita una compilación nueva de la app con el motor de separación.",
+    "input": "Elegí un WAV mono o estéreo de hasta 140 segundos y 64 MB.",
+    "addFailed": "No pudimos agregar las pistas. Dejá dos espacios libres y volvé a intentar.",
+    "modelError": "El modelo no pudo descargarse o verificarse. Revisá la conexión y volvé a intentar."
+  },
   "mixer": {
+    "vocals": "Voz",
+    "backing": "Acompañamiento",
     "click": "Metrónomo sincronizado",
     "clickBpm": "BPM de la grabación",
     "clickMeter": "Compás del metrónomo",

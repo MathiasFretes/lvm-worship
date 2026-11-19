@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppState, ScrollView, Text, TextInput, View } from 'react-native'
 import { Stack, useFocusEffect } from 'expo-router'
 import * as DocumentPicker from 'expo-document-picker'
-import { File } from 'expo-file-system'
+import { File, Paths } from 'expo-file-system'
 import { AudioContext, AudioManager, type AudioBuffer } from 'react-native-audio-api'
 import { useTranslation } from 'react-i18next'
 import { createStemMixer, emptyMixer, MIXER_FILE_BYTES, MIXER_TRACK_LIMIT, type MixerAudio } from '@lavozmisionera/core/music/stemMixer'
@@ -14,6 +14,9 @@ import Button from '../components/Button'
 import Chip from '../components/Chip'
 import { ChartSection } from '../components/ChordChart'
 import Screen from '../components/Screen'
+import SeparationPanel from '../components/SeparationPanel'
+import { type SeparatedFiles } from '../lib/sourceSeparation'
+import { uuidv4 } from '../lib/uuid'
 import { readMixerProject, writeMixerProject } from '../lib/mixerStore'
 import { usePersonalSong, useSong } from '../lib/useSong'
 import { useTheme } from '../theme/ThemeProvider'
@@ -73,6 +76,7 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
   const theme = useTheme()
   const [state, setState] = useState(emptyMixer)
   const [busy, setBusy] = useState(false)
+  const [separating, setSeparating] = useState(false)
   const [error, setError] = useState('')
   const [restoring, setRestoring] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -153,7 +157,7 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
   }, []))
 
   async function importFiles() {
-    if (importing.current || restoring || saving) return
+    if (importing.current || restoring || saving || separating) return
     importing.current = true
     setBusy(true)
     setError('')
@@ -184,7 +188,7 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
   }
 
   async function saveDraft() {
-    if (busy || restoring || saving) return
+    if (busy || restoring || saving || separating) return
     setSaving(true)
     setDraftError('')
     setDraftStatus('')
@@ -208,6 +212,37 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
     setError(valid ? '' : t('loopError'))
   }
 
+  async function addSeparated(files: SeparatedFiles, name: string) {
+    if (importing.current || restoring || saving || separating || state.preparing || state.tracks.length > MIXER_TRACK_LIMIT - 2) return false
+    importing.current = true
+    setBusy(true)
+    const added: number[] = []
+    const copied: File[] = []
+    let engine = mixer.current
+    try {
+      engine ??= createStemMixer(nativeAudio(), setState, reason => setDraftError(reason === 'processing' ? 'processingError' : 'audioError'))
+      mixer.current = engine
+      engine.pause()
+      for (const part of ['vocals', 'backing'] as const) {
+        const target = new File(Paths.cache, `${uuidv4()}.wav`)
+        copied.push(target)
+        files[part].copy(target)
+        const id = await engine.add(`${name} · ${t(part === 'vocals' ? 'vocals' : 'backing')}`, await target.arrayBuffer())
+        if (id === null || !mounted.current || mixer.current !== engine) throw new Error('import')
+        added.push(id)
+      }
+      added.forEach((id, index) => assets.current.set(id, copied[index]))
+      return true
+    } catch {
+      added.forEach(id => engine?.remove(id))
+      copied.forEach(file => { try { if (file.exists) file.delete() } catch { /* OS can reclaim cache. */ } })
+      return false
+    } finally {
+      importing.current = false
+      if (mounted.current) setBusy(false)
+    }
+  }
+
   const ink = { color: theme.colors.ink }
   const row = { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.spacing.sm } as const
   const panel = { backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.md, padding: theme.spacing.md, gap: theme.spacing.md }
@@ -226,9 +261,11 @@ export default function MixerScreen({ embedded = false, songId, songTitle, songS
       contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.sec }}>{t('description')}</Text>
       {songId && <Text accessibilityRole="header" style={ink}>{t('songRehearsal', { title: songTitle || songId })}</Text>}
-      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      <Button title={t(busy ? 'loading' : 'import')} disabled={busy || separating || restoring || saving || state.preparing || state.tracks.length >= MIXER_TRACK_LIMIT} onPress={() => void importFiles()} />
+      <SeparationPanel disabled={busy || restoring || saving || state.preparing || state.playing || state.tracks.length > MIXER_TRACK_LIMIT - 2}
+        onAdd={addSeparated} onStart={() => mixer.current?.pause()} onBusy={setSeparating} />
       {(stored || state.tracks.length > 0) && <Button title={t(saving ? 'saving' : state.tracks.length ? 'save' : 'deleteSaved')}
-        variant="secondary" disabled={busy || restoring || saving} onPress={() => void saveDraft()} />}
+        variant="secondary" disabled={busy || separating || restoring || saving} onPress={() => void saveDraft()} />}
       {error ? <Text accessibilityRole="alert" style={ink}>{error}</Text> : null}
       {draftError ? <Text accessibilityRole="alert" style={ink}>{t(draftError)}</Text> : null}
       {draftStatus ? <Text accessibilityLiveRegion="polite" style={ink}>{t(draftStatus)}</Text> : null}

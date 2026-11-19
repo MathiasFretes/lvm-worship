@@ -61,7 +61,30 @@
       "32nd": "32분음표"
     }
   },
+  "separation": {
+    "title": "보컬과 반주 분리",
+    "description": "최대 140초의 모노 또는 스테레오 WAV를 선택하세요. 처음 사용 시 236 MB 모델을 다운로드합니다. 오디오는 이 기기에서 처리됩니다. MelBandRoformer (MIT), Kimberley Jensen; redbaty 변환.",
+    "choose": "WAV 선택 및 분리",
+    "cancel": "취소",
+    "cancelHint": "현재 구간의 처리가 끝나면 취소됩니다.",
+    "download": "모델 다운로드 · {{percent}}%",
+    "verify": "모델 확인 · {{percent}}%",
+    "decode": "오디오 여는 중…",
+    "separate": "오디오 분리 · {{percent}}%",
+    "encode": "트랙 준비 중…",
+    "vocals": "보컬 미리 듣기",
+    "backing": "반주 미리 듣기",
+    "stop": "미리 듣기 중지",
+    "add": "두 트랙 추가",
+    "failed": "오디오를 분리하지 못했습니다. 더 짧은 구간을 선택하고 저장 공간을 확인하세요.",
+    "nativeBuild": "분리 엔진이 포함된 새 앱 빌드가 필요합니다.",
+    "input": "최대 140초, 64 MB의 모노 또는 스테레오 WAV를 선택하세요.",
+    "addFailed": "트랙을 추가하지 못했습니다. 트랙 공간 두 개를 비우고 다시 시도하세요.",
+    "modelError": "모델을 다운로드하거나 확인하지 못했습니다. 연결을 확인하고 다시 시도하세요."
+  },
   "mixer": {
+    "vocals": "보컬",
+    "backing": "반주",
     "click": "동기화 메트로놈",
     "clickBpm": "녹음 BPM",
     "clickMeter": "메트로놈 박자표",
