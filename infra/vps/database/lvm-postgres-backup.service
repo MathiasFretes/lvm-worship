@@ -1,0 +1,9 @@
+[Unit]
+Description=Back up LVM Worship PostgreSQL
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/srv/apps/la-voz-misionera/backup.sh
+UMask=0077

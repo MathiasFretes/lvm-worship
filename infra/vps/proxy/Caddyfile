@@ -1,0 +1,9 @@
+srv2137598.hstgr.cloud {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	# Temporary response until the independent PostgreSQL backend is ready.
+	respond "LVM está en preparación. Estamos migrando el servicio a nuestra infraestructura." 503
+}
