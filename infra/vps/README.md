@@ -56,6 +56,8 @@ La contraseña se genera en el servidor con `openssl rand -hex 32` y se guarda �
 
 `database/backup.sh` crea dumps con `pg_dump -Fc`, verifica que sean legibles y guarda su SHA-256. El servicio y timer `lvm-postgres-backup` ejecutan la copia diariamente a las 03:15 UTC, con hasta 15 minutos de dispersión, conservando 14 días en `/srv/backups/la-voz-misionera`. La primera copia y una restauración en una base temporal se verificaron. Estas copias están en el mismo VPS; todavía falta configurar una copia externa para recuperación ante pérdida del servidor.
 
+`copy-backup.ps1` permite guardar una copia adicional en esta PC, en `~/Backups/LaVozMisionera`, cifrada con Windows DPAPI para el usuario actual. Comprueba el SHA-256 remoto y verifica que el archivo cifrado pueda recuperarse con el mismo contenido, eliminando el temporal sin cifrar. La copia es manual, no un trabajo programado. Para descifrarla se necesita el mismo perfil Windows/DPAPI y la cadena de entropía registrada en el JSON acompañante; no alcanza con copiar el archivo a otra cuenta. Una copia local ya verificada no sustituye una política de respaldo externo automático.
+
 ```powershell
 ssh hostinger-vps "systemctl list-timers lvm-postgres-backup.timer --no-pager"
 ssh hostinger-vps "systemctl start lvm-postgres-backup.service"
