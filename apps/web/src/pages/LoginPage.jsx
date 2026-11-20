@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import {completeAuthRedirect} from '../utils/app/authRedirect'
 import '../styles/auth.css'
 
 export default function LoginPage() {
@@ -19,7 +20,7 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (!loading && isLoggedIn) navigate(redirectTo, { replace: true })
+    if (!loading && isLoggedIn) completeAuthRedirect(redirectTo,navigate)
   }, [isLoggedIn, loading, navigate, redirectTo])
 
   async function handleGoogleSignIn() {
@@ -38,7 +39,7 @@ export default function LoginPage() {
       setError(friendlyError(error.message, t))
       setSubmitting(false)
     } else {
-      navigate(redirectTo, { replace: true })
+      completeAuthRedirect(redirectTo,navigate)
     }
   }
 

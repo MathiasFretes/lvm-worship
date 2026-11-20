@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import {completeAuthRedirect} from '../utils/app/authRedirect'
 import SpritePicker from '../components/ui/SpritePicker'
 import { showToast } from '../utils/app/toast'
 import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
@@ -74,7 +75,7 @@ export default function SignupPage() {
       if (profileError) console.error('Profile update after signup failed:', profileError)
       await refreshProfile()
       showToast(t('welcomeToast'))
-      navigate(redirectTo, { replace: true })
+      completeAuthRedirect(redirectTo,navigate)
     } else {
       setSignUpSuccess(true)
     }
