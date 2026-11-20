@@ -18,6 +18,9 @@ if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "S
   docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/004_public_site.sql
 fi
 # Passwords are passed over stdin, never as command arguments or stored in source.
+if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='007_site_editor'")" = '0' ]; then
+  docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/007_site_editor.sql
+fi
 if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='006_catalog_guards'")" = '0' ]; then
   docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/006_catalog_guards.sql
 fi
