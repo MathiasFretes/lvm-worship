@@ -48,6 +48,7 @@ export * from './setlists/setlistsRepo'
 export * from './setlists/copyName'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
+export * from './setlists/offlineSetlists'
 
 // Live sessions: fresh code generation + row queries + Realtime subscription
 export * from './sessions/sessionCode'
