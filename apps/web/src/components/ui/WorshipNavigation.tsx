@@ -32,7 +32,7 @@ export default function WorshipNavigation() {
 
   const setlistHome = isLoggedIn ? '/setlists' : '/setlist'
   const destinations: Destination[] = [
-    { to: '/', label: t('home'), active: path => path === '/' },
+    { to: '/app', label: t('home'), active: path => path === '/' || path === '/app' },
     { to: '/songs', label: t('songs'), active: path => matches(path, '/songs') || matches(path, '/song') },
     { to: setlistHome, label: t('setlist'), active: path => matches(path, '/setlist') || matches(path, '/setlists') || matches(path, '/set') },
     { to: '/songbook', label: t('songbook'), active: path => matches(path, '/songbook') },
@@ -162,7 +162,7 @@ export default function WorshipNavigation() {
                   <p>{profile?.display_name || session?.user?.email}</p>
                   <Link to="/profile" onClick={() => setPopover(null)}>{t('profile')}</Link>
                   {hasMinRole('user') && <Link to="/portal/editor" onClick={() => setPopover(null)}>{t('songEditor')}</Link>}
-                  {hasMinRole('admin') && <Link to="/admin" onClick={() => setPopover(null)}>{t('adminPortal')}</Link>}
+                  {hasMinRole('admin') && <a href="/service/admin" onClick={() => setPopover(null)}>LVM Service</a>}
                   <button type="button" onClick={signOut}><LogOutIcon />{t('signOut')}</button>
                 </div>}
               </div>
@@ -184,7 +184,7 @@ export default function WorshipNavigation() {
             <nav className="lvm-worship-nav__drawer-links" aria-label={t('mobileMenu')}>
               {navLinks(true)}
               {isLoggedIn && hasMinRole('user') && <Link to="/portal/editor" className="lvm-worship-nav__link" onClick={closeDrawer} aria-current={matches(pathname, '/portal/editor') ? 'page' : undefined}>{t('songEditor')}</Link>}
-              {isLoggedIn && hasMinRole('admin') && <Link to="/admin" className="lvm-worship-nav__link" onClick={closeDrawer} aria-current={matches(pathname, '/admin') ? 'page' : undefined}>{t('adminPortal')}</Link>}
+              {isLoggedIn && hasMinRole('admin') && <a href="/service/admin" className="lvm-worship-nav__link" onClick={closeDrawer}>LVM Service</a>}
             </nav>
             <div className="lvm-worship-nav__drawer-footer">
               <OfflineBadge forceText />

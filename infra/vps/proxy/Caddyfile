@@ -4,6 +4,30 @@ srv2137598.hstgr.cloud {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 	}
-	# Temporary response until the independent PostgreSQL backend is ready.
-	respond "LVM está en preparación. Estamos migrando el servicio a nuestra infraestructura." 503
+	handle /api/* {
+		reverse_proxy lvm-worship-api:4318
+	}
+	@public path / /nosotros /pastores /predicas /biblioteca /envivo /devocional /sedes /ministerios /celulas /oracion /nuevo /calendario /donaciones /boletin /redes /privacidad /contacto
+	handle @public {
+		root * /srv/public
+		rewrite * /index.html
+		file_server
+	}
+	handle_path /site/* {
+		root * /srv/public
+		file_server
+	}
+	handle /service {
+		redir /service/ 308
+	}
+	handle_path /service/* {
+		root * /srv/service
+		try_files {path} /index.html
+		file_server
+	}
+	handle {
+		root * /srv/worship
+		try_files {path} {path}/index.html /index.html
+		file_server
+	}
 }

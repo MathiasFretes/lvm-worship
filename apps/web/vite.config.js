@@ -70,7 +70,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase':     ['@supabase/supabase-js'],
+          'data-client': ['@supabase/postgrest-js'],
           'i18n':         ['i18next', 'react-i18next'],
           'helmet':       ['react-helmet-async'],
         },

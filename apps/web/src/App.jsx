@@ -15,8 +15,9 @@ const SignupPage = lazyRoute(() => import('./pages/SignupPage'))
 const ProfilePage = lazyRoute(() => import('./pages/ProfilePage'))
 const AuthCallbackPage = lazyRoute(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = lazyRoute(() => import('./pages/ResetPasswordPage'))
+const ActivateAccountPage = lazyRoute(() => import('./pages/ActivateAccountPage'))
 const ForgotPasswordPage = lazyRoute(() => import('./pages/ForgotPasswordPage'))
-const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
+const AdminPage = lazyRoute(() => import('./pages/ServiceAdminRedirect'))
 const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./features/song-editor/LvmSongEditorPage'))
 const TablaturePage = lazyRoute(() => import('./features/tablature/TablaturePage'))
@@ -41,6 +42,8 @@ export default function App(){
     <ErrorBoundary>
       <React.Suspense fallback={<div className="container"><h3>Loading...</h3></div>}>
         <Routes>
+          <Route path="/activate" element={<ActivateAccountPage />} />
+          <Route path="/app" element={<Layout />}><Route index element={<HomeDashboard />} /></Route>
           <Route element={<Layout />}>
             <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />

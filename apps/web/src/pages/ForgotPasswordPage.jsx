@@ -7,17 +7,19 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
     setSubmitting(true)
     // VITE_SITE_URL should be set in your .env file (e.g. VITE_SITE_URL=https://lavozmisionera.com)
     const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
-    await supabase.auth.resetPasswordForEmail(email, {
+    const result = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${siteUrl}/reset-password`,
     })
     // Always show the generic confirmation — do not reveal whether the email exists
-    setSubmitted(true)
+    if (result?.error) setError(result.error.message)
+    else setSubmitted(true)
     setSubmitting(false)
   }
 
@@ -57,6 +59,7 @@ export default function ForgotPasswordPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="lvm-auth-form">
+          {error && <div role="alert" className="lvm-auth-error">{error}</div>}
           <div className="lvm-form-field">
             <label htmlFor="email">Email</label>
             <input

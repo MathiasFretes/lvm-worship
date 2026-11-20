@@ -23,7 +23,7 @@ import {
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function Songs(){

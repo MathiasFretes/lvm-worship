@@ -38,7 +38,7 @@ import { filterDisplayTags } from '../utils/songs/tags'
 let pdfLibPromise
 let imageLibPromise
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 function buildSongSeo(entry, parsed, id){

@@ -6,7 +6,7 @@ El servidor aloja proyectos independientes. Su hostname puede conservar el nombr
 
 Ubuntu 24.04 LTS fue reinstalado y el acceso por la clave `Acceso VPS` se comprobó desde una conexión nueva. En la PC de configuración, el alias `ssh hostinger-vps` usa esa clave y el archivo de identidades de servidor `~/.ssh/hostinger_vps_20261120_known_hosts`, conservando el archivo anterior. Docker Engine 29.10.0 y Compose 5.8.0 están instalados desde el repositorio oficial de Docker; el contenedor `hello-world` pasó. Docker usa el controlador de logs `local` con rotación.
 
-UFW está activo y permite SSH, 80/tcp y 443/tcp para IPv4 e IPv6. Caddy está desplegado como proxy compartido y PostgreSQL 17.12 está saludable en Docker. El dominio `srv2137598.hstgr.cloud` tiene HTTPS válido y redirige HTTP a HTTPS. Mientras se migra el backend, responde 503 con un aviso de preparación; la aplicación Worship todavía no está publicada. Al publicar contenedores, Docker puede eludir reglas de UFW; hay que revisar las direcciones y puertos publicados de cada proyecto.
+UFW está activo y permite SSH, 80/tcp y 443/tcp para IPv4 e IPv6. Caddy está desplegado como proxy compartido y PostgreSQL 17.12 está saludable en Docker. El dominio `srv2137598.hstgr.cloud` tiene HTTPS válido y redirige HTTP a HTTPS. La raíz sirve las pantallas públicas reutilizadas de V0, `/app` abre Worship y `/service/` abre LVM Service. La administración general pertenece a Service (`/service/admin`), no a Worship. Al publicar contenedores, Docker puede eludir reglas de UFW; hay que revisar las direcciones y puertos publicados de cada proyecto.
 
 Las snapshots de Hostinger se eliminan al reinstalar el sistema operativo y no sustituyen un respaldo externo para ese procedimiento. El backup automático del 14 de noviembre permaneció disponible después de la reinstalación.
 
@@ -46,13 +46,13 @@ Después de revisar el inventario, `prepare-layout.sh` crea solo los directorios
 Get-Content -Raw infra/vps/prepare-layout.sh | ssh hostinger-vps "tr -d '\r' | sh"
 ```
 
-Cada futura aplicación tendrá su propio proyecto de Compose, redes, volúmenes y secretos. El proxy compartido vive en `/srv/proxy`, con rutas por dominio. El usuario eligió sustituir Supabase por PostgreSQL propio en Docker: la infraestructura ya está instalada, pero el código de Worship conserva su integración anterior hasta completar la migración de autenticación, datos, permisos y funciones. El dominio `lavozmisionera.com` y su DNS no se modificaron.
+Cada futura aplicación tendrá su propio proyecto de Compose, redes, volúmenes y secretos. El proxy compartido vive en `/srv/proxy`, con rutas por dominio. La web de Worship usa ahora la API propia y PostgreSQL; no necesita credenciales de Supabase. El usuario eligió una base nueva y no se importaron usuarios ni canciones anteriores. El dominio `lavozmisionera.com` y su DNS no se modificaron.
 
 ## PostgreSQL en Docker
 
 `database/compose.yaml` se instala en `/srv/apps/la-voz-misionera/compose.yaml` como proyecto `lvm-worship`. No publica ningún puerto del host: PostgreSQL está exclusivamente en la red interna `lvm-worship_database`. El volumen `lvm-worship_postgres_data` conserva los datos al recrear el contenedor. **No ejecutar `docker compose down -v`: elimina la base.** Las imágenes de PostgreSQL y Caddy están fijadas al digest verificado durante la instalación; las actualizaciones requieren cambiarlo expresamente.
 
-La contraseña se genera en el servidor con `openssl rand -hex 32` y se guarda únicamente en `secrets/postgres_password`, con permisos 600 y directorio 700. Compose la monta como secreto; no se incluye en código ni en variables públicas. `lvm_owner` es el usuario administrativo de inicialización, no una cuenta para exponer al navegador. Al implementar el backend se deberá crear una cuenta de aplicación con permisos limitados. La base `lvm_worship` está nueva, sin datos migrados de Supabase.
+La contraseña se genera en el servidor con `openssl rand -hex 32` y se guarda únicamente en `secrets/postgres_password`, con permisos 600 y directorio 700. Compose la monta como secreto; no se incluye en código ni en variables públicas. `lvm_owner` es la cuenta administrativa de inicialización y backups. La API usa `lvm_api` con permisos limitados y PostgREST usa `lvm_rest` con roles sin login `lvm_anon`/`lvm_user`, sujetos a RLS. Las contraseñas, correos, sesiones y solicitudes de contacto están en el esquema privado. Las cuentas públicas no exponen correos. La base `lvm_worship` está nueva, sin datos migrados de Supabase.
 
 `database/backup.sh` crea dumps con `pg_dump -Fc`, verifica que sean legibles y guarda su SHA-256. El servicio y timer `lvm-postgres-backup` ejecutan la copia diariamente a las 03:15 UTC, con hasta 15 minutos de dispersión, conservando 14 días en `/srv/backups/la-voz-misionera`. La primera copia y una restauración en una base temporal se verificaron. Estas copias están en el mismo VPS; todavía falta configurar una copia externa para recuperación ante pérdida del servidor.
 
@@ -66,7 +66,22 @@ ssh hostinger-vps "cd /srv/apps/la-voz-misionera && docker compose ps"
 
 `proxy/compose.yaml` y `proxy/Caddyfile` se instalan en `/srv/proxy`. Caddy publica solamente 80 y 443 TCP. Sus certificados y estado ACME persisten en volúmenes Docker. La red `shared-proxy` está separada de PostgreSQL y permitirá conectar el backend y futuros sitios sin dar al proxy acceso directo a la base de datos. La API administrativa de Caddy no se publica en el host.
 
-La configuración temporal devuelve un aviso 503, no una copia estática incompleta de Worship. Cuando el backend propio esté validado, se reemplazará esa respuesta por las rutas del frontend y la API. Antes de aplicar cambios, validar con `docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` desde `/srv/proxy`; luego recargar con `docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`.
+Las rutas `/api/*` llegan al servicio compartido de autenticación y datos. El proxy monta las compilaciones en `web/`, `public-web/` y `service-web/` con permisos de solo lectura. Antes de aplicar cambios, validar con `docker compose exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` desde `/srv/proxy`; luego recargar con `docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`.
+
+## API compartida y administración
+
+El código está en `LVM Service/suite-api/`, copiado al VPS como `source/service-api/`. `backend.compose.yaml` se combina con `compose.yaml`; no publica puertos adicionales. `configure-backend.sh` aplica solamente las migraciones nuevas y prepara los secretos en el servidor. Nunca se ejecutan los scripts históricos de Supabase sobre esta base.
+
+```sh
+cd /srv/apps/la-voz-misionera
+sh configure-backend.sh
+docker compose -f compose.yaml -f backend.compose.yaml up -d --build --wait api
+docker compose -f compose.yaml -f backend.compose.yaml run --rm --no-deps --entrypoint node provision-owner test/integration.mjs
+```
+
+La cuenta propietaria se reserva con el perfil administrativo `provision-owner correo`, que escribe un enlace de activación de un solo uso (24 horas) en `activation/owner-activation-url`, con permisos 600. El perfil tiene acceso al secreto de PostgreSQL solo durante esa operación; la API normal no lo monta. No publicar ni registrar el enlace. Las contraseñas elegidas por el usuario usan scrypt con sal aleatoria; la cookie de sesión es `Secure`, `HttpOnly`, `SameSite=Lax`. Las mutaciones comprueban Origin y JSON; hay límite de intentos de autenticación. Los JWT internos de PostgREST duran 60 segundos y nunca llegan al navegador.
+
+LVM Service contiene la gestión de cuentas y la bandeja de mensajes; Worship mantiene las herramientas musicales. La planificación Service 0.1 conserva su persistencia local y su exportación de archivos existentes: este despliegue no habilita el antiguo backend de planificación sin autenticación. La edición editorial completa, correo transaccional/recuperación por email y proveedores OAuth aún requieren su implementación/configuración; no se simulan envíos. Los formularios públicos guardan solicitudes privadas en PostgreSQL, accesibles a administradores en Service. Los adjuntos PPTX del worker anterior y los clientes nativos aún no se migraron a esta API.
 
 ## Primer uso para Worship: procesamiento de audio
 

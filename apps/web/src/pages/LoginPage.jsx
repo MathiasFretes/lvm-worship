@@ -10,7 +10,7 @@ export default function LoginPage() {
   const { isLoggedIn, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/app'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -107,6 +107,7 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {supabase.auth.supportsOAuth !== false && <>
         <div className="lvm-auth-divider">{t('common:or')}</div>
         <button
           type="button"
@@ -117,6 +118,7 @@ export default function LoginPage() {
           <GoogleIcon />
           {t('common:continueWithGoogle')}
         </button>
+        </>}
 
         <p className="lvm-auth-card__footer">
           {t('noAccountYet')}{' '}

@@ -44,6 +44,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+  // Authenticated data must never enter the shared static cache.
+  if (new URL(request.url).pathname.startsWith('/api/')) return;
   // Don't intercept requests to external origins (e.g. R2, CDN) 
   if (!request.url.startsWith(self.location.origin)) return;
   // Always try the network first for the legacy static song index, so any

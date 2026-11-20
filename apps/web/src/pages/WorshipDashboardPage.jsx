@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useWorshipDashboardData } from '../features/dashboard/useWorshipDashboardData'
 import './worship-dashboard.css'
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 
 export default function WorshipDashboardPage() {
   const { t } = useTranslation('home')
