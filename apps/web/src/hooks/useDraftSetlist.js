@@ -36,6 +36,7 @@ function readDraft() {
             entryKey: makeEntryKey(e.songId),
             songId: e.songId,
             toKey: e.toKey || null,
+            notes: typeof e.notes === 'string' ? e.notes : null,
             sectionOrderText: typeof e.sectionOrderText === 'string' ? e.sectionOrderText : '',
             song: sourceSong ? entrySongFromCatalog(sourceSong) : null,
             sourceSong,
@@ -62,7 +63,7 @@ function writeDraft(name, serviceDate, entries) {
       JSON.stringify({
         name,
         serviceDate,
-        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey, ...(e.sectionOrderText ? { sectionOrderText: e.sectionOrderText } : {}), ...(e.sourceSong ? { sourceSong: e.sourceSong } : {}) })),
+        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey, notes: e.notes ?? null, ...(e.sectionOrderText ? { sectionOrderText: e.sectionOrderText } : {}), ...(e.sourceSong ? { sourceSong: e.sourceSong } : {}) })),
       })
     )
   } catch {
@@ -181,6 +182,7 @@ export function useDraftSetlist() {
         entryKey: makeEntryKey(e.songId),
         songId: e.songId,
         toKey: e.toKey || null,
+        notes: e.notes ?? null,
         sectionOrderText: e.sectionOrderText || '',
         song: e.song || null,
         sourceSong: e.sourceSong || songs.find((song) => song.id === e.songId || song.dbId === e.songId) || null,

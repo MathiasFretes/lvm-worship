@@ -29,6 +29,20 @@ function stored() {
 }
 
 describe('useDraftSetlist', () => {
+  it('retains different occurrence notes when replacing and reopening a draft', () => {
+    const first = renderHook(() => useDraftSetlist())
+    act(() => first.result.current.replaceEntries([
+      { songId: 'abba', toKey: 'D', notes: 'Quiet introduction', sourceSong: SONGS[0] },
+      { songId: 'abba', toKey: 'E', notes: 'Repeat the chorus', sourceSong: SONGS[0] },
+    ]))
+    first.unmount()
+    const reopened = renderHook(() => useDraftSetlist())
+    expect(reopened.result.current.items.map(({ toKey, notes }) => ({ toKey, notes }))).toEqual([
+      { toKey: 'D', notes: 'Quiet introduction' },
+      { toKey: 'E', notes: 'Repeat the chorus' },
+    ])
+    reopened.unmount()
+  })
   it('persists every edit immediately, with no save step', () => {
     const { result } = renderHook(() => useDraftSetlist())
 

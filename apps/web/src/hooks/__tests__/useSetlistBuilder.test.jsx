@@ -63,6 +63,20 @@ async function mountLoaded() {
 }
 
 describe('useSetlistBuilder', () => {
+  it('retains distinct occurrence notes when renaming a saved setlist', async () => {
+    fetchSetlist.mockResolvedValue({ ...SAVED, entries: [
+      { ...SAVED.entries[0], notes: 'Start quietly' },
+      { ...SAVED.entries[0], id: 'row-2', position: 1, toKey: 'E', notes: 'Repeat the chorus' },
+    ] })
+    const {result}=await mountLoaded()
+    expect(result.current.items.map(item=>item.notes)).toEqual(['Start quietly','Repeat the chorus'])
+    await act(async()=>{result.current.setName('Rehearsal');vi.advanceTimersByTime(900)})
+    await waitFor(()=>expect(updateSetlist).toHaveBeenCalledTimes(1))
+    expect(updateSetlist.mock.calls[0][2].songs).toEqual([
+      {id:'uuid-a',toKey:null,notes:'Start quietly'},
+      {id:'uuid-a',toKey:'E',notes:'Repeat the chorus'},
+    ])
+  })
   it('loads a setlist and exposes its entries', async () => {
     const { result } = await mountLoaded()
     expect(result.current.name).toBe('Sunday Morning')

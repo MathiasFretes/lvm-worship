@@ -19,6 +19,7 @@ import { isVerseId, parseVerseId } from '@lavozmisionera/core'
  * @property {string} entryKey  Stable local list key — DB row ids are wiped every save
  * @property {string} songId
  * @property {string|null} toKey  setlist_songs.key_override; null = the song's own key
+ * @property {string|null} notes  Notes for this occurrence, including repeated songs
  * @property {EntrySong} song
  */
 
@@ -76,6 +77,7 @@ export function toWorkingItems(entries, catalog) {
         entryKey: entry.entryKey,
         songId: entry.songId,
         toKey: entry.toKey,
+        notes: entry.notes ?? null,
         song: {
           id: entry.songId,
           slug: '',
@@ -97,7 +99,7 @@ export function toWorkingItems(entries, catalog) {
     const catalogSong = byDbId.get(entry.songId) || byId.get(entry.songId)
     const song = entry.song || entrySongFromCatalog(catalogSong)
     if (!song) continue
-    out.push({ entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, sectionOrderText: entry.sectionOrderText || '', song })
+    out.push({ entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, notes: entry.notes ?? null, sectionOrderText: entry.sectionOrderText || '', song })
   }
   return out
 }
