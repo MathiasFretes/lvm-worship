@@ -25,3 +25,15 @@ Los enlaces entrantes de autenticación anteriores se descartan en modo VPS sin 
 Pasaron 929 pruebas en la suite móvil completa, el typecheck y ambos exports Android/iOS con el modo VPS seleccionado. Después se añadió y aprobó una prueba adicional de logout exclusivamente local: las tres pruebas actuales del adaptador pasan y comprueban que esa operación no envía credenciales y que pedir logout de otras sesiones no borra la sesión actual. No se atribuye el conteo de la ejecución anterior a esa prueba nueva.
 
 Todavía se requiere instalar una nueva compilación nativa que incluya SecureStore y probar login, lectura, repertorios, reconexión y cambio de cuenta sobre un dispositivo/emulador. En esta PC no se encontró `emulator.exe` en el SDK Android por defecto; no se retomó el teléfono que el usuario pidió omitir. Los exports Metro no prueban Keystore ni ese recorrido. La API se publicará coordinadamente después de ese gate; no activar la variable contra el VPS productivo actual.
+
+## Compilación Android verificada
+
+El 21 de noviembre se completó `:app:assembleDebug -PreactNativeArchitectures=arm64-v8a --max-workers=2 --console=plain` sobre el código `7bd5330b9`: Gradle terminó con `BUILD SUCCESSFUL` en 11 min 2 s, con 545 tareas (90 ejecutadas). Se usó JDK 17, SDK Android 36 y, solamente para ese proceso, las herramientas Unix de Git en `PATH`; esto corrigió la descarga de bibliotecas de audio que antes fallaba porque Bash no encontraba `mkdir`/`rm`. No se cambió el PATH del sistema.
+
+El artefacto generado es `apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk`, de 118.887.117 bytes, creado el 21 de noviembre a las 13:56:43 (hora local). SHA-256: `363D5BFD34E7D7DAE490AF20CEF2B2DF47BC18DABA0F7A5A05491FDD451E5C69`. Se verificaron el identificador `com.lavozmisionera.app`, versión `1.1.3`, mínimo Android API 24 y destino API 36. No se confundió con el APK anterior de octubre.
+
+La inspección del APK encontró `SecureStoreModule` y `ExpoModulesPackageList` en los DEX; la lista de autolinking generada registra `expo.modules.securestore.SecureStoreModule`. El manifiesto enlaza las reglas `secure_store_backup_rules.xml` y `secure_store_data_extraction_rules.xml`: ambas excluyen las preferencias `SecureStore` de los respaldos; la segunda también las excluye de transferencias entre dispositivos.
+
+Es un APK **debug**, sin `index.android.bundle` y dependiente de Metro: no es una distribución autónoma ni firmada para producción. La variable seleccionada durante Gradle no demuestra qué configuración ejecutará Metro. No se instaló ni se comprobó Keystore en ejecución. El disco quedó con aproximadamente 1,2 GB libres, por lo que no se descargó un emulador o imagen Android para intentar el gate pendiente. Este avance prueba compilación y empaquetado del módulo, no el recorrido de usuario ni la activación productiva.
+
+Después de la compilación se repitieron la suite móvil y el chequeo de tipos sobre `7bd5330b9`: **930 pruebas aprobadas en 85 archivos**, con `tsc --noEmit` aprobado. Esta ejecución incluye la prueba adicional de logout local y las rutas que aíslan enlaces de autenticación anteriores.
