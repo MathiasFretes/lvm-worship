@@ -24,7 +24,7 @@ export function createDeviceBackend(options: Parameters<typeof createDeviceTrans
     const subscription = originalSubscribe(callback)
     return { data: { subscription: { unsubscribe() { listeners.delete(callback); return subscription.data.subscription.unsubscribe() } } } }
   }
-  client.auth.signOut = async (options?: { scope?: string }) => {
+  const signOut = async (options?: { scope?: string }) => {
     if (options?.scope === 'others') return { data: {}, error: { message: 'Standalone revocation of other devices is not supported', status: 400 } }
     if (options?.scope === 'local') {
       await transport.clearSession()
@@ -35,12 +35,14 @@ export function createDeviceBackend(options: Parameters<typeof createDeviceTrans
     if (result.error && !(await transport.readStoredSession())) emit('SIGNED_OUT', null)
     return result
   }
+  client.auth.signOut = signOut
   async function refresh() {
     const result = await client.auth.getSession()
     if (!result.error) emit(result.data.session ? 'TOKEN_REFRESHED' : 'SIGNED_OUT', result.data.session)
   }
   return {
     client: { ...client, auth: { ...client.auth,
+      signOut,
       passwordChangeRevokesSessions: true,
       startAutoRefresh() { if (!timer) { void refresh(); timer = setInterval(() => { void refresh() }, 60000) } },
       stopAutoRefresh() { if (timer) clearInterval(timer); timer = undefined },
