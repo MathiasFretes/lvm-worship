@@ -1,6 +1,6 @@
 # Worship conectado y ensayo sin conexión
 
-## Entrega local verificada — 21 de noviembre de 2026
+## Entrega publicada y verificada — 21 de noviembre de 2026
 
 Service conserva la administración general. El enlace de preparación abre `/setlist?churchId=...&serviceId=...` con la misma sesión HttpOnly. Worship recibe únicamente el contexto musical y los permisos actuales de la API. La revisión e incorporación al orden completo siguen en Service.
 
@@ -19,6 +19,10 @@ El ensayo offline descarga una instantánea con letras, acordes, lecturas, notas
 - Service `scripts/verify-worship-connected.mjs`: assets productivos de ambos clientes y API/PostgreSQL aislados, sesión real de músico, guardado pendiente tras recarga, reconexión, revisión administrativa, incorporación conservando bienvenida manual, conversión canónica de Presenter y recuperación desde otro contexto del navegador. Limpia los fixtures al terminar.
 - La prueba conectada bloquea los PUT musicales para simular la interrupción; no sustituye la prueba separada del service worker ni demuestra entrega al proceso de escritorio de Presenter.
 
-## Publicación pendiente
+## Publicación y recuperación
 
-Esta evidencia corresponde a cambios locales, no al CI de `6301397` ni a una publicación productiva. Publicar coordinadamente API + migración aditiva `011_worship_exchange` + ambos clientes, habilitando `VITE_SERVICE_WORSHIP=connected` en Service. Conservar respaldos de PostgreSQL, API y ambas compilaciones; comprobar HTTPS y los flujos publicados antes de registrar el cierre. No ejecutar migraciones históricas de Supabase.
+Se publicaron coordinadamente API + migración aditiva `011_worship_exchange` + ambos clientes, con `VITE_SERVICE_WORSHIP=connected` en Service, en `https://srv2137598.hstgr.cloud`. Worship Web corresponde a `52d4454bd` y Service/API a `0c5e73e`. El flujo conectado pasó con los recursos HTTPS reales, seleccionando explícitamente la iglesia en Service, y la planificación anterior volvió a superar sus ocho escenarios de aceptación. Los fixtures temporales quedaron eliminados.
+
+GitHub Actions aprobó los tres jobs del código de Service/API publicado en la [ejecución 44910644424](https://github.com/MathiasFretes/la-voz-misionera-platform/actions/runs/44910644424). Los tests de Worship y su ensayo offline se ejecutaron localmente; no se presentan como CI remoto de Worship.
+
+El snapshot previo está en `/srv/apps/la-voz-misionera/releases/worship-20261121T134628Z`. Se restauró el respaldo posterior de PostgreSQL en una base desechable y se verificaron migración 011, permisos privados y propietario único. La copia fuera del VPS `lvm_worship_20261121T135208Z.dump.dpapi` pasó checksum y recuperación DPAPI. La reversión de interfaces/API conserva la migración aditiva y los datos musicales. No ejecutar migraciones históricas de Supabase. La entrega a la aplicación de escritorio de Presenter, los clientes nativos y la distribución continúan como gates separados.
