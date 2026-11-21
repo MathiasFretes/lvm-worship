@@ -91,6 +91,7 @@
       "./plugins/withBaselineProfile",
       "./plugins/withNativeDebugSymbols",
       "expo-router",
+      "expo-secure-store",
       "onnxruntime-react-native",
       "./plugins/withOnnxNewArchitecture",
       [

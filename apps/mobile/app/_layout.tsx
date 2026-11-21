@@ -16,9 +16,9 @@ import {
   registerAuthAutoRefresh,
   supabase,
   supabaseConfigError,
+  readStoredAuthSession,
 } from '../src/lib/supabase'
 import { resolveInitialSession, INITIAL_SESSION_TIMEOUT_MS } from '../src/lib/authSession'
-import { makeStoredSessionReader } from '../src/lib/storedSession'
 import { startConnectivityWatch } from '../src/lib/connectivity'
 import OfflineBanner from '../src/components/OfflineBanner'
 import { setCurrentUserFromSession } from '../src/lib/currentUser'
@@ -311,7 +311,7 @@ export default function RootLayout() {
     const sessionRead = resolveInitialSession(
       supabase.auth,
       INITIAL_SESSION_TIMEOUT_MS,
-      makeStoredSessionReader(process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''),
+      readStoredAuthSession,
     )
     // One AsyncStorage round trip for all 15 launch keys instead of 15 separate
     // getItem calls. The stores themselves are untouched: they receive a
@@ -404,6 +404,7 @@ export default function RootLayout() {
     const stopConnectivityWatch = startConnectivityWatch()
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      if ((event as string) === 'SESSION_UNAVAILABLE' && !next) return
       setSession(next)
       setCurrentUserFromSession(next)
       // A sprite picked before the session existed (email-confirmation flow,

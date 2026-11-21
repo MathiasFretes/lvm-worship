@@ -5,9 +5,33 @@ import { createLvmSupabase } from '@lavozmisionera/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { silenceInvalidRefreshTokenLogs } from './authSession'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
+import * as SecureStore from 'expo-secure-store'
+import { createDeviceBackend } from './deviceBackend'
+import { makeStoredSessionReader } from './storedSession'
+import type { Session } from '@supabase/supabase-js'
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+const deviceApi = process.env.EXPO_PUBLIC_LVM_API_URL
+export const usesVpsBackend = !!deviceApi
+let device: ReturnType<typeof createDeviceBackend> | undefined
+let deviceConfigError: string | null = null
+if (deviceApi) {
+  try {
+    device = createDeviceBackend({ apiUrl: deviceApi, fetcher: withRequestBudget(fetch, () => FOREGROUND_MS), storage: {
+      getItem: key => SecureStore.getItemAsync(key),
+      setItem: (key, value) => SecureStore.setItemAsync(key, value, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }),
+      removeItem: key => SecureStore.deleteItemAsync(key),
+    } })
+  } catch { deviceConfigError = 'EXPO_PUBLIC_LVM_API_URL must be an HTTPS URL ending in /api.' }
+}
+export const readStoredAuthSession = deviceApi
+  ? async () => (await device?.readStoredSession() || null) as unknown as Session | null
+  : makeStoredSessionReader(url || '')
+export async function deviceApiRequest(path: string, init: RequestInit) {
+  if (!device || !deviceApi) throw new Error('VPS device client is not configured')
+  return device.fetch(new URL(path, new URL(deviceApi).origin).href, init)
+}
 
 // If the public Supabase env vars are missing, DO NOT throw at module import:
 // a top-level throw aborts the whole JS bundle before React (and any error
@@ -17,7 +41,7 @@ const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 // build — set them as EAS environment variables instead). Surface the problem
 // as a value the app root can render as a readable screen.
 export const supabaseConfigError: string | null =
-  !url || !anonKey
+  deviceApi ? deviceConfigError : !url || !anonKey
     ? 'Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.\n\n' +
       'For local/simulator builds: copy apps/mobile/.env.example to ' +
       'apps/mobile/.env and fill in the values.\n\n' +
@@ -31,7 +55,7 @@ export const supabaseConfigError: string | null =
 // automatic init (`_recoverAndRefresh`), which kicks off when createLvmSupabase()
 // constructs the client below — so the filter must be installed FIRST to be in
 // place when init runs. See silenceInvalidRefreshTokenLogs for the full why.
-if (!supabaseConfigError) {
+if (!supabaseConfigError && !usesVpsBackend) {
   silenceInvalidRefreshTokenLogs()
 }
 
@@ -72,7 +96,7 @@ function supabaseRequestBudget(requestUrl: string): number | null {
 // config-error screen in that case, so this client is never actually used.
 export const supabase: SupabaseClient = supabaseConfigError
   ? (null as unknown as SupabaseClient)
-  : createLvmSupabase({
+  : device ? device.client as unknown as SupabaseClient : createLvmSupabase({
       url: url as string,
       anonKey: anonKey as string,
       storage: AsyncStorage,

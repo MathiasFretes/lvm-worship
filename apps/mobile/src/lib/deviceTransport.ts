@@ -10,6 +10,15 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
   const key = `lvm.device.session.${base.host.replace(/[^a-zA-Z0-9.-]/g, '_')}`
   let generation = 0
   let writes: Promise<unknown> = Promise.resolve()
+  function storedValue(value: DeviceCredentials) {
+    const user: DeviceCredentials['user'] = { id: value.user.id }
+    for (const field of ['email', 'role']) if (typeof value.user[field] === 'string') user[field] = String(value.user[field]).slice(0, 254)
+    const metadata = value.user.user_metadata as { full_name?: unknown } | undefined
+    if (typeof metadata?.full_name === 'string') user.user_metadata = { full_name: metadata.full_name.slice(0, 120) }
+    // Membership lists can exceed native keychain item limits and are always
+    // checked server-side. Persist only a small identity snapshot with the token.
+    return JSON.stringify({ access_token: value.access_token, expires_at: value.expires_at, user })
+  }
   const write = (action: () => Promise<void>) => {
     const task = writes.then(action)
     writes = task.catch(() => undefined)
@@ -19,10 +28,10 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
     await writes
     const raw = await storage.getItem(key)
     if (!raw) return null
-    const value = JSON.parse(raw) as DeviceCredentials
-    if (!/^n_[A-Za-z0-9_-]{43}$/.test(value.access_token) || !value.user?.id || !Number.isSafeInteger(value.expires_at)) throw new Error('Invalid device session')
-    if (value.expires_at * 1000 <= now()) {
-      await write(() => storage.removeItem(key))
+    let value: DeviceCredentials | null = null
+    try { value = JSON.parse(raw) as DeviceCredentials } catch { /* Discard an unreadable credential, not a native storage failure. */ }
+    if (!value || !/^n_[A-Za-z0-9_-]{43}$/.test(value.access_token) || !value.user?.id || !Number.isSafeInteger(value.expires_at) || value.expires_at * 1000 <= now()) {
+      await write(async () => { if (await storage.getItem(key) === raw) await storage.removeItem(key) })
       return null
     }
     return value
@@ -40,6 +49,9 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
     headers.delete('cookie'); headers.delete('origin'); headers.delete('authorization')
     headers.set('X-LVM-Client', 'native')
     if (current) headers.set('Authorization', `Bearer ${current.access_token}`)
+    // Local sign-out must survive a lost connection or a failed server reply.
+    // The captured token still revokes the remote session when reachable.
+    if (action === 'logout') await write(async () => { if (generation === expectedGeneration) await storage.removeItem(key) })
     const response = await fetcher(url.href, { ...init, headers, credentials: 'omit', redirect: 'error' })
     if (response.url && new URL(response.url).origin !== base.origin) throw new Error('Device API redirect refused')
     if (response.status === 401 && current && expectedGeneration === generation) {
@@ -53,17 +65,17 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
     } else if (data.session?.access_token) {
       const value = data.session as DeviceCredentials
       if (!/^n_[A-Za-z0-9_-]{43}$/.test(value.access_token) || !value.user?.id || !Number.isSafeInteger(value.expires_at)) throw new Error('Invalid server device session')
-      await write(async () => { if (generation === expectedGeneration) await storage.setItem(key, JSON.stringify(value)) })
+      await write(async () => { if (generation === expectedGeneration) await storage.setItem(key, storedValue(value)) })
     } else if (action === 'session' && data.session && current) {
       if (data.session.user?.id !== current.user.id) {
         await write(async () => { if (generation === expectedGeneration) await storage.removeItem(key) })
         throw new Error('Device session identity mismatch')
       }
       data.session = { ...current, ...data.session }
-      await write(async () => { if (generation === expectedGeneration) await storage.setItem(key, JSON.stringify(data.session)) })
+      await write(async () => { if (generation === expectedGeneration) await storage.setItem(key, storedValue(data.session)) })
       return new Response(JSON.stringify(data), { status: response.status, headers: response.headers })
     }
     return response
   }
-  return { fetch: transport, readStoredSession: read }
+  return { fetch: transport, readStoredSession: read, clearSession: async () => { ++generation; await write(() => storage.removeItem(key)) } }
 }

@@ -67,3 +67,11 @@ it('expires locally and never merges a different server identity with the saved 
   const expired = createDeviceTransport({ apiUrl, storage: store, fetcher, now: () => session.expires_at * 1000 })
   expect(await expired.readStoredSession()).toBeNull()
 })
+it('keeps the encrypted record small without persisting server membership capabilities', async () => {
+  const store = storage()
+  const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ session: { ...session, user: { ...session.user, memberships: Array.from({ length: 500 }, () => ({ capabilities: ['admin'] })) } } })))
+  const client = createDeviceTransport({ apiUrl, storage: store, fetcher })
+  await client.fetch(`${apiUrl}/auth/login`, { method: 'POST' })
+  expect((await client.readStoredSession())?.user.memberships).toBeUndefined()
+  expect([...store.values.values()][0].length).toBeLessThan(1000)
+})

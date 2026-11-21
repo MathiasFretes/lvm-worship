@@ -47,6 +47,11 @@ describe('validatePasswordStrength', () => {
 })
 
 describe('changePassword', () => {
+  it('keeps the replacement device session when the VPS already revoked all previous sessions', async () => {
+    const client = fakeSupabase({ passwordChangeRevokesSessions: true })
+    expect(await changePassword(client, input())).toEqual({ ok: true, othersSignedOut: true })
+    expect(client.auth.signOut).not.toHaveBeenCalled()
+  })
   it('verifies, updates, then drops other sessions — in that order', async () => {
     const supabase = fakeSupabase()
     const result = await changePassword(supabase, input())

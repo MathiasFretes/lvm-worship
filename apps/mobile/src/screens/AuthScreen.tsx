@@ -18,7 +18,7 @@ import ConstrainedContent from '../components/ConstrainedContent'
 import HeroOverscrollFill from '../components/HeroOverscrollFill'
 import TextField from '../components/TextField'
 import SymbolIcon from '../components/SymbolIcon'
-import { supabase } from '../lib/supabase'
+import { supabase, usesVpsBackend } from '../lib/supabase'
 import { MIN_PASSWORD_LENGTH, validateSignIn, validateSignUp } from '../lib/authValidation'
 import { appleSignIn, emailSignIn, emailSignUp, googleSignIn, type AuthResult } from '../lib/authFlows'
 import { makeAppleDeps, makeGoogleDeps } from '../lib/authDeps'
@@ -203,7 +203,7 @@ export default function AuthScreen() {
             autoComplete={isSignup ? 'new-password' : 'current-password'}
             textContentType={isSignup ? 'newPassword' : 'password'}
             labelAccessory={
-              isSignup ? undefined : (
+                isSignup || usesVpsBackend ? undefined : (
                 <Pressable onPress={onForgot} hitSlop={8} accessibilityRole="button">
                   <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.colors.textAccent }}>
                     {tx('forgot')}
@@ -242,6 +242,7 @@ export default function AuthScreen() {
             <SymbolIcon name="chevron.right" size={13} color={t.colors.onAccent} weight="semibold" />
           </Pressable>
 
+          {!usesVpsBackend && <>
           {/* Divider */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md }}>
             <View style={{ flex: 1, height: 1, backgroundColor: t.colors.border }} />
@@ -294,6 +295,7 @@ export default function AuthScreen() {
             ) : null}
           </View>
 
+          </>}
           {isSignup ? (
             <Text style={{ fontSize: 12.5, color: t.colors.sec, textAlign: 'center' }}>
               {tx('terms.prefix')}
