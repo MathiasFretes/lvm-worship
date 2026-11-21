@@ -1,6 +1,21 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "service": {
+    "connected": {
+      "send": "Send for review",
+      "refresh": "Update Service context",
+      "cancelSend": "Cancel pending send",
+      "duplicate": "Duplicate {{title}}",
+      "pending": "Saved on this device. Waiting to send to LVM Service.",
+      "local": "Your changes are saved on this device.",
+      "sent": "Sent to LVM Service for review.",
+      "conflict": "This service changed. Your local repertoire is safe. Cancel the pending send, update the context, then review and send again.",
+      "sendError": "Could not send the repertoire. Your local copy is safe. Check your connection and retry.",
+      "loadError": "Could not update the Service context. Saved local work has been kept. Check your connection and retry.",
+      "noAccess": "This service is unavailable or your permission changed. Your local repertoire has been kept.",
+      "noContext": "Connect to load this service for the first time.",
+      "invalidLink": "This Service link is unavailable. Open a new preparation link from LVM Service."
+    },
     "title": "LVM Service 셋리스트",
     "import": "Service 컨텍스트 가져오기",
     "export": "WorshipPlan 공유",

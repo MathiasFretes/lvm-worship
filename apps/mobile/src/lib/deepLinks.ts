@@ -54,6 +54,11 @@ export function resolveDeepLinkPath(path: string): string {
       return `/setlist/import?code=${encodeURIComponent(seg[2])}`
     }
 
+    // Service is an editor route, not a shared setlist slug. Keep its scope
+    // parameters for the authenticated route to validate, including duplicates.
+    if (seg[0] === 'setlist' && ((seg.length === 2 && seg[1] === 'service') ||
+      (seg.length === 1 && ['churchId', 'serviceId', 'branchId'].some(key => url.searchParams.has(key))))) return `/setlist/service${url.search}`
+
     // Slug-list form -> import preview. seg[1] is the comma-joined, per-item
     // URI-encoded slug list; forward it and the raw toKeys value verbatim.
     // Skips the app's own /setlist/import. A personal /setlist/<uuid> is only
@@ -111,6 +116,7 @@ export function resolveDeepLinkPath(path: string): string {
 export function deepLinkStackRouteKey(target: string): string | null {
   if (target.startsWith('/viewer/')) return 'viewer/[slug]'
   if (target.startsWith('/setlist/import')) return 'setlist/import'
+  if (target === '/setlist/service' || target.startsWith('/setlist/service?')) return 'setlist/service'
   if (target.startsWith('/session/')) return 'session/[code]'
   return null
 }

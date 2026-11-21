@@ -1,6 +1,21 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "service": {
+    "connected": {
+      "send": "Enviar a revisión",
+      "refresh": "Actualizar contexto de Service",
+      "cancelSend": "Cancelar envío pendiente",
+      "duplicate": "Duplicar {{title}}",
+      "pending": "Guardado en este dispositivo. Pendiente de envío a LVM Service.",
+      "local": "Tus cambios están guardados en este dispositivo.",
+      "sent": "Enviado a LVM Service para revisión.",
+      "conflict": "Este culto cambió. Tu repertorio local está a salvo. Cancelá el envío pendiente, actualizá el contexto, revisá y volvé a enviar.",
+      "sendError": "No se pudo enviar el repertorio. Tu copia local está a salvo. Revisá tu conexión y reintentá.",
+      "loadError": "No se pudo actualizar el contexto de Service. Se conserva el trabajo local. Revisá tu conexión y reintentá.",
+      "noAccess": "Este culto no está disponible o cambiaron tus permisos. Se conserva tu repertorio local.",
+      "noContext": "Conectate para cargar este culto por primera vez.",
+      "invalidLink": "Este enlace de Service no está disponible. Abrí un nuevo enlace de preparación desde LVM Service."
+    },
     "title": "Repertorio de LVM Service",
     "import": "Importar contexto de Service",
     "export": "Compartir WorshipPlan",
