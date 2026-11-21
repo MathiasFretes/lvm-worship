@@ -73,8 +73,13 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
       }
       data.session = { ...current, ...data.session }
       await write(async () => { if (generation === expectedGeneration) await storage.setItem(key, storedValue(data.session)) })
+      if (generation !== expectedGeneration) throw new Error('Device account changed while authentication was pending')
       return new Response(JSON.stringify(data), { status: response.status, headers: response.headers })
     }
+    // Secure storage is asynchronous too. A logout or account replacement can
+    // begin while a write is pending, after the earlier response check passed.
+    // Never let that old response produce a new auth event in the caller.
+    if (generation !== expectedGeneration) throw new Error('Device account changed while authentication was pending')
     return response
   }
   return { fetch: transport, readStoredSession: read, clearSession: async () => { ++generation; await write(() => storage.removeItem(key)) } }

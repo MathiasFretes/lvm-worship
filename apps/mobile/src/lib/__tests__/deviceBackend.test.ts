@@ -55,3 +55,32 @@ it('supports local-only logout without sending credentials or accidentally revok
   expect(app.fetcher).toHaveBeenCalledTimes(before)
   expect(await app.readStoredSession()).toBeNull()
 })
+
+it('does not emit a late login when local logout starts during secure credential persistence', async () => {
+  let stored: string | null = null
+  let releaseWrite!: () => void
+  let writeStarted!: () => void
+  const started = new Promise<void>(resolve => { writeStarted = resolve })
+  const blocked = new Promise<void>(resolve => { releaseWrite = resolve })
+  const app = createDeviceBackend({ apiUrl,
+    storage: {
+      getItem: async () => stored,
+      setItem: async (_key, value) => { writeStarted(); await blocked; stored = value },
+      removeItem: async () => { stored = null },
+    },
+    fetcher: async input => new Response(JSON.stringify(String(input).endsWith('/login') ? { session, user: session.user } : { session: null })),
+  })
+  const callback = vi.fn()
+  const subscription = app.client.auth.onAuthStateChange(callback)
+  await vi.waitFor(() => expect(callback).toHaveBeenCalledWith('INITIAL_SESSION', null))
+  const login = app.client.auth.signInWithPassword({ email: 'owner@example.com', password: 'secret' })
+  await started
+  const logout = app.client.auth.signOut({ scope: 'local' })
+  releaseWrite()
+  const [loginResult] = await Promise.all([login, logout])
+  expect(loginResult.error).toBeTruthy()
+  expect(callback.mock.calls.some(([event]) => event === 'SIGNED_IN')).toBe(false)
+  expect(callback).toHaveBeenLastCalledWith('SIGNED_OUT', null)
+  expect(await app.readStoredSession()).toBeNull()
+  subscription.data.subscription.unsubscribe()
+})
