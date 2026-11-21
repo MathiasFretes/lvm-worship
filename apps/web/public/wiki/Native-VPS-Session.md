@@ -6,7 +6,7 @@ Estado del 21 de noviembre: frontera de transporte implementada y comprobada en 
 
 Las operaciones de almacenamiento se serializan. Un login atrasado no puede recuperar una sesión después de logout; se comprueban expiración e identidad al recuperar el perfil. Una caída de red conserva la sesión no expirada para que el host pueda mantener material offline, sin otorgar permisos del servidor.
 
-Cinco pruebas del transporte y el typecheck móvil pasaron. La suite móvil completa pasó 924 pruebas antes de añadir la quinta prueba de este transporte (no se presenta ese conteo como ejecución del último cambio). También pasó una prueba HTTP contra PostgreSQL/API aislados usando este transporte: misma cuenta web/nativa, lectura privada, cookie web sin token expuesto, rechazo de solicitudes nativas desde navegador y revocación por cambio de contraseña.
+Cinco pruebas del transporte, el typecheck móvil y la suite móvil completa de 925 pruebas pasaron. Los exports Metro Android/iOS también pasaron, sin constituir un build nativo instalado ni probar el nuevo transporte desde las pantallas (todavía no está activado). También pasó una prueba HTTP contra PostgreSQL/API aislados usando este transporte: misma cuenta web/nativa, lectura privada, cookie web sin token expuesto, rechazo de solicitudes nativas desde navegador y revocación por cambio de contraseña.
 
 Para repetir el preflight, preparar la API aislada de Service y el túnel a `127.0.0.1:54319`; ejecutar desde Service `node --experimental-strip-types scripts/verify-native-session.mjs`. No acepta un destino productivo. El almacenamiento de esa comprobación es memoria: no prueba Keystore ni Keychain.
 
