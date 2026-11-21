@@ -653,7 +653,7 @@ function SetlistWorkspacePage({ connected }) {
             } catch (error) { showToast(error.message) }
           }}>{t('common:save')}</Button>
           {connected.pending && <Button variant="secondary" disabled={connected.busy} onClick={connected.cancelPending}>{t('common:cancel')}</Button>}
-          <a href={`/service/services/${encodeURIComponent(worshipContext?.serviceId || searchParams.get('serviceId'))}`}>{t('setlist.returnToService')}</a>
+          <a href={`/service/services/${encodeURIComponent(worshipContext?.serviceId || searchParams.get('serviceId'))}?churchId=${encodeURIComponent(searchParams.get('churchId'))}`}>{t('setlist.returnToService')}</a>
         </Toolbar>
       </section>}
       {!connected && !routeId && worshipContext && (
