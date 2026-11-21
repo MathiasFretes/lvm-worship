@@ -20,6 +20,8 @@ Se instaló `expo-secure-store ~55.0.18` compatible con SDK 55 y se añadió su 
 
 Los controles Google/Apple y recuperación por correo se ocultan en modo VPS porque la API no los soporta. Las solicitudes de exportación pasan por el transporte del VPS y no pueden enviar su token opaco al antiguo dominio. Los endpoints de exportación todavía requieren su migración funcional; el enrutamiento seguro no equivale a implementarlos.
 
+Los enlaces entrantes de autenticación anteriores se descartan en modo VPS sin guardarlos como credencial pendiente. Las rutas directas de confirmación, recuperación y cambio por email vuelven a `/login`; así no intentan importar un token de Supabase en el cliente VPS. Los builds sin la variable VPS mantienen sus rutas anteriores.
+
 Pasaron 929 pruebas en la suite móvil completa, el typecheck y ambos exports Android/iOS con el modo VPS seleccionado. Después se añadió y aprobó una prueba adicional de logout exclusivamente local: las tres pruebas actuales del adaptador pasan y comprueban que esa operación no envía credenciales y que pedir logout de otras sesiones no borra la sesión actual. No se atribuye el conteo de la ejecución anterior a esa prueba nueva.
 
 Todavía se requiere instalar una nueva compilación nativa que incluya SecureStore y probar login, lectura, repertorios, reconexión y cambio de cuenta sobre un dispositivo/emulador. En esta PC no se encontró `emulator.exe` en el SDK Android por defecto; no se retomó el teléfono que el usuario pidió omitir. Los exports Metro no prueban Keystore ni ese recorrido. La API se publicará coordinadamente después de ese gate; no activar la variable contra el VPS productivo actual.
