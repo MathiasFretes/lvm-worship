@@ -378,6 +378,7 @@ export function useSetlistBuilder(setlistId) {
     name,
     serviceDate,
     items,
+    entryCount: entries.length,
     songs,
     songsLoading,
     songsError,

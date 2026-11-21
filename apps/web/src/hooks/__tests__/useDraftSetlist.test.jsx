@@ -29,6 +29,20 @@ function stored() {
 }
 
 describe('useDraftSetlist', () => {
+  it('restores and clears only the explicitly scoped Service draft', async () => {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ name: 'Personal', entries: [{ songId: 'grace' }] }))
+    const first = renderHook(() => useDraftSetlist({ storageKey: 'service-account-a-church-a' }))
+    act(() => { first.result.current.addSong(SONGS[0]); first.result.current.setName('Culto A') })
+    expect(JSON.parse(localStorage.getItem('service-account-a-church-a')).name).toBe('Culto A')
+    expect(stored().name).toBe('Personal')
+    first.unmount()
+    const restored = renderHook(() => useDraftSetlist({ storageKey: 'service-account-a-church-a' }))
+    expect(restored.result.current.items[0].title || restored.result.current.items[0].song?.title).toBe('Abba')
+    await act(async () => { await restored.result.current.deleteSet() })
+    expect(localStorage.getItem('service-account-a-church-a')).toBeNull()
+    expect(stored().name).toBe('Personal')
+    restored.unmount()
+  })
   it('retains different occurrence notes when replacing and reopening a draft', () => {
     const first = renderHook(() => useDraftSetlist())
     act(() => first.result.current.replaceEntries([

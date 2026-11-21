@@ -99,7 +99,7 @@ export function toWorkingItems(entries, catalog) {
     const catalogSong = byDbId.get(entry.songId) || byId.get(entry.songId)
     const song = entry.song || entrySongFromCatalog(catalogSong)
     if (!song) continue
-    out.push({ entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, notes: entry.notes ?? null, sectionOrderText: entry.sectionOrderText || '', song })
+    out.push({ entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, notes: entry.notes ?? null, sectionOrderText: entry.sectionOrderText || '', song, ...(entry.sourceSong ? { sourceSong: entry.sourceSong } : {}) })
   }
   return out
 }

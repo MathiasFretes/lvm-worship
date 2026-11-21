@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import React from 'react'
 import { AuthProvider, useAuth } from '../useAuth'
+import { grantOfflineAccess, offlineOwner } from '../../utils/setlists/offlineAccess'
 
 const { authListener, unsubscribe } = vi.hoisted(() => ({
   authListener: vi.fn(),
@@ -27,6 +28,16 @@ vi.mock('../../lib/supabase', () => ({
 const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>
 
 describe('LVM authentication state contract', () => {
+  it('revokes downloaded material on explicit logout while keeping network failures signed out for remote actions', async () => {
+    const { result, unmount } = renderHook(useAuth, { wrapper })
+    grantOfflineAccess('first')
+    await act(async () => authListener('SESSION_UNAVAILABLE', null))
+    expect(offlineOwner()).toBe('first')
+    expect(result.current.isLoggedIn).toBe(false)
+    await act(async () => authListener('SIGNED_OUT', null))
+    expect(offlineOwner()).toBe('')
+    unmount()
+  })
   it('keeps protected worship routes pending until Supabase reports a session', () => {
     const { result } = renderHook(useAuth, { wrapper })
 

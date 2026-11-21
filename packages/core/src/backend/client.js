@@ -34,7 +34,7 @@ export function createLvmBackend({ url, fetch: fetchImpl = globalThis.fetch }) {
     },
     onAuthStateChange(callback) {
       listeners.add(callback)
-      auth.getSession().then(result => { if (listeners.has(callback)) callback('INITIAL_SESSION', result.data?.session || null) })
+      auth.getSession().then(result => { if (listeners.has(callback)) callback(result.error ? 'SESSION_UNAVAILABLE' : 'INITIAL_SESSION', result.data?.session || null) })
       return { data: { subscription: { unsubscribe: () => listeners.delete(callback) } } }
     },
     async signInWithPassword(input) {

@@ -37,6 +37,8 @@ export default function SetActions({
   onExportService,
   onImportContext,
   onExportWorshipPlan,
+  onDownloadRehearsal,
+  offlineProgress,
 }) {
   const { t } = useTranslation('pages')
   const [pptOpen, setPptOpen] = useState(false)
@@ -57,6 +59,10 @@ export default function SetActions({
 
   return (
     <>
+      {onDownloadRehearsal ? <Button size="sm" variant="secondary" iconLeft={<DownloadIcon />}
+        disabled={empty || !!offlineProgress} loading={!!offlineProgress} onClick={onDownloadRehearsal}>
+        {offlineProgress ? t('mixer.saving') : t('mixer.save')}
+      </Button> : null}
       <Button
         size="sm"
         variant="secondary"

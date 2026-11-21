@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { hasMinRole as checkHasMinRole } from '../lib/roles'
+import { reconcileOfflineAccess } from '../utils/setlists/offlineAccess'
 
 const AuthContext = createContext(null)
 
@@ -38,6 +39,7 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (ignore) return
+      reconcileOfflineAccess(_event, newSession)
       if (newSession) {
         // Keep the existing (cached) profile while re-fetching so the navbar
         // avatar doesn't vanish on tab refocus / token refresh.

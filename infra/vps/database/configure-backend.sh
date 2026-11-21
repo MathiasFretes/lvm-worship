@@ -17,7 +17,7 @@ docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STO
 if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='004_public_site'")" = '0' ]; then
   docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/004_public_site.sql
 fi
-for version in 005_public_inbox 006_catalog_guards 007_site_editor 008_church_identity 009_account_directory 010_church_planning; do
+for version in 005_public_inbox 006_catalog_guards 007_site_editor 008_church_identity 009_account_directory 010_church_planning 011_worship_exchange; do
   if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='$version'")" = '0' ]; then
     docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < "source/service-api/schema/$version.sql"
   fi
