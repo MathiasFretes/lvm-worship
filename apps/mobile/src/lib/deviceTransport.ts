@@ -80,6 +80,9 @@ export function createDeviceTransport({ apiUrl, storage, fetcher = fetch, now = 
     // begin while a write is pending, after the earlier response check passed.
     // Never let that old response produce a new auth event in the caller.
     if (generation !== expectedGeneration) throw new Error('Device account changed while authentication was pending')
+    // Reads may have started during this mutation, with its starting generation
+    // but without its new credential. Committing invalidates those reads too.
+    if (mutatingSession) ++generation
     return response
   }
   return { fetch: transport, readStoredSession: read, clearSession: async () => { ++generation; await write(() => storage.removeItem(key)) } }

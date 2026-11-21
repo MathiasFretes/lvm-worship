@@ -75,3 +75,24 @@ it('keeps the encrypted record small without persisting server membership capabi
   expect((await client.readStoredSession())?.user.memberships).toBeUndefined()
   expect([...store.values.values()][0].length).toBeLessThan(1000)
 })
+
+it('does not let a session check started during login erase the committed credential', async () => {
+  const store = storage()
+  let finishLogin!: (value: Response) => void
+  let finishCheck!: (value: Response) => void
+  const client = createDeviceTransport({ apiUrl, storage: store, fetcher: async input => new Promise<Response>(resolve => {
+    if (String(input).endsWith('/login')) finishLogin = resolve
+    else finishCheck = resolve
+  }) })
+  const login = client.fetch(`${apiUrl}/auth/login`, { method: 'POST' })
+  await vi.waitFor(() => expect(finishLogin).toBeDefined())
+  const check = client.fetch(`${apiUrl}/auth/session`)
+  // Attach rejection handling before releasing either response.
+  const checked = check.then(() => null, error => error)
+  await vi.waitFor(() => expect(finishCheck).toBeDefined())
+  finishLogin(new Response(JSON.stringify({ session })))
+  await login
+  finishCheck(new Response('{"session":null}'))
+  expect(await checked).toBeInstanceOf(Error)
+  expect(await client.readStoredSession()).toEqual(session)
+})

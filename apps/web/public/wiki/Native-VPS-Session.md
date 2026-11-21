@@ -39,3 +39,11 @@ Es un APK **debug**, sin `index.android.bundle` y dependiente de Metro: no es un
 Después de la compilación se repitieron la suite móvil y el chequeo de tipos sobre `7bd5330b9`: **930 pruebas aprobadas en 85 archivos**, con `tsc --noEmit` aprobado. Esta ejecución incluye la prueba adicional de logout local y las rutas que aíslan enlaces de autenticación anteriores.
 
 La revisión posterior reprodujo una carrera durante la persistencia cifrada: iniciar logout local mientras `setItem` estaba pendiente permitía devolver un login ya invalidado. El transporte vuelve a comprobar la generación después de esa escritura. La regresión falló antes del cambio y pasó después; también pasaron el typecheck y la suite completa actual de **931 pruebas en 85 archivos**. Es una corrección TypeScript posterior al APK descrito arriba, no una nueva compilación instalada.
+
+## Notificaciones de cuenta y consultas concurrentes
+
+La siguiente revisión amplió esa protección al tramo posterior a fetch: la decodificación JSON y los eventos que reciben las pantallas. El adaptador ya no reenvía las notificaciones sin generación del cliente base; controla la suscripción inicial, login, alta, cambio de contraseña, logout y validación en primer plano. Una operación superada devuelve un error de cambio de cuenta y no emite un evento con la identidad anterior. `getUser` usa la misma consulta de sesión protegida.
+
+La generación cambia al iniciar y al completar una mutación de sesión. Así también se invalidan las consultas que empezaron mientras el login estaba pendiente, antes de existir su nueva credencial. La misma regla se aplica al transporte para que una respuesta vacía atrasada no retire el token recién guardado.
+
+Las regresiones reproducen logout durante decodificación de login, respuesta inicial vacía posterior a login, dos logins con decodificación invertida, validación en primer plano atrasada y consultas iniciadas durante un login pendiente. Las pruebas de los fallos de notificación y de la consulta concurrente fallaron antes de sus correcciones. La suite completa posterior pasó **937 pruebas en 85 archivos**, `tsc --noEmit` pasó y se completaron los exports Metro Android/iOS con el modo VPS seleccionado. No se activó el modo VPS en producción ni se da por probado el flujo en un dispositivo.
