@@ -17,16 +17,12 @@ docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STO
 if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='004_public_site'")" = '0' ]; then
   docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/004_public_site.sql
 fi
+for version in 005_public_inbox 006_catalog_guards 007_site_editor 008_church_identity 009_account_directory; do
+  if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='$version'")" = '0' ]; then
+    docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < "source/service-api/schema/$version.sql"
+  fi
+done
 # Passwords are passed over stdin, never as command arguments or stored in source.
-if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='007_site_editor'")" = '0' ]; then
-  docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/007_site_editor.sql
-fi
-if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='006_catalog_guards'")" = '0' ]; then
-  docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/006_catalog_guards.sql
-fi
-if [ "$(docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -Atc "SELECT count(*) FROM private.migrations WHERE version='005_public_inbox'")" = '0' ]; then
-  docker compose exec -T postgres psql -U lvm_owner -d lvm_worship -v ON_ERROR_STOP=1 < source/service-api/schema/005_public_inbox.sql
-fi
 {
   printf "ALTER ROLE lvm_api PASSWORD '%s';\n" "$(cat secrets/api_password)"
   printf "ALTER ROLE lvm_rest PASSWORD '%s';\n" "$(cat secrets/rest_password)"
