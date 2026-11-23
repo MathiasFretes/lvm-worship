@@ -5,13 +5,13 @@ Worship PR #4 and Service PR #19 remain drafts.
 
 ## Exact versions
 
-- Application build and verifier: `7b64c2840f21465340281f0ea6bed322cd1f2967`.
-- Service review UI: `83c4c5a4f96676dc0e5fa74f26fce531062a6cb5`, served as an authenticated
+- Application build and verifier: `03636384cbe0b3675c5b3d95817160d0ff5f8e81`.
+- Service review UI: `72e11a5fb682b1171040384974be09ae1c6a1100`, served as an authenticated
   `/service/song-review` preview at `http://127.0.0.1:4175`.
 - API source/image label: `83c4c5a4f96676dc0e5fa74f26fce531062a6cb5`.
 - API image: `sha256:da2acd7b55554a565eb98032c1ab971ed40728c594488153284c2ce00e231ae7`.
-- Migration 012 SHA-256: `d2d62820ccb26351d21c22ff5f64d4d57d65f1f5012bf3b057b36badb24eca25`.
-- Run ID: `c748a1e2-a666-4294-8581-c59e8e706246`. Subsequent evidence-only commits do not change the tested
+- Migration 012 SHA-256: `9e5ad7eb84631e591a9a5eefd7c886fc12f7e695b813a97c096d7879c6116491`.
+- Run ID: `b77a8c4f-95a8-4ffa-80b5-fcb44a832835`. Subsequent evidence-only commits do not change the tested
   application/API source.
 - Production stays at `7364f3ee8ae15ca2b4fb919cdc0c1e57951fd18e`; the candidate
   fixes below have **not** been installed there. The default locale remains `en`.
@@ -75,7 +75,7 @@ ordinary-user denial and administrator-only deletion.
 
 ## Results
 
-The final report has 24 passing checks and no browser errors. It covers:
+The final report has 27 passing checks and no browser errors. It covers:
 
 - Ordinary-user submission without direct publication; direct API writes and
   approvals denied; forged editor role in the frontend still denied by PostgreSQL.
@@ -101,7 +101,7 @@ reserved native Android fixtures were preserved.
 
 ## Automated validation and rollout dependencies
 
-Worship: 567 tests in 97 files, clean lint/parity and full production build.
+Worship: 570 tests in 97 files, clean lint/parity and full production build.
 Service: 57 UI/domain tests, 14 API unit tests plus fresh PostgreSQL migration and SQL gates for
 planning, worship exchange and editor transactions. Service CI explicitly skips
 `*.down.sql` while applying migrations. The release guard still rejects old main.
@@ -163,4 +163,45 @@ Neither native rollout nor production migration is part of this delivery.
 Local QA initially found a preview-only setup error (Service assets served with
 `/` instead of `/service/`); starting the preview with
 `LVM_SERVICE_ASSET_BASE=/service/` fixed it. The failed run cleaned its fixtures;
-the complete replacement run above passed all 24 checks.
+the replacement run passed all 24 checks. The expanded lifecycle run below passed 27 checks.
+
+
+## B4 / B5: draft lifecycle and retained history
+
+Both observations were reproduced on the previous candidate in a disposable
+PostgreSQL database and rolled back. The corrected migration was then applied
+and the complete SQL regression, secure rollback and reapply sequence passed.
+`editor-draft-lifecycle.sql` runs in CI before rollback and again after reapply.
+
+- `save_draft`, `submit_draft` and `delete_draft` require status `draft`, even with
+  the current revision. Submitted, published and archived rows return 409 without
+  changing content/status/history. An already-confirmed operation can still
+  replay its receipt after a state transition; it never re-executes the mutation.
+- Rejection returns a submitted draft to `draft`; saving a revision then submitting
+  again preserves the original rejected proposal's immutable payload. Approval
+  marks the draft published and links its public song. SQL checks all transitions
+  with the ordinary user role and a separate editor reviewer.
+- Deletion of a draft with any proposal history (including rejected proposals) or
+  repertoire links returns 409. No automatic archiving is introduced. Both draft
+  foreign keys now use NO ACTION, preventing cascading history/link loss even
+  independently of the RPC. The rollback retains these constraints.
+- A never-submitted, unlinked draft can still be deleted, and a lost deletion
+  acknowledgement replays the original receipt after the row is gone.
+- Worship disables fields, save and submit for non-draft personal songs; cancel
+  and preview remain usable. Three UI unit regressions cover submitted, published
+  and archived rows. A locked row displays server content instead of restoring an
+  editable local journal over it. Server checks remain authoritative after a
+  status change in another session.
+
+The expanded real browser/API gate passed **27 checks**, including the submitted
+read-only screen, rejection/unlock, rejected/approved history retained on denied
+deletion, published immutability and repertoire links. SQL additionally verifies
+editing after rejection and the archived state. Existing QA account/song hashes
+matched before/after; the normal browser and production data were untouched.
+
+Migration source: Service `72e11a5fb682b1171040384974be09ae1c6a1100`.
+The API runtime remains the previously verified `83c4c5a` image: API JavaScript
+has no difference; this iteration changes SQL, tests and documentation. Its
+migration is applied only in QA, and the report records the new schema hash
+separately from that unchanged API image/source. The compiled Service UI is from
+`72e11a5` and Worship from the application/verifier SHA listed above.
