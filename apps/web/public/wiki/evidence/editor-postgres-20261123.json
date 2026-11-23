@@ -1,0 +1,47 @@
+{
+  "run": "3c973d1b-c8d0-45fc-b1f8-e97d96178b7e",
+  "database": "lvm_planning_qa_20261121",
+  "frontend": "http://127.0.0.1:4174",
+  "clientCommit": "bb753f97c973c6e4858bc885228f48aabfdad36e",
+  "apiCommit": "602a7781eac83a1e612d0ac37a9bfce089f9a05b",
+  "checks": [
+    "real UI login against isolated API/PostgreSQL",
+    "lost submission acknowledgement replays the same operation without duplicate proposals",
+    "ordinary user cannot insert even minimal audit rows or forge a publication action",
+    "ordinary user submits real pending addition without publishing",
+    "replayed approval returns the same published song without a duplicate",
+    "PostgreSQL denies ordinary direct publication/review; editor approval preserves ChordPro",
+    "a forged editor role in the frontend still cannot publish through the real API/PostgreSQL",
+    "audit SQL failure rolls back publication; lost acknowledgement retries publish once and keep local edits",
+    "saved song appears immediately in the library without reloading",
+    "editor creates via UI and reloads persisted PostgreSQL content",
+    "audit failure during approval preserves pending proposal and previous published content",
+    "user edit remains pending; reviewer UI approval persists exactly",
+    "reviewer UI rejection preserves published content; repeated decision is idempotent and conflicting decision is 409",
+    "private draft UI save/reload and cross-account read/write isolation",
+    "failed draft submission rolls back status/proposal; lost acknowledgement retry creates one proposal",
+    "draft UI submission and atomic approval link it to published song",
+    "concurrent identical operations create one proposal; reused IDs and stale song revisions return 409 without overwrites",
+    "role revocation rejects subsequent writes with the existing session"
+  ],
+  "errors": [],
+  "cleaned": true,
+  "apiImage": "sha256:f74867fb73a68b64df83f76b474e174baf875208cb9b5b33cf53afdaf0364811",
+  "schemaSha256": "dfc8d181207d0a08f6162d32162d00381585e687857d46b4fabfb5b8b972891c",
+  "before": {
+    "users": 3,
+    "songs": 2,
+    "drafts": 0,
+    "operations": 0,
+    "existingUsersFingerprint": "f46591408eff34e609cd5ba7a9a4f3b1",
+    "existingSongsFingerprint": "f57db6d45055d0b8322bccfcd1c6e281"
+  },
+  "after": {
+    "users": 3,
+    "songs": 2,
+    "drafts": 0,
+    "operations": 0,
+    "existingUsersFingerprint": "f46591408eff34e609cd5ba7a9a4f3b1",
+    "existingSongsFingerprint": "f57db6d45055d0b8322bccfcd1c6e281"
+  }
+}

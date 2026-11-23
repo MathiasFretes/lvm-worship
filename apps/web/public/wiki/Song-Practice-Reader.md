@@ -73,3 +73,8 @@ These are frontend checks, not evidence of real PostgreSQL authorization or
 successful publication. Public test-song saving still awaits explicit user
 confirmation. Real draft/proposal persistence and permission gates, the physical
 Android gate and integration into `main` remain separate acceptance criteria.
+
+
+The follow-up [real PostgreSQL editor gate](Editor-Postgres-Acceptance.md) found
+and corrected transactional/audit/retry and UI-refresh defects in the candidate.
+It does not certify those fixes as deployed or authorize integration.
