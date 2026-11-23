@@ -5,15 +5,14 @@ Worship PR #4 and Service PR #19 remain drafts.
 
 ## Exact versions
 
-- Application build: `ba7f508f9915003e9306dd7bd627bc60de12f243`.
-- Final verifier: `65e406e609c552441dd371b28f2bffe3d7e1039e`. Its application source has no difference
-  from the application-build commit; follow-up commits add the verifier and evidence;
-  `apps/web/src`, shared core and tokens have no difference between these commits.
-- Service review UI: `ffc4614faad338b2fcf614b0987329b93487f6f8`, served as an
-  authenticated `/service/song-review` preview at `http://127.0.0.1:4175`.
-- API source/image label: `602a7781eac83a1e612d0ac37a9bfce089f9a05b`.
-- API image: `sha256:f74867fb73a68b64df83f76b474e174baf875208cb9b5b33cf53afdaf0364811`.
-- Migration 012 SHA-256: `dfc8d181207d0a08f6162d32162d00381585e687857d46b4fabfb5b8b972891c`.
+- Application build and verifier: `7b64c2840f21465340281f0ea6bed322cd1f2967`.
+- Service review UI: `83c4c5a4f96676dc0e5fa74f26fce531062a6cb5`, served as an authenticated
+  `/service/song-review` preview at `http://127.0.0.1:4175`.
+- API source/image label: `83c4c5a4f96676dc0e5fa74f26fce531062a6cb5`.
+- API image: `sha256:da2acd7b55554a565eb98032c1ab971ed40728c594488153284c2ce00e231ae7`.
+- Migration 012 SHA-256: `d2d62820ccb26351d21c22ff5f64d4d57d65f1f5012bf3b057b36badb24eca25`.
+- Run ID: `c748a1e2-a666-4294-8581-c59e8e706246`. Subsequent evidence-only commits do not change the tested
+  application/API source.
 - Production stays at `7364f3ee8ae15ca2b4fb919cdc0c1e57951fd18e`; the candidate
   fixes below have **not** been installed there. The default locale remains `en`.
 
@@ -76,7 +75,7 @@ ordinary-user denial and administrator-only deletion.
 
 ## Results
 
-The final report has 20 passing checks and no browser errors. It covers:
+The final report has 24 passing checks and no browser errors. It covers:
 
 - Ordinary-user submission without direct publication; direct API writes and
   approvals denied; forged editor role in the frontend still denied by PostgreSQL.
@@ -102,8 +101,8 @@ reserved native Android fixtures were preserved.
 
 ## Automated validation and rollout dependencies
 
-Worship: 566 tests in 97 files, clean lint/parity and full production build.
-Service: 56 UI/domain tests, 14 API unit tests plus fresh PostgreSQL migration and SQL gates for
+Worship: 567 tests in 97 files, clean lint/parity and full production build.
+Service: 57 UI/domain tests, 14 API unit tests plus fresh PostgreSQL migration and SQL gates for
 planning, worship exchange and editor transactions. Service CI explicitly skips
 `*.down.sql` while applying migrations. The release guard still rejects old main.
 
@@ -113,10 +112,55 @@ has no unsafe fallback to old multi-request writes. Do not deploy the bundle alo
 The legacy web can remain readable during the staged update. API native activation
 and Android distribution are separate and are not included.
 
-The backend migration includes a down script, retaining receipts/history. Revert
-client and API together; do not replay baseline/historical Supabase migrations.
+The backend down migration retains receipts/history and leaves editing read-only;
+it revokes transactional editing/review RPCs and never restores direct table or
+audit INSERT privileges. Reapply the reviewed up migration to resume editing.
+Coordinate client/API versions; do not replay baseline/historical Supabase migrations.
 The provisioning script no longer reapplies migration 002 over the newer review
 wrapper. Single-editor recovery was tested across reload; simultaneous local
 editing in multiple tabs and storage-quota exhaustion are not certified by this
 report. The broader PR module review, canonical-main integration and physical
 Android gate remain open.
+
+
+## Three review blockers: implementation and regression evidence
+
+1. **Direct writes:** migration 012 revokes INSERT/UPDATE/DELETE on songs,
+   suggestions and private drafts for client roles, including authorized editors.
+   The browser/API gate checks these denials independently of the visible UI.
+   The web PPTX metadata path now uses `update_pptx` through the transactional RPC.
+2. **Required revision:** every mutation of an existing song or draft requires a
+   non-null matching `p_expected_updated_at`. The API gate checks missing values
+   for save, suggest, delete, PPTX metadata, draft save/submit/delete. SQL additionally
+   checks strictly advancing revisions within one transaction; favorite-count
+   updates alone preserve the musical revision.
+3. **Old proposals:** submissions capture the source revision. Approval of an
+   outdated or unversioned edit/deletion returns 409 and retains the proposal.
+   Service displays the current content and disables approval until an explicit,
+   separately confirmed base update against the compared revision. This operation
+   is audited and does not approve. A subsequent separate approval was exercised
+   in the real Service UI. SQL also covers historical NULL bases and stale rebase.
+
+Fresh PostgreSQL validation applied the schema in a disposable database, ran
+planning, worship-exchange, editor-transactions and editor-revisions regressions,
+then applied the real down migration, verified protected table/RPC/audit grants,
+reapplied 012 and repeated editor-revisions. That disposable database was removed.
+CI repeats the SQL sequence in `church-planning`; rollback SQL is never included
+in the ordinary migration glob.
+
+### Compatibility inventory and limits
+
+Active Worship web editor save/publication, draft creation/update/deletion,
+submission and presentation metadata use transactional RPCs. Service review,
+rejection and explicit base update use server-validated RPCs. The old Worship
+admin route still belongs in Service. The PPTX metadata test covers CAS, replay,
+content preservation and administrator-only removal; it does **not** certify a
+binary upload to the historical Cloudflare Worker, which is not configured for
+this VPS flow. Legacy Supabase/native editor CRUD is not activated or certified
+by this candidate and needs its own migration before use against these grants.
+Neither native rollout nor production migration is part of this delivery.
+
+Local QA initially found a preview-only setup error (Service assets served with
+`/` instead of `/service/`); starting the preview with
+`LVM_SERVICE_ASSET_BASE=/service/` fixed it. The failed run cleaned its fixtures;
+the complete replacement run above passed all 24 checks.
