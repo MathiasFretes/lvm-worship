@@ -13,7 +13,7 @@ import LivePreviewModal from '../../components/editor/LivePreviewModal'
 import ChordProGuideDrawer from '../../components/editor/ChordProGuideDrawer'
 import SuggestionReviewPanel from '../../components/editor/SuggestionReviewPanel'
 import { PptxAttachment } from './PptxAttachment'
-import { deleteEditableSong, loadEditableSong, saveEditableSong, submitEditableDraft } from './songEditorRepository'
+import { deleteEditableSong, loadEditableSong, saveEditableSong, submitEditableDraft, saveSongPresentation } from './songEditorRepository'
 import { readChordProFile, songFormFromRow, validateSongForm } from './songEditorModel'
 import { clearEditorDraft, readEditorDraft, writeEditorDraft } from './editorDraftJournal'
 import './lvm-song-editor.css'
@@ -214,8 +214,10 @@ export default function LvmSongEditorPage() {
 
   async function savePptxUrl(url) {
     if (existing?.kind !== 'published') return
-    const { error } = await supabase.from('songs').update({ pptx_url: url || null }).eq('id', existing.row.id)
-    if (error) throw error
+    const row = await saveSongPresentation(supabase, { song: existing.row, url, operationId: operationId(`pptx:${url || ''}`) })
+    operationRef.current = null
+    if (!dirty) clearEditorDraft(accountId, journalRoute)
+    setExisting(current => ({ ...current, row }))
     setForm(current => ({ ...current, pptx_url: url || '' }))
     setSavedForm(current => ({ ...current, pptx_url: url || '' }))
   }
@@ -305,7 +307,7 @@ export default function LvmSongEditorPage() {
                 <label>{t('country')}<input value={form.country} onChange={event => change('country', event.target.value)} disabled={saving} /></label>
                 <label>{t('youtube')}<input value={form.youtube_id} onChange={event => change('youtube_id', event.target.value)} disabled={saving} aria-invalid={!!errors.youtube_id} />{errors.youtube_id ? <span role="alert">{t('validationYoutube')}</span> : null}</label>
               </div>
-              {existing?.kind === 'published' ? <div className="lvm-song-editor__attachment"><h3>{t('presentation')}</h3><PptxAttachment value={form.pptx_url} onChange={value => change('pptx_url', value)} onSaved={savePptxUrl} disabled={saving} slug={existing.row.slug} title={form.title} /></div> : null}
+              {existing?.kind === 'published' ? <div className="lvm-song-editor__attachment"><h3>{t('presentation')}</h3><PptxAttachment value={form.pptx_url} onChange={value => change('pptx_url', value)} onSaved={savePptxUrl} onBusyChange={setSaving} disabled={saving} slug={existing.row.slug} title={form.title} /></div> : null}
             </section>
 
             <section className="lvm-song-editor__panel" aria-label={t('lyrics')}>

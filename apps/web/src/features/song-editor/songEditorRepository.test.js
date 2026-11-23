@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { deleteEditableSong, findAvailableSlug, loadEditableSong, saveEditableSong, submitEditableDraft } from './songEditorRepository'
+import { deleteEditableSong, findAvailableSlug, loadEditableSong, saveEditableSong, submitEditableDraft, saveSongPresentation } from './songEditorRepository'
 
 function query(result) {
   const chain = {
@@ -81,4 +81,13 @@ describe('LVM song editor repository', () => {
     expect(await deleteEditableSong(client, { song, role: 'admin' })).toBe('deleted')
     expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', expect.objectContaining({ p_action: 'delete', p_song_id: 'song-1' }))
   })
+})
+
+
+it('updates PPTX metadata through the revision-checked transaction only', async () => {
+  const row = { id: 'song-1', pptx_url: 'https://example.invalid/chart.pptx', updated_at: 'next' }
+  const client = { rpc: vi.fn(async () => ({ data: { kind: 'published', row }, error: null })), from: vi.fn() }
+  expect(await saveSongPresentation(client, { song: { id: 'song-1', updated_at: 'original-revision' }, url: row.pptx_url, operationId: 'presentation-operation' })).toEqual(row)
+  expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', { p_operation_id: 'presentation-operation', p_action: 'update_pptx', p_song_id: 'song-1', p_personal_song_id: null, p_payload: { pptx_url: row.pptx_url }, p_expected_updated_at: 'original-revision' })
+  expect(client.from).not.toHaveBeenCalled()
 })

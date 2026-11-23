@@ -52,6 +52,19 @@ export async function submitEditableDraft(client, { form, existing, operationId 
   return mutate(client, { action: 'submit_draft', form, existing, operationId })
 }
 
+export async function saveSongPresentation(client, { song, url, operationId = crypto.randomUUID() }) {
+  const { data, error } = await client.rpc('mutate_editor_song', {
+    p_operation_id: operationId,
+    p_action: 'update_pptx',
+    p_song_id: song.id,
+    p_personal_song_id: null,
+    p_payload: { pptx_url: url || null },
+    p_expected_updated_at: song.updated_at || null,
+  })
+  if (error) throw error
+  return data.row
+}
+
 export async function deleteEditableSong(client, { song, operationId = crypto.randomUUID() }) {
   if (!song?.id) throw new Error('A saved song is required')
   const { data, error } = await client.rpc('mutate_editor_song', {

@@ -7,7 +7,7 @@ import { publicUrl } from '../../utils/network/publicUrl'
 const workerUrl = import.meta.env.VITE_PPTX_WORKER_URL || ''
 const maxBytes = 20 * 1024 * 1024
 
-export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled }) {
+export function PptxAttachment({ value, slug, title, onChange, onSaved, onBusyChange, disabled }) {
   const { t } = useTranslation('songEditor')
   const { session } = useAuth()
   const { can, isAtLeast } = useRole()
@@ -41,6 +41,7 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
   async function upload() {
     if (!file || !slug || !workerUrl) return
     setBusy(true)
+    onBusyChange?.(true)
     setError('')
     try {
       const body = new FormData()
@@ -53,9 +54,10 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
       setFile(null)
       setReplacing(false)
     } catch (cause) {
-      setError(cause.message || t('pptxUploadFailed'))
+      setError(cause.code === 'PT409' || cause.status === 409 ? t('saveConflict') : cause.message || t('pptxUploadFailed'))
     } finally {
       setBusy(false)
+      onBusyChange?.(false)
     }
   }
 
@@ -63,6 +65,7 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
     if (!canDelete || !value || !slug || !workerUrl) return
     if (!window.confirm(t('deletePptxQuestion', { title }))) return
     setBusy(true)
+    onBusyChange?.(true)
     setError('')
     try {
       await request('/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) })
@@ -70,9 +73,10 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
       onChange('')
       setFile(null)
     } catch (cause) {
-      setError(cause.message || t('pptxDeleteFailed'))
+      setError(cause.code === 'PT409' || cause.status === 409 ? t('saveConflict') : cause.message || t('pptxDeleteFailed'))
     } finally {
       setBusy(false)
+      onBusyChange?.(false)
     }
   }
 
