@@ -29,7 +29,7 @@ export function InstrumentalLine({ spec, steps, split, preferFlat }) {
 }
 
 
-export function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle = 'letters' }){
+export function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle = 'letters', onChordSelect }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
@@ -69,7 +69,8 @@ export function MeasuredLine({ plain, chords, steps, showChords, preferFlat, cho
     }
     const measureChord = (text = '') => {
       ctx.font = chordFont
-      return ctx.measureText(text).width
+      const touchWidth = onChordSelect ? parseFloat(window.getComputedStyle(hostRef.current).getPropertyValue('--lvm-control-h-mobile')) || parseFloat(cs.lineHeight) : 0
+      return Math.max(ctx.measureText(text).width, touchWidth)
     }
     const rows = buildChordRowsLayout({
       plain,
@@ -89,7 +90,7 @@ export function MeasuredLine({ plain, chords, steps, showChords, preferFlat, cho
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
     setState({ rows, padTop })
-  }, [plain, chords, steps, showChords, preferFlat, chordStyle, measureKey])
+  }, [plain, chords, steps, showChords, preferFlat, chordStyle, measureKey, onChordSelect])
 
   // Recalculate on container resize (orientation/viewport changes)
   useEffect(() => {
@@ -108,16 +109,16 @@ export function MeasuredLine({ plain, chords, steps, showChords, preferFlat, cho
   }, [])
 
   return (
-    <div ref={hostRef} style={{ marginBottom: 10 }}>
+    <div ref={hostRef} className="song-practice__chart-line" style={{ marginBottom: 10 }}>
       {(state.rows || []).map((row, rowIndex) => (
         <div
           key={`${rowIndex}-${row.text}`}
-          style={{ position:'relative', paddingTop: (showChords && row.offsets.length > 0) ? state.padTop : 0 }}
+          style={{ position:'relative', paddingTop: (showChords && row.offsets.length > 0) ? onChordSelect ? `max(${state.padTop}px, var(--lvm-practice-control-height))` : state.padTop : 0 }}
         >
           {showChords && row.offsets.length > 0 && (
-            <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
+            <div aria-hidden={onChordSelect ? undefined : true} className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
               {row.offsets.map((c, i)=>(
-                <span key={i} style={{
+                onChordSelect ? <button key={i} type="button" className="song-practice__inline-chord" onClick={() => onChordSelect(c.sym)} style={{ position: 'absolute', left: `${c.left}px` }}>{c.sym}</button> : <span key={i} style={{
                   position:'absolute',
                   left: `${c.left}px`,
                   fontFamily: 'var(--lvm-font-chords)',

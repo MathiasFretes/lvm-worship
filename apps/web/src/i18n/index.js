@@ -19,6 +19,10 @@ import enAdmin from './locales/en/admin.json'
 import enEditor from './locales/en/editor.json'
 import enErrors from './locales/en/errors.json'
 import enPages from './locales/en/pages.json'
+import enPractice from './locales/en/practice.json'
+import esPractice from './locales/es/practice.json'
+import koPractice from './locales/ko/practice.json'
+import trPractice from './locales/tr/practice.json'
 
 import esCommon from './locales/es/common.json'
 import esNav from './locales/es/nav.json'
@@ -69,6 +73,7 @@ const resources = {
     editor: enEditor,
     errors: enErrors,
     pages: enPages,
+    practice: enPractice,
   },
   es: {
     common: esCommon,
@@ -82,6 +87,7 @@ const resources = {
     editor: esEditor,
     errors: esErrors,
     pages: esPages,
+    practice: esPractice,
   },
   ko: {
     common: koCommon,
@@ -95,6 +101,7 @@ const resources = {
     editor: koEditor,
     errors: koErrors,
     pages: koPages,
+    practice: koPractice,
   },
   tr: {
     common: trCommon,
@@ -108,6 +115,7 @@ const resources = {
     editor: trEditor,
     errors: trErrors,
     pages: trPages,
+    practice: trPractice,
   },
 }
 
