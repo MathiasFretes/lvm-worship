@@ -1,9 +1,6 @@
 name: PR Checks
 
-# Run lint + tests + Vite build on every PR. All steps are non-blocking
-# (`continue-on-error: true`) so the job always ends green — they're for
-# visibility, not gating. Flip individual steps to required after their
-# warning baselines have been driven down.
+# Web checks are blocking. Mobile/token checks retain their existing policy.
 
 on:
   pull_request:
@@ -23,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -33,18 +32,24 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Lint (warn-only)
-        continue-on-error: true
+      - name: Release guard tests
+        run: node --test infra/vps/check-worship-release.test.mjs
+
+      - name: Candidate includes deployed Worship
+        run: node infra/vps/check-worship-release.mjs
+
+      - name: Web locale parity
+        run: npm run i18n:check
+
+      - name: Lint
         run: npm run lint
 
-      - name: Tests (warn-only)
-        continue-on-error: true
-        # Suite is green (323/323); any failure is a real regression. Root
+      - name: Tests
+        # Any test failure is a regression. Root
         # script delegates to the @lavozmisionera/web workspace.
         run: npm run test:run
 
-      - name: Build (warn-only, vite only)
-        continue-on-error: true
+      - name: Build (vite only)
         # Skip the SEO/sitemap scripts that need a real Supabase service-role
         # key — only the bundle compile matters for a PR check. Run from the web
         # workspace so Vite finds apps/web/vite.config.js + index.html.
@@ -52,6 +57,21 @@ jobs:
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
         run: npx vite build
+
+      - name: Install browser for visual QA
+        run: npm exec -w @lavozmisionera/web -- playwright install --with-deps chromium
+
+      - name: Spanish editor visual QA (isolated session, no API writes)
+        run: |
+          npm exec -w @lavozmisionera/web -- vite preview --host 127.0.0.1 --port 4173 &
+          node apps/web/scripts/verify-editor-locale.mjs
+
+      - name: Upload visual QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: editor-locale-qa
+          path: test-results/editor-locale/
 
   # apps/mobile had no CI at all until now — its typecheck/test/i18n:check
   # scripts existed but nothing ran them, and every root script delegates to

@@ -102,3 +102,56 @@ ssh -o ExitOnForwardFailure=yes -N -L 127.0.0.1:4381:127.0.0.1:4381 hostinger-vp
 ```
 
 El navegador sigue accediendo a `127.0.0.1:4381`, y la inferencia se ejecuta en el VPS. `--origin` debe coincidir exactamente con el origen del navegador; para el sitio publicado sería su origen HTTPS. Este modo transmite el audio seleccionado al VPS por el túnel SSH, a diferencia del modo local que procesa en la propia computadora. La configuración inicial no publica la web ni cambia el dominio actual. Para un servicio permanente se debe usar un usuario dedicado y supervisar recursos y concurrencia por proyecto.
+
+
+## Worship: reconciliar una versión antes de publicar
+
+La versión web verificada el 23 de noviembre de 2026 es
+`7364f3ee8ae15ca2b4fb919cdc0c1e57951fd18e`; `main` seguía en
+`db8483605311811ed0f9a7c3570ae0d5f6b4243d`. La rama
+`claude/song-practice-reader-20261123` contiene la versión publicada y sus
+antecesores. El PR de consolidación incluye también trabajo anterior de
+infraestructura y Expo: integrar código nativo no habilita su API ni certifica
+el gate del dispositivo físico.
+
+Antes de cualquier despliegue de Worship, obtener la historia completa y ejecutar:
+
+```powershell
+git fetch origin
+node infra/vps/check-worship-release.mjs https://srv2137598.hstgr.cloud HEAD
+```
+
+El comando lee `/deployment.json`, exige un SHA completo conocido y verifica que
+la versión publicada sea antecesora del candidato. Rechaza una rama vieja,
+historia divergente, un manifiesto inválido o un servidor inaccesible. El workflow
+web ejecuta este control y sus pruebas con `fetch-depth: 0`; lint, tests, paridad,
+compilación y QA visual fallan el job ante errores. Los jobs nativos conservan su
+política anterior y deben revisarse paso por paso. La protección de `main` no está
+configurada: estos controles no impiden por sí solos un merge o copia manual
+fuera de ese procedimiento.
+
+Compilar el candidato limpio y registrar SHA y hash del artefacto:
+
+```powershell
+$env:VITE_COMMIT_SHA = (git rev-parse HEAD)
+$env:VITE_SITE_URL = 'https://srv2137598.hstgr.cloud'
+$env:VITE_API_URL = 'https://srv2137598.hstgr.cloud/api'
+$env:LVM_CATALOG_URL = 'https://srv2137598.hstgr.cloud/api/data/songs'
+npm run build
+```
+
+`VITE_API_URL` debe ser absoluta para PostgREST. Este build consulta solamente el
+catálogo público; no necesita credenciales de Supabase. Antes de copiar archivos,
+conservar en `releases/` el artefacto, su SHA-256 y una copia de los HTML, SW,
+sitemap y manifiesto anteriores. Copiar primero los assets con hash; luego todos
+los HTML generados, no solamente `index.html`, y el SW. Conservar assets anteriores.
+No reemplazar el directorio `web/`: Caddy lo monta por bind y debe actualizarse su
+contenido en el mismo directorio. Verificar HTTPS y que los HTML/assets servidos
+coincidan con `dist/`; actualizar el manifiesto con el SHA completo.
+
+Rollback es una operación deliberada, separada de un despliegue normal: restaurar
+los HTML/SW/manifiesto/sitemap de la versión elegida sobre `web/`, conservando sus
+assets. No tocar PostgreSQL, secretos, contenedores API ni las otras webs. La copia
+anterior a esta publicación se conserva en
+`releases/worship-7364f3ee8/rollback.tar.gz`; los assets anteriores siguen disponibles.
+Después de restaurar, repetir los checks HTTPS y registrar el SHA restaurado.

@@ -31,7 +31,7 @@ No native API deployment is part of this change.
 
 ## Validation (23 November 2026)
 
-The web suite passed 558 tests in 95 files, lint and locale-key parity. The complete
+The web suite passed 561 tests in 96 files, lint and locale-key parity. The complete
 build passed using the public VPS PostgreSQL catalog endpoint. That catalog was
 empty during the build; seven static shell pages and the sitemap were generated.
 
@@ -52,3 +52,24 @@ background measured 6.70:1 contrast.
 The palette is defined in `packages/tokens/tokens.css`; reader behavior and styles
 live under `apps/web/src/features/song-practice/`. Roboto and the existing Roboto
 Mono files are local assets; the new Roboto variable font includes its OFL license.
+
+
+## Reconciliation and editor QA (23 November 2026)
+
+Production Worship serves `7364f3ee8ae15ca2b4fb919cdc0c1e57951fd18e`.
+The Spanish editor and preview alignment fixes are included in that version.
+`DEFAULT_LOCALE` remains `en`: an explicit Spanish selection is respected; this
+release does not change the default-language policy.
+
+`node apps/web/scripts/verify-editor-locale.mjs` is a reproducible browser check.
+Set `LVM_EDITOR_PREVIEW_URL=https://srv2137598.hstgr.cloud` to inspect the served
+frontend. It intercepts all API reads with isolated fixture sessions and blocks
+all API writes. It checks Spanish fields/help/preview, unchanged ChordPro,
+chord-to-lyric alignment, light/dark modes at 1440/390 px, and distinct editor/user
+save-versus-review actions. Its report and screenshots are in
+`test-results/editor-locale/`, uploaded by the PR workflow.
+
+These are frontend checks, not evidence of real PostgreSQL authorization or
+successful publication. Public test-song saving still awaits explicit user
+confirmation. Real draft/proposal persistence and permission gates, the physical
+Android gate and integration into `main` remain separate acceptance criteria.
