@@ -78,7 +78,6 @@ El código está en `LVM Service/suite-api/`, copiado al VPS como `source/servic
 cd /srv/apps/la-voz-misionera
 sh configure-backend.sh
 docker compose -f compose.yaml -f backend.compose.yaml up -d --build --wait api
-docker compose -f compose.yaml -f backend.compose.yaml run --rm --no-deps --entrypoint node provision-owner test/integration.mjs
 ```
 
 La cuenta propietaria se reserva con el perfil administrativo `provision-owner correo`, que escribe un enlace de activación de un solo uso (24 horas) en `activation/owner-activation-url`, con permisos 600. El perfil tiene acceso al secreto de PostgreSQL solo durante esa operación; la API normal no lo monta. No publicar ni registrar el enlace. Las contraseñas elegidas por el usuario usan scrypt con sal aleatoria; la cookie de sesión es `Secure`, `HttpOnly`, `SameSite=Lax`. Las mutaciones comprueban Origin y JSON; hay límite de intentos de autenticación. Los JWT internos de PostgREST duran 60 segundos y nunca llegan al navegador.
@@ -155,3 +154,26 @@ assets. No tocar PostgreSQL, secretos, contenedores API ni las otras webs. La co
 anterior a esta publicación se conserva en
 `releases/worship-7364f3ee8/rollback.tar.gz`; los assets anteriores siguen disponibles.
 Después de restaurar, repetir los checks HTTPS y registrar el SHA restaurado.
+
+
+## Verificación G1/G2 antes de una actualización coordinada
+
+La API nueva mantiene autenticación nativa apagada por defecto. Solo el valor
+exacto `LVM_NATIVE_AUTH_ENABLED=1` **en el servidor** habilita rutas nativas y Bearer;
+un flag ausente o `0` también bloquea tokens nativos previamente emitidos. Expo
+no puede habilitar el servidor. No añadir ese opt-in al Compose productivo hasta
+una autorización independiente y el gate nativo correspondiente.
+
+La verificación oficial dejó de usar INSERT directos para preparar canciones y
+borradores. Ejecutarla desde un checkout de **Service**, en Linux con Docker:
+
+```sh
+sh suite-api/test/run-isolated.sh
+```
+
+Ese runner crea su propio clúster PostgreSQL desechable, secretos y red interna
+sin puertos publicados; comprueba el archivo original integration.mjs en modo
+nativo ausente, `0` y `1`, identidad y revocación nativa. No usar el perfil
+provision-owner ni la base productiva para esta prueba. GitHub Actions ejecuta
+el mismo runner. Los dumps/restauraciones y autorización de despliegue siguen
+siendo pasos separados; aprobar esta prueba no publica ni activa Expo.

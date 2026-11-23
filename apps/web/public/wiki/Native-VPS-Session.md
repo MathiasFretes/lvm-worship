@@ -10,6 +10,20 @@ Cinco pruebas del transporte, el typecheck móvil y la suite móvil completa de 
 
 Para repetir el preflight, preparar la API aislada de Service y el túnel a `127.0.0.1:54319`; ejecutar desde Service `node --experimental-strip-types scripts/verify-native-session.mjs`. No acepta un destino productivo. El almacenamiento de esa comprobación es memoria: no prueba Keystore ni Keychain.
 
+## Activación del servidor (G1)
+
+El servidor queda apagado para autenticación nativa por defecto. Solo el valor
+exacto `LVM_NATIVE_AUTH_ENABLED=1` permite rutas nativas y tokens Bearer nativos;
+con flag ausente o `0`, tampoco se aceptan tokens emitidos anteriormente. Las
+sesiones web siguen funcionando. Definir `EXPO_PUBLIC_LVM_API_URL` en Expo no
+habilita el servidor. La API nativa productiva sigue sin autorización de activación.
+
+Service ejecuta `sh suite-api/test/run-isolated.sh` con PostgreSQL propio,
+red/secretos temporales y tres APIs (flag ausente, `0`, `1`). La prueba oficial
+integration.mjs usa RPC para preparar datos y conserva la denegación de escrituras
+directas. GitHub Actions ejecuta también el gate de tokens previos/revocación.
+No utilizar el perfil administrativo productivo para esta comprobación.
+
 ## Integración optativa en Expo
 
 La variable comentada en `apps/mobile/.env.example` selecciona exclusivamente el cliente VPS. Si es inválida, se muestra el error de configuración; no se vuelve silenciosamente a Supabase. Sin esa variable, los builds existentes conservan su modo anterior durante la transición.
