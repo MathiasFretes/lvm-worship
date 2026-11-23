@@ -6,9 +6,11 @@ Worship PR #4 and Service PR #19 remain drafts.
 ## Exact versions
 
 - Application build: `ba7f508f9915003e9306dd7bd627bc60de12f243`.
-- Final verifier: `bb753f97c973c6e4858bc885228f48aabfdad36e`. Its only difference
-  from the application-build commit is the forged-frontend-role test script;
+- Final verifier: `65e406e609c552441dd371b28f2bffe3d7e1039e`. Its application source has no difference
+  from the application-build commit; follow-up commits add the verifier and evidence;
   `apps/web/src`, shared core and tokens have no difference between these commits.
+- Service review UI: `ffc4614faad338b2fcf614b0987329b93487f6f8`, served as an
+  authenticated `/service/song-review` preview at `http://127.0.0.1:4175`.
 - API source/image label: `602a7781eac83a1e612d0ac37a9bfce089f9a05b`.
 - API image: `sha256:f74867fb73a68b64df83f76b474e174baf875208cb9b5b33cf53afdaf0364811`.
 - Migration 012 SHA-256: `dfc8d181207d0a08f6162d32162d00381585e687857d46b4fabfb5b8b972891c`.
@@ -17,7 +19,8 @@ Worship PR #4 and Service PR #19 remain drafts.
 
 ## Environment and command
 
-The compiled frontend ran at `http://127.0.0.1:4174`. All browser API calls were
+The compiled Worship frontend ran at `http://127.0.0.1:4174`; the Service review
+frontend ran at `http://127.0.0.1:4175/service/song-review`. All browser API calls were
 forwarded to `127.0.0.1:54320`, an SSH forward to a new, loopback-only Docker API
 on VPS port 4320. It used `lvm_planning_qa_20261121` and its isolated PostgREST,
 never the production database or API. Unlike visual-only QA, API results were
@@ -26,6 +29,7 @@ SQL independently checked persisted content and authorization outcomes.
 
 ```powershell
 $env:LVM_EDITOR_FRONTEND_URL = 'http://127.0.0.1:4174'
+$env:LVM_REVIEW_FRONTEND_URL = 'http://127.0.0.1:4175'
 node apps/web/scripts/verify-editor-postgres.mjs
 ```
 
@@ -54,9 +58,25 @@ forwarded into QA. The normal production browser is not altered.
 6. Approval/rejection acknowledgement retries are now idempotent; a different
    decision returns 409. Missing/deleted targets cannot be partially approved.
 
+## Service review queue
+
+QA found no global UI queue for new song additions. The candidate adds it in
+LVM Service at `/service/song-review`, using existing navy/gold panels and form
+controls. An editor can review music without receiving global administration
+rights. Review requires an explicit confirmation; deletion approval remains
+administrator-only. Existing song content can be compared before approving an
+edit. Errors keep the decision/reason for retry. The queue is paginated and
+mobile selection moves focus to the detail without horizontal overflow.
+
+The expanded gate finds and approves a new addition in this actual Service UI,
+including an injected audit failure and a lost approval acknowledgement. It also
+rejects an edit from Service, preserving the published song. All API calls still
+reach isolated PostgreSQL. Unit tests protect confirmations, failed-review retry,
+ordinary-user denial and administrator-only deletion.
+
 ## Results
 
-The final report has 18 passing checks and no browser errors. It covers:
+The final report has 20 passing checks and no browser errors. It covers:
 
 - Ordinary-user submission without direct publication; direct API writes and
   approvals denied; forged editor role in the frontend still denied by PostgreSQL.
@@ -83,7 +103,7 @@ reserved native Android fixtures were preserved.
 ## Automated validation and rollout dependencies
 
 Worship: 566 tests in 97 files, clean lint/parity and full production build.
-Service: 14 API unit tests plus fresh PostgreSQL migration and SQL gates for
+Service: 56 UI/domain tests, 14 API unit tests plus fresh PostgreSQL migration and SQL gates for
 planning, worship exchange and editor transactions. Service CI explicitly skips
 `*.down.sql` while applying migrations. The release guard still rejects old main.
 

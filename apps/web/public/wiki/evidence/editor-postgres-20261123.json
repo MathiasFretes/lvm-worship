@@ -1,14 +1,17 @@
 {
-  "run": "3c973d1b-c8d0-45fc-b1f8-e97d96178b7e",
+  "run": "6a8a3cbc-c6b7-4802-b9c9-4fc15f34f186",
   "database": "lvm_planning_qa_20261121",
   "frontend": "http://127.0.0.1:4174",
-  "clientCommit": "bb753f97c973c6e4858bc885228f48aabfdad36e",
+  "serviceFrontend": "http://127.0.0.1:4175",
+  "serviceFrontendCommit": "ffc4614faad338b2fcf614b0987329b93487f6f8",
+  "clientCommit": "65e406e609c552441dd371b28f2bffe3d7e1039e",
   "apiCommit": "602a7781eac83a1e612d0ac37a9bfce089f9a05b",
   "checks": [
     "real UI login against isolated API/PostgreSQL",
     "lost submission acknowledgement replays the same operation without duplicate proposals",
     "ordinary user cannot insert even minimal audit rows or forge a publication action",
     "ordinary user submits real pending addition without publishing",
+    "Service editor finds and approves the new song through the real UI, with audit rollback and lost-acknowledgement replay",
     "replayed approval returns the same published song without a duplicate",
     "PostgreSQL denies ordinary direct publication/review; editor approval preserves ChordPro",
     "a forged editor role in the frontend still cannot publish through the real API/PostgreSQL",
@@ -22,6 +25,7 @@
     "failed draft submission rolls back status/proposal; lost acknowledgement retry creates one proposal",
     "draft UI submission and atomic approval link it to published song",
     "concurrent identical operations create one proposal; reused IDs and stale song revisions return 409 without overwrites",
+    "Service review works at 390px, focuses the selected detail and has no horizontal overflow",
     "role revocation rejects subsequent writes with the existing session"
   ],
   "errors": [],
