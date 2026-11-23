@@ -22,7 +22,7 @@ assert.equal(git(['status', '--porcelain']), '', 'Commit the exact client under 
 const serviceRepo = fileURLToPath(new URL('../../../../LVM Service/', import.meta.url))
 assert.equal(execFileSync('git', ['-C', serviceRepo, 'status', '--porcelain'], { encoding: 'utf8' }).trim(), '', 'Commit the Service UI before the gate')
 const serviceFrontendCommit = execFileSync('git', ['-C', serviceRepo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-const report = { run, database, frontend, serviceFrontend, serviceFrontendCommit, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '83c4c5a4f96676dc0e5fa74f26fce531062a6cb5', checks: [], errors: [], cleaned: false }
+const report = { run, database, frontend, serviceFrontend, serviceFrontendCommit, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '83c4c5a4f96676dc0e5fa74f26fce531062a6cb5', migrationCommit: '72e11a5', checks: [], errors: [], cleaned: false }
 const accounts = []
 const auditFault = 'qa_editor_fault_' + run.replaceAll('-', '')
 let faultInstalled = false
@@ -39,7 +39,7 @@ const sql = statement => execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-
 assert.equal(sql('SELECT current_database();'), database)
 assert.equal((await fetch(`${api}/health`)).status, 200)
 report.apiImage = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', "docker inspect -f '{{.Image}}' lvm-editor-revisions-qa-api"], { encoding: 'utf8' }).trim()
-report.schemaSha256 = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', 'sha256sum /srv/apps/la-voz-misionera/editor-revisions-83c4c5a/source/schema/012_editor_transactions.sql'], { encoding: 'utf8' }).trim().split(' ')[0]
+report.schemaSha256 = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', 'sha256sum /srv/apps/la-voz-misionera/editor-lifecycle-72e11a5/source/schema/012_editor_transactions.sql'], { encoding: 'utf8' }).trim().split(' ')[0]
 const baseline = () => JSON.parse(sql("SELECT json_build_object('users',(SELECT count(*) FROM public.users),'songs',(SELECT count(*) FROM public.songs),'drafts',(SELECT count(*) FROM public.personal_songs),'operations',(SELECT count(*) FROM private.editor_operations),'existingUsersFingerprint',(SELECT md5(coalesce(json_agg(u ORDER BY id)::text,'')) FROM public.users u),'existingSongsFingerprint',(SELECT md5(coalesce(json_agg(s ORDER BY id)::text,'')) FROM public.songs s));"))
 report.before = baseline()
 const rows = (table, where) => JSON.parse(sql(`SELECT coalesce(json_agg(t),'[]'::json) FROM (SELECT * FROM public.${table} WHERE ${where}) t;`))
@@ -286,8 +286,23 @@ try {
  record('failed draft submission rolls back status/proposal; lost acknowledgement retry creates one proposal')
  let draftSuggestion = rows('song_suggestions', `personal_song_id=${literal(draft.id)} AND status='pending'`)[0]
  assert.equal(rows('personal_songs', `id=${literal(draft.id)}`)[0].status, 'submitted')
+ const submittedDraft = rows('personal_songs', `id=${literal(draft.id)}`)[0]
+ for (const action of ['save_draft', 'submit_draft', 'delete_draft']) {
+  assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: action, p_song_id: null, p_personal_song_id: draft.id, p_payload: { title: draft.title, default_key: 'G', tags: ['QA'], chordpro_content: '[D]Forbidden after submit' }, p_expected_updated_at: submittedDraft.updated_at })).status, 409)
+ }
+ assert.deepEqual(rows('personal_songs', `id=${literal(draft.id)}`)[0], submittedDraft)
+ await user.page.goto(`${frontend}/portal/editor?p=${draft.id}`)
+ await expect(user.page.getByLabel('Letra con acordes en ChordPro')).toBeDisabled()
+ await expect(user.page.getByRole('button', { name: 'Guardar borrador', exact: true })).toBeDisabled()
+ await expect(user.page.getByRole('button', { name: 'Enviar borrador', exact: true })).toBeDisabled()
+ record('submitted draft is read-only in Worship and API rejects save, resubmit and delete with the current revision')
+
  assert.equal((await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: draftSuggestion.id, p_action: 'reject', p_reason: 'Preparar segunda versión' })).status, 200)
  assert.equal(rows('personal_songs', `id=${literal(draft.id)}`)[0].status, 'draft')
+ const rejectedHistory = rows('song_suggestions', `id=${literal(draftSuggestion.id)}`)[0]
+ const rejectedDraft = rows('personal_songs', `id=${literal(draft.id)}`)[0]
+ assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: 'delete_draft', p_song_id: null, p_personal_song_id: draft.id, p_payload: {}, p_expected_updated_at: rejectedDraft.updated_at })).status, 409)
+ assert.deepEqual(rows('song_suggestions', `id=${literal(rejectedHistory.id)}`)[0], rejectedHistory)
  await user.page.goto(`${frontend}/portal/editor?p=${draft.id}`)
  await expect(user.page.getByRole('button', { name: 'Enviar borrador', exact: true })).toBeVisible()
  await expect(user.page.getByLabel('Letra con acordes en ChordPro')).toHaveValue(editBody)
@@ -299,6 +314,30 @@ try {
  assert.equal(linked.status, 'published')
  assert.equal(rows('songs', `id=${literal(linked.published_song_id)}`)[0].chordpro_content, editBody)
  record('draft UI submission and atomic approval link it to published song')
+ for (const action of ['save_draft', 'submit_draft', 'delete_draft']) {
+  assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: action, p_song_id: null, p_personal_song_id: draft.id, p_payload: { title: draft.title, default_key: 'G', tags: ['QA'], chordpro_content: '[D]Forbidden after publication' }, p_expected_updated_at: linked.updated_at })).status, 409)
+ }
+ assert.deepEqual(rows('personal_songs', `id=${literal(draft.id)}`)[0], linked)
+ assert.deepEqual(rows('song_suggestions', `id=${literal(rejectedHistory.id)}`)[0], rejectedHistory)
+ assert.equal(rows('song_suggestions', `personal_song_id=${literal(draft.id)}`).length, 2)
+ record('rejection unlocks editing; deletion cannot remove rejected or approved proposal history; published draft remains immutable')
+ const freeResult = await request(a, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: 'create_draft', p_song_id: null, p_personal_song_id: null, p_payload: { title: `${prefix} unused draft` } })
+ assert.equal(freeResult.status, 200)
+ const freeDraft = freeResult.data.row
+ const repertoire = await request(a, 'data/setlists', 'POST', { name: `${prefix} draft repertoire`, owner_id: a.id })
+ assert.equal(repertoire.status, 201)
+ const list = repertoire.data[0]
+ assert.equal((await request(a, 'data/setlist_songs', 'POST', { setlist_id: list.id, personal_song_id: freeDraft.id })).status, 201)
+ const deletion = { p_operation_id: randomUUID(), p_action: 'delete_draft', p_song_id: null, p_personal_song_id: freeDraft.id, p_payload: {}, p_expected_updated_at: freeDraft.updated_at }
+ assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', deletion)).status, 409)
+ assert.equal(rows('setlist_songs', `setlist_id=${literal(list.id)}`).length, 1)
+ assert.ok((await request(a, `data/setlist_songs?setlist_id=eq.${list.id}`, 'DELETE')).status < 300)
+ const removedDraft = await request(a, 'data/rpc/mutate_editor_song', 'POST', deletion)
+ assert.equal(removedDraft.status, 200)
+ assert.deepEqual((await request(a, 'data/rpc/mutate_editor_song', 'POST', deletion)).data, removedDraft.data)
+ assert.equal(rows('personal_songs', `id=${literal(freeDraft.id)}`).length, 0)
+ record('repertoire dependency prevents draft deletion; unused unlinked draft can be deleted with replayable acknowledgement')
+
  await servicePage.goto(`${serviceFrontend}/service/song-review`)
  const stale = await request(editor, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: 'save_published', p_song_id: direct.id, p_personal_song_id: null, p_payload: { title: direct.title, default_key: 'G', tags: ['QA'], chordpro_content: 'stale overwrite' }, p_expected_updated_at: direct.updated_at })
  assert.equal(stale.status, 409)
@@ -400,7 +439,7 @@ try {
  clearFault()
  if (accounts.length) {
   const ids = accounts.map(actor => literal(actor.id)).join(',')
-  sql(`BEGIN; DELETE FROM public.editor_audit_log WHERE actor_id IN (${ids}); DELETE FROM public.song_suggestions WHERE suggested_by IN (${ids}); DELETE FROM public.personal_songs WHERE owner_id IN (${ids}); DELETE FROM public.songs WHERE title LIKE ${literal(prefix + '%')}; DELETE FROM public.users WHERE id IN (${ids}); COMMIT;`)
+  sql(`BEGIN; DELETE FROM public.editor_audit_log WHERE actor_id IN (${ids}); DELETE FROM public.song_suggestions WHERE suggested_by IN (${ids}); DELETE FROM public.setlists WHERE owner_id IN (${ids}); DELETE FROM public.personal_songs WHERE owner_id IN (${ids}); DELETE FROM public.songs WHERE title LIKE ${literal(prefix + '%')}; DELETE FROM public.users WHERE id IN (${ids}); COMMIT;`)
   assert.equal(sql(`SELECT count(*) FROM public.users WHERE id IN (${ids});`), '0')
   assert.equal(sql(`SELECT count(*) FROM public.songs WHERE title LIKE ${literal(prefix + '%')};`), '0')
  }

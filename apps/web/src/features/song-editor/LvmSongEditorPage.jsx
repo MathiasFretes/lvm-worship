@@ -54,6 +54,7 @@ export default function LvmSongEditorPage() {
   const fileRef = useRef(null)
   const operationRef = useRef(null)
   const loadedScope = useRef(null)
+  const draftLocked = existing?.kind === 'personal' && existing.row.status && existing.row.status !== 'draft'
   const dirty = JSON.stringify(form) !== JSON.stringify(savedForm)
 
   useEffect(() => {
@@ -67,7 +68,8 @@ export default function LvmSongEditorPage() {
       .then(result => {
         if (!active) return
         if (!result) { setStatus('missing'); return }
-        const recovered = readEditorDraft(accountId, journalRoute)
+        const locked = result.kind === 'personal' && result.row.status && result.row.status !== 'draft'
+        const recovered = locked ? null : readEditorDraft(accountId, journalRoute)
         loadedScope.current = `${accountId}:${journalRoute}`
         setExisting(recovered?.baseUpdatedAt && result.row ? { ...result, row: { ...result.row, updated_at: recovered.baseUpdatedAt } } : result)
         setForm(recovered ? songFormFromRow(recovered.form) : result.form)
@@ -104,6 +106,7 @@ export default function LvmSongEditorPage() {
   }, [search, songs])
 
   function change(field, value) {
+    if (draftLocked) return
     setForm(current => ({ ...current, [field]: value }))
     if (errors[field]) setErrors(current => ({ ...current, [field]: undefined }))
     setFailure('')
@@ -164,7 +167,7 @@ export default function LvmSongEditorPage() {
   async function save() {
     const nextErrors = validateSongForm(form)
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length || saving) return
+    if (Object.keys(nextErrors).length || saving || draftLocked) return
     setSaving(true)
     setFailure('')
     setNotice('')
@@ -196,7 +199,7 @@ export default function LvmSongEditorPage() {
   async function submitDraft() {
     const nextErrors = validateSongForm(form)
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length || saving || existing?.kind !== 'personal') return
+    if (Object.keys(nextErrors).length || saving || draftLocked || existing?.kind !== 'personal') return
     setSaving(true)
     setFailure('')
     try {
@@ -291,47 +294,48 @@ export default function LvmSongEditorPage() {
 
       {status === 'ready' ? (
         <>
+          {draftLocked && existing.row.status === 'submitted' ? <p role="status" className="lvm-song-editor__message">{t('draftSubmitted')}</p> : null}
           {notice ? <p role="status" className="lvm-song-editor__message">{notice}</p> : null}
           {failure ? <p role="alert" className="lvm-song-editor__message">{t(failure, { defaultValue: failure })}</p> : null}
           <div className="lvm-song-editor__columns">
             <section className="lvm-song-editor__panel" aria-label={t('details')}>
               <h2>{t('details')}</h2>
               <div className="lvm-song-editor__fields">
-                <label>{t('title')}<input value={form.title} onChange={event => change('title', event.target.value)} disabled={saving} aria-invalid={!!errors.title} />{errors.title ? <span role="alert">{t('validationTitle')}</span> : null}</label>
-                <label>{t('artist')}<input value={form.artist} onChange={event => change('artist', event.target.value)} disabled={saving} /></label>
-                <label>{t('key')}<select value={form.default_key} onChange={event => change('default_key', event.target.value)} disabled={saving} aria-invalid={!!errors.default_key}><option value="">{t('chooseKey')}</option>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>{errors.default_key ? <span role="alert">{t('validationKey')}</span> : null}</label>
-                <label>{t('tags')}<input value={form.tags.join(', ')} onChange={event => change('tags', event.target.value.split(','))} disabled={saving} placeholder={t('tagsPlaceholder')} aria-invalid={!!errors.tags} />{errors.tags ? <span role="alert">{t('validationTags')}</span> : null}</label>
-                <label>{t('tempo')}<input type="number" min="20" max="400" value={form.tempo ?? ''} onChange={event => change('tempo', event.target.value)} disabled={saving} aria-invalid={!!errors.tempo} />{errors.tempo ? <span role="alert">{t('validationTempo')}</span> : null}</label>
-                <label>{t('timeSignature')}<select value={form.time_signature} onChange={event => change('time_signature', event.target.value)} disabled={saving}><option value="">{t('select')}</option>{['4/4', '3/4', '2/4', '6/8'].map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-                <label>{t('language')}<input value={form.language} onChange={event => change('language', event.target.value)} disabled={saving} /></label>
-                <label>{t('country')}<input value={form.country} onChange={event => change('country', event.target.value)} disabled={saving} /></label>
-                <label>{t('youtube')}<input value={form.youtube_id} onChange={event => change('youtube_id', event.target.value)} disabled={saving} aria-invalid={!!errors.youtube_id} />{errors.youtube_id ? <span role="alert">{t('validationYoutube')}</span> : null}</label>
+                <label>{t('title')}<input value={form.title} onChange={event => change('title', event.target.value)} disabled={saving || draftLocked} aria-invalid={!!errors.title} />{errors.title ? <span role="alert">{t('validationTitle')}</span> : null}</label>
+                <label>{t('artist')}<input value={form.artist} onChange={event => change('artist', event.target.value)} disabled={saving || draftLocked} /></label>
+                <label>{t('key')}<select value={form.default_key} onChange={event => change('default_key', event.target.value)} disabled={saving || draftLocked} aria-invalid={!!errors.default_key}><option value="">{t('chooseKey')}</option>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>{errors.default_key ? <span role="alert">{t('validationKey')}</span> : null}</label>
+                <label>{t('tags')}<input value={form.tags.join(', ')} onChange={event => change('tags', event.target.value.split(','))} disabled={saving || draftLocked} placeholder={t('tagsPlaceholder')} aria-invalid={!!errors.tags} />{errors.tags ? <span role="alert">{t('validationTags')}</span> : null}</label>
+                <label>{t('tempo')}<input type="number" min="20" max="400" value={form.tempo ?? ''} onChange={event => change('tempo', event.target.value)} disabled={saving || draftLocked} aria-invalid={!!errors.tempo} />{errors.tempo ? <span role="alert">{t('validationTempo')}</span> : null}</label>
+                <label>{t('timeSignature')}<select value={form.time_signature} onChange={event => change('time_signature', event.target.value)} disabled={saving || draftLocked}><option value="">{t('select')}</option>{['4/4', '3/4', '2/4', '6/8'].map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+                <label>{t('language')}<input value={form.language} onChange={event => change('language', event.target.value)} disabled={saving || draftLocked} /></label>
+                <label>{t('country')}<input value={form.country} onChange={event => change('country', event.target.value)} disabled={saving || draftLocked} /></label>
+                <label>{t('youtube')}<input value={form.youtube_id} onChange={event => change('youtube_id', event.target.value)} disabled={saving || draftLocked} aria-invalid={!!errors.youtube_id} />{errors.youtube_id ? <span role="alert">{t('validationYoutube')}</span> : null}</label>
               </div>
-              {existing?.kind === 'published' ? <div className="lvm-song-editor__attachment"><h3>{t('presentation')}</h3><PptxAttachment value={form.pptx_url} onChange={value => change('pptx_url', value)} onSaved={savePptxUrl} onBusyChange={setSaving} disabled={saving} slug={existing.row.slug} title={form.title} /></div> : null}
+              {existing?.kind === 'published' ? <div className="lvm-song-editor__attachment"><h3>{t('presentation')}</h3><PptxAttachment value={form.pptx_url} onChange={value => change('pptx_url', value)} onSaved={savePptxUrl} onBusyChange={setSaving} disabled={saving || draftLocked} slug={existing.row.slug} title={form.title} /></div> : null}
             </section>
 
             <section className="lvm-song-editor__panel" aria-label={t('lyrics')}>
               <div className="lvm-song-editor__panel-heading"><h2>{t('lyrics')}</h2><button type="button" className="lvm-song-editor__secondary" onClick={() => setShowGuide(true)}>{t('guide')}</button></div>
               <div className="lvm-song-editor__tools">
-                <select disabled={saving} aria-label={t('chord')} value={chord} onChange={event => setChord(event.target.value)}>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>
-                <button type="button" onClick={insertChord} disabled={saving}>{t('insertChord')}</button>
-                {SECTIONS.map(section => <button key={section.directive} type="button" onClick={() => insertSection(section.directive, t(section.label))} disabled={saving}>{t(section.label)}</button>)}
+                <select disabled={saving || draftLocked} aria-label={t('chord')} value={chord} onChange={event => setChord(event.target.value)}>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>
+                <button type="button" onClick={insertChord} disabled={saving || draftLocked}>{t('insertChord')}</button>
+                {SECTIONS.map(section => <button key={section.directive} type="button" onClick={() => insertSection(section.directive, t(section.label))} disabled={saving || draftLocked}>{t(section.label)}</button>)}
               </div>
               <label htmlFor="lvm-chordpro-body">{t('body')}</label>
-              <textarea id="lvm-chordpro-body" ref={bodyRef} value={form.chordpro_content} onChange={event => change('chordpro_content', event.target.value)} disabled={saving} spellCheck={false} placeholder={t('bodyPlaceholder')} />
+              <textarea id="lvm-chordpro-body" ref={bodyRef} value={form.chordpro_content} onChange={event => change('chordpro_content', event.target.value)} disabled={saving || draftLocked} spellCheck={false} placeholder={t('bodyPlaceholder')} />
               <div className="lvm-song-editor__tools">
-                <button type="button" onClick={() => fileRef.current?.click()} disabled={saving}>{t('import')}</button>
-                <input ref={fileRef} type="file" accept=".chordpro,.pro,.chord,.cho,.cpr" disabled={saving} onChange={importFile} hidden />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={saving || draftLocked}>{t('import')}</button>
+                <input ref={fileRef} type="file" accept=".chordpro,.pro,.chord,.cho,.cpr" disabled={saving || draftLocked} onChange={importFile} hidden />
                 <button type="button" onClick={() => setShowPreview(true)}>{t('preview')}</button>
               </div>
             </section>
           </div>
 
-          {existing?.kind === 'published' && isAtLeast('editor') ? <SuggestionReviewPanel songId={existing.row.id} currentSong={existing.row} onApproved={approved} onRejected={() => {}} onTouchUp={suggestion => { if (!saving) setForm(current => ({ ...current, ...suggestion.payload })) }} disabled={saving} /> : null}
+          {existing?.kind === 'published' && isAtLeast('editor') ? <SuggestionReviewPanel songId={existing.row.id} currentSong={existing.row} onApproved={approved} onRejected={() => {}} onTouchUp={suggestion => { if (!saving) setForm(current => ({ ...current, ...suggestion.payload })) }} disabled={saving || draftLocked} /> : null}
 
           <footer className="lvm-song-editor__actions">
-            <button type="button" className="lvm-song-editor__primary" onClick={save} disabled={saving}>{saving ? t('saving') : (existing?.kind === 'personal' ? t('saveDraft') : canDirectWrite(role) ? t('saveSong') : t('submit'))}</button>
-            {existing?.kind === 'personal' ? <button type="button" className="lvm-song-editor__secondary" onClick={submitDraft} disabled={saving}>{t('submitDraft')}</button> : null}
+            <button type="button" className="lvm-song-editor__primary" onClick={save} disabled={saving || draftLocked}>{saving ? t('saving') : (existing?.kind === 'personal' ? t('saveDraft') : canDirectWrite(role) ? t('saveSong') : t('submit'))}</button>
+            {existing?.kind === 'personal' ? <button type="button" className="lvm-song-editor__secondary" onClick={submitDraft} disabled={saving || draftLocked}>{t('submitDraft')}</button> : null}
             <button type="button" className="lvm-song-editor__secondary" onClick={discard} disabled={!dirty || saving}>{t('discard')}</button>
             <button type="button" className="lvm-song-editor__secondary" onClick={cancel} disabled={saving}>{t('cancel')}</button>
             {existing?.kind === 'published' && isAtLeast('editor') ? <button type="button" className="lvm-song-editor__danger" onClick={deleteSong} disabled={saving}>{t('delete')}</button> : null}

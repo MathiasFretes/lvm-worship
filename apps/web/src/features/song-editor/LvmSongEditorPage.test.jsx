@@ -159,3 +159,18 @@ it('recovers the unsaved form and the same operation ID after an acknowledgement
   await waitFor(() => expect(context.save).toHaveBeenCalledTimes(2))
   expect(context.save.mock.calls[1][1].operationId).toBe(operation)
 })
+
+
+it.each(['submitted', 'published', 'archived'])('keeps a %s personal song read-only until it returns to draft', async status => {
+  await i18n.changeLanguage('en')
+  const row = { id: 'locked-draft', status, title: 'Retained draft', default_key: 'G', tags: ['QA'], chordpro_content: '[G]Submitted content' }
+  context.load.mockResolvedValue({ kind: 'personal', row, form: songFormFromRow(row) })
+  renderEditor('/portal/editor?p=locked-draft')
+  expect(await screen.findByDisplayValue('Retained draft')).toBeDisabled()
+  expect(screen.getByLabelText('ChordPro song body')).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Save draft', exact: true })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Submit draft', exact: true })).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }))
+  expect(await screen.findByText('Song library')).toBeInTheDocument()
+  expect(context.save).not.toHaveBeenCalled()
+})
