@@ -22,7 +22,7 @@ assert.equal(git(['status', '--porcelain']), '', 'Commit the exact client under 
 const serviceRepo = fileURLToPath(new URL('../../../../LVM Service/', import.meta.url))
 assert.equal(execFileSync('git', ['-C', serviceRepo, 'status', '--porcelain'], { encoding: 'utf8' }).trim(), '', 'Commit the Service UI before the gate')
 const serviceFrontendCommit = execFileSync('git', ['-C', serviceRepo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-const report = { run, database, frontend, serviceFrontend, serviceFrontendCommit, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '602a7781eac83a1e612d0ac37a9bfce089f9a05b', checks: [], errors: [], cleaned: false }
+const report = { run, database, frontend, serviceFrontend, serviceFrontendCommit, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '83c4c5a4f96676dc0e5fa74f26fce531062a6cb5', checks: [], errors: [], cleaned: false }
 const accounts = []
 const auditFault = 'qa_editor_fault_' + run.replaceAll('-', '')
 let faultInstalled = false
@@ -38,8 +38,8 @@ const literal = value => `'${String(value).replaceAll("'", "''")}'`
 const sql = statement => execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', `cd /srv/apps/la-voz-misionera && docker compose exec -T postgres psql -U lvm_owner -d ${database} -v ON_ERROR_STOP=1 -At`], { input: statement, encoding: 'utf8' }).trim()
 assert.equal(sql('SELECT current_database();'), database)
 assert.equal((await fetch(`${api}/health`)).status, 200)
-report.apiImage = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', "docker inspect -f '{{.Image}}' lvm-editor-qa-api-602a778"], { encoding: 'utf8' }).trim()
-report.schemaSha256 = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', 'sha256sum /srv/apps/la-voz-misionera/editor-gate-20261123-602a778/source/schema/012_editor_transactions.sql'], { encoding: 'utf8' }).trim().split(' ')[0]
+report.apiImage = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', "docker inspect -f '{{.Image}}' lvm-editor-revisions-qa-api"], { encoding: 'utf8' }).trim()
+report.schemaSha256 = execFileSync('ssh', ['-o', 'BatchMode=yes', 'hostinger-vps', 'sha256sum /srv/apps/la-voz-misionera/editor-revisions-83c4c5a/source/schema/012_editor_transactions.sql'], { encoding: 'utf8' }).trim().split(' ')[0]
 const baseline = () => JSON.parse(sql("SELECT json_build_object('users',(SELECT count(*) FROM public.users),'songs',(SELECT count(*) FROM public.songs),'drafts',(SELECT count(*) FROM public.personal_songs),'operations',(SELECT count(*) FROM private.editor_operations),'existingUsersFingerprint',(SELECT md5(coalesce(json_agg(u ORDER BY id)::text,'')) FROM public.users u),'existingSongsFingerprint',(SELECT md5(coalesce(json_agg(s ORDER BY id)::text,'')) FROM public.songs s));"))
 report.before = baseline()
 const rows = (table, where) => JSON.parse(sql(`SELECT coalesce(json_agg(t),'[]'::json) FROM (SELECT * FROM public.${table} WHERE ${where}) t;`))
@@ -257,9 +257,9 @@ try {
  assert.equal((await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: rejected.id, p_action: 'reject', p_reason: 'Revisar el arreglo' })).status, 200)
  assert.equal((await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: rejected.id, p_action: 'approve' })).status, 409)
  record('reviewer UI rejection preserves published content; repeated decision is idempotent and conflicting decision is 409')
- const draftResult = await request(a, 'data/personal_songs', 'POST', { owner_id: a.id, title: `${prefix} borrador`, default_key: 'G', tags: ['QA'], chordpro_content: body })
- assert.equal(draftResult.status, 201)
- const draft = draftResult.data[0]
+ const draftResult = await request(a, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: 'create_draft', p_song_id: null, p_personal_song_id: null, p_payload: { title: `${prefix} borrador`, default_key: 'G', tags: ['QA'], chordpro_content: body } })
+ assert.equal(draftResult.status, 200)
+ const draft = draftResult.data.row
  await user.page.goto(`${frontend}/portal/editor?p=${draft.id}`)
  await expect(user.page.getByRole('button', { name: 'Guardar borrador' })).toBeVisible()
  await user.page.getByLabel('Letra con acordes en ChordPro').fill(editBody)
@@ -268,7 +268,7 @@ try {
  await user.page.reload()
  await expect(user.page.getByLabel('Letra con acordes en ChordPro')).toHaveValue(editBody)
  assert.deepEqual((await request(b, `data/personal_songs?id=eq.${draft.id}`)).data, [])
- assert.deepEqual((await request(b, `data/personal_songs?id=eq.${draft.id}`, 'PATCH', { title: 'intrusion' })).data, [])
+ assert.ok((await request(b, `data/personal_songs?id=eq.${draft.id}`, 'PATCH', { title: 'intrusion' })).status >= 400)
  assert.equal(rows('personal_songs', `id=${literal(draft.id)}`)[0].title, draft.title)
  record('private draft UI save/reload and cross-account read/write isolation')
  fault(a)
@@ -318,6 +318,71 @@ try {
  assert.ok(await servicePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
  await servicePage.screenshot({ path: fileURLToPath(new URL('service-review-mobile.png', output)), fullPage: true })
  record('Service review works at 390px, focuses the selected detail and has no horizontal overflow')
+
+ for (const [table, method, payload] of [
+  ['songs', 'POST', { title: `${prefix} denied direct`, slug: `denied_${run}` }],
+  [`songs?id=eq.${direct.id}`, 'PATCH', { title: 'denied update' }],
+  ['song_suggestions', 'POST', { suggested_by: editor.id, type: 'addition', payload: { title: 'denied' } }],
+  ['personal_songs', 'POST', { owner_id: editor.id, title: 'denied draft' }],
+ ]) assert.ok((await request(editor, `data/${table}`, method, payload)).status >= 400)
+ record('authorized editors also cannot bypass transactions with direct song, proposal or draft writes')
+ const makeCommand = (action, song, payload) => ({ p_operation_id: randomUUID(), p_action: action, p_song_id: song?.id || null, p_personal_song_id: null, p_payload: payload, p_expected_updated_at: song?.updated_at || null })
+ const versionPayload = { title: `${prefix} revisión`, default_key: 'G', tags: ['QA'], chordpro_content: '[G]Versión base' }
+ const versionCreated = await request(editor, 'data/rpc/mutate_editor_song', 'POST', makeCommand('save_published', null, versionPayload))
+ assert.equal(versionCreated.status, 200)
+ const versionOne = versionCreated.data.row
+ const proposed = await request(a, 'data/rpc/mutate_editor_song', 'POST', makeCommand('suggest', versionOne, { ...versionPayload, chordpro_content: '[C]Propuesta conservada' }))
+ assert.equal(proposed.status, 200)
+ const revisionSaved = await request(editor, 'data/rpc/mutate_editor_song', 'POST', makeCommand('save_published', versionOne, { ...versionPayload, chordpro_content: '[D]Cambio posterior' }))
+ assert.equal(revisionSaved.status, 200)
+ const versionTwo = revisionSaved.data.row
+ for (const action of ['save_published', 'suggest', 'delete', 'update_pptx']) {
+  const command = { ...makeCommand(action, versionTwo, versionPayload), p_expected_updated_at: null }
+  assert.equal((await request(editor, 'data/rpc/mutate_editor_song', 'POST', command)).status, 409)
+ }
+ for (const action of ['save_draft', 'submit_draft', 'delete_draft']) {
+  assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', { ...makeCommand(action, null, versionPayload), p_personal_song_id: draft.id })).status, 409)
+ }
+ record('API rejects missing revisions for every existing song/draft mutation')
+ const staleApproval = await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: proposed.data.suggestionId, p_action: 'approve' })
+ assert.equal(staleApproval.status, 409)
+ assert.equal(rows('songs', `id=${literal(versionTwo.id)}`)[0].chordpro_content, '[D]Cambio posterior')
+ assert.equal(rows('song_suggestions', `id=${literal(proposed.data.suggestionId)}`)[0].status, 'pending')
+ await servicePage.reload()
+ await servicePage.getByRole('button', { name: `Revisar ${versionPayload.title}`, exact: true }).click()
+ await expect(servicePage.getByRole('region', { name: 'Propuesta desactualizada' })).toBeVisible()
+ await expect(servicePage.getByRole('button', { name: 'Aprobar propuesta', exact: true })).toBeDisabled()
+ await servicePage.getByText('Versión publicada actual', { exact: true }).click()
+ await expect(servicePage.getByText('[D]Cambio posterior', { exact: true })).toBeVisible()
+ await servicePage.getByRole('button', { name: 'Comparé las versiones; actualizar base', exact: true }).click()
+ await expect(servicePage.getByRole('button', { name: 'Confirmar actualización de base', exact: true })).toBeVisible()
+ assert.equal(rows('songs', `id=${literal(versionTwo.id)}`)[0].chordpro_content, '[D]Cambio posterior')
+ await servicePage.getByRole('button', { name: 'Confirmar actualización de base', exact: true }).click()
+ await expect(servicePage.getByText('Base actualizada tras la comparación. La propuesta todavía no está aprobada.')).toBeVisible()
+ assert.equal(rows('song_suggestions', `id=${literal(proposed.data.suggestionId)}`)[0].status, 'pending')
+ await servicePage.screenshot({ path: fileURLToPath(new URL('service-explicit-rebase.png', output)), fullPage: true })
+ await servicePage.getByRole('button', { name: 'Aprobar propuesta', exact: true }).click()
+ await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
+ await expect(servicePage.getByRole('status').filter({ hasText: 'Propuesta aprobada y guardada.' })).toBeVisible()
+ assert.equal(rows('songs', `id=${literal(versionTwo.id)}`)[0].chordpro_content, '[C]Propuesta conservada')
+ record('stale approval returns 409; Service requires compare, confirmed rebase and a separate approval')
+ const presentationBase = rows('songs', `id=${literal(versionTwo.id)}`)[0]
+ const presentationCommand = makeCommand('update_pptx', presentationBase, { pptx_url: 'https://example.invalid/qa.pptx' })
+ const presentation = await request(editor, 'data/rpc/mutate_editor_song', 'POST', presentationCommand)
+ assert.equal(presentation.status, 200)
+ const presentationAgain = await request(editor, 'data/rpc/mutate_editor_song', 'POST', presentationCommand)
+ assert.deepEqual(presentationAgain.data, presentation.data)
+ assert.equal(presentation.data.row.chordpro_content, presentationBase.chordpro_content)
+ assert.equal(presentation.data.row.pptx_url, 'https://example.invalid/qa.pptx')
+ assert.equal((await request(editor, 'data/rpc/mutate_editor_song', 'POST', { ...presentationCommand, p_operation_id: randomUUID() })).status, 409)
+ assert.ok((await request(editor, 'data/rpc/mutate_editor_song', 'POST', makeCommand('update_pptx', presentation.data.row, { pptx_url: null }))).status >= 400)
+ const admin = await account('presentation-admin')
+ sql(`UPDATE public.users SET role='admin' WHERE id=${literal(admin.id)};`)
+ const removed = await request(admin, 'data/rpc/mutate_editor_song', 'POST', makeCommand('update_pptx', presentation.data.row, { pptx_url: null }))
+ assert.equal(removed.status, 200)
+ assert.equal(removed.data.row.pptx_url, null)
+ assert.equal(removed.data.row.chordpro_content, presentationBase.chordpro_content)
+ record('presentation metadata remains functional with CAS, idempotency and administrator-only removal; no file upload is simulated')
  sql(`UPDATE public.users SET role='user' WHERE id=${literal(editor.id)};`)
  const revoked = await request(editor, `data/songs?id=eq.${direct.id}`, 'PATCH', { title: 'revoked write' })
  assert.ok(revoked.status >= 400 || Array.isArray(revoked.data) && revoked.data.length === 0)
