@@ -19,7 +19,10 @@ const output = new URL('../../../test-results/editor-postgres/', import.meta.url
 await mkdir(output, { recursive: true })
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim()
 assert.equal(git(['status', '--porcelain']), '', 'Commit the exact client under test before running the final gate')
-const report = { run, database, frontend, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '602a7781eac83a1e612d0ac37a9bfce089f9a05b', checks: [], errors: [], cleaned: false }
+const serviceRepo = fileURLToPath(new URL('../../../../LVM Service/', import.meta.url))
+assert.equal(execFileSync('git', ['-C', serviceRepo, 'status', '--porcelain'], { encoding: 'utf8' }).trim(), '', 'Commit the Service UI before the gate')
+const serviceFrontendCommit = execFileSync('git', ['-C', serviceRepo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+const report = { run, database, frontend, serviceFrontend, serviceFrontendCommit, clientCommit: git(['rev-parse', 'HEAD']), apiCommit: '602a7781eac83a1e612d0ac37a9bfce089f9a05b', checks: [], errors: [], cleaned: false }
 const accounts = []
 const auditFault = 'qa_editor_fault_' + run.replaceAll('-', '')
 let faultInstalled = false
@@ -157,7 +160,7 @@ try {
  await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
  await expect(servicePage.getByRole('alert')).toBeVisible()
  await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
- await expect(servicePage.getByRole('status')).toHaveText('Propuesta aprobada y guardada.')
+ await expect(servicePage.getByRole('status').filter({ hasText: 'Propuesta aprobada y guardada.' })).toBeVisible()
  const publishedSuggestion = rows('song_suggestions', `id=${literal(addition.id)}`)[0]
  const approved = { status: 200, data: { song_id: publishedSuggestion.song_id } }
  record('Service editor finds and approves the new song through the real UI, with audit rollback and lost-acknowledgement replay')
