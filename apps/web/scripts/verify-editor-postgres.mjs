@@ -55,7 +55,7 @@ async function account(label) {
 }
 const browser = await chromium.launch({ headless: true })
 let lastPage
-async function ui(actor, login = false) {
+async function ui(actor, login = false, spoofRole = false) {
  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'es-ES' })
  await context.addInitScript(() => localStorage.setItem('lvm.uiLanguage', 'es'))
  let jar = login ? '' : actor.cookie
@@ -77,7 +77,12 @@ async function ui(actor, login = false) {
   if (setCookie) jar = setCookie.split(';')[0]
   const forwarded = Object.fromEntries(response.headers)
   delete forwarded['content-length']; delete forwarded['content-encoding']
-  await route.fulfill({ status: response.status, headers: forwarded, body: Buffer.from(await response.arrayBuffer()) })
+  let buffer = Buffer.from(await response.arrayBuffer())
+  if (spoofRole && url.pathname === '/api/data/users' && response.ok) {
+    const data = JSON.parse(buffer.toString())
+    buffer = Buffer.from(JSON.stringify(Array.isArray(data) ? data.map(row => ({ ...row, role: 'editor' })) : { ...data, role: 'editor' }))
+  }
+  await route.fulfill({ status: response.status, headers: forwarded, body: buffer })
  })
  if (!login) {
   const [name, ...parts] = actor.cookie.split('=')
@@ -152,6 +157,15 @@ try {
  assert.equal(published.language, 'es')
  assert.equal(published.country, 'Paraguay')
  record('PostgreSQL denies ordinary direct publication/review; editor approval preserves ChordPro')
+ const impersonated = await ui(a, false, true)
+ await form(impersonated.page, `${prefix} rol manipulado`, body)
+ await impersonated.page.getByRole('button', { name: 'Guardar canción', exact: true }).click()
+ await expect(impersonated.page.getByRole('alert')).toBeVisible()
+ await expect(impersonated.page.getByLabel('Letra con acordes en ChordPro')).toHaveValue(body)
+ assert.equal(rows('songs', `title=${literal(prefix + ' rol manipulado')}`).length, 0)
+ assert.equal(rows('users', `id=${literal(a.id)}`)[0].role, 'user')
+ await impersonated.context.close()
+ record('a forged editor role in the frontend still cannot publish through the real API/PostgreSQL')
  const reviewer = await ui(editor)
  await form(reviewer.page, `${prefix} directa`, body)
  fault(editor)
