@@ -5,14 +5,17 @@ function parseChordLine(line) {
   const segments = []
   const re = /\[([^\]]+)\]/g
   let lastIndex = 0
+  let chord = null
   let match
 
   while ((match = re.exec(line)) !== null) {
-    segments.push({ chord: match[1], lyric: line.slice(lastIndex, match.index) })
+    const lyric = line.slice(lastIndex, match.index)
+    if (lyric || chord) segments.push({ chord, lyric })
+    chord = match[1]
     lastIndex = re.lastIndex
   }
   const remaining = line.slice(lastIndex)
-  if (remaining || segments.length === 0) segments.push({ chord: null, lyric: remaining })
+  if (remaining || chord || segments.length === 0) segments.push({ chord, lyric: remaining })
   return segments
 }
 
