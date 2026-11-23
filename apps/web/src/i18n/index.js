@@ -1,3 +1,7 @@
+import enSongEditor from './locales/en/songEditor.json'
+import esSongEditor from './locales/es/songEditor.json'
+import koSongEditor from './locales/ko/songEditor.json'
+import trSongEditor from './locales/tr/songEditor.json'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
@@ -71,6 +75,7 @@ const resources = {
     profile: enProfile,
     admin: enAdmin,
     editor: enEditor,
+    songEditor: enSongEditor,
     errors: enErrors,
     pages: enPages,
     practice: enPractice,
@@ -85,6 +90,7 @@ const resources = {
     profile: esProfile,
     admin: esAdmin,
     editor: esEditor,
+    songEditor: esSongEditor,
     errors: esErrors,
     pages: esPages,
     practice: esPractice,
@@ -99,6 +105,7 @@ const resources = {
     profile: koProfile,
     admin: koAdmin,
     editor: koEditor,
+    songEditor: koSongEditor,
     errors: koErrors,
     pages: koPages,
     practice: koPractice,
@@ -113,6 +120,7 @@ const resources = {
     profile: trProfile,
     admin: trAdmin,
     editor: trEditor,
+    songEditor: trSongEditor,
     errors: trErrors,
     pages: trPages,
     practice: trPractice,

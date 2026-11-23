@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
@@ -7,6 +8,7 @@ const workerUrl = import.meta.env.VITE_PPTX_WORKER_URL || ''
 const maxBytes = 20 * 1024 * 1024
 
 export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled }) {
+  const { t } = useTranslation('songEditor')
   const { session } = useAuth()
   const { can, isAtLeast } = useRole()
   const [file, setFile] = useState(null)
@@ -21,8 +23,8 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
     setFile(null)
     setError('')
     if (!selected) return
-    if (!selected.name.toLowerCase().endsWith('.pptx')) { setError('Choose a PPTX file'); return }
-    if (selected.size > maxBytes) { setError('The file must be smaller than 20 MB'); return }
+    if (!selected.name.toLowerCase().endsWith('.pptx')) { setError(t('choosePptx')); return }
+    if (selected.size > maxBytes) { setError(t('pptxSize')); return }
     setFile(selected)
   }
 
@@ -32,7 +34,7 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
       headers: { Authorization: `Bearer ${session?.access_token || ''}`, ...(options.headers || {}) },
     })
     const data = await response.json()
-    if (!response.ok) throw new Error(data.error || 'PPTX request failed')
+    if (!response.ok) throw new Error(data.error || t('pptxRequestFailed'))
     return data
   }
 
@@ -45,13 +47,13 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
       body.append('file', file)
       body.append('slug', slug)
       const data = await request('/upload', { method: 'POST', body })
-      if (!data.url) throw new Error('PPTX upload returned no URL')
+      if (!data.url) throw new Error(t('pptxNoUrl'))
       await onSaved(data.url)
       onChange(data.url)
       setFile(null)
       setReplacing(false)
     } catch (cause) {
-      setError(cause.message || 'PPTX upload failed')
+      setError(cause.message || t('pptxUploadFailed'))
     } finally {
       setBusy(false)
     }
@@ -59,7 +61,7 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
 
   async function remove() {
     if (!canDelete || !value || !slug || !workerUrl) return
-    if (!window.confirm(`Delete the PPTX for “${title}”?`)) return
+    if (!window.confirm(t('deletePptxQuestion', { title }))) return
     setBusy(true)
     setError('')
     try {
@@ -68,7 +70,7 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
       onChange('')
       setFile(null)
     } catch (cause) {
-      setError(cause.message || 'PPTX deletion failed')
+      setError(cause.message || t('pptxDeleteFailed'))
     } finally {
       setBusy(false)
     }
@@ -78,18 +80,18 @@ export function PptxAttachment({ value, slug, title, onChange, onSaved, disabled
     <div className="lvm-song-editor__pptx">
       {value && !replacing ? (
         <div className="lvm-song-editor__tools">
-          <a href={value.startsWith('http') ? value : publicUrl(value)} target="_blank" rel="noopener noreferrer">Download PPTX</a>
-          {canWrite ? <button type="button" onClick={() => setReplacing(true)} disabled={disabled || busy}>Replace</button> : null}
-          {canDelete ? <button type="button" onClick={remove} disabled={disabled || busy || !workerUrl}>Delete</button> : null}
+          <a href={value.startsWith('http') ? value : publicUrl(value)} target="_blank" rel="noopener noreferrer">{t('downloadPptx')}</a>
+          {canWrite ? <button type="button" onClick={() => setReplacing(true)} disabled={disabled || busy}>{t('replace')}</button> : null}
+          {canDelete ? <button type="button" onClick={remove} disabled={disabled || busy || !workerUrl}>{t('deletePptx')}</button> : null}
         </div>
       ) : canWrite ? (
         <div className="lvm-song-editor__tools">
-          <input type="file" aria-label="PPTX file" accept=".pptx" onChange={selectFile} disabled={disabled || busy || !workerUrl} />
-          <button type="button" onClick={upload} disabled={disabled || busy || !file || !workerUrl}>{busy ? 'Uploading…' : 'Upload PPTX'}</button>
-          {replacing ? <button type="button" onClick={() => { setReplacing(false); setFile(null); setError('') }}>Cancel replacement</button> : null}
+          <input type="file" aria-label={t('pptxFile')} accept=".pptx" onChange={selectFile} disabled={disabled || busy || !workerUrl} />
+          <button type="button" onClick={upload} disabled={disabled || busy || !file || !workerUrl}>{busy ? t('uploading') : t('uploadPptx')}</button>
+          {replacing ? <button type="button" onClick={() => { setReplacing(false); setFile(null); setError('') }}>{t('cancelReplacement')}</button> : null}
         </div>
       ) : null}
-      {!workerUrl && canWrite ? <p>PPTX upload is not configured in this environment.</p> : null}
+      {!workerUrl && canWrite ? <p>{t('pptxUnavailable')}</p> : null}
       {error ? <p role="alert">{error}</p> : null}
     </div>
   )

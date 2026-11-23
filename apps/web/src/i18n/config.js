@@ -23,6 +23,7 @@ export const I18N_NAMESPACES = [
   'profile',
   'admin',
   'editor',
+  'songEditor',
   'errors',
   'pages',
   'practice',

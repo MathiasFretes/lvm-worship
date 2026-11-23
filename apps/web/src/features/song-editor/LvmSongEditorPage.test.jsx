@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HelmetProvider } from 'react-helmet-async'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import i18n from '../../i18n'
 import LvmSongEditorPage from './LvmSongEditorPage'
 import { songFormFromRow } from './songEditorModel'
 
@@ -79,4 +80,27 @@ describe('LVM song editor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByLabelText('Title *')).toBeInTheDocument()
   })
+})
+
+
+it('uses Spanish for the editor and validation while language changes preserve unsaved work', async () => {
+  await i18n.changeLanguage('es')
+  renderEditor()
+  await screen.findByRole('heading', { name: 'Nueva canción' })
+  expect(screen.getByRole('region', { name: 'Datos de la canción' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Tono *')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Guía de ChordPro' })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Guardar canción' }))
+  expect(screen.getByText('El título es obligatorio')).toBeInTheDocument()
+  expect(screen.getByText('El tono es obligatorio')).toBeInTheDocument()
+  expect(screen.getByText('Agregá al menos una etiqueta')).toBeInTheDocument()
+  await userEvent.type(screen.getByRole('textbox', { name: /^Título/ }), 'Borrador sin guardar')
+  fireEvent.change(screen.getByLabelText('Letra con acordes en ChordPro'), { target: { value: '[G]Mi canción' } })
+  await act(async () => { await i18n.changeLanguage('en') })
+  expect(screen.getByRole('textbox', { name: /^Title/ })).toHaveValue('Borrador sin guardar')
+  expect(screen.getByLabelText('ChordPro song body')).toHaveValue('[G]Mi canción')
+  await act(async () => { await i18n.changeLanguage('es') })
+  expect(screen.getByRole('textbox', { name: /^Título/ })).toHaveValue('Borrador sin guardar')
+  expect(context.load).toHaveBeenCalledTimes(1)
+  expect(context.save).not.toHaveBeenCalled()
 })
