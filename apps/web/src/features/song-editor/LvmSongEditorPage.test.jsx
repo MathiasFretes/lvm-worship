@@ -6,13 +6,13 @@ import i18n from '../../i18n'
 import LvmSongEditorPage from './LvmSongEditorPage'
 import { songFormFromRow } from './songEditorModel'
 
-const context = vi.hoisted(() => ({ load: vi.fn(), save: vi.fn(), songs: [], role: 'editor' }))
+const context = vi.hoisted(() => ({ load: vi.fn(), save: vi.fn(), songs: [], role: 'editor', refresh: vi.fn() }))
 vi.mock('./songEditorRepository', () => ({ loadEditableSong: context.load, saveEditableSong: context.save }))
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ session: { user: { id: 'user-1' } }, role: context.role, hasMinRole: () => true }) }))
 vi.mock('../../hooks/useRole', () => ({ useRole: () => ({ role: context.role, isAtLeast: role => role === 'editor' }) }))
-vi.mock('../../hooks/useSongs', () => ({ useSongs: () => ({ songs: context.songs, loading: false, error: null }) }))
+vi.mock('../../hooks/useSongs', () => ({ useSongs: () => ({ songs: context.songs, loading: false, error: null, retry: context.refresh }) }))
 vi.mock('./PptxAttachment', () => ({ PptxAttachment: () => <p>PPTX attachment</p> }))
-vi.mock('../../components/editor/SuggestionReviewPanel', () => ({ default: () => null }))
+vi.mock('../../components/editor/SuggestionReviewPanel', () => ({ default: ({ onApproved }) => <button onClick={onApproved}>Approve fixture</button> }))
 vi.mock('../../components/editor/ChordProGuideDrawer', () => ({ default: () => null }))
 vi.mock('../../components/editor/LivePreviewModal', () => ({ default: () => null }))
 
@@ -31,8 +31,10 @@ function renderEditor(path = '/portal/editor') {
 }
 
 beforeEach(() => {
+  for (const key of Object.keys(localStorage)) if (key.startsWith('lvm.editor-draft.v1:')) localStorage.removeItem(key)
   context.load.mockReset()
   context.save.mockReset()
+  context.refresh.mockReset().mockResolvedValue([])
   context.songs = []
   context.role = 'editor'
   context.load.mockResolvedValue({ kind: 'new', row: null, form: songFormFromRow() })
@@ -54,6 +56,7 @@ describe('LVM song editor', () => {
     context.save.mockImplementation(async (_, { form }) => ({ kind: 'published', row: { id: 'uuid-1', slug: 'nino_de_belen', ...form }, form }))
     await userEvent.click(screen.getByRole('button', { name: 'Save song' }))
     await waitFor(() => expect(context.save).toHaveBeenCalledOnce())
+    await waitFor(() => expect(context.refresh).toHaveBeenCalledOnce())
     expect(context.save.mock.calls[0][1].form).toMatchObject({ title: 'Niño de Belén', artist: 'Equipo LVM', default_key: 'G', tags: ['Navidad'] })
   })
 
@@ -103,4 +106,56 @@ it('uses Spanish for the editor and validation while language changes preserve u
   expect(screen.getByRole('textbox', { name: /^Título/ })).toHaveValue('Borrador sin guardar')
   expect(context.load).toHaveBeenCalledTimes(1)
   expect(context.save).not.toHaveBeenCalled()
+})
+
+
+it('reloads the published form after approval and refreshes the library', async () => {
+  const row = { id: 'song-review', slug: 'review', title: 'Review', default_key: 'G', tags: ['QA'], chordpro_content: '[G]Before' }
+  const approved = { ...row, chordpro_content: '[D]Approved' }
+  context.load.mockResolvedValueOnce({ kind: 'published', row, form: songFormFromRow(row) })
+    .mockResolvedValue({ kind: 'published', row: approved, form: songFormFromRow(approved) })
+  renderEditor('/portal/editor/review')
+  await screen.findByDisplayValue('[G]Before')
+  await userEvent.click(screen.getByRole('button', { name: 'Approve fixture' }))
+  expect(await screen.findByDisplayValue('[D]Approved')).toBeInTheDocument()
+  expect(context.refresh).toHaveBeenCalledOnce()
+})
+
+it('keeps unsaved edits on approval and loads the approved version when they are discarded', async () => {
+  const row = { id: 'song-review', slug: 'review', title: 'Review', default_key: 'G', tags: ['QA'], chordpro_content: '[G]Before' }
+  const approved = { ...row, chordpro_content: '[D]Approved' }
+  context.load.mockResolvedValueOnce({ kind: 'published', row, form: songFormFromRow(row) })
+    .mockResolvedValue({ kind: 'published', row: approved, form: songFormFromRow(approved) })
+  renderEditor('/portal/editor/review')
+  await screen.findByDisplayValue('[G]Before')
+  fireEvent.change(screen.getByLabelText('ChordPro song body'), { target: { value: '[C]Unsaved local edit' } })
+  await userEvent.click(screen.getByRole('button', { name: 'Approve fixture' }))
+  expect(screen.getByLabelText('ChordPro song body')).toHaveValue('[C]Unsaved local edit')
+  expect(context.load).toHaveBeenCalledOnce()
+  expect(screen.getByRole('status')).toHaveTextContent('Suggestion approved.')
+  await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
+  expect(await screen.findByDisplayValue('[D]Approved')).toBeInTheDocument()
+  expect(context.save).not.toHaveBeenCalled()
+})
+
+
+it('recovers the unsaved form and the same operation ID after an acknowledgement failure and remount', async () => {
+  context.save.mockRejectedValueOnce(new Error('Lost acknowledgement'))
+    .mockImplementationOnce(async (_, { form }) => ({ kind: 'published', row: { id: 'song-resume', slug: 'resume', ...form }, form }))
+  const first = renderEditor()
+  await screen.findByRole('heading', { name: 'New song' })
+  await userEvent.type(screen.getByLabelText('Title *'), 'Resume')
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: /^Key/ }), 'G')
+  await userEvent.type(screen.getByLabelText('Tags *'), 'QA')
+  fireEvent.change(screen.getByLabelText('ChordPro song body'), { target: { value: '[G]Recovered lyrics' } })
+  await userEvent.click(screen.getByRole('button', { name: 'Save song' }))
+  await screen.findByRole('alert')
+  const operation = context.save.mock.calls[0][1].operationId
+  first.unmount()
+  renderEditor()
+  expect(await screen.findByDisplayValue('Resume')).toBeInTheDocument()
+  expect(screen.getByLabelText('ChordPro song body')).toHaveValue('[G]Recovered lyrics')
+  await userEvent.click(screen.getByRole('button', { name: 'Save song' }))
+  await waitFor(() => expect(context.save).toHaveBeenCalledTimes(2))
+  expect(context.save.mock.calls[1][1].operationId).toBe(operation)
 })

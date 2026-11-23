@@ -130,7 +130,7 @@ function RejectionForm({ onSubmit, onCancel }) {
   )
 }
 
-function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTouchUp, canDirectDelete }) {
+function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTouchUp, canDirectDelete, disabled }) {
   const { t } = useTranslation('songEditor')
   const [rejecting, setRejecting] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -209,7 +209,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
             type="button"
             className="lvm-btn lvm-btn--primary lvm-btn--sm"
             onClick={handleApprove}
-            disabled={loading}
+            disabled={loading || disabled}
           >
             {t('approve')}
           </button>
@@ -218,7 +218,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
           type="button"
           className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={() => onTouchUp(suggestion)}
-          disabled={loading}
+          disabled={loading || disabled}
         >
           {t('touchUp')}
         </button>
@@ -226,7 +226,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
           type="button"
           className="lvm-btn lvm-btn--destructive lvm-btn--sm"
           onClick={() => setRejecting(true)}
-          disabled={loading}
+          disabled={loading || disabled}
         >
           {t('reject')}
         </button>
@@ -242,7 +242,7 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
   )
 }
 
-export default function SuggestionReviewPanel({ songId, currentSong, onApproved, onRejected, onTouchUp }) {
+export default function SuggestionReviewPanel({ songId, currentSong, onApproved, onRejected, onTouchUp, disabled = false }) {
   const { t } = useTranslation('songEditor')
   const { isAtLeast } = useRole()
   const [suggestions, setSuggestions] = useState([])
@@ -310,6 +310,7 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
           onRejected={handleRejected}
           onTouchUp={onTouchUp}
           canDirectDelete={canDirectDelete}
+          disabled={disabled}
         />
       ))}
     </div>

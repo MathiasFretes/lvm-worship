@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { canDirectWrite, submitSongSuggestion } from '@lavozmisionera/core'
+import { canDirectWrite } from '@lavozmisionera/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { useSongs } from '../../hooks/useSongs'
@@ -13,8 +13,9 @@ import LivePreviewModal from '../../components/editor/LivePreviewModal'
 import ChordProGuideDrawer from '../../components/editor/ChordProGuideDrawer'
 import SuggestionReviewPanel from '../../components/editor/SuggestionReviewPanel'
 import { PptxAttachment } from './PptxAttachment'
-import { deleteEditableSong, loadEditableSong, saveEditableSong } from './songEditorRepository'
-import { readChordProFile, songFormFromRow, songFormToRow, validateSongForm } from './songEditorModel'
+import { deleteEditableSong, loadEditableSong, saveEditableSong, submitEditableDraft } from './songEditorRepository'
+import { readChordProFile, songFormFromRow, validateSongForm } from './songEditorModel'
+import { clearEditorDraft, readEditorDraft, writeEditorDraft } from './editorDraftJournal'
 import './lvm-song-editor.css'
 
 const SECTIONS = [
@@ -30,8 +31,10 @@ export default function LvmSongEditorPage() {
   const personalId = searchParams.get('p')
   const navigate = useNavigate()
   const { session } = useAuth()
+  const accountId = session?.user?.id
+  const journalRoute = personalId ? `personal:${personalId}` : slug ? `song:${slug}` : 'new'
   const { role, isAtLeast } = useRole()
-  const { songs } = useSongs()
+  const { songs, retry: refreshSongs } = useSongs()
   const [revision, setRevision] = useState(0)
   const [status, setStatus] = useState('loading')
   const [existing, setExisting] = useState(null)
@@ -44,14 +47,18 @@ export default function LvmSongEditorPage() {
   const [showPreview, setShowPreview] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [reviewChanged, setReviewChanged] = useState(false)
   const [search, setSearch] = useState('')
   const [chord, setChord] = useState('G')
   const bodyRef = useRef(null)
   const fileRef = useRef(null)
+  const operationRef = useRef(null)
+  const loadedScope = useRef(null)
   const dirty = JSON.stringify(form) !== JSON.stringify(savedForm)
 
   useEffect(() => {
     let active = true
+    loadedScope.current = null
     setStatus('loading')
     setFailure('')
     setErrors({})
@@ -60,16 +67,25 @@ export default function LvmSongEditorPage() {
       .then(result => {
         if (!active) return
         if (!result) { setStatus('missing'); return }
-        setExisting(result)
-        setForm(result.form)
+        const recovered = readEditorDraft(accountId, journalRoute)
+        loadedScope.current = `${accountId}:${journalRoute}`
+        setExisting(recovered?.baseUpdatedAt && result.row ? { ...result, row: { ...result.row, updated_at: recovered.baseUpdatedAt } } : result)
+        setForm(recovered ? songFormFromRow(recovered.form) : result.form)
         setSavedForm(result.form)
+        operationRef.current = recovered?.operation || null
+        setReviewChanged(false)
         setStatus('ready')
       })
       .catch(error => {
         if (active) { setFailure(error.message || 'loadFailed'); setStatus('error') }
       })
     return () => { active = false }
-  }, [slug, personalId, revision])
+  }, [slug, personalId, revision, accountId, journalRoute])
+
+  useEffect(() => {
+    if (status !== 'ready' || loadedScope.current !== `${accountId}:${journalRoute}`) return
+    if (dirty) writeEditorDraft(accountId, journalRoute, { form, baseUpdatedAt: existing?.row?.updated_at, operation: operationRef.current })
+  }, [accountId, journalRoute, status, dirty, form, existing])
 
   useEffect(() => {
     function onBeforeUnload(event) {
@@ -138,6 +154,13 @@ export default function LvmSongEditorPage() {
     }
   }
 
+  function operationId(action) {
+    const signature = JSON.stringify({ action, form, id: existing?.row?.id, updatedAt: existing?.row?.updated_at })
+    if (operationRef.current?.signature !== signature) operationRef.current = { signature, id: crypto.randomUUID() }
+    writeEditorDraft(accountId, journalRoute, { form, baseUpdatedAt: existing?.row?.updated_at, operation: operationRef.current })
+    return operationRef.current.id
+  }
+
   async function save() {
     const nextErrors = validateSongForm(form)
     setErrors(nextErrors)
@@ -146,11 +169,13 @@ export default function LvmSongEditorPage() {
     setFailure('')
     setNotice('')
     try {
-      const result = await saveEditableSong(supabase, { form, existing, role, actorId: session?.user?.id })
+      const result = await saveEditableSong(supabase, { form, existing, role, operationId: operationId('save') })
       if (result.kind === 'invalid') { setErrors(result.errors); return }
+      clearEditorDraft(accountId, journalRoute)
       setForm(result.form)
       setSavedForm(result.form)
       if (result.kind === 'published') {
+        await refreshSongs?.()
         setExisting({ kind: 'published', row: result.row, form: result.form })
         setNotice(t('saved'))
         if (result.row.slug !== slug) navigate(`/portal/editor/${result.row.slug}`, { replace: true })
@@ -161,7 +186,8 @@ export default function LvmSongEditorPage() {
         setNotice(t('submitted'))
       }
     } catch (error) {
-      setFailure(error.message || t('saveFailed'))
+      if (error.code === 'PT409' || error.status === 409) { setFailure(t('saveConflict')); setReviewChanged(true) }
+      else setFailure(t('saveUnconfirmed'))
     } finally {
       setSaving(false)
     }
@@ -174,19 +200,13 @@ export default function LvmSongEditorPage() {
     setSaving(true)
     setFailure('')
     try {
-      const saved = await saveEditableSong(supabase, { form, existing, role, actorId: session?.user?.id })
-      await submitSongSuggestion(supabase, {
-        type: saved.row.source_song_id ? 'edit' : 'addition',
-        payload: songFormToRow(form),
-        songId: saved.row.source_song_id || null,
-        personalSongId: saved.row.id,
-      })
-      const { error } = await supabase.from('personal_songs').update({ status: 'submitted' }).eq('id', saved.row.id)
-      if (error) throw error
+      await submitEditableDraft(supabase, { form, existing, operationId: operationId('submit_draft') })
+      clearEditorDraft(accountId, journalRoute)
       setNotice(t('draftSubmitted'))
       navigate('/songs')
     } catch (error) {
-      setFailure(error.message || t('submitFailed'))
+      if (error.code === 'PT409' || error.status === 409) { setFailure(t('saveConflict')); setReviewChanged(true) }
+      else setFailure(t('saveUnconfirmed'))
     } finally {
       setSaving(false)
     }
@@ -205,7 +225,8 @@ export default function LvmSongEditorPage() {
     if (!window.confirm(t('deleteQuestion', { title: form.title }))) return
     setFailure('')
     try {
-      await deleteEditableSong(supabase, { song: existing.row, role, actorId: session?.user?.id })
+      await deleteEditableSong(supabase, { song: existing.row, role, operationId: operationId('delete') })
+      await refreshSongs?.()
       navigate('/songs')
     } catch (error) {
       setFailure(error.message || t('deleteFailed'))
@@ -217,6 +238,25 @@ export default function LvmSongEditorPage() {
     else navigate('/songs')
   }
 
+  function approved() {
+    void refreshSongs?.()
+    if (dirty) {
+      setReviewChanged(true)
+      setNotice(`${t('approved')} ${t('unsaved')}`)
+    } else {
+      setRevision(value => value + 1)
+    }
+  }
+
+  function discard() {
+    clearEditorDraft(accountId, journalRoute)
+    if (reviewChanged) setRevision(value => value + 1)
+    else setForm(savedForm)
+    setErrors({})
+    setFailure('')
+    setNotice('')
+  }
+
   return (
     <main className="lvm-song-editor">
       <Helmet><title>{form.title ? t('editTitle', { title: form.title }) : t('pageTitle')} – La Voz Misionera</title></Helmet>
@@ -226,16 +266,16 @@ export default function LvmSongEditorPage() {
           <h1>{existing?.kind === 'published' || existing?.kind === 'personal' ? t('editSong') : t('newSong')}</h1>
           <p>{t('description')}</p>
         </div>
-        <button type="button" className="lvm-song-editor__secondary" onClick={cancel}>{t('back')}</button>
+        <button type="button" className="lvm-song-editor__secondary" onClick={cancel} disabled={saving}>{t('back')}</button>
       </header>
 
       <section className="lvm-song-editor__finder" aria-label={t('finder')}>
         <label htmlFor="editor-find">{t('finder')}</label>
-        <input id="editor-find" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('searchPlaceholder')} />
+        <input id="editor-find" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t('searchPlaceholder')} disabled={saving} />
         {matches.length > 0 ? (
           <div className="lvm-song-editor__matches">
             {matches.map(song => (
-              <Link key={song.id} to={`/portal/editor/${song.slug || song.id}`} onClick={event => { if (dirty && !window.confirm(t('discardQuestion'))) event.preventDefault() }}>
+              <Link key={song.id} to={`/portal/editor/${song.slug || song.id}`} onClick={event => { if (saving || (dirty && !window.confirm(t('discardQuestion')))) event.preventDefault() }}>
                 {song.title}
               </Link>
             ))}
@@ -271,33 +311,33 @@ export default function LvmSongEditorPage() {
             <section className="lvm-song-editor__panel" aria-label={t('lyrics')}>
               <div className="lvm-song-editor__panel-heading"><h2>{t('lyrics')}</h2><button type="button" className="lvm-song-editor__secondary" onClick={() => setShowGuide(true)}>{t('guide')}</button></div>
               <div className="lvm-song-editor__tools">
-                <select aria-label={t('chord')} value={chord} onChange={event => setChord(event.target.value)}>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>
-                <button type="button" onClick={insertChord}>{t('insertChord')}</button>
-                {SECTIONS.map(section => <button key={section.directive} type="button" onClick={() => insertSection(section.directive, t(section.label))}>{t(section.label)}</button>)}
+                <select disabled={saving} aria-label={t('chord')} value={chord} onChange={event => setChord(event.target.value)}>{CHROMATIC_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</select>
+                <button type="button" onClick={insertChord} disabled={saving}>{t('insertChord')}</button>
+                {SECTIONS.map(section => <button key={section.directive} type="button" onClick={() => insertSection(section.directive, t(section.label))} disabled={saving}>{t(section.label)}</button>)}
               </div>
               <label htmlFor="lvm-chordpro-body">{t('body')}</label>
               <textarea id="lvm-chordpro-body" ref={bodyRef} value={form.chordpro_content} onChange={event => change('chordpro_content', event.target.value)} disabled={saving} spellCheck={false} placeholder={t('bodyPlaceholder')} />
               <div className="lvm-song-editor__tools">
-                <button type="button" onClick={() => fileRef.current?.click()}>{t('import')}</button>
-                <input ref={fileRef} type="file" accept=".chordpro,.pro,.chord,.cho,.cpr" onChange={importFile} hidden />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={saving}>{t('import')}</button>
+                <input ref={fileRef} type="file" accept=".chordpro,.pro,.chord,.cho,.cpr" disabled={saving} onChange={importFile} hidden />
                 <button type="button" onClick={() => setShowPreview(true)}>{t('preview')}</button>
               </div>
             </section>
           </div>
 
-          {existing?.kind === 'published' && isAtLeast('editor') ? <SuggestionReviewPanel songId={existing.row.id} currentSong={existing.row} onApproved={() => {}} onRejected={() => {}} onTouchUp={suggestion => setForm(current => ({ ...current, ...suggestion.payload }))} /> : null}
+          {existing?.kind === 'published' && isAtLeast('editor') ? <SuggestionReviewPanel songId={existing.row.id} currentSong={existing.row} onApproved={approved} onRejected={() => {}} onTouchUp={suggestion => { if (!saving) setForm(current => ({ ...current, ...suggestion.payload })) }} disabled={saving} /> : null}
 
           <footer className="lvm-song-editor__actions">
             <button type="button" className="lvm-song-editor__primary" onClick={save} disabled={saving}>{saving ? t('saving') : (existing?.kind === 'personal' ? t('saveDraft') : canDirectWrite(role) ? t('saveSong') : t('submit'))}</button>
             {existing?.kind === 'personal' ? <button type="button" className="lvm-song-editor__secondary" onClick={submitDraft} disabled={saving}>{t('submitDraft')}</button> : null}
-            <button type="button" className="lvm-song-editor__secondary" onClick={() => { setForm(savedForm); setErrors({}); setFailure(''); setNotice('') }} disabled={!dirty || saving}>{t('discard')}</button>
-            <button type="button" className="lvm-song-editor__secondary" onClick={cancel}>{t('cancel')}</button>
-            {existing?.kind === 'published' && isAtLeast('editor') ? <button type="button" className="lvm-song-editor__danger" onClick={deleteSong}>{t('delete')}</button> : null}
+            <button type="button" className="lvm-song-editor__secondary" onClick={discard} disabled={!dirty || saving}>{t('discard')}</button>
+            <button type="button" className="lvm-song-editor__secondary" onClick={cancel} disabled={saving}>{t('cancel')}</button>
+            {existing?.kind === 'published' && isAtLeast('editor') ? <button type="button" className="lvm-song-editor__danger" onClick={deleteSong} disabled={saving}>{t('delete')}</button> : null}
           </footer>
         </>
       ) : null}
 
-      {confirmCancel ? <div role="dialog" aria-modal="true" aria-label={t('discardDialog')} className="lvm-song-editor__confirm"><div><h2>{t('discardQuestion')}</h2><p>{t('unsaved')}</p><button type="button" onClick={() => setConfirmCancel(false)}>{t('keepEditing')}</button><button type="button" onClick={() => navigate('/songs')}>{t('leave')}</button></div></div> : null}
+      {confirmCancel ? <div role="dialog" aria-modal="true" aria-label={t('discardDialog')} className="lvm-song-editor__confirm"><div><h2>{t('discardQuestion')}</h2><p>{t('unsaved')}</p><button type="button" onClick={() => setConfirmCancel(false)}>{t('keepEditing')}</button><button type="button" onClick={() => { clearEditorDraft(accountId, journalRoute); navigate('/songs') }}>{t('leave')}</button></div></div> : null}
       {showPreview ? <LivePreviewModal content={form.chordpro_content} metadata={{ title: form.title, currentKey: form.default_key }} onClose={() => setShowPreview(false)} /> : null}
       <ChordProGuideDrawer open={showGuide} onClose={() => setShowGuide(false)} />
     </main>

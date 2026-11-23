@@ -116,5 +116,7 @@
   "guideSyntaxText": "Los símbolos de acordes, los corchetes y los nombres de las directivas forman parte del formato. Cambiar el idioma de la interfaz no traduce ni modifica una canción existente.",
   "addition": "Nueva canción",
   "edit": "Edición",
-  "deletion": "Eliminación"
+  "deletion": "Eliminación",
+  "saveUnconfirmed": "No se pudo confirmar el guardado. Tus cambios siguen aquí; reintentá para comprobarlo sin duplicar la operación.",
+  "saveConflict": "La canción cambió en el servidor. Tus cambios siguen aquí. Copialos o descartalos para cargar la versión actual."
 }

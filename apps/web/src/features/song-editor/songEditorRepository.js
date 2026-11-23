@@ -1,4 +1,4 @@
-import { canDirectWrite, hasMinRole, submitSongSuggestion, updatePersonalSong } from '@lavozmisionera/core'
+import { canDirectWrite } from '@lavozmisionera/core'
 import { slugFromTitle, songFormFromRow, songFormToRow, validateSongForm } from './songEditorModel'
 
 export async function loadEditableSong(client, { slug, personalId }) {
@@ -25,63 +25,43 @@ export async function findAvailableSlug(client, title, currentId) {
   throw new Error('No available URL slug for this title')
 }
 
-async function recordAudit(client, actorId, action, row, payload) {
-  if (!actorId) return
-  const { error } = await client.from('editor_audit_log').insert({
-    actor_id: actorId,
-    action,
-    song_id: row?.id || null,
-    song_slug: row?.slug || null,
-    song_title: payload.title,
-    payload_snapshot: payload,
+async function mutate(client, { action, form, existing, operationId = crypto.randomUUID() }) {
+  const { data, error } = await client.rpc('mutate_editor_song', {
+    p_operation_id: operationId,
+    p_action: action,
+    p_song_id: existing?.kind === 'published' ? existing.row.id : null,
+    p_personal_song_id: existing?.kind === 'personal' ? existing.row.id : null,
+    p_payload: songFormToRow(form),
+    p_expected_updated_at: existing?.row?.updated_at || null,
   })
-  if (error) console.error('[songEditor] Audit log failed:', error)
+  if (error) throw error
+  return { ...data, form: songFormFromRow(data?.row || songFormToRow(form)) }
 }
 
-export async function saveEditableSong(client, { form, existing, role, actorId }) {
+export async function saveEditableSong(client, { form, existing, role, operationId }) {
   const errors = validateSongForm(form)
   if (Object.keys(errors).length) return { kind: 'invalid', errors }
-  const payload = songFormToRow(form)
-
-  if (existing?.kind === 'personal') {
-    const row = await updatePersonalSong(client, existing.row.id, payload)
-    return { kind: 'personal', row, form: songFormFromRow(row) }
-  }
-
-  if (!canDirectWrite(role)) {
-    await submitSongSuggestion(client, {
-      type: existing?.kind === 'published' ? 'edit' : 'addition',
-      payload,
-      songId: existing?.row?.id || null,
-      personalSongId: null,
-    })
-    await recordAudit(client, actorId, 'suggestion_submitted', existing?.row, payload)
-    return { kind: 'suggestion', form: songFormFromRow(payload) }
-  }
-
-  const slug = existing?.kind === 'published' && payload.title === existing.row.title?.trim()
-    ? existing.row.slug
-    : await findAvailableSlug(client, payload.title, existing?.row?.id)
-  const now = new Date().toISOString()
-  const query = existing?.kind === 'published'
-    ? client.from('songs').update({ ...payload, slug, updated_at: now }).eq('id', existing.row.id)
-    : client.from('songs').insert({ ...payload, slug, is_deleted: false, created_at: now, updated_at: now })
-  const { data, error } = await query.select().single()
-  if (error) throw error
-  await recordAudit(client, actorId, 'direct_save', data, payload)
-  return { kind: 'published', row: data, form: songFormFromRow(data) }
+  const action = existing?.kind === 'personal' ? 'save_draft' : canDirectWrite(role) ? 'save_published' : 'suggest'
+  return mutate(client, { action, form, existing, operationId })
 }
 
-export async function deleteEditableSong(client, { song, role, actorId }) {
+export async function submitEditableDraft(client, { form, existing, operationId }) {
+  const errors = validateSongForm(form)
+  if (Object.keys(errors).length) return { kind: 'invalid', errors }
+  if (existing?.kind !== 'personal') throw new Error('A personal draft is required')
+  return mutate(client, { action: 'submit_draft', form, existing, operationId })
+}
+
+export async function deleteEditableSong(client, { song, operationId = crypto.randomUUID() }) {
   if (!song?.id) throw new Error('A saved song is required')
-  const payload = { slug: song.slug, title: song.title }
-  if (hasMinRole(role, 'admin')) {
-    const { error } = await client.from('songs').update({ is_deleted: true }).eq('id', song.id)
-    if (error) throw error
-    await recordAudit(client, actorId, 'deleted', song, payload)
-    return 'deleted'
-  }
-  await submitSongSuggestion(client, { type: 'deletion', payload, songId: song.id, personalSongId: null })
-  await recordAudit(client, actorId, 'suggestion_submitted', song, payload)
-  return 'requested'
+  const { data, error } = await client.rpc('mutate_editor_song', {
+    p_operation_id: operationId,
+    p_action: 'delete',
+    p_song_id: song.id,
+    p_personal_song_id: null,
+    p_payload: { title: song.title, slug: song.slug },
+    p_expected_updated_at: song.updated_at || null,
+  })
+  if (error) throw error
+  return data.kind === 'deleted' ? 'deleted' : 'requested'
 }

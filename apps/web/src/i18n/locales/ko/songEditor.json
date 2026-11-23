@@ -116,5 +116,7 @@
   "guideSyntaxText": "Chord symbols, square brackets and directive names are part of the file format. Changing the interface language does not translate or modify an existing song.",
   "addition": "Addition",
   "edit": "Edit",
-  "deletion": "Deletion"
+  "deletion": "Deletion",
+  "saveUnconfirmed": "The save could not be confirmed. Your edits are still here; retry to confirm the same operation without duplicates.",
+  "saveConflict": "The song changed on the server. Your edits are still here. Copy them or discard them to load the current version."
 }
