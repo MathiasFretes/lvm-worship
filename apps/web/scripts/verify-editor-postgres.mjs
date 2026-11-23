@@ -9,6 +9,8 @@ import { chromium, expect } from '@playwright/test'
 const api = 'http://127.0.0.1:54320/api'
 const origin = 'https://srv2137598.hstgr.cloud'
 const frontend = process.env.LVM_EDITOR_FRONTEND_URL || origin
+const serviceFrontend = process.env.LVM_REVIEW_FRONTEND_URL
+assert.ok(serviceFrontend && ['127.0.0.1', 'localhost'].includes(new URL(serviceFrontend).hostname), 'Start the isolated Service review preview')
 assert.ok(['127.0.0.1', 'localhost', 'srv2137598.hstgr.cloud'].includes(new URL(frontend).hostname))
 const database = 'lvm_planning_qa_20261121'
 const run = randomUUID()
@@ -139,8 +141,27 @@ try {
  const forbidden = await request(a, 'data/songs', 'POST', { title: `${prefix} forbidden`, slug: `forbidden_${run}` })
  assert.ok(forbidden.status >= 400)
  assert.ok((await request(a, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: addition.id, p_action: 'approve' })).status >= 400)
- const approved = await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: addition.id, p_action: 'approve' })
- assert.equal(approved.status, 200)
+ const reviewer = await ui(editor)
+ const servicePage = await reviewer.context.newPage()
+ servicePage.on('pageerror', error => report.errors.push(error.message))
+ await servicePage.goto(`${serviceFrontend}/service/song-review`)
+ await servicePage.getByRole('button', { name: `Revisar ${additionTitle}`, exact: true }).click()
+ await expect(servicePage.getByRole('region', { name: 'Detalle de la propuesta' })).toContainText(body)
+ await servicePage.getByRole('button', { name: 'Aprobar propuesta', exact: true }).click()
+ fault(editor)
+ await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
+ await expect(servicePage.getByRole('alert')).toBeVisible()
+ assert.equal(rows('songs', `title=${literal(additionTitle)}`).length, 0)
+ clearFault()
+ reviewer.loseNextAck('review_song_suggestion')
+ await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
+ await expect(servicePage.getByRole('alert')).toBeVisible()
+ await servicePage.getByRole('button', { name: 'Confirmar aprobación', exact: true }).click()
+ await expect(servicePage.getByRole('status')).toHaveText('Propuesta aprobada y guardada.')
+ const publishedSuggestion = rows('song_suggestions', `id=${literal(addition.id)}`)[0]
+ const approved = { status: 200, data: { song_id: publishedSuggestion.song_id } }
+ record('Service editor finds and approves the new song through the real UI, with audit rollback and lost-acknowledgement replay')
+ await servicePage.screenshot({ path: fileURLToPath(new URL('service-review-desktop.png', output)), fullPage: true })
  const approveAgain = await request(editor, 'data/rpc/review_song_suggestion', 'POST', { p_suggestion_id: addition.id, p_action: 'approve' })
  assert.equal(approveAgain.status, 200)
  assert.equal(approveAgain.data.song_id, approved.data.song_id)
@@ -166,7 +187,6 @@ try {
  assert.equal(rows('users', `id=${literal(a.id)}`)[0].role, 'user')
  await impersonated.context.close()
  record('a forged editor role in the frontend still cannot publish through the real API/PostgreSQL')
- const reviewer = await ui(editor)
  await form(reviewer.page, `${prefix} directa`, body)
  fault(editor)
  await reviewer.page.getByRole('button', { name: 'Guardar canción', exact: true }).click()
@@ -274,6 +294,7 @@ try {
  assert.equal(linked.status, 'published')
  assert.equal(rows('songs', `id=${literal(linked.published_song_id)}`)[0].chordpro_content, editBody)
  record('draft UI submission and atomic approval link it to published song')
+ await servicePage.goto(`${serviceFrontend}/service/song-review`)
  const stale = await request(editor, 'data/rpc/mutate_editor_song', 'POST', { p_operation_id: randomUUID(), p_action: 'save_published', p_song_id: direct.id, p_personal_song_id: null, p_payload: { title: direct.title, default_key: 'G', tags: ['QA'], chordpro_content: 'stale overwrite' }, p_expected_updated_at: direct.updated_at })
  assert.equal(stale.status, 409)
  assert.equal(rows('songs', `id=${literal(direct.id)}`)[0].chordpro_content, editBody)
@@ -285,6 +306,13 @@ try {
  const changedCommand = { ...command, p_payload: { ...command.p_payload, title: 'different payload' } }
  assert.equal((await request(a, 'data/rpc/mutate_editor_song', 'POST', changedCommand)).status, 409)
  record('concurrent identical operations create one proposal; reused IDs and stale song revisions return 409 without overwrites')
+ await servicePage.reload()
+ await servicePage.setViewportSize({ width: 390, height: 844 })
+ await servicePage.getByRole('button', { name: `Revisar ${prefix} concurrente`, exact: true }).click()
+ await expect(servicePage.getByRole('region', { name: 'Detalle de la propuesta' })).toBeFocused()
+ assert.ok(await servicePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+ await servicePage.screenshot({ path: fileURLToPath(new URL('service-review-mobile.png', output)), fullPage: true })
+ record('Service review works at 390px, focuses the selected detail and has no horizontal overflow')
  sql(`UPDATE public.users SET role='user' WHERE id=${literal(editor.id)};`)
  const revoked = await request(editor, `data/songs?id=eq.${direct.id}`, 'PATCH', { title: 'revoked write' })
  assert.ok(revoked.status >= 400 || Array.isArray(revoked.data) && revoked.data.length === 0)
