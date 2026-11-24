@@ -3,6 +3,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native'
@@ -14,6 +15,7 @@ import Card from './Card'
 import Chip from './Chip'
 import SymbolIcon from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
+import { validLibraryRange, type LibraryFilters } from '@lavozmisionera/core/songs/libraryFilters'
 
 export type SortKey = 'title' | 'artist' | 'key' | 'recent' | 'tempo'
 export type SortDir = 'asc' | 'desc'
@@ -44,6 +46,9 @@ type FilterSortProps = {
   onToggleTag: (tag: string) => void
   onReset: () => void
   resultCount: number
+  musicFilters?: LibraryFilters
+  onMusicFilters?: (filters: LibraryFilters) => void
+  availableKeys?: string[]
 }
 
 export default function FilterSortSheet(props: FilterSortProps) {
@@ -61,6 +66,9 @@ function FilterSortContent({
   onToggleTag,
   onReset,
   resultCount,
+  musicFilters,
+  onMusicFilters,
+  availableKeys = [],
 }: FilterSortProps) {
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'common'])
@@ -70,6 +78,8 @@ function FilterSortContent({
   return (
     <FormSheetShell title={tx('filterSheet.title')} actionLabel={tx('common:reset')} onAction={onReset}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         // The fitToContents detent doesn't bound over-tall content the way the
         // old Modal's maxHeight did, so cap the scroll area ourselves — long
         // tag lists scroll here instead of pushing the footer off screen.
@@ -125,6 +135,26 @@ function FilterSortContent({
           })}
         </Card>
 
+        {musicFilters && onMusicFilters && <View style={{ gap: t.spacing.sm, marginTop: t.spacing.lg }}>
+          <Text style={{ ...t.typography.rowTitle, color: t.colors.ink }}>{tx('filterSheet.music.key')}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
+            {['', ...availableKeys].map(key => <Chip key={key} label={key || tx('filterSheet.music.anyKey')}
+              selected={musicFilters.key === key} onPress={() => onMusicFilters({ ...musicFilters, key })} />)}
+          </View>
+          {(['minBpm', 'maxBpm'] as const).map(field => <View key={field} style={{ gap: t.spacing.xs }}>
+            <Text style={{ color: t.colors.ink }}>{tx(`filterSheet.music.${field}`)}</Text>
+            <TextInput accessibilityLabel={tx(`filterSheet.music.${field}`)} keyboardType="number-pad" maxLength={3}
+              value={musicFilters[field]} onChangeText={value => onMusicFilters({ ...musicFilters, [field]: value })}
+              style={{ color: t.colors.ink, minHeight: 44, borderWidth: 1, borderColor: t.colors.border,
+                borderRadius: t.radii.md, paddingHorizontal: t.spacing.sm }} />
+          </View>)}
+          {!validLibraryRange(musicFilters) && <Text accessibilityRole="alert" style={{ color: t.colors.ink }}>{tx('filterSheet.music.invalidRange')}</Text>}
+          <Text style={{ ...t.typography.rowTitle, color: t.colors.ink }}>{tx('filterSheet.music.source')}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
+            {(['all', 'catalog', 'personal'] as const).map(source => <Chip key={source} label={tx(`filterSheet.music.${source}`)}
+              selected={musicFilters.source === source} onPress={() => onMusicFilters({ ...musicFilters, source })} />)}
+          </View>
+        </View>}
         {/* Filter by tag */}
         {availableTags.length > 0 ? (
           <>

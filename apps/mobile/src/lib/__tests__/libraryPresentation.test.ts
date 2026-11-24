@@ -27,4 +27,18 @@ describe('mobile library model', () => {
     ], 'recent', 'asc', (k) => k)
     expect(sections[0].data.map(({ title }) => title)).toEqual(['Nueva', 'Vieja'])
   })
+
+  it('finds accented artist names alongside titles and tags', () => {
+    const songs = [song('Canto', { artist: 'José Pérez' }), song('José vive'), song('Otro canto')]
+    expect(findLibrarySongs(songs, 'JOSE').map(item => item.title)).toEqual(['José vive', 'Canto'])
+  })
+
+  it('optionally searches lyric phrases across chords without matching ChordPro directives', () => {
+    const songs = [song('Himno', { chordpro_content: '{title: Hidden directive}\n[C]Dios de [G]amor' })]
+    expect(findLibrarySongs(songs, 'Dios de amor')).toEqual([])
+    expect(findLibrarySongs(songs, 'DIOS DE AMOR', true)).toEqual(songs)
+    expect(findLibrarySongs(songs, 'Hidden directive', true)).toEqual([])
+    songs[0].chordpro_content = '[C]Otra letra'
+    expect(findLibrarySongs(songs, 'Dios de amor', true)).toEqual([])
+  })
 })

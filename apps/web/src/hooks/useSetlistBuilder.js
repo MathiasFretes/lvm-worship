@@ -92,7 +92,7 @@ export function useSetlistBuilder(setlistId) {
       await updateSetlist(supabase, setlistId, {
         name: n,
         serviceDate: d,
-        songs: e.map((item) => ({ id: item.songId, toKey: item.toKey })),
+        songs: e.map((item) => ({ id: item.songId, toKey: item.toKey, notes: item.notes ?? null })),
       })
       if (!unmounted.current) {
         setSaveFailed(false)
@@ -173,6 +173,7 @@ export function useSetlistBuilder(setlistId) {
               entryKey: makeEntryKey(entry.song_id),
               songId: entry.song_id,
               toKey: entry.toKey,
+              notes: entry.notes ?? null,
               song: entry.song ? { id: entry.song_id, ...entry.song } : null,
             }))
           )
@@ -353,6 +354,7 @@ export function useSetlistBuilder(setlistId) {
           entryKey: makeEntryKey(e.songId),
           songId: e.songId,
           toKey: e.toKey || null,
+          notes: e.notes ?? null,
           song: e.song || null,
         }))
       )
@@ -376,6 +378,7 @@ export function useSetlistBuilder(setlistId) {
     name,
     serviceDate,
     items,
+    entryCount: entries.length,
     songs,
     songsLoading,
     songsError,

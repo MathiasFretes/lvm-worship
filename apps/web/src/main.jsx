@@ -19,6 +19,8 @@ function bootstrapRouteFromQuery(){
   if (typeof window === 'undefined') return
   const { search, pathname } = window.location
   if (!search) return
+  // Login/signup own their redirect query; legacy deep-link rewriting is entry-only.
+  if (!['/', '/index.html', '/404.html'].includes(pathname)) return
   const params = new URLSearchParams(search || '')
   const redirect = params.get('redirect') || params.get('r')
   if (redirect) {

@@ -20,6 +20,12 @@ export function beatsInMeasure(sig: TimeSignatureId): number {
 
 export type BeatEmphasis = 'primary' | 'secondary' | 'normal'
 
+export const MIXER_CLICK = {
+  primary: { frequency: 1760, peak: 0.24 },
+  secondary: { frequency: 1320, peak: 0.18 },
+  normal: { frequency: 1000, peak: 0.14 },
+}
+
 /**
  * Emphasis of a (0-based) beat within a measure. With the downbeat accent on,
  * beat 1 is primary in every signature; 6/8 additionally gets a secondary

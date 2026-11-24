@@ -1,2 +1,3 @@
 apps/studio/**/DesignTokens.generated.swift text eol=lf
 apps/studio/**/AccentColor.colorset/Contents.json text eol=lf
+infra/vps/*.sh text eol=lf

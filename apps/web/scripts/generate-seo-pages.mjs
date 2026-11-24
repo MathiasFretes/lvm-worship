@@ -2,8 +2,9 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
+import { loadPublicCatalog } from './catalog.mjs'
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = process.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 // Resolve paths from this script's location, not process.cwd(), so the build
 // works regardless of where it is invoked from. scriptDir = apps/web/scripts.
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
@@ -46,14 +47,14 @@ if (process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== PRODUCTION_BR
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!process.env.LVM_CATALOG_URL && (!supabaseUrl || !supabaseServiceKey)) {
   console.error('Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+const supabase = process.env.LVM_CATALOG_URL ? null : createClient(supabaseUrl, supabaseServiceKey)
 
-const { data: songs, error: songsError } = await supabase
+const { data: songs, error: songsError } = process.env.LVM_CATALOG_URL ? { data: await loadPublicCatalog(), error: null } : await supabase
   .from('songs')
   .select('title, artist, slug, updated_at')
   .eq('is_deleted', false)

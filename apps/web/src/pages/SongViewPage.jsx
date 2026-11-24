@@ -10,21 +10,20 @@ import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
 import { useChordStyle } from '../hooks/useSettings'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
-import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
-import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
+import { DownloadIcon, MediaIcon, EyeIcon, SetlistIcon } from '../components/Icons'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
 import Busy from '../components/Busy'
 import { publicUrl } from '../utils/network/publicUrl'
-import { Button, Card, Chip, IconButton, PageHeader, Toolbar } from '../components/ui/layout-kit'
+import { Button, Card, Chip, IconButton, PageHeader } from '../components/ui/layout-kit'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobileDock from '../components/ui/mobile/MobileDock'
-import { buildChordRowsLayout } from '../utils/songs/chordLineLayout'
+import { InstrumentalLine, MeasuredLine } from '../components/song/SongChartLines'
 import {
   buildSongCatalog,
   getEntryById,
@@ -34,12 +33,14 @@ import {
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
 import { filterDisplayTags } from '../utils/songs/tags'
+import SongPracticeWorkspace from '../features/song-practice/SongPracticeWorkspace'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
 let imageLibPromise
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 function buildSongSeo(entry, parsed, id){
@@ -98,11 +99,12 @@ function buildSongSeo(entry, parsed, id){
 }
 
 export default function SongView(){
-  const { t } = useTranslation('song')
+  const { t } = useTranslation(['song', 'pages'])
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const personalParam = searchParams.get('p')
+  const requestedKey = searchParams.get('key')
   const { songs } = useSongs()
   const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
@@ -148,7 +150,7 @@ export default function SongView(){
   const [twoColsView, setTwoColsView] = useState(() => {
     try {
       const saved = localStorage.getItem('songView:twoCols')
-      if (saved === null) return true
+      if (saved === null) return false
       return saved === '1'
     } catch {
       return true
@@ -162,13 +164,10 @@ export default function SongView(){
   const jpgAlerted = useRef(false)
   const [busy, setBusy] = useState(false)
   const lastPlan = useRef(null)
-  const [isNarrow, setIsNarrow] = useState(() => {
-    try { return window.innerWidth < 600 } catch { return false }
-  })
+  const isNarrow = useIsMobile(600)
+  const [practiceMusic, setPracticeMusic] = useState({ capo: null, tuning: 0 })
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
-  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const mobileDockRef = useRef(null)
-  const [mobileDockHeight, setMobileDockHeight] = useState(96)
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
   const mediaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube || entry?.youtube || ''
@@ -180,31 +179,7 @@ export default function SongView(){
   }, [entry?.id, entry?.language])
 
 
-  useEffect(() => {
-    function onResize(){
-      try { setIsNarrow(window.innerWidth < 600) } catch {}
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
 
-  useEffect(() => {
-    if (!isNarrow && mobileActionsOpen) setMobileActionsOpen(false)
-  }, [isNarrow, mobileActionsOpen])
-
-  useEffect(() => {
-    if (!isNarrow) return
-    const el = mobileDockRef.current
-    if (!el) return
-    const update = () => {
-      try { setMobileDockHeight(el.offsetHeight || 96) } catch {}
-    }
-    update()
-    if (typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [isNarrow])
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
@@ -258,7 +233,7 @@ export default function SongView(){
       const p = { meta: doc.meta, blocks }
       setParsed(p)
       const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
-      setToKey(baseKey)
+      setToKey(/^[A-G][#b]?m?$/.test(requestedKey || '') ? requestedKey : baseKey)
       const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
       const needsCheck = blocks.length > 1 && lineCount > 40
       setJpgDisabled(needsCheck)
@@ -268,7 +243,7 @@ export default function SongView(){
       showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
       setErr('Failed to parse song')
     }
-  }, [entry?.chordpro_content, entry?.title, entry?.originalKey])
+  }, [entry?.chordpro_content, entry?.title, entry?.originalKey, requestedKey])
 
   // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
 
@@ -379,7 +354,7 @@ export default function SongView(){
   const buildSong = () => normalizeSongInput({
     title,
     key: formatKeyDisplay(toKey, chordStyle),
-    capo: parsed?.meta?.capo,
+    capo: practiceMusic.capo ?? parsed?.meta?.capo,
     lyricsBlocks: (parsed.blocks || []).map(b => ({
       section: b.section,
       lines: (b.lines || []).map(ln => {
@@ -508,122 +483,26 @@ export default function SongView(){
     try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
   }
 
-  const editHref = personalParam ? `/portal/editor?p=${personalParam}` : null
+  const editHref = personalParam ? `/portal/editor?p=${encodeURIComponent(personalParam)}` : `/portal/editor/${encodeURIComponent(entry.id)}`
 
-  const desktopToolbar = !isNarrow ? (
-    <Toolbar className="lvm-song-toolbar">
-      <div className="lvm-toolbar__group">
-        <KeySelector
-          baseKey={baseKey}
-          valueKey={toKey}
-          onChange={(full) => setToKey(full)}
-        />
-        <IconButton
-          variant={twoColsView ? 'primary' : 'secondary'}
-          aria-label={twoColsView ? t('useOneColumn') : t('useTwoColumns')}
-          title={twoColsView ? t('useOneColumn') : t('useTwoColumns')}
-          onClick={toggleColumns}
-        >
-          {twoColsView ? <OneColIcon /> : <TwoColIcon />}
-        </IconButton>
-        <IconButton
-          variant={showChords ? 'primary' : 'secondary'}
-          aria-label={t('toggleChords')}
-          title={t('toggleChords')}
-          aria-pressed={showChords}
-          onClick={() => setShowChords(v => !v)}
-        >
-          <EyeIcon />
-        </IconButton>
-      </div>
-      <div className="lvm-toolbar__actions">
-        {isPersonal ? (
-          <Button variant="primary" as={Link} to={editHref} leftIcon={<EyeIcon />} title="Edit song">
-            Edit
-          </Button>
-        ) : (<>
-        <div className="lvm-download-menu">
-          <Button
-            variant="primary"
-            leftIcon={<DownloadIcon />}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDownloadMenuOpen(v => !v) }}
-            onMouseEnter={prefetchPdf}
-            onFocus={prefetchPdf}
-            loading={busy}
-            title="Download"
-            aria-haspopup="true"
-            aria-expanded={downloadMenuOpen}
-          >
-            Download
-          </Button>
-          {downloadMenuOpen && (
-            <>
-              <button
-                type="button"
-                className="lvm-download-menu__backdrop"
-                aria-hidden="true"
-                tabIndex={-1}
-                onClick={() => setDownloadMenuOpen(false)}
-              />
-              <div className="lvm-download-menu__panel" role="menu" aria-label="Download options">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="lvm-download-menu__item"
-                  onClick={(e) => { e.preventDefault(); handleDownloadPdf(); setDownloadMenuOpen(false) }}
-                  onMouseEnter={prefetchPdf}
-                >
-                  <DownloadIcon /> PDF
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="lvm-download-menu__item"
-                  disabled={jpgDisabled}
-                  title={jpgDisabled ? 'JPG only supports single-page songs' : undefined}
-                  onClick={(e) => { e.preventDefault(); handleDownloadJpg(); setDownloadMenuOpen(false) }}
-                  onMouseEnter={prefetchJpg}
-                >
-                  <DownloadIcon /> JPG
-                </button>
-                {hasPptx && (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="lvm-download-menu__item"
-                    onClick={(e) => { e.preventDefault(); handleDownloadPptx(); setDownloadMenuOpen(false) }}
-                  >
-                    <DownloadIcon /> PPTX
-                  </button>
-                )}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="lvm-download-menu__item"
-                  onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setDownloadMenuOpen(false) }}
-                >
-                  <DownloadIcon /> ChordPro
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-        <Button
-          variant="primary"
-          as={Link}
-          to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
-          leftIcon={<MediaIcon />}
-          title={t('worshipMode')}
-        >
-          {t('worshipMode')}
-        </Button>
-        </>)}
-      </div>
-    </Toolbar>
-  ) : null
+  const addToSetlist = (iconOnly = false) => (
+    <Button
+      onClick={() => navigate('/setlist', {
+        state: { addSongToDraft: { song: isPersonal ? { ...entry, id: `p_${personalParam}` } : entry, toKey } },
+      })}
+      variant="secondary"
+      iconOnly={iconOnly}
+      leftIcon={<SetlistIcon />}
+      aria-label={t('pages:setlist.addSongsTab')}
+    >
+      {t('pages:setlist.addSongsTab')}
+    </Button>
+  )
+
 
   return (
-    <div className="container" style={isNarrow ? { paddingBottom: `calc(${mobileDockHeight}px + var(--space-2))` } : undefined}>
+    <SongPracticeWorkspace key={entry.id} songId={entry.id} parsed={parsed} baseKey={baseKey} toKey={toKey} onKeyChange={setToKey} chordStyle={chordStyle} showChords={showChords} onChordsChange={() => setShowChords(value => !value)} twoCols={twoColsView} onColumnsChange={toggleColumns} isNarrow={isNarrow} favorite={!isPersonal ? <StarButton songId={entry?.dbId} /> : null} onDownload={!isPersonal ? () => setMobileActionsOpen(true) : null} editHref={editHref} onMusicSettingsChange={setPracticeMusic}>
+      {({ notation, showTabs, showStrumming, beforeChart, afterChart, onChordSelect }) => (<>
       {helmet}
       <Busy busy={busy} />
       <PageHeader
@@ -650,11 +529,11 @@ export default function SongView(){
                 {entry.reviewStatus === 'submitted' ? 'Pending review' : 'Personal draft'}
               </span>
             ) : (
-              <StarButton songId={entry?.dbId} />
+              null
             )}
           </div>
         }
-        subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
+        subtitle={entry.authors?.join(', ') || undefined}
       >
         {(() => {
           const visibleTags = filterDisplayTags(entry?.tags)
@@ -667,8 +546,15 @@ export default function SongView(){
             </div>
           )
         })()}
-        {desktopToolbar}
+        <Button as={Link} state={{ chart: entry.chordpro_content, steps, preferFlat }}
+          to={`/mixer?${new URLSearchParams({ song: entry.dbId || personalRow?.id || entry.id, slug: id || entry.id, title, ...(isPersonal ? { personal: '1' } : {}) })}`}>{t('pages:mixer.songAudio')}</Button>
+        {['tablature', 'score'].map(material => <Button key={material} as={Link}
+          to={`/${material}?${new URLSearchParams({ song: entry.dbId || personalRow?.id || entry.id, slug: id || entry.id, title, ...(isPersonal ? { personal: '1' } : {}) })}`}>
+          {t(`pages:${material}.title`)}
+        </Button>)}
+        {!isNarrow && <>{addToSetlist()}<Button as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}>{t('worshipMode')}</Button></>}
       </PageHeader>
+      {beforeChart}
 
       <Card
         className={`songpage__sheet ${(!isNarrow && twoColsView) ? 'songpage__sheet--two' : ''}`.trim()}
@@ -691,6 +577,8 @@ export default function SongView(){
                                         )
                                 }
                                 const plain = ln.text || ''
+                                if (!showTabs && /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-0-9xhpb/\\~().|\s]+$/.test(plain)) return null
+                                if (!showStrumming && /^\s*(?:strum|rasgueo|strumming)\s*:/i.test(plain)) return null
                                 if (ln.comment) {
                                         return <div key={key} className="comment">{plain}</div>
                                 }
@@ -706,13 +594,15 @@ export default function SongView(){
                                                 steps={steps}
                                                 showChords={showChords}
                                                 preferFlat={preferFlat}
-                                                chordStyle={chordStyle}
+                                                chordStyle={notation}
+                                                onChordSelect={onChordSelect}
                                         />
                                 )
                         })}
           </div>
         ))}
       </Card>
+      {afterChart}
 
       {(() => {
         const ytId = mediaYoutube ? extractYouTubeId(mediaYoutube) : null
@@ -743,6 +633,7 @@ export default function SongView(){
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
+          {addToSetlist(true)}
           {!isPersonal && (<>
             <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
             <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>
@@ -752,7 +643,8 @@ export default function SongView(){
       <MobileActionSheet
         open={mobileActionsOpen}
         onClose={() => setMobileActionsOpen(false)}
-        title="Download"
+        title={t('download')}
+        closeLabel={t('practice:done')}
       >
         <div className="lvm-mobile-actions">
           <Button
@@ -790,7 +682,8 @@ export default function SongView(){
           </Button>
         </div>
       </MobileActionSheet>
-    </div>
+      </>)}
+    </SongPracticeWorkspace>
   )
 }
 
@@ -841,134 +734,5 @@ function isSectionLabel(text = '') {
   return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i.test(s)
 }
 
-
-function InstrumentalLine({ spec, steps, split, preferFlat }) {
-  const inst = transposeInstrumental(spec, steps, preferFlat)
-  const rows = formatInstrumental(inst, { split })
-  if (!rows.length) return null
-  return (
-    <div style={{ marginBottom: 10 }}>
-      {rows.map((line, idx) => (
-        <div
-          key={idx}
-          style={{
-            whiteSpace: 'pre',
-            fontFamily: 'var(--lvm-font-chords)',
-            fontWeight: 700,
-            fontSize: 'inherit',
-            lineHeight: 1.35,
-          }}
-        >
-          {line}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-
-function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle = 'letters' }){
-  const hostRef = useRef(null)
-  const canvasRef = useRef(null)
-  const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
-  const [measureKey, setMeasureKey] = useState(0)
-
-  useEffect(()=>{
-    if(!hostRef.current) return
-
-    // Ensure canvas
-    if(!canvasRef.current){
-      const cv = document.createElement('canvas')
-      cv.width = 1; cv.height = 1
-      canvasRef.current = cv
-    }
-    const ctx = canvasRef.current.getContext('2d')
-
-    // Grab computed styles from the visible lyrics node
-    const lyr = hostRef.current.querySelector('.lyrics')
-    if (!ctx || !lyr) {
-      setState({ rows: [{ text: plain || '', offsets: [] }], padTop: 0 })
-      return
-    }
-    const cs = window.getComputedStyle(lyr)
-
-    // Lyrics font for width measurement
-    const lyricFont = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    const hostW = hostRef.current.getBoundingClientRect().width || 0
-
-    // Measure pixel offsets for each chord and resolve collisions
-    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--lvm-font-chords')
-    const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
-    const chordFontSize = cs.fontSize // match lyric size
-    const chordFont = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
-    const measureLyric = (text = '') => {
-      ctx.font = lyricFont
-      return ctx.measureText(text).width
-    }
-    const measureChord = (text = '') => {
-      ctx.font = chordFont
-      return ctx.measureText(text).width
-    }
-    const rows = buildChordRowsLayout({
-      plain,
-      chords: showChords ? chords : [],
-      width: hostW,
-      measureLyric,
-      measureChord,
-      transposeSym: (sym) => formatChord(transposeSymPrefer(sym, steps, preferFlat), { style: chordStyle }),
-      spaceWidth: measureLyric(' ') || 0,
-    })
-
-    // Estimate chord ascent to reserve vertical space
-    ctx.font = chordFont
-    const chordM = ctx.measureText('Mg')
-    const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
-
-    const gap = 4
-    const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
-    setState({ rows, padTop })
-  }, [plain, chords, steps, showChords, preferFlat, chordStyle, measureKey])
-
-  // Recalculate on container resize (orientation/viewport changes)
-  useEffect(() => {
-    const el = hostRef.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => setMeasureKey(k => k + 1))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  // Fallback: window resize
-  useEffect(() => {
-    function onResize(){ setMeasureKey(k => k + 1) }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  return (
-    <div ref={hostRef} style={{ marginBottom: 10 }}>
-      {(state.rows || []).map((row, rowIndex) => (
-        <div
-          key={`${rowIndex}-${row.text}`}
-          style={{ position:'relative', paddingTop: (showChords && row.offsets.length > 0) ? state.padTop : 0 }}
-        >
-          {showChords && row.offsets.length > 0 && (
-            <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
-              {row.offsets.map((c, i)=>(
-                <span key={i} style={{
-                  position:'absolute',
-                  left: `${c.left}px`,
-                  fontFamily: 'var(--lvm-font-chords)',
-                  fontWeight: 700
-                }}>{c.sym}</span>
-              ))}
-            </div>
-          )}
-          <div className="lyrics" style={{ whiteSpace: 'pre' }}>{row.text || '\u00a0'}</div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /* TitleStrip was used only for SongView; removed per request. */

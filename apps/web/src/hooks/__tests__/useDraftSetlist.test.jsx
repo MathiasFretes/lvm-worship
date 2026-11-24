@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { buildServiceFromSetlist } from '../../lvm/serviceAdapter'
+import { buildWorshipPlanFromSetlist } from '../../lvm/worshipPlan'
 
 const SONGS = [
   { dbId: 'uuid-a', id: 'abba', title: 'Abba', authors: [], originalKey: 'D', tempo: 128, chordpro_content: '{start_of_verse}\n[D]Abba\n{end_of_verse}\n{start_of_chorus}\n[G]Aleluya\n{end_of_chorus}' },
@@ -28,6 +29,34 @@ function stored() {
 }
 
 describe('useDraftSetlist', () => {
+  it('restores and clears only the explicitly scoped Service draft', async () => {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ name: 'Personal', entries: [{ songId: 'grace' }] }))
+    const first = renderHook(() => useDraftSetlist({ storageKey: 'service-account-a-church-a' }))
+    act(() => { first.result.current.addSong(SONGS[0]); first.result.current.setName('Culto A') })
+    expect(JSON.parse(localStorage.getItem('service-account-a-church-a')).name).toBe('Culto A')
+    expect(stored().name).toBe('Personal')
+    first.unmount()
+    const restored = renderHook(() => useDraftSetlist({ storageKey: 'service-account-a-church-a' }))
+    expect(restored.result.current.items[0].title || restored.result.current.items[0].song?.title).toBe('Abba')
+    await act(async () => { await restored.result.current.deleteSet() })
+    expect(localStorage.getItem('service-account-a-church-a')).toBeNull()
+    expect(stored().name).toBe('Personal')
+    restored.unmount()
+  })
+  it('retains different occurrence notes when replacing and reopening a draft', () => {
+    const first = renderHook(() => useDraftSetlist())
+    act(() => first.result.current.replaceEntries([
+      { songId: 'abba', toKey: 'D', notes: 'Quiet introduction', sourceSong: SONGS[0] },
+      { songId: 'abba', toKey: 'E', notes: 'Repeat the chorus', sourceSong: SONGS[0] },
+    ]))
+    first.unmount()
+    const reopened = renderHook(() => useDraftSetlist())
+    expect(reopened.result.current.items.map(({ toKey, notes }) => ({ toKey, notes }))).toEqual([
+      { toKey: 'D', notes: 'Quiet introduction' },
+      { toKey: 'E', notes: 'Repeat the chorus' },
+    ])
+    reopened.unmount()
+  })
   it('persists every edit immediately, with no save step', () => {
     const { result } = renderHook(() => useDraftSetlist())
 
@@ -117,9 +146,9 @@ describe('useDraftSetlist', () => {
     expect(service.items[1].song.sections.map((section) => section.kind)).toEqual(['verse', 'chorus', 'verse', 'chorus'])
   })
 
-  it('exports a previously selected song after reload without a live catalog', async () => {
+  it('exports the viewer key after reloading the draft without a live catalog', async () => {
     const { result, unmount } = renderHook(() => useDraftSetlist())
-    act(() => { result.current.toggleSong(SONGS[0]) })
+    act(() => { result.current.addSong(SONGS[0], { toKey: 'E' }) })
     unmount()
     const onlineSongs = [...SONGS]
     SONGS.splice(0, SONGS.length)
@@ -130,6 +159,13 @@ describe('useDraftSetlist', () => {
       const service = buildServiceFromSetlist({ items: offline.result.current.items, songs: offline.result.current.songs, now: new Date('2026-09-27T19:00:00Z') })
       expect(service.items[0].song.title).toBe('Abba')
       expect(service.items[0].song.sections[0].lines[0].text).toBe('Abba')
+      const plan = buildWorshipPlanFromSetlist({
+        context: { schemaVersion: '0.1', serviceId: 'service-1', title: 'Culto', startsAt: '2026-09-27T19:00:00Z', setlistId: 'set-1', name: 'Ensayo' },
+        items: offline.result.current.items,
+        songs: offline.result.current.songs,
+      })
+      expect(plan.songs[0]).toMatchObject({ songId: 'abba', key: 'E' })
+      expect(plan.songs[0].sections[0].lines[0].chords[0].symbol).toBe('E')
       offline.unmount()
     } finally {
       SONGS.push(...onlineSongs)

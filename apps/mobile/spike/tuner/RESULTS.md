@@ -39,7 +39,7 @@ better fit (push, not poll) and is what the pipeline uses.
 
 Headless benchmark (`bench.ts`, run with `npx -y tsx spike/tuner/bench.ts`)
 streams synthetic plucks through the exact device pipeline shape — hop-sized
-callbacks → decimation → ring buffer → YIN (`src/lib/tuner/yin.ts`, CMNDF +
+callbacks → decimation → ring buffer → YIN (`packages/core/src/music/tunerYin.ts`, CMNDF +
 absolute threshold 0.12 + parabolic interpolation, no global-min fallback) →
 median-5 + EMA-0.35 smoothing. Signals model what breaks naive detectors:
 stiff-string inharmonicity, per-partial decay, pick transient, **weak low-E

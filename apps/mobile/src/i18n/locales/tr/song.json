@@ -5,6 +5,9 @@
     "needsReview": true
   },
   "library": {
+    "searchLyrics": "Şarkı sözlerinde ara",
+    "offlineCatalog": "Bu cihazda kayıtlı herkese açık katalog gösteriliyor. Güncelleme ve kişisel şarkılar için bağlantı gerekir.",
+    "cacheError": "Katalog çevrimdışı kullanım için kaydedilemedi. Depolama alanını kontrol edip yeniden deneyin.",
     "title": "İlahi Kütüphanesi",
     "addSong": "İlahi ekle",
     "filterAndSort": "Filtrele ve sırala",
@@ -17,6 +20,19 @@
     "noKey": "Ton yok"
   },
   "filterSheet": {
+    "music": {
+      "title": "Müzik filtreleri",
+      "key": "Ton",
+      "anyKey": "Tüm tonlar",
+      "minBpm": "En düşük BPM",
+      "maxBpm": "En yüksek BPM",
+      "source": "Şarkı kaynağı",
+      "all": "Tüm şarkılar",
+      "catalog": "Katalog",
+      "personal": "Şarkılarım",
+      "invalidRange": "1 ile 999 arasında tam sayı BPM kullanın. Alt sınır üst sınırdan büyük olamaz.",
+      "reset": "Müzik filtrelerini sıfırla"
+    },
     "title": "Filtrele ve sırala",
     "sortBy": "Sıralama ölçütü",
     "sort": {

@@ -38,12 +38,41 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'PREPARE_REHEARSAL_SHELL' || !event.ports?.[0]) return;
+  const port = event.ports[0];
+  event.waitUntil((async () => {
+    try {
+      const assets = event.data.assets;
+      if (!Array.isArray(assets) || assets.length > 256) throw new Error('Invalid offline assets');
+      const urls = assets.map(value => {
+        const url = new URL(value, self.location.origin);
+        if (url.origin !== self.location.origin || !url.pathname.startsWith('/assets/')) throw new Error('Invalid offline asset');
+        return url.href;
+      });
+      const cache = await caches.open(CACHE_NAME);
+      for (const url of urls) {
+        const response = await fetch(url, { cache: 'reload' });
+        if (!response.ok || !isExpectedResponseForRequest(new Request(url), response)) throw new Error('Offline asset unavailable');
+        await cache.put(url, response);
+      }
+      const shell = await fetch('/app', { cache: 'reload' });
+      if (!shell.ok || !shell.headers.get('content-type')?.includes('text/html')) throw new Error('Offline screen unavailable');
+      await cache.put('/app', shell);
+      port.postMessage({ ok: true });
+    } catch { port.postMessage({ ok: false }); }
+    finally { port.close(); }
+  })());
+});
+
 // Use a network-first strategy for navigation requests to avoid serving a
 // potentially stale index.html that references outdated assets. Other requests
 // still fall back to a cache-first approach.
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+  // Authenticated data must never enter the shared static cache.
+  if (new URL(request.url).pathname.startsWith('/api/')) return;
   // Don't intercept requests to external origins (e.g. R2, CDN) 
   if (!request.url.startsWith(self.location.origin)) return;
   // Always try the network first for the legacy static song index, so any
@@ -71,14 +100,22 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => {
+          const exact = await caches.match(request);
+          if (exact) return exact;
+          const path = new URL(request.url).pathname;
+          if (/^\/(worship|setlists|setlist)(\/|$)/.test(path)) return caches.match('/app');
+          return Response.error();
+        })
     );
     return;
   }
 
   event.respondWith(
     (async () => {
-      const cached = await caches.match(request);
+      // Hashed static assets are identical for this origin. A module request
+      // may carry Origin while the explicit warm-up fetch did not (Vary: Origin).
+      const cached = await caches.match(request, { ignoreVary: new URL(request.url).pathname.startsWith('/assets/') });
       const usableCached = isExpectedResponseForRequest(request, cached) ? cached : null;
       if (usableCached) return usableCached;
       try {

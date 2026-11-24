@@ -1,4 +1,5 @@
-import { Stack } from 'expo-router'
+import { Redirect, Stack } from 'expo-router'
+import { usesVpsBackend } from '../src/lib/supabase'
 import Screen from '../src/components/Screen'
 import AuthLinkScreen from '../src/screens/AuthLinkScreen'
 
@@ -10,6 +11,7 @@ import AuthLinkScreen from '../src/screens/AuthLinkScreen'
 // opened without a session, and this screen is what creates one.
 
 function LvmAuthLinkRoute() {
+  if (usesVpsBackend) return <Redirect href="/login" />
   return (
     <Screen edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />

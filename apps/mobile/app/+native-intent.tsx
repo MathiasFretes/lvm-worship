@@ -31,6 +31,7 @@ export function redirectSystemPath({
   // and route to that screen by name.
   const authLink = parseAuthLink(path)
   if (authLink) {
+    if (process.env.EXPO_PUBLIC_LVM_API_URL) return '/login'
     setPendingAuthLink(authLink)
     return '/auth-link'
   }

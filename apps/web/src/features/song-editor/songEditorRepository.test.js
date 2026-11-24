@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { deleteEditableSong, findAvailableSlug, loadEditableSong, saveEditableSong } from './songEditorRepository'
+import { deleteEditableSong, findAvailableSlug, loadEditableSong, saveEditableSong, submitEditableDraft, saveSongPresentation } from './songEditorRepository'
 
 function query(result) {
   const chain = {
@@ -30,51 +30,41 @@ describe('LVM song editor repository', () => {
     await expect(findAvailableSlug(client, 'Santo')).rejects.toThrow('offline')
   })
 
-  it('inserts a new song and updates an existing song by UUID', async () => {
-    const slugQuery = query({ data: null, error: null })
+  it('sends publication and its expected revision through one server transaction', async () => {
     const saved = { id: 'uuid-1', slug: 'nino_de_belen', ...form }
-    const writeQuery = query({ data: saved, error: null })
-    const client = { from: vi.fn(table => table === 'songs' ? (client.from.mock.calls.length % 2 ? slugQuery : writeQuery) : query({ data: null, error: null })) }
-
-    const created = await saveEditableSong(client, { form, existing: { kind: 'new', row: null }, role: 'editor' })
+    const client = { rpc: vi.fn(async () => ({ data: { kind: 'published', row: saved }, error: null })), from: vi.fn() }
+    const created = await saveEditableSong(client, { form, existing: { kind: 'new' }, role: 'editor', operationId: 'operation-1' })
     expect(created.kind).toBe('published')
-    expect(writeQuery.insert).toHaveBeenCalledWith(expect.objectContaining({ slug: 'nino_de_belen', chordpro_content: form.chordpro_content }))
-
-    client.from.mockClear()
-    const updated = await saveEditableSong(client, { form: { ...form, title: 'Niño de Belén nuevo' }, existing: { kind: 'published', row: saved }, role: 'editor' })
-    expect(updated.kind).toBe('published')
-    expect(writeQuery.update).toHaveBeenCalledWith(expect.objectContaining({ title: 'Niño de Belén nuevo' }))
-    expect(writeQuery.eq).toHaveBeenCalledWith('id', 'uuid-1')
+    expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', expect.objectContaining({ p_operation_id: 'operation-1', p_action: 'save_published', p_payload: expect.objectContaining({ chordpro_content: form.chordpro_content }) }))
+    await saveEditableSong(client, { form, existing: { kind: 'published', row: { ...saved, updated_at: '2026-11-23T10:00:00Z' } }, role: 'editor' })
+    expect(client.rpc).toHaveBeenLastCalledWith('mutate_editor_song', expect.objectContaining({ p_song_id: 'uuid-1', p_expected_updated_at: '2026-11-23T10:00:00Z' }))
+    expect(client.from).not.toHaveBeenCalled()
   })
 
-  it('keeps the existing URL slug when the title did not change', async () => {
-    const saved = { id: 'uuid-2', slug: 'historic-slug', ...form }
-    const write = query({ data: saved, error: null })
-    const client = { from: vi.fn(() => write) }
-    await saveEditableSong(client, { form, existing: { kind: 'published', row: saved }, role: 'editor' })
-    expect(client.from).toHaveBeenCalledTimes(1)
-    expect(write.update).toHaveBeenCalledWith(expect.objectContaining({ slug: 'historic-slug' }))
-  })
-
-  it('submits a review suggestion for a user without writing the public catalog', async () => {
-    const suggestion = query({ data: { id: 'suggestion-1' }, error: null })
-    const client = { auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'user-1' } }, error: null })) }, from: vi.fn(() => suggestion) }
-    const result = await saveEditableSong(client, { form, existing: { kind: 'new', row: null }, role: 'user' })
+  it('requests review for an ordinary user without direct table writes', async () => {
+    const client = { rpc: vi.fn(async () => ({ data: { kind: 'suggestion', suggestionId: 'suggestion-1' }, error: null })), from: vi.fn() }
+    const result = await saveEditableSong(client, { form, existing: { kind: 'new' }, role: 'user' })
     expect(result.kind).toBe('suggestion')
-    expect(client.from).toHaveBeenCalledWith('song_suggestions')
-    expect(client.from).not.toHaveBeenCalledWith('songs')
-    expect(suggestion.insert).toHaveBeenCalledWith(expect.objectContaining({ type: 'addition', suggested_by: 'user-1' }))
+    expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', expect.objectContaining({ p_action: 'suggest', p_song_id: null }))
+    expect(client.from).not.toHaveBeenCalled()
   })
 
-  it('updates the owner-scoped personal draft instead of creating a public song', async () => {
-    const updated = { id: 'draft-1', ...form }
-    const personal = query({ data: updated, error: null })
-    const client = { from: vi.fn(() => personal) }
-    const result = await saveEditableSong(client, { form, existing: { kind: 'personal', row: { id: 'draft-1' } }, role: 'user' })
-    expect(result.kind).toBe('personal')
-    expect(client.from).toHaveBeenCalledWith('personal_songs')
-    expect(client.from).not.toHaveBeenCalledWith('songs')
-    expect(personal.eq).toHaveBeenCalledWith('id', 'draft-1')
+  it('saves and submits private drafts with single atomic commands', async () => {
+    const client = { rpc: vi.fn(async () => ({ data: { kind: 'personal', row: form }, error: null })), from: vi.fn() }
+    const existing = { kind: 'personal', row: { id: 'draft-1' } }
+    expect((await saveEditableSong(client, { form, existing, role: 'user' })).kind).toBe('personal')
+    expect(client.rpc).toHaveBeenLastCalledWith('mutate_editor_song', expect.objectContaining({ p_action: 'save_draft', p_personal_song_id: 'draft-1' }))
+    await submitEditableDraft(client, { form, existing })
+    expect(client.rpc).toHaveBeenLastCalledWith('mutate_editor_song', expect.objectContaining({ p_action: 'submit_draft', p_personal_song_id: 'draft-1', p_payload: expect.objectContaining({ title: form.title }) }))
+    expect(client.from).not.toHaveBeenCalled()
+  })
+
+  it('propagates transaction errors and reuses the caller operation ID on retry', async () => {
+    const client = { rpc: vi.fn().mockResolvedValueOnce({ error: new Error('Lost acknowledgement') }).mockResolvedValueOnce({ data: { kind: 'published', row: form }, error: null }) }
+    const input = { form, existing: { kind: 'new' }, role: 'editor', operationId: 'same-operation' }
+    await expect(saveEditableSong(client, input)).rejects.toThrow('Lost acknowledgement')
+    await saveEditableSong(client, input)
+    expect(client.rpc.mock.calls.map(call => call[1].p_operation_id)).toEqual(['same-operation', 'same-operation'])
   })
 
   it('rejects incomplete forms before any database write', async () => {
@@ -84,15 +74,20 @@ describe('LVM song editor repository', () => {
     expect(client.from).not.toHaveBeenCalled()
   })
 
-  it('soft-deletes only for admins and submits a deletion request for editors', async () => {
-    const song = { id: 'song-1', slug: 'santo', title: 'Santo' }
-    const deleteQuery = query({ data: null, error: null })
-    const suggestionQuery = query({ data: { id: 'suggestion-1' }, error: null })
-    const client = { auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'editor-1' } }, error: null })) }, from: vi.fn(table => table === 'songs' ? deleteQuery : suggestionQuery) }
+  it('leaves delete-versus-request authorization to PostgreSQL', async () => {
+    const client = { rpc: vi.fn().mockResolvedValueOnce({ data: { kind: 'suggestion' }, error: null }).mockResolvedValueOnce({ data: { kind: 'deleted' }, error: null }) }
+    const song = { id: 'song-1', title: 'Santo', slug: 'santo' }
     expect(await deleteEditableSong(client, { song, role: 'editor' })).toBe('requested')
-    expect(deleteQuery.update).not.toHaveBeenCalled()
-    expect(suggestionQuery.insert).toHaveBeenCalledWith(expect.objectContaining({ type: 'deletion', song_id: 'song-1' }))
     expect(await deleteEditableSong(client, { song, role: 'admin' })).toBe('deleted')
-    expect(deleteQuery.update).toHaveBeenCalledWith({ is_deleted: true })
+    expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', expect.objectContaining({ p_action: 'delete', p_song_id: 'song-1' }))
   })
+})
+
+
+it('updates PPTX metadata through the revision-checked transaction only', async () => {
+  const row = { id: 'song-1', pptx_url: 'https://example.invalid/chart.pptx', updated_at: 'next' }
+  const client = { rpc: vi.fn(async () => ({ data: { kind: 'published', row }, error: null })), from: vi.fn() }
+  expect(await saveSongPresentation(client, { song: { id: 'song-1', updated_at: 'original-revision' }, url: row.pptx_url, operationId: 'presentation-operation' })).toEqual(row)
+  expect(client.rpc).toHaveBeenCalledWith('mutate_editor_song', { p_operation_id: 'presentation-operation', p_action: 'update_pptx', p_song_id: 'song-1', p_personal_song_id: null, p_payload: { pptx_url: row.pptx_url }, p_expected_updated_at: 'original-revision' })
+  expect(client.from).not.toHaveBeenCalled()
 })

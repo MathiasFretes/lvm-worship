@@ -1,3 +1,7 @@
+import enSongEditor from './locales/en/songEditor.json'
+import esSongEditor from './locales/es/songEditor.json'
+import koSongEditor from './locales/ko/songEditor.json'
+import trSongEditor from './locales/tr/songEditor.json'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
@@ -19,6 +23,10 @@ import enAdmin from './locales/en/admin.json'
 import enEditor from './locales/en/editor.json'
 import enErrors from './locales/en/errors.json'
 import enPages from './locales/en/pages.json'
+import enPractice from './locales/en/practice.json'
+import esPractice from './locales/es/practice.json'
+import koPractice from './locales/ko/practice.json'
+import trPractice from './locales/tr/practice.json'
 
 import esCommon from './locales/es/common.json'
 import esNav from './locales/es/nav.json'
@@ -67,8 +75,10 @@ const resources = {
     profile: enProfile,
     admin: enAdmin,
     editor: enEditor,
+    songEditor: enSongEditor,
     errors: enErrors,
     pages: enPages,
+    practice: enPractice,
   },
   es: {
     common: esCommon,
@@ -80,8 +90,10 @@ const resources = {
     profile: esProfile,
     admin: esAdmin,
     editor: esEditor,
+    songEditor: esSongEditor,
     errors: esErrors,
     pages: esPages,
+    practice: esPractice,
   },
   ko: {
     common: koCommon,
@@ -93,8 +105,10 @@ const resources = {
     profile: koProfile,
     admin: koAdmin,
     editor: koEditor,
+    songEditor: koSongEditor,
     errors: koErrors,
     pages: koPages,
+    practice: koPractice,
   },
   tr: {
     common: trCommon,
@@ -106,8 +120,10 @@ const resources = {
     profile: trProfile,
     admin: trAdmin,
     editor: trEditor,
+    songEditor: trSongEditor,
     errors: trErrors,
     pages: trPages,
+    practice: trPractice,
   },
 }
 

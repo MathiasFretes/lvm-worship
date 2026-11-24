@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import {completeAuthRedirect} from '../utils/app/authRedirect'
 import '../styles/auth.css'
 
 export default function LoginPage() {
@@ -10,7 +11,7 @@ export default function LoginPage() {
   const { isLoggedIn, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/app'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,7 +20,7 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (!loading && isLoggedIn) navigate(redirectTo, { replace: true })
+    if (!loading && isLoggedIn) completeAuthRedirect(redirectTo,navigate)
   }, [isLoggedIn, loading, navigate, redirectTo])
 
   async function handleGoogleSignIn() {
@@ -38,7 +39,7 @@ export default function LoginPage() {
       setError(friendlyError(error.message, t))
       setSubmitting(false)
     } else {
-      navigate(redirectTo, { replace: true })
+      completeAuthRedirect(redirectTo,navigate)
     }
   }
 
@@ -107,6 +108,7 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {supabase.auth.supportsOAuth !== false && <>
         <div className="lvm-auth-divider">{t('common:or')}</div>
         <button
           type="button"
@@ -117,6 +119,7 @@ export default function LoginPage() {
           <GoogleIcon />
           {t('common:continueWithGoogle')}
         </button>
+        </>}
 
         <p className="lvm-auth-card__footer">
           {t('noAccountYet')}{' '}

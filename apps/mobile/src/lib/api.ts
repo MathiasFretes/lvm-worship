@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, usesVpsBackend, deviceApiRequest } from './supabase'
 import { UserFacingError } from './errors'
 import { markSessionError } from './sessionError'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
@@ -13,6 +13,7 @@ const base = process.env.EXPO_PUBLIC_API_BASE_URL
 const budgetedFetch = withRequestBudget(fetch, () => FOREGROUND_MS)
 
 export function apiBase(): string {
+  if (usesVpsBackend) return new URL(process.env.EXPO_PUBLIC_LVM_API_URL!).origin
   if (!base) {
     throw new Error(
       'Missing EXPO_PUBLIC_API_BASE_URL. ' +
@@ -67,11 +68,13 @@ async function sendRepairingRedirect(path: string, init: RequestInit): Promise<R
 
 /** GET or DELETE with the caller's Supabase bearer token. */
 export async function apiRequest(method: 'GET' | 'DELETE', path: string): Promise<Response> {
+  if (usesVpsBackend) return deviceApiRequest(path, { method })
   return sendRepairingRedirect(path, { method, headers: await authHeader() })
 }
 
 /** POST JSON with the caller's Supabase bearer token. */
 export async function apiPost(path: string, body: unknown): Promise<Response> {
+  if (usesVpsBackend) return deviceApiRequest(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   return sendRepairingRedirect(path, {
     method: 'POST',
     headers: { ...(await authHeader()), 'Content-Type': 'application/json' },

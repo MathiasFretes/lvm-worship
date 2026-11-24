@@ -93,6 +93,7 @@ export async function changePassword(
   if (update.error) {
     return { ok: false, error: contextualise(authErrorKey(update.error)) }
   }
+  if ((supabase.auth as typeof supabase.auth & { passwordChangeRevokesSessions?: boolean }).passwordChangeRevokesSessions) return { ok: true, othersSignedOut: true }
 
   // 3. Drop every OTHER session, keeping this device signed in. The password is
   // already changed at this point, so a failure here is reported, not raised —

@@ -18,9 +18,9 @@ import { entrySongFromCatalog, makeEntryKey, toWorkingItems } from '../utils/set
 
 export const DRAFT_STORAGE_KEY = 'lvm.draft.v1'
 
-function readDraft() {
+function readDraft(storageKey) {
   try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') return null
@@ -36,6 +36,7 @@ function readDraft() {
             entryKey: makeEntryKey(e.songId),
             songId: e.songId,
             toKey: e.toKey || null,
+            notes: typeof e.notes === 'string' ? e.notes : null,
             sectionOrderText: typeof e.sectionOrderText === 'string' ? e.sectionOrderText : '',
             song: sourceSong ? entrySongFromCatalog(sourceSong) : null,
             sourceSong,
@@ -49,45 +50,48 @@ function readDraft() {
   }
 }
 
-function writeDraft(name, serviceDate, entries) {
+function writeDraft(storageKey, name, serviceDate, entries) {
   try {
     // An empty draft is stored as no draft at all, so clearing one actually
     // clears it rather than leaving an empty husk behind.
     if (!name && !serviceDate && entries.length === 0) {
-      localStorage.removeItem(DRAFT_STORAGE_KEY)
-      return
+      localStorage.removeItem(storageKey)
+      return true
     }
     localStorage.setItem(
-      DRAFT_STORAGE_KEY,
+      storageKey,
       JSON.stringify({
         name,
         serviceDate,
-        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey, ...(e.sectionOrderText ? { sectionOrderText: e.sectionOrderText } : {}), ...(e.sourceSong ? { sourceSong: e.sourceSong } : {}) })),
+        entries: entries.map((e) => ({ songId: e.songId, toKey: e.toKey, notes: e.notes ?? null, ...(e.sectionOrderText ? { sectionOrderText: e.sectionOrderText } : {}), ...(e.sourceSong ? { sourceSong: e.sourceSong } : {}) })),
       })
     )
+    return true
   } catch {
     // Storage full or blocked. The in-memory draft still works for this visit.
+    return false
   }
 }
 
-export function clearDraft() {
+export function clearDraft(storageKey = DRAFT_STORAGE_KEY) {
   try {
-    localStorage.removeItem(DRAFT_STORAGE_KEY)
+    localStorage.removeItem(storageKey)
   } catch {
     /* nothing to clear */
   }
 }
 
 /** @returns {import('../utils/setlists/entries').SetlistController} */
-export function useDraftSetlist() {
+export function useDraftSetlist({ storageKey = DRAFT_STORAGE_KEY } = {}) {
   const { songs: liveSongs, loading: songsLoading, error: songsError, retry: retrySongs } = useSongs()
 
   const initial = useRef(null)
-  if (initial.current === null) initial.current = readDraft() || { name: '', serviceDate: null, entries: [] }
+  if (initial.current === null) initial.current = readDraft(storageKey) || { name: '', serviceDate: null, entries: [] }
 
   const [name, setNameState] = useState(initial.current.name)
   const [serviceDate, setServiceDate] = useState(initial.current.serviceDate)
   const [entries, setEntries] = useState(initial.current.entries)
+  const [saveFailed, setSaveFailed] = useState(false)
   const songs = useMemo(() => {
     const byId = new Map(entries.filter((entry) => entry.sourceSong).map((entry) => [entry.sourceSong.id, entry.sourceSong]))
     liveSongs.forEach((song) => byId.set(song.id, song))
@@ -97,8 +101,8 @@ export function useDraftSetlist() {
 
   // The single writer, so no mutation has to remember to persist.
   useEffect(() => {
-    writeDraft(name, serviceDate, entries)
-  }, [name, serviceDate, entries])
+    setSaveFailed(!writeDraft(storageKey, name, serviceDate, entries))
+  }, [storageKey, name, serviceDate, entries])
 
   const items = useMemo(() => toWorkingItems(entries, catalog), [entries, catalog])
 
@@ -122,11 +126,11 @@ export function useDraftSetlist() {
     })
   }, [])
 
-  const addSong = useCallback((song) => {
+  const addSong = useCallback((song, { toKey = null } = {}) => {
     setEntries((prev) => [...prev, {
       entryKey: makeEntryKey(song.id),
       songId: song.id,
-      toKey: null,
+      toKey,
       sectionOrderText: '',
       song: entrySongFromCatalog(song),
       sourceSong: song,
@@ -181,6 +185,7 @@ export function useDraftSetlist() {
         entryKey: makeEntryKey(e.songId),
         songId: e.songId,
         toKey: e.toKey || null,
+        notes: e.notes ?? null,
         sectionOrderText: e.sectionOrderText || '',
         song: e.song || null,
         sourceSong: e.sourceSong || songs.find((song) => song.id === e.songId || song.dbId === e.songId) || null,
@@ -202,6 +207,7 @@ export function useDraftSetlist() {
     name,
     serviceDate,
     items,
+    entryCount: entries.length,
     songs,
     songsLoading,
     songsError,
@@ -211,7 +217,7 @@ export function useDraftSetlist() {
     loading: false,
     notFound: false,
     loadFailed: false,
-    saveFailed: false,
+    saveFailed,
     saving: false,
     retryLoad: () => {},
     setName: setNameState,
@@ -227,7 +233,7 @@ export function useDraftSetlist() {
     replaceEntries,
     reset,
     deleteSet: async () => {
-      clearDraft()
+      clearDraft(storageKey)
     },
   }
 }

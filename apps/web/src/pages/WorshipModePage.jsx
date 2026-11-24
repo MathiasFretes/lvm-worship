@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { useChordStyle } from '../hooks/useSettings'
@@ -9,7 +10,9 @@ import { formatKeyDisplay } from '../utils/chordpro/solfege'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/app/theme'
 import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordRender'
 import KeySelector from '../components/KeySelector'
-import { decodeSongIds, initialOffsets, loadWorshipEntries, readWorshipSession, setlistReturnUrl, WORSHIP_SESSION_KEY } from './worshipModeModel'
+import { decodeSongIds, entriesFromOffline, initialOffsets, loadWorshipEntries, readWorshipSession, setlistReturnUrl, WORSHIP_SESSION_KEY } from './worshipModeModel'
+import { offlineOwner, subscribeOfflineAccess } from '../utils/setlists/offlineAccess'
+import { offlineSetlists } from '../hooks/useOfflineSetlists'
 import './worship-mode.css'
 
 const FIT_SIZES = [18, 17, 16, 15, 14]
@@ -29,15 +32,18 @@ function Control({ children, label, onClick, disabled = false, active = false, c
 }
 
 export default function WorshipMode() {
+  const { t } = useTranslation('pages')
   const { songIds = '' } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   const ids = useMemo(() => decodeSongIds(songIds), [songIds])
   const params = useMemo(() => new URLSearchParams(location.search), [location.search])
+  const offlineId = params.get('offline')
+  const offlineOwnerId = useSyncExternalStore(subscribeOfflineAccess, offlineOwner, () => '')
   const requestedKeys = useMemo(() => (params.get('toKeys') || '').split(',').map((key) => {
     try { return decodeURIComponent(key) } catch { return key }
   }), [params])
-  const { songs: catalogSongs, loading } = useSongs()
+  const { songs: catalogSongs, loading } = useSongs({ enabled: !offlineId })
   const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
   const language = useMemo(() => resolveInitialSongLanguage(catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages), [catalog])
   const chordStyle = useChordStyle()
@@ -114,7 +120,7 @@ export default function WorshipMode() {
   useEffect(() => { if (!showTimer) { setRunning(false); setElapsed(0); startAt.current = 0 } }, [showTimer])
 
   useEffect(() => {
-    if (loading) return undefined
+    if (offlineId || loading) return undefined
     let cancelled = false
     const session = readWorshipSession(ids)
     loadWorshipEntries(ids, catalog.byId).then((loaded) => {
@@ -140,17 +146,41 @@ export default function WorshipMode() {
       }
     }).catch(() => { if (!cancelled) setError('No se pudo abrir el repertorio.') })
     return () => { cancelled = true; clearTimeout(hintTimer.current) }
-  }, [ids, catalog.byId, loading, params, requestedKeys])
+  }, [ids, catalog.byId, loading, params, requestedKeys, offlineId])
 
   useEffect(() => {
-    if (!entries.length || loadedIds !== ids.join(',')) return
+    if (!offlineId) return undefined
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!offlineOwnerId) throw new Error('Offline access was cleared')
+        const setlist = (await offlineSetlists.read(offlineOwnerId)).find(set => set.id === offlineId)
+        if (!setlist) throw new Error('Download not found')
+        const loaded = entriesFromOffline(setlist)
+        if (cancelled) return
+        const initial = initialOffsets(loaded, setlist.items.map(item => item.toKey || ''), '', null)
+        setEntries(loaded)
+        setBaseOffsets(initial.base)
+        setOffsets(initial.current)
+        setIndex(0)
+        setError('')
+      } catch {
+        if (!cancelled) { setEntries([]); setError(t('mixer.restoreError')) }
+      }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [offlineId, offlineOwnerId, t])
+
+  useEffect(() => {
+    if (offlineId || !entries.length || loadedIds !== ids.join(',')) return
     try { sessionStorage.setItem(WORSHIP_SESSION_KEY, JSON.stringify({
       idsString: ids.join(','), idx: index, offsets, baseOffsets, cols: columns,
       fontPx: fontSize, autoSize: autoFit, showChords, halfStep, ts: Date.now(),
     })) } catch { /* private mode */ }
-  }, [ids, loadedIds, entries, index, offsets, baseOffsets, columns, fontSize, autoFit, showChords, halfStep])
+  }, [ids, loadedIds, entries, index, offsets, baseOffsets, columns, fontSize, autoFit, showChords, halfStep, offlineId])
 
-  const current = entries[index]
+  const current = offlineId && !offlineOwnerId ? undefined : entries[index]
   const isVerse = current?.type === 'verse'
   const currentOffset = offsets[index] || 0
   const displayedKey = current && !isVerse ? transposeSymPrefer(current.baseKey, currentOffset, false) : ''
@@ -269,15 +299,15 @@ export default function WorshipMode() {
     return () => window.removeEventListener('resize', fit)
   }, [autoFit, current, columns, showChords])
 
-  if (!ids.length) return <main className="lvm-worship-empty"><h1>Worship Mode</h1><p>Seleccioná canciones desde el repertorio.</p><button onClick={() => navigate('/setlist')}>Volver a repertorios</button></main>
+  if (!ids.length && !offlineId) return <main className="lvm-worship-empty"><h1>Worship Mode</h1><p>Seleccioná canciones desde el repertorio.</p><button onClick={() => navigate('/setlist')}>Volver a repertorios</button></main>
 
   return <main className="lvm-worship-mode worship__viewport" ref={viewportRef} onPointerDownCapture={wakeChrome} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
     <header className={`lvm-worship-header ${dimmed ? 'is-dimmed' : ''}`}>
-      <Control label="Back to setlist" onClick={() => navigate(setlistReturnUrl(ids, requestedKeys))}>←</Control>
+      <Control label="Back to setlist" onClick={() => navigate(offlineId ? '/setlists' : setlistReturnUrl(ids, requestedKeys))}>←</Control>
       <div className="lvm-worship-heading">
         <div className="lvm-worship-heading__line">
           {showClock && <time aria-label="Clock">{clockText(now, twentyFourHours)}</time>}
-          <h1 title={current?.title || ''}>{current?.title || (loading ? 'Cargando…' : 'Repertorio')}</h1>
+          <h1 title={current?.title || ''}>{current?.title || (offlineId && !error ? t('mixer.restoring') : loading ? 'Cargando…' : 'Repertorio')}</h1>
           {showTimer && <div className="lvm-worship-timer" aria-label="Stopwatch"><span>{timerText(elapsed)}</span>{!mobile && <><Control label={running ? 'Stop stopwatch' : 'Start stopwatch'} onClick={toggleTimer}>{running ? 'Ⅱ' : '▶'}</Control><Control label="Reset stopwatch" onClick={resetTimer} disabled={!elapsed}>↺</Control></>}</div>}
         </div>
         {current && !isVerse && <p className="lvm-worship-key">Key: {displayKey}{displayedKey !== current.baseKey && <> · Original: {formatKeyDisplay(current.baseKey, chordStyle)}</>}</p>}
@@ -287,7 +317,8 @@ export default function WorshipMode() {
 
     <div className="worship__content lvm-worship-content" ref={contentRef} style={{ fontSize: `${fontSize}px`, '--worship-columns': isVerse || mobile ? 1 : columns }}>
       {error && <p role="alert">{error}</p>}
-      {!loading && !error && !current && <p role="status">No se encontraron canciones o versículos para este repertorio.</p>}
+      {!offlineId && !loading && !error && !current && <p role="status">No se encontraron canciones o versículos para este repertorio.</p>}
+      {current?.notes ? <p className="lvm-worship-notes">{current.notes}</p> : null}
       {current?.type === 'verse' ? <VerseView sections={current.sections} rtl={!!current.rtl} /> : current?.sections?.map((section, sectionIndex) => <section className="lvm-worship-section" key={sectionIndex}>
         {section.label && <h2 className="section">[{section.label}]</h2>}
         {section.lines.map((line, lineIndex) => line.instrumental
@@ -301,7 +332,7 @@ export default function WorshipMode() {
       <Control label="Lower key" onClick={() => changeKey(-1)} disabled={isVerse}>↓{!mobile && <span> Key Down</span>}</Control>
       <Control label="Raise key" onClick={() => changeKey(1)} disabled={isVerse}>↑{!mobile && <span> Key Up</span>}</Control>
       {!mobile && <Control label="Reset key" onClick={resetKey} disabled={isVerse}>↺ Reset</Control>}
-      {!mobile && <div className="lvm-worship-search"><input aria-label="Add song by title" placeholder="Agregar canción…" value={search} onChange={(event) => setSearch(event.target.value)} />{search.trim() && <div className="lvm-worship-results" role="listbox">{results.map((song) => <button role="option" aria-selected="false" key={song.id} onClick={() => addSong(song)}>+ {song.title}</button>)}</div>}</div>}
+      {!mobile && !offlineId && <div className="lvm-worship-search"><input aria-label="Add song by title" placeholder="Agregar canción…" value={search} onChange={(event) => setSearch(event.target.value)} />{search.trim() && <div className="lvm-worship-results" role="listbox">{results.map((song) => <button role="option" aria-selected="false" key={song.id} onClick={() => addSong(song)}>+ {song.title}</button>)}</div>}</div>}
       {!mobile && <><Control label="Toggle chords" onClick={() => setShowChords((value) => !value)} disabled={isVerse}>Acordes {showChords ? '✓' : ''}</Control><Control label="Smaller font" onClick={() => { setAutoFit(false); setFontSize((size) => Math.max(10, size - 1)) }}>A−</Control><Control label="Larger font" onClick={() => { setAutoFit(false); setFontSize((size) => Math.min(40, size + 1)) }}>A+</Control></>}
       <Control label="Previous song" onClick={() => move(-1)} disabled={index === 0}>←{!mobile && <span> BACK</span>}</Control>
       <span className="lvm-worship-position">{entries.length ? index + 1 : 0}/{entries.length}</span>
@@ -329,8 +360,8 @@ export default function WorshipMode() {
       <button aria-label="Larger font" onClick={() => { setAutoFit(false); setFontSize((size) => Math.min(40, size + 1)) }}>A+ Ampliar texto</button>
       {showTimer && <><button aria-label={running ? 'Stop stopwatch' : 'Start stopwatch'} onClick={toggleTimer}>{running ? 'Pausar' : 'Iniciar'} temporizador</button><button aria-label="Reset stopwatch" onClick={resetTimer} disabled={!elapsed}>Reiniciar temporizador</button></>}
       <button aria-label="Toggle auto-dim" onClick={() => setPinned((value) => !value)}>Controles siempre visibles: {pinned ? 'Sí' : 'No'}</button>
-      <input aria-label="Quick add song" placeholder="Agregar canción…" value={search} onChange={(event) => setSearch(event.target.value)} />
-      {search.trim() && results.map((song) => <button key={song.id} aria-label={`Add ${song.title}`} onClick={() => addSong(song)}>+ {song.title}</button>)}
+      {!offlineId && <input aria-label="Quick add song" placeholder="Agregar canción…" value={search} onChange={(event) => setSearch(event.target.value)} />}
+      {!offlineId && search.trim() && results.map((song) => <button key={song.id} aria-label={`Add ${song.title}`} onClick={() => addSong(song)}>+ {song.title}</button>)}
     </aside></div>}
     {mobile && hint && <div className="worship__hint" role="status">Swipe left/right for songs · up/down for key</div>}
   </main>

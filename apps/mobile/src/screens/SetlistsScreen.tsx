@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import { duplicateSetlist, nextCopyName, timeAgo } from '@lavozmisionera/core'
 import ConstrainedContent from '../components/ConstrainedContent'
+import Button from '../components/Button'
 import EmptyState from '../components/EmptyState'
 import ListRow from '../components/ListRow'
 import LoadingSkeleton from '../components/LoadingSkeleton'
@@ -151,6 +152,9 @@ export default function SetlistsScreen() {
           >
             <SymbolIcon name="plus" size={20} color={theme.colors.onAccent} weight="semibold" />
           </Pressable>
+        </View>
+        <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.sm }}>
+          <Button title={t('service.title')} variant="secondary" onPress={() => router.push('/setlist/service')} />
         </View>
         {content()}
       </ConstrainedContent>

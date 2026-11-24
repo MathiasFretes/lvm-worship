@@ -15,10 +15,15 @@ const SignupPage = lazyRoute(() => import('./pages/SignupPage'))
 const ProfilePage = lazyRoute(() => import('./pages/ProfilePage'))
 const AuthCallbackPage = lazyRoute(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = lazyRoute(() => import('./pages/ResetPasswordPage'))
+const ActivateAccountPage = lazyRoute(() => import('./pages/ActivateAccountPage'))
 const ForgotPasswordPage = lazyRoute(() => import('./pages/ForgotPasswordPage'))
-const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
+const AdminPage = lazyRoute(() => import('./pages/ServiceAdminRedirect'))
 const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./features/song-editor/LvmSongEditorPage'))
+const TablaturePage = lazyRoute(() => import('./features/tablature/TablaturePage'))
+const MixerPage = lazyRoute(() => import('./features/mixer/MixerPage'))
+const PracticeToolsPage = lazyRoute(() => import('./features/practice/PracticeToolsPage'))
+const ScorePage = lazyRoute(() => import('./features/score/ScorePage'))
 const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
 const DownloadPage = lazyRoute(() => import('./pages/DownloadPage'))
 const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
@@ -37,9 +42,15 @@ export default function App(){
     <ErrorBoundary>
       <React.Suspense fallback={<div className="container"><h3>Loading...</h3></div>}>
         <Routes>
+          <Route path="/activate" element={<ActivateAccountPage />} />
+          <Route path="/app" element={<Layout />}><Route index element={<HomeDashboard />} /></Route>
           <Route element={<Layout />}>
             <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />
+            <Route path="/tablature" element={<TablaturePage />} />
+            <Route path="/mixer" element={<MixerPage />} />
+            <Route path="/practice" element={<PracticeToolsPage />} />
+            <Route path="/score" element={<ScorePage />} />
             <Route path="/about" element={<About />} />
             <Route path="/licenses" element={<LicensesPage />} />
             <Route path="/download" element={<DownloadPage />} />

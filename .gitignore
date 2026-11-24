@@ -45,6 +45,7 @@ docs/*
 !docs/m77-d1-clean-ownership.md
 
 # Signing material — never commit, in any workspace.
+/test-results/
 *.jks
 *.keystore
 *.p12

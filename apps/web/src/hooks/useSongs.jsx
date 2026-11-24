@@ -135,17 +135,17 @@ function normaliseSong(song) {
  * songs — array of normalised song objects
  * loading — true while the first fetch is in flight
  */
-export function useSongs() {
+export function useSongs({ enabled = true } = {}) {
   const [state, setState] = useState(snapshot)
 
   useEffect(() => {
     listeners.add(setState)
     setState(snapshot)
-    if (snapshot.loading || (cacheTime && Date.now() - cacheTime > STALE_MS)) {
+    if (enabled && (snapshot.loading || (cacheTime && Date.now() - cacheTime > STALE_MS))) {
       void fetchSongs()
     }
     return () => listeners.delete(setState)
-  }, [])
+  }, [enabled])
 
   return { ...state, retry: fetchSongs }
 }

@@ -13,6 +13,7 @@ type PersonalRow = {
   status: string
   published_song_id: string | null
   created_at: string | null
+  chordpro_content?: string | null
 }
 
 /** Personal drafts remain distinct from published catalog entries. */
@@ -29,6 +30,7 @@ export function mergeSongCatalog(catalog: CatalogRow[], personal: PersonalRow[])
       tags: entry.tags,
       tempo: entry.tempo,
       created_at: entry.created_at,
+      chordpro_content: entry.chordpro_content,
       source: 'personal',
       personalId: entry.id,
       reviewStatus: entry.status,

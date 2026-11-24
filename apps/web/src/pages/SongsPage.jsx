@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigationType, useSearchParams } from 'react-router-dom'
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { normalizeSongSearch, searchSongs } from '../utils/songs/search'
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
-import { Chip, Input } from '../components/ui/layout-kit'
+import { Button, Chip, Field, Input } from '../components/ui/layout-kit'
+import { availableLibraryKeys, EMPTY_LIBRARY_FILTERS, matchesLibraryFilters, validLibraryRange } from '@lavozmisionera/core/songs/libraryFilters'
+import { plainSongLyrics } from '@lavozmisionera/core/songs/search'
+import { SearchIcon } from '../components/Icons'
 import { SongLibraryCard } from '../features/song-library/SongLibraryCard'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
@@ -20,7 +23,7 @@ import {
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function Songs(){
@@ -64,6 +67,7 @@ export default function Songs(){
       )
       out.push({
         ...display,
+        lyricSearchText: normalizeSongSearch(plainSongLyrics(display.chordpro_content || '')),
         tags: labels,
         tagKeys: keys,
         hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
@@ -92,6 +96,7 @@ export default function Songs(){
         reviewStatus: p.status,
         title: p.title,
         originalKey: p.default_key || '',
+        tempo: p.tempo ?? null,
         tags: labels,
         tagKeys: keys,
         authors,
@@ -103,6 +108,7 @@ export default function Songs(){
         searchText: `${p.title} ${(p.tags || []).join(' ')} ${p.artist || ''}`.toLowerCase(),
         searchTitles: [p.title].filter(Boolean),
         chordpro_content: p.chordpro_content || '',
+        lyricSearchText: normalizeSongSearch(plainSongLyrics(p.chordpro_content || '')),
       })
     }
     return out
@@ -132,6 +138,9 @@ export default function Songs(){
   }, [items, tagMap])
 
   const [selectedTags, setSelectedTags] = useState([])
+  const [musicFilters, setMusicFilters] = useState({ ...EMPTY_LIBRARY_FILTERS })
+  const availableKeys = useMemo(() => availableLibraryKeys(items), [items])
+  const musicPass = useCallback(song => matchesLibraryFilters(song, musicFilters), [musicFilters])
   const [lyricsOn, setLyricsOn] = useState(false)
   const [communityOnly, setCommunityOnly] = useState(() => {
     try { return localStorage.getItem('pref:communityOnly') === '1' } catch { return false }
@@ -165,13 +174,14 @@ export default function Songs(){
       list = items.slice()
     }
 
-    list = list.filter(tagPass).filter(communityPass)
+    list = list.filter(tagPass).filter(communityPass).filter(musicPass)
 
     if (lyricsOn && qLower.length) {
       const extra = items
         .filter(tagPass)
         .filter(communityPass)
-        .filter(s => normalizeSongSearch(s.chordpro_content).includes(qLower))
+        .filter(musicPass)
+        .filter(s => s.lyricSearchText.includes(qLower))
       const byId = new Set(list.map((i) => i.id))
       for (const s of extra) {
         if (!byId.has(s.id)) list.push(s)
@@ -200,7 +210,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, qLower, lyricsOn, tagPass, communityPass])
+  }, [items, qLower, lyricsOn, tagPass, communityPass, musicPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
@@ -353,6 +363,10 @@ export default function Songs(){
       <div className="lvm-song-library__header">
         <div className="lvm-song-library__heading">
           <h1 title={t('songs.titleTooltip')}>{t('songs.title')}</h1>
+          <Button as={Link} to="/tablature">{t('tablature.title')}</Button>
+          <Button as={Link} to="/mixer">{t('mixer.title')}</Button>
+          <Button as={Link} to="/score">{t('score.title')}</Button>
+          <Button as={Link} to="/practice">{t('practiceTools.title')}</Button>
           {languageChipCodes.length > 0 ? (
             <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (
@@ -371,16 +385,21 @@ export default function Songs(){
         </div>
 
         <div className="lvm-song-library__filters">
-          <Input
-            id="search"
-            type="search"
-            ref={searchRef}
-            value={q}
-            onChange={(e)=> setQ(e.target.value)}
-            onKeyDown={onSearchKeyDown}
-            placeholder={t('songs.searchPlaceholder')}
-            aria-label={t('songs.searchAria')}
-          />
+          <div className="lvm-song-library__search">
+            <SearchIcon size={20} aria-hidden="true" />
+            <Input
+              id="search"
+              name="q"
+              type="search"
+              autoComplete="off"
+              ref={searchRef}
+              value={q}
+              onChange={(e)=> setQ(e.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder={t('songs.searchPlaceholder')}
+              aria-label={t('songs.searchAria')}
+            />
+          </div>
           <div className="lvm-song-library__toggles">
             <label>
               <input
@@ -401,6 +420,28 @@ export default function Songs(){
           </div>
 
           <div className="lvm-song-library__tags">
+            <details className="lvm-song-library__music">
+              <summary>{t('songs.filters.title')}</summary>
+              <div className="lvm-song-library__music-fields">
+                <Field label={t('songs.filters.key')}>
+                  <select className="lvm-input" value={musicFilters.key} onChange={event => setMusicFilters({ ...musicFilters, key: event.target.value })}>
+                    <option value="">{t('songs.filters.anyKey')}</option>
+                    {availableKeys.map(key => <option key={key} value={key}>{key}</option>)}
+                  </select>
+                </Field>
+                <Field label={t('songs.filters.source')}>
+                  <select className="lvm-input" value={musicFilters.source} onChange={event => setMusicFilters({ ...musicFilters, source: event.target.value })}>
+                    {['all', 'catalog', 'personal'].map(source => <option key={source} value={source}>{t(`songs.filters.${source}`)}</option>)}
+                  </select>
+                </Field>
+                {['minBpm', 'maxBpm'].map(field => <Input key={field} id={`library-${field}`} label={t(`songs.filters.${field}`)}
+                  type="number" min="1" max="999" step="1" value={musicFilters[field]}
+                  aria-invalid={!validLibraryRange(musicFilters)}
+                  onChange={event => setMusicFilters({ ...musicFilters, [field]: event.target.value })} />)}
+                {!validLibraryRange(musicFilters) && <p role="alert">{t('songs.filters.invalidRange')}</p>}
+                <Button onClick={() => setMusicFilters({ ...EMPTY_LIBRARY_FILTERS })}>{t('songs.filters.reset')}</Button>
+              </div>
+            </details>
             <div className="tagbar">
               <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>{t('songs.all')}</Chip>
               {allTags.map((tag) => (

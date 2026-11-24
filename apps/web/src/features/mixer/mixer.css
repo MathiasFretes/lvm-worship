@@ -1,0 +1,92 @@
+.lvm-mixer {
+  padding-block: var(--space-4) var(--space-6);
+}
+
+.lvm-mixer__panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--lvm-separator);
+  border-radius: var(--radius-md);
+  background: var(--lvm-surface-2);
+}
+
+.lvm-mixer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lvm-mixer__row input[type='number'] {
+  width: 7ch;
+}
+
+.lvm-mixer__row :is(.lvm-field, .lvm-btn) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lvm-mixer__row .lvm-btn__label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.lvm-mixer__timeline {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.lvm-mixer__timeline input {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+.lvm-mixer__timeline output {
+  font-variant-numeric: tabular-nums;
+}
+
+.lvm-mixer__tracks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+}
+
+.lvm-mixer__panel h2,
+.lvm-mixer__panel p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.lvm-mixer__panel h2 {
+  font-size: 1.125rem;
+}
+
+.lvm-mixer__panel + .lvm-mixer__panel {
+  margin-block-start: var(--space-3);
+}
+
+.lvm-mixer__chart {
+  min-width: 0;
+}
+
+.lvm-mixer__separation {
+  margin-block: var(--space-3);
+}
+
+.lvm-mixer__separation > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lvm-mixer__separation :is(input, audio) {
+  max-width: 100%;
+}
+
+.lvm-mixer__preview {
+  display: grid;
+  gap: var(--space-2);
+}

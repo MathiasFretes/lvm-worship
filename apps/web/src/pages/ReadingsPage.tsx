@@ -22,7 +22,7 @@ import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
 import BibleTranslationPicker from '../components/BibleTranslationPicker'
 import { isRtlBibleLanguage } from '../utils/bible/direction'
 
-const SITE_URL = 'https://lavozmisionera.com'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://lavozmisionera.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function ReadingsPage(){

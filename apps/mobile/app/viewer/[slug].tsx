@@ -46,6 +46,8 @@ import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
 import { useChartAutoFit } from '../../src/lib/useChartAutoFit'
 import { resolveViewerKey } from '../../src/lib/songViewerKey'
 import { useTheme } from '../../src/theme/ThemeProvider'
+import { useCurrentUser } from '../../src/lib/currentUser'
+import { addSongToServiceDraft } from '../../src/lib/worshipServiceDraft'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
 // view controls (floating transpose bar, View-options sheet) and the Export &
@@ -61,8 +63,10 @@ const TRANSPOSE_BAR_CLEARANCE = 96
 
 export default function ViewerScreen() {
   const t = useTheme()
-  const { t: tx } = useTranslation(['song', 'export', 'errors', 'common'])
+  const { t: tx } = useTranslation(['song', 'export', 'errors', 'common', 'setlist'])
   const router = useRouter()
+  const userId = useCurrentUser()?.id
+  const addingToService = useRef(false)
   const { slug, title, songKey, initialKey, source, personalId } = useLocalSearchParams<{
     slug: string
     title?: string
@@ -200,6 +204,27 @@ export default function ViewerScreen() {
 
   const displayTitle = song?.title || title || slug
   const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
+  async function addToService() {
+    if (!userId || !song?.chordpro_content || addingToService.current) return
+    addingToService.current = true
+    try {
+      const draft = await addSongToServiceDraft(userId, {
+        id: isPersonal ? `p_${personalId}` : song.slug,
+        title: song.title,
+        originalKey: nativeKey || '',
+        chordpro_content: song.chordpro_content,
+      }, effectiveKey || null)
+      if (draft) router.push('/setlist/service')
+      else Alert.alert(tx('setlist:service.title'), tx('setlist:service.noContext'), [
+        { text: tx('common:cancel'), style: 'cancel' },
+        { text: tx('setlist:service.import'), onPress: () => router.push('/setlist/service') },
+      ])
+    } catch {
+      Alert.alert(tx('setlist:service.title'), tx('setlist:service.addError'))
+    } finally {
+      addingToService.current = false
+    }
+  }
   // Capo chip: only a net DOWNWARD ± transpose (delta < 0) has a capo
   // equivalent — the played shapes sit below the sounding key, which stays the
   // seeded/native key the taps started from. Zero/upward → null → no chip.
@@ -299,6 +324,16 @@ export default function ViewerScreen() {
           onEdit={handleEditPersonal}
           onOptions={() => setSheet('options')}
           onExport={() => setSheet('export')}
+          onAudio={song && !loading && !error ? () => router.push({ pathname: '/mixer', params: {
+            song: song.id, title: displayTitle, slug: song.slug, personal: isPersonal ? '1' : '0', transpose: String(steps), flat: preferFlat ? '1' : '0',
+          } }) : undefined}
+          onTablature={song && !loading && !error ? () => router.push({ pathname: '/tablature', params: {
+            song: song.id, title: displayTitle,
+          } }) : undefined}
+          onScore={song && !loading && !error ? () => router.push({ pathname: '/score', params: {
+            song: song.id, title: displayTitle,
+          } }) : undefined}
+          onAddToService={userId && doc && !loading && !error ? () => void addToService() : undefined}
         />
       </Animated.View>
 

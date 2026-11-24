@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createSetlist, isVerseId, uniqueName, updateSetlist } from '@lavozmisionera/core'
 import { supabase } from '../lib/supabase'
@@ -33,6 +33,14 @@ import LvmSongPicker from '../features/setlist/LvmSongPicker'
 import LvmSetlistEditor from '../features/setlist/LvmSetlistEditor'
 import '../features/setlist/lvm-setlist.css'
 import SetActions from '../features/setlist/SetActions'
+import OfflineSetlists from '../features/setlist/OfflineSetlists'
+import ConnectedServiceEntry from '../features/setlist/ConnectedServiceEntry'
+import { sameServicePlan } from '../features/setlist/serviceDrafts'
+import { downloadRehearsal } from '../features/setlist/offlineRehearsal'
+import { prepareOfflineShell } from '../features/setlist/offlineShell'
+import { offlineSetlists, notifyOfflineSetlists } from '../hooks/useOfflineSetlists'
+import { grantOfflineAccess, offlineOwner } from '../utils/setlists/offlineAccess'
+import { entriesFromOffline } from './worshipModeModel'
 import AddVerseDialog from '../features/setlist/AddVerseDialog'
 import PruneSetlistsModal from '../features/setlist/PruneSetlistsModal'
 import ShortcutsDialog from '../features/setlist/ShortcutsDialog'
@@ -59,9 +67,9 @@ import {
 //
 // The saved and draft builders expose the same controller surface, so
 // everything below the hook selection is identical for both.
-function useController(setlistId) {
+function useController(setlistId, storageKey) {
   const saved = useSetlistBuilder(setlistId || '')
-  const draft = useDraftSetlist()
+  const draft = useDraftSetlist({ storageKey })
   return setlistId ? saved : draft
 }
 
@@ -107,7 +115,26 @@ function downloadJson(value, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-export default function SetlistWorkspacePage() {
+export default function SetlistWorkspaceRoute() {
+  const { session, loading } = useAuth()
+  const [params] = useSearchParams()
+  const { id } = useParams()
+  const { t } = useTranslation('common')
+  const churchId = params.get('churchId')
+  const serviceId = params.get('serviceId')
+  if (!id && (churchId || serviceId)) {
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(churchId || '') || !serviceId || serviceId.length > 200) return <PageContainer><p role="alert">{t('pages:mixer.restoreError')}</p></PageContainer>
+    const userId = session?.user?.id || offlineOwner()
+    if (!userId && loading) return <PageContainer><p role="status">{t('loading')}</p></PageContainer>
+    if (!userId) return <Navigate to={`/login?redirect=${encodeURIComponent(`/setlist?${params}`)}`} replace />
+    return <ConnectedServiceEntry key={JSON.stringify([userId, churchId, serviceId])} userId={userId} churchId={churchId} serviceId={serviceId}>
+      {connected => <SetlistWorkspacePage key={connected.draftKey} connected={connected} />}
+    </ConnectedServiceEntry>
+  }
+  return <SetlistWorkspacePage />
+}
+
+function SetlistWorkspacePage({ connected }) {
   const { t, i18n } = useTranslation('pages')
   const { id: routeId, songIds: routeSongIds, code: routeCode } = useParams()
   const [searchParams] = useSearchParams()
@@ -124,12 +151,37 @@ export default function SetlistWorkspacePage() {
     }
   }, [searchParams])
   const navigate = useNavigate()
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, session } = useAuth()
+  const currentUser = useRef(session?.user?.id)
+  currentUser.current = session?.user?.id
+  const [offlineProgress, setOfflineProgress] = useState(null)
   const chordStyle = useChordStyle()
   const isMobile = useIsMobile()
 
-  const controller = useController(routeId)
+  const controller = useController(routeId, connected?.draftKey)
   const { items, catalog, songs, songsLoading, songsError, retrySongs } = controller
+  const downloadCurrentRehearsal = async () => {
+    const ownerId = session?.user?.id
+    if (!ownerId || offlineProgress || controller.loading) return
+    try {
+      if (controller.entryCount !== items.length) throw new Error('Some setlist entries are unavailable')
+      grantOfflineAccess(ownerId)
+      setOfflineProgress({ done: 0, total: items.length })
+      const setlist = await downloadRehearsal({
+        id: routeId || 'local-draft', name: controller.name || t('setlist.untitledSet'),
+        serviceDate: controller.serviceDate || null, updatedAt: controller.updatedAt || null,
+        items: items.map(item => ({ ...item, notes: item.notes ?? null })),
+      }, { client: supabase, catalog, onProgress: (done, total) => setOfflineProgress({ done, total }) })
+      entriesFromOffline(setlist)
+      await prepareOfflineShell()
+      if (currentUser.current !== ownerId || offlineOwner() !== ownerId) return
+      await offlineSetlists.save(ownerId, setlist)
+      if (currentUser.current !== ownerId || offlineOwner() !== ownerId) return
+      notifyOfflineSetlists()
+      showToast(t('mixer.saved'))
+    } catch { showToast(t('mixer.saveError')) }
+    finally { setOfflineProgress(null) }
+  }
   const sectionLabels = useMemo(() => {
     const labels = {}
     for (const song of songs) {
@@ -173,12 +225,33 @@ export default function SetlistWorkspacePage() {
   // import rather than dropped on the floor.
   const [legacySets, setLegacySets] = useState(() => readLegacyLocalSets())
   const [legacyBusy, setLegacyBusy] = useState(false)
-  const [worshipContext, setWorshipContext] = useState(readWorshipContext)
+  const [importedContext, setWorshipContext] = useState(readWorshipContext)
+  const worshipContext = connected ? connected.exchange?.context : importedContext
+  useEffect(() => {
+    if (!connected?.exchange?.context || controller.name) return
+    controller.setName(connected.exchange.context.name)
+    controller.setDate(connected.exchange.context.startsAt)
+  }, [connected?.exchange?.context, controller])
+
+  const connectedPlan = useMemo(() => {
+    if (!connected || !worshipContext || !items.length) return null
+    try { return buildWorshipPlanFromSetlist({ context: worshipContext, items, songs }) } catch { return null }
+  }, [connected, worshipContext, items, songs])
+  const connectedPlanConfirmed = sameServicePlan(connectedPlan, connected?.exchange?.plan)
 
   const verseCache = useRef(new Map())
   const searchRef = useRef(null)
   const hydratedFromRoute = useRef(false)
   const quickApplied = useRef(false)
+  const addedFromViewer = useRef(null)
+
+  useEffect(() => {
+    const addition = location.state?.addSongToDraft
+    if (routeId || routeCode || routeSongIds || !addition?.song?.id || addedFromViewer.current === location.key) return
+    addedFromViewer.current = location.key
+    controller.addSong(addition.song, { toKey: addition.toKey || null })
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
+  }, [controller, location, navigate, routeCode, routeId, routeSongIds])
 
   useEffect(() => {
     try {
@@ -378,7 +451,7 @@ export default function SetlistWorkspacePage() {
           toKey: item.toKey,
         })),
       })
-      clearDraft()
+      clearDraft(connected?.draftKey)
       controller.reset?.()
       await lists.refresh()
       showToast(t('setlist.setlistSaved'))
@@ -535,6 +608,8 @@ export default function SetlistWorkspacePage() {
   const actions = (
     <SetActions
       items={items}
+      onDownloadRehearsal={isLoggedIn ? downloadCurrentRehearsal : undefined}
+      offlineProgress={offlineProgress}
       worshipPath={worshipPath}
       pptxCount={pptxCount}
       busy={pdfBusy}
@@ -552,7 +627,7 @@ export default function SetlistWorkspacePage() {
       onResetKeys={resetKeys}
       onServiceDate={onServiceDate}
       onExportService={onExportService}
-      onImportContext={!routeId ? onImportContext : undefined}
+      onImportContext={!routeId && !connected ? onImportContext : undefined}
       onExportWorshipPlan={!routeId && worshipContext ? onExportWorshipPlan : undefined}
     />
   )
@@ -561,7 +636,27 @@ export default function SetlistWorkspacePage() {
 
   const centre = (
     <div className="lvm-set-main">
-      {!routeId && worshipContext && (
+      {connected && <section className="lvm-service-handoff" aria-label="LVM Service">
+        <div><strong>{worshipContext ? t('setlist.preparingForService', { name: worshipContext.title }) : t('setlist.importPlatformContext')}</strong>
+          {connected.error && <p role="alert">{connected.error}</p>}
+          {controller.saveFailed && <p role="alert">{t('mixer.saveError')}</p>}
+          {connected.pending && <p role="status">{t('setlist.savedOnDevice')}</p>}
+          {connected.saved && connectedPlanConfirmed && <p role="status">{t('setlist.setlistSaved')}</p>}
+        </div>
+        <Toolbar>
+          {connected.exchange?.plan && <Button variant="secondary" disabled={connected.busy || connected.pending} onClick={connected.openRemote}>{t('common:edit')}: {t('setlist.platformRepertoire')}</Button>}
+          <Button variant="secondary" disabled={connected.busy || connected.pending} onClick={() => { void connected.refresh() }}>{t('setlist.importPlatformContext')}</Button>
+          <Button variant="primary" disabled={connected.busy || controller.saveFailed || !connected.exchange?.canPrepare || !items.length} onClick={() => {
+            try {
+              if (session?.user?.id) grantOfflineAccess(session.user.id)
+              void connected.submit(buildWorshipPlanFromSetlist({ context: worshipContext, items, songs }))
+            } catch (error) { showToast(error.message) }
+          }}>{t('common:save')}</Button>
+          {connected.pending && <Button variant="secondary" disabled={connected.busy} onClick={connected.cancelPending}>{t('common:cancel')}</Button>}
+          <a href={`/service/services/${encodeURIComponent(worshipContext?.serviceId || searchParams.get('serviceId'))}?churchId=${encodeURIComponent(searchParams.get('churchId'))}`}>{t('setlist.returnToService')}</a>
+        </Toolbar>
+      </section>}
+      {!connected && !routeId && worshipContext && (
         <div className="lvm-service-handoff" role="status">
           <div>
             <strong>{t('setlist.preparingForService', { name: worshipContext.title })}</strong>
@@ -742,6 +837,9 @@ export default function SetlistWorkspacePage() {
         ) : null}
       </Toolbar>
 
+      {offlineProgress ? <p role="status">{t('mixer.saving')} {offlineProgress.done}/{offlineProgress.total}</p> : null}
+      <OfflineSetlists />
+
       {legacySets.length > 0 ? (
         <div className="lvm-draft-banner">
           <strong>{t('setlist.legacyTitle', { count: legacySets.length })}</strong>
@@ -764,7 +862,7 @@ export default function SetlistWorkspacePage() {
         </div>
       ) : null}
 
-      {!routeId && !isLoggedIn ? (
+      {!connected && !routeId && !isLoggedIn ? (
         <div className="lvm-draft-banner">
           <strong>{t('setlist.draftTitle')}</strong>
           <span>{t('setlist.draftBody')}</span>
@@ -786,7 +884,7 @@ export default function SetlistWorkspacePage() {
           </label>
         </div>
       ) : null}
-      {!routeId && isLoggedIn && items.length > 0 ? (
+      {!connected && !routeId && isLoggedIn && items.length > 0 ? (
         <div className="lvm-draft-banner">
           <strong>{t('setlist.draftTitle')}</strong>
           <Button size="sm" variant="primary" onClick={onSaveDraft}>
@@ -868,7 +966,7 @@ export default function SetlistWorkspacePage() {
 async function fetchEntriesForRename(setlistId) {
   const { fetchSetlist } = await import('@lavozmisionera/core')
   const data = await fetchSetlist(supabase, setlistId)
-  return (data?.entries || []).map((e) => ({ id: e.song_id, toKey: e.toKey }))
+  return (data?.entries || []).map((e) => ({ id: e.song_id, toKey: e.toKey, notes: e.notes ?? null }))
 }
 
 // The three recipes Home's quick-action cards can hand over.

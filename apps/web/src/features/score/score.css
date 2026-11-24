@@ -1,0 +1,31 @@
+.lvm-score { display: grid; gap: var(--space-3); padding-block: var(--space-4) var(--space-6); }
+.lvm-score > .lvm-btn { justify-self: start; }
+.lvm-score__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lvm-score__edit { border: 0; margin: 0; padding: 0; min-width: 0; }
+.lvm-score__row input[type='number'] { width: 7ch; }
+.lvm-score__row input:not([type]) { max-width: min(55vw, 18rem); }
+.lvm-score__panel {
+  display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-3);
+  border: 1px solid var(--lvm-separator); border-radius: var(--radius-md); background: var(--lvm-surface-2);
+}
+.lvm-score__viewport { overflow-x: auto; }
+.lvm-score__staff { position: relative; width: max-content; min-width: 100%; display: flex; padding-left: 48px; }
+.lvm-score__line { position: absolute; inset-inline: 0; border-top: 1px solid currentColor; }
+.lvm-score__barline { position: absolute; right: 0; border-right: 1px solid currentColor; }
+.lvm-score__meter { position: absolute; left: 30px; display: grid; width: 17px; text-align: center; font: bold 15px/16px serif; }
+.lvm-score__clef, .lvm-score__rest { position: absolute; font: 2.1rem/1 'Segoe UI Symbol', 'Noto Music', serif; }
+.lvm-score__clef { left: 6px; }
+.lvm-score__note { position: relative; flex: 0 0 44px; color: inherit; background: transparent; border: 0; cursor: pointer; }
+.lvm-score__note[aria-pressed='true'] { outline: 2px solid currentColor; outline-offset: -2px; }
+.lvm-score__note[aria-current='true'] { background: var(--lvm-surface-2); box-shadow: inset 3px 0 currentColor; }
+.lvm-score__head, .lvm-score__stem, .lvm-score__ledger, .lvm-score__dot, .lvm-score__flag, .lvm-score__accidental { position: absolute; }
+.lvm-score__head { left: 17px; width: 11px; height: 8px; border: 2px solid currentColor; border-radius: 50%; background: currentColor; transform: rotate(-18deg); }
+.lvm-score__head.is-open { background: var(--lvm-surface-2); }
+.lvm-score__stem { left: 26px; height: 26px; border-left: 1px solid currentColor; }
+.lvm-score__stem.is-down { left: 17px; }
+.lvm-score__flag { left: 26px; width: 7px; height: 9px; border-right: 2px solid currentColor; border-top-right-radius: 6px; }
+.lvm-score__flag.is-down { left: 17px; transform: scaleY(-1); }
+.lvm-score__ledger { left: 12px; width: 21px; border-top: 1px solid currentColor; }
+.lvm-score__rest { left: 12px; }
+.lvm-score__dot { left: 32px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.lvm-score__accidental { left: 4px; }

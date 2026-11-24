@@ -1,0 +1,61 @@
+services:
+  rest:
+    image: postgrest/postgrest:v16.0@sha256:45674266ef004bc6676f98b12132f1da042de8b5237eff4e7af3c7bf6c510bfb
+    user: '1000:1000'
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: '@/run/secrets/rest_uri'
+      PGRST_DB_ANON_ROLE: lvm_anon
+      PGRST_DB_SCHEMAS: public
+      PGRST_JWT_SECRET: '@/run/secrets/jwt_secret'
+      PGRST_DB_MAX_ROWS: 10000
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_LOG_LEVEL: error
+    secrets: [rest_uri, jwt_secret]
+    networks: [database]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 256m
+    security_opt: [no-new-privileges:true]
+  api:
+    build: ./source/service-api
+    restart: unless-stopped
+    environment:
+      LVM_ORIGIN: https://srv2137598.hstgr.cloud
+    secrets: [api_password, jwt_secret]
+    networks:
+      database:
+      proxy:
+        aliases: [lvm-worship-api]
+    depends_on: [rest]
+    mem_limit: 512m
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4318/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+  provision-owner:
+    profiles: [admin]
+    build: ./source/service-api
+    user: '0:0'
+    environment:
+      LVM_ORIGIN: https://srv2137598.hstgr.cloud
+    secrets: [postgres_password]
+    volumes:
+      - ./activation:/activation
+      - ./source/service-api/test:/app/test:ro
+    networks: [database]
+    entrypoint: [node, provision-owner.mjs]
+secrets:
+  api_password:
+    file: ./secrets/api_password
+  rest_uri:
+    file: ./secrets/rest_uri
+  jwt_secret:
+    file: ./secrets/jwt_secret
+networks:
+  proxy:
+    external: true
+    name: shared-proxy

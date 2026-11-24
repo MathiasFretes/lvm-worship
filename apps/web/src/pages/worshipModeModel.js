@@ -49,6 +49,25 @@ export function songFromCatalog(entry) {
   }
 }
 
+export function entriesFromOffline(setlist) {
+  return setlist.items.map(item => {
+    if (item.verseLines) return {
+      id: item.songId, entryKey: item.entryKey, title: item.song.title,
+      type: 'verse', baseKey: null, notes: item.notes,
+      sections: [{ label: '', lines: item.verseLines }],
+    }
+    const entry = songFromCatalog({ ...item.song, originalKey: item.song.default_key })
+    if (item.sectionOrderText?.trim()) {
+      const text = item.sectionOrderText.trim()
+      const sections = entry.sections.filter(section => section.lines.some(line => !line.comment && line.plain.trim()))
+      const order = text.split(',').map(Number)
+      if (!/^\d+(\s*,\s*\d+)*$/.test(text) || order.some(index => index < 1 || index > sections.length)) throw new Error('Invalid rehearsal section order')
+      entry.sections = order.map(index => sections[index - 1])
+    }
+    return { ...entry, id: item.songId, entryKey: item.entryKey, notes: item.notes }
+  })
+}
+
 async function verseFromReference(id, languageByTranslation, chapterCache) {
   const reference = parseVerseId(id)
   if (!reference) return null

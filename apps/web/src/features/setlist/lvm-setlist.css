@@ -44,3 +44,9 @@
 .lvm-set-editor :is(button, input, select):focus-visible, .lvm-set-picker :is(button, input):focus-visible, .lvm-set-nav :is(button, input, a):focus-visible { outline: 2px solid var(--lvm-focus-ring); outline-offset: 2px; }
 @media (max-width: 48rem) { .lvm-set-editor__item { grid-template-columns: 2rem minmax(0, 1fr); } .lvm-set-editor__key, .lvm-set-editor__item-actions { grid-column: 2; } }
 @media (max-width: 56.25rem) { .lvm-set-editor, .lvm-set-picker, .lvm-set-nav { height: auto; overflow-y: visible; } }
+.lvm-offline-sets { margin-block: var(--space-4); padding: var(--space-4); border: 1px solid var(--lvm-separator); border-radius: var(--radius-sm); background: var(--lvm-surface-1); color: var(--lvm-text); }
+.lvm-offline-sets h2 { font-size: 1rem; margin: 0 0 var(--space-3); }
+.lvm-offline-sets ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
+.lvm-offline-sets li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.lvm-offline-sets a { display: grid; flex: 1 1 12rem; min-height: 2.75rem; gap: var(--space-1); overflow-wrap: anywhere; }
+.lvm-offline-sets a span { color: var(--lvm-text-secondary); font-size: .875rem; }

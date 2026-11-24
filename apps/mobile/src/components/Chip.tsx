@@ -12,10 +12,12 @@ import SymbolIcon from './SymbolIcon'
 export default function Chip({
   label,
   selected = false,
+  disabled = false,
   onPress,
 }: {
   label: string
   selected?: boolean
+  disabled?: boolean
   onPress?: () => void
 }) {
   const t = useTheme()
@@ -24,8 +26,9 @@ export default function Chip({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
       style={({ pressed }) => [
         styles.chip,
         {
@@ -35,7 +38,7 @@ export default function Chip({
           borderRadius: t.radii.pill,
           backgroundColor: selected ? t.colors.accent : t.colors.surfaceAlt,
           borderColor: selected ? t.colors.accent : t.colors.border,
-          opacity: pressed ? 0.85 : 1,
+          opacity: disabled ? 0.55 : pressed ? 0.85 : 1,
         },
       ]}
     >

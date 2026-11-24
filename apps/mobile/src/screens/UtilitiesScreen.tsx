@@ -14,6 +14,9 @@ import PitchPipeScreen from './PitchPipeScreen'
 import CapoCalculatorScreen from './CapoCalculatorScreen'
 import KeyReferenceScreen from './KeyReferenceScreen'
 import SongbookBuilderScreen from './SongbookBuilderScreen'
+import TablatureScreen from './TablatureScreen'
+import MixerScreen from './MixerScreen'
+import ScoreScreen from './ScoreScreen'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import type { Tokens } from '@lavozmisionera/tokens/native'
@@ -47,7 +50,7 @@ function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; 
   )
 }
 
-type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/capo' | '/songbook' | '/key-reference'
+type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/capo' | '/songbook' | '/key-reference' | '/tablature' | '/mixer' | '/score'
 
 const UTILITIES: {
   icon: Parameters<typeof SymbolIcon>[0]['name']
@@ -58,6 +61,9 @@ const UTILITIES: {
   { icon: 'metronome', titleKey: 'tools.metronome', route: '/metronome' },
   { icon: 'pianokeys', titleKey: 'tools.pitchPipe', route: '/pitch-pipe' },
   { icon: 'book', titleKey: 'tools.songbook', route: '/songbook' },
+  { icon: 'music.note', titleKey: 'tablature.title', route: '/tablature' },
+  { icon: 'music.note', titleKey: 'mixer.title', route: '/mixer' },
+  { icon: 'music.note', titleKey: 'score.title', route: '/score' },
   { icon: 'music.note', titleKey: 'tools.capo', route: '/capo' },
   { icon: 'circle.hexagongrid', titleKey: 'tools.keyRef', route: '/key-reference' },
 ]
@@ -142,6 +148,12 @@ export default function UtilitiesScreen() {
             <PitchPipeScreen embedded />
           ) : tool === '/songbook' ? (
             <SongbookBuilderScreen embedded />
+          ) : tool === '/tablature' ? (
+            <TablatureScreen embedded />
+          ) : tool === '/mixer' ? (
+            <MixerScreen embedded />
+          ) : tool === '/score' ? (
+            <ScoreScreen embedded />
           ) : tool === '/capo' ? (
             <CapoCalculatorScreen embedded />
           ) : tool === '/key-reference' ? (

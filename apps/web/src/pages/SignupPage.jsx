@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import {completeAuthRedirect} from '../utils/app/authRedirect'
 import SpritePicker from '../components/ui/SpritePicker'
 import { showToast } from '../utils/app/toast'
 import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
@@ -24,7 +25,7 @@ export default function SignupPage() {
   const { refreshProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/app'
 
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -74,7 +75,7 @@ export default function SignupPage() {
       if (profileError) console.error('Profile update after signup failed:', profileError)
       await refreshProfile()
       showToast(t('welcomeToast'))
-      navigate(redirectTo, { replace: true })
+      completeAuthRedirect(redirectTo,navigate)
     } else {
       setSignUpSuccess(true)
     }
@@ -194,6 +195,7 @@ export default function SignupPage() {
           </button>
         </form>
 
+        {supabase.auth.supportsOAuth !== false && <>
         <div className="lvm-auth-divider">{t('common:or')}</div>
         <button
           type="button"
@@ -204,6 +206,7 @@ export default function SignupPage() {
           <GoogleIcon />
           {t('common:continueWithGoogle')}
         </button>
+        </>}
 
         <p className="lvm-auth-card__footer">
           {t('alreadyHaveAccount')} <Link to="/login">{t('signIn')}</Link>

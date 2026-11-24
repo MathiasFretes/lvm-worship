@@ -1,0 +1,33 @@
+srv2137598.hstgr.cloud {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+	handle /api/* {
+		reverse_proxy lvm-worship-api:4318
+	}
+	@public path / /nosotros /pastores /predicas /biblioteca /envivo /devocional /sedes /ministerios /celulas /oracion /nuevo /calendario /donaciones /boletin /redes /privacidad /contacto
+	handle @public {
+		root * /srv/public
+		rewrite * /index.html
+		file_server
+	}
+	handle_path /site/* {
+		root * /srv/public
+		file_server
+	}
+	handle /service {
+		redir /service/ 308
+	}
+	handle_path /service/* {
+		root * /srv/service
+		try_files {path} /index.html
+		file_server
+	}
+	handle {
+		root * /srv/worship
+		try_files {path} {path}/index.html /index.html
+		file_server
+	}
+}

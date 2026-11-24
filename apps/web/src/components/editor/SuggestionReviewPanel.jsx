@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { reviewSongSuggestion } from '@lavozmisionera/core'
@@ -14,6 +15,7 @@ function formatDate(str) {
 }
 
 function MetadataDiff({ oldPayload, newPayload }) {
+  const { t } = useTranslation('songEditor')
   const FIELDS = [
     'title', 'artist', 'default_key', 'tempo', 'time_signature',
     'country', 'youtube_id', 'mp3_url', 'pptx_url', 'slug', 'tags',
@@ -29,10 +31,10 @@ function MetadataDiff({ oldPayload, newPayload }) {
 
   return (
     <div className="lvm-suggestion-card__diff-section">
-      <div className="lvm-suggestion-card__diff-title">Metadata changes</div>
+      <div className="lvm-suggestion-card__diff-title">{t('metadataChanges')}</div>
       {diffs.map(f => (
         <div key={f} className="lvm-suggestion-card__diff-row">
-          <span className="lvm-suggestion-card__diff-key">{f}</span>
+          <span className="lvm-suggestion-card__diff-key">{t(({ title: 'title', artist: 'artist', default_key: 'key', tempo: 'tempo', time_signature: 'timeSignature', country: 'country', youtube_id: 'youtube', pptx_url: 'presentation', tags: 'tags' })[f] || f, { defaultValue: f }).replace(/ \*$/, '')}</span>
           {oldPayload && (
             <>
               <span className="lvm-suggestion-card__diff-old">
@@ -51,6 +53,7 @@ function MetadataDiff({ oldPayload, newPayload }) {
 }
 
 function ContentDiff({ oldContent, newContent }) {
+  const { t } = useTranslation('songEditor')
   if (!oldContent && !newContent) return null
 
   const oldLines = (oldContent || '').split('\n')
@@ -75,7 +78,7 @@ function ContentDiff({ oldContent, newContent }) {
 
   return (
     <div className="lvm-suggestion-card__diff-section">
-      <div className="lvm-suggestion-card__diff-title">Content changes</div>
+      <div className="lvm-suggestion-card__diff-title">{t('contentChanges')}</div>
       <div className="lvm-suggestion-card__content-diff">
         {rows.map((row, i) => (
           <div
@@ -96,13 +99,14 @@ function ContentDiff({ oldContent, newContent }) {
 }
 
 function RejectionForm({ onSubmit, onCancel }) {
+  const { t } = useTranslation('songEditor')
   const [reason, setReason] = useState('')
 
   return (
     <div className="lvm-rejection-form">
       <textarea
         className="lvm-rejection-form__textarea"
-        placeholder="Reason for rejection (optional)..."
+        placeholder={t('rejectReason')}
         value={reason}
         onChange={e => setReason(e.target.value)}
       />
@@ -112,21 +116,22 @@ function RejectionForm({ onSubmit, onCancel }) {
           className="lvm-btn lvm-btn--destructive lvm-btn--sm"
           onClick={() => onSubmit(reason)}
         >
-          Confirm Rejection
+          {t('confirmReject')}
         </button>
         <button
           type="button"
           className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={onCancel}
         >
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </div>
   )
 }
 
-function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTouchUp, canDirectDelete }) {
+function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTouchUp, canDirectDelete, disabled }) {
+  const { t } = useTranslation('songEditor')
   const [rejecting, setRejecting] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -139,10 +144,10 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
     setLoading(true)
     try {
       await reviewSongSuggestion(supabase, suggestion.id, 'approve')
-      showToast('Suggestion approved.')
+      showToast(t('approved'))
       onApproved(suggestion.id)
     } catch (err) {
-      showToast(`Error applying suggestion: ${err.message}`)
+      showToast(t('applyError', { message: err.message }))
     }
     setLoading(false)
   }
@@ -152,10 +157,10 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
     setLoading(true)
     try {
       await reviewSongSuggestion(supabase, suggestion.id, 'reject', reason || null)
-      showToast('Suggestion rejected.')
+      showToast(t('rejected'))
       onRejected(suggestion.id)
     } catch (err) {
-      showToast(`Error rejecting suggestion: ${err.message}`)
+      showToast(t('rejectError', { message: err.message }))
     }
     setLoading(false)
     setRejecting(false)
@@ -167,18 +172,18 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
     <div className={`lvm-suggestion-card${isDeletion ? ' lvm-suggestion-card--deletion' : ''}`}>
       <div className={`lvm-suggestion-card__header${isDeletion ? ' lvm-suggestion-card__header--deletion' : ''}`}>
         <span className="lvm-suggestion-card__proposer">
-          {suggestion.users?.display_name || 'Unknown user'}
+          {suggestion.users?.display_name || t('unknownUser')}
         </span>
         <span className="lvm-suggestion-card__meta">{formatDate(suggestion.created_at)}</span>
         <span className={`lvm-suggestion-card__badge lvm-suggestion-card__badge--${suggestion.type}`}>
-          {suggestion.type}
+          {t(suggestion.type, { defaultValue: suggestion.type })}
         </span>
       </div>
 
       <div className="lvm-suggestion-card__body">
         {isDeletion && (
           <div className="lvm-suggestion-card__deletion-warning">
-            ⚠ This suggestion requests deletion of this song. Admin approval required.
+            {t('deletionWarning')}
           </div>
         )}
 
@@ -204,26 +209,26 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
             type="button"
             className="lvm-btn lvm-btn--primary lvm-btn--sm"
             onClick={handleApprove}
-            disabled={loading}
+            disabled={loading || disabled}
           >
-            Approve
+            {t('approve')}
           </button>
         )}
         <button
           type="button"
           className="lvm-btn lvm-btn--secondary lvm-btn--sm"
           onClick={() => onTouchUp(suggestion)}
-          disabled={loading}
+          disabled={loading || disabled}
         >
-          Touch Up
+          {t('touchUp')}
         </button>
         <button
           type="button"
           className="lvm-btn lvm-btn--destructive lvm-btn--sm"
           onClick={() => setRejecting(true)}
-          disabled={loading}
+          disabled={loading || disabled}
         >
-          Reject
+          {t('reject')}
         </button>
       </div>
 
@@ -237,7 +242,8 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
   )
 }
 
-export default function SuggestionReviewPanel({ songId, currentSong, onApproved, onRejected, onTouchUp }) {
+export default function SuggestionReviewPanel({ songId, currentSong, onApproved, onRejected, onTouchUp, disabled = false }) {
+  const { t } = useTranslation('songEditor')
   const { isAtLeast } = useRole()
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -283,16 +289,16 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
 
   return (
     <div className="lvm-suggestion-review lvm-portal-section">
-      <h2>Pending Suggestions</h2>
+      <h2>{t('pending')}</h2>
 
       {error && (
-        <p style={{ color: 'var(--lvm-danger)' }}>Error loading suggestions: {error}</p>
+        <p style={{ color: 'var(--lvm-danger)' }}>{t('suggestionsError', { message: error })}</p>
       )}
 
-      {loading && <p className="lvm-suggestion-review__empty">Loading suggestions…</p>}
+      {loading && <p className="lvm-suggestion-review__empty">{t('loadingSuggestions')}</p>}
 
       {!loading && !error && suggestions.length === 0 && (
-        <p className="lvm-suggestion-review__empty">No suggestions to review</p>
+        <p className="lvm-suggestion-review__empty">{t('noSuggestions')}</p>
       )}
 
       {suggestions.map(s => (
@@ -304,6 +310,7 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
           onRejected={handleRejected}
           onTouchUp={onTouchUp}
           canDirectDelete={canDirectDelete}
+          disabled={disabled}
         />
       ))}
     </div>

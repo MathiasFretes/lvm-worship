@@ -1,36 +1,20 @@
-// Audio glue for the metronome — the only metronome module that imports
-// react-native-audio-api. Clicks are oscillator blips (no assets) scheduled
-// ahead of time on the audio clock with the classic lookahead pattern: a 25 ms
-// JS timer keeps ~120 ms of clicks queued at exact `ctx.currentTime`-relative
-// timestamps, so JS timer jitter never reaches the ear (a setInterval-triggered
-// play() would audibly drift). The same tick advances the visual beat by
-// consuming the queue of already-scheduled beats as the clock passes them.
-
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AudioContext, AudioManager } from 'react-native-audio-api'
-import {
-  beatEmphasis,
-  beatIntervalSec,
-  beatsInMeasure,
-  clampBpm,
-  type BeatEmphasis,
-  type TimeSignatureId,
-} from './pattern'
+import { clampBpm, type TimeSignatureId } from '@lavozmisionera/core/music/metronomePattern'
+import { runMetronome, type MetronomeCountIn, type MetronomeDivision, type MetronomePulse, type MetronomeVoice } from '@lavozmisionera/core/music/metronomeClock'
 
-const LOOKAHEAD_MS = 25
-const SCHEDULE_AHEAD_S = 0.12
-const START_DELAY_S = 0.08
 const CLICK_DECAY_S = 0.045
+type AudioSession = { ctx?: AudioContext; clear?: () => void }
 
-// Two click voices (accent vs regular) plus the 6/8 secondary accent between
-// them — same synthesis, different pitch/level, so the downbeat reads clearly.
-const CLICKS: Record<BeatEmphasis, { frequency: number; peak: number }> = {
+const CLICKS: Record<MetronomeVoice, { frequency: number; peak: number }> = {
   primary: { frequency: 1760, peak: 0.9 },
   secondary: { frequency: 1320, peak: 0.62 },
   normal: { frequency: 1000, peak: 0.42 },
+  countIn: { frequency: 2200, peak: 0.55 },
+  subdivision: { frequency: 740, peak: 0.23 },
 }
 
-function scheduleClick(ctx: AudioContext, at: number, emphasis: BeatEmphasis) {
+function scheduleClick(ctx: AudioContext, at: number, emphasis: MetronomeVoice) {
   const { frequency, peak } = CLICKS[emphasis]
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
@@ -43,16 +27,6 @@ function scheduleClick(ctx: AudioContext, at: number, emphasis: BeatEmphasis) {
   gain.connect(ctx.destination)
   osc.start(at)
   osc.stop(at + CLICK_DECAY_S + 0.02)
-}
-
-type ScheduledBeat = { beat: number; time: number }
-
-function dequeueSounding(queue: ScheduledBeat[], currentTime: number): number | null {
-  let beat: number | null = null
-  while (queue.length > 0 && queue[0].time <= currentTime) {
-    beat = queue.shift()!.beat
-  }
-  return beat
 }
 
 export interface Metronome {
@@ -70,6 +44,12 @@ export interface Metronome {
   setAccentEnabled: (on: boolean) => void
   /** 0-based beat currently sounding within the measure; null when stopped. */
   currentBeat: number | null
+  remaining: number
+  division: MetronomeDivision
+  setDivision: (division: MetronomeDivision) => void
+  countIn: MetronomeCountIn
+  setCountIn: (count: MetronomeCountIn) => void
+  error: boolean
 }
 
 export function useMetronome(initialBpm = 100): Metronome {
@@ -77,77 +57,59 @@ export function useMetronome(initialBpm = 100): Metronome {
   const [bpm, setBpmState] = useState(() => clampBpm(initialBpm))
   const [signature, setSignatureState] = useState<TimeSignatureId>('4/4')
   const [accentEnabled, setAccentEnabledState] = useState(true)
-  const [currentBeat, setCurrentBeat] = useState<number | null>(null)
-
-  const ctxRef = useRef<AudioContext | null>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // Scheduler-side mirrors of the knobs, so the tick never closes over stale state.
+  const [pulse, setPulse] = useState<MetronomePulse | null>(null)
+  const [division, setDivision] = useState<MetronomeDivision>(1)
+  const [countIn, setCountIn] = useState<MetronomeCountIn>(0)
+  const [error, setError] = useState(false)
   const bpmRef = useRef(bpm)
-  const sigRef = useRef(signature)
-  const accentRef = useRef(accentEnabled)
-  const nextTimeRef = useRef(0)
-  const beatRef = useRef(0)
-  const queueRef = useRef<ScheduledBeat[]>([])
-
-  const tick = useCallback(() => {
-    const ctx = ctxRef.current
-    if (!ctx) return
-    while (nextTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_S) {
-      const sig = sigRef.current
-      const beat = beatRef.current % beatsInMeasure(sig)
-      scheduleClick(ctx, nextTimeRef.current, beatEmphasis(sig, beat, accentRef.current))
-      queueRef.current.push({ beat, time: nextTimeRef.current })
-      nextTimeRef.current += beatIntervalSec(bpmRef.current)
-      beatRef.current = beat + 1
-    }
-    // Advance the visual indicator to the newest beat the clock has passed.
-    const sounding = dequeueSounding(queueRef.current, ctx.currentTime)
-    if (sounding !== null) setCurrentBeat(sounding)
-  }, [])
+  const settingsRef = useRef({ bpm, meter: signature, accent: accentEnabled, division, countIn })
+  settingsRef.current = { bpm, meter: signature, accent: accentEnabled, division, countIn }
+  const session = useRef<AudioSession | null>(null)
+  const audioActivity = useRef(Promise.resolve<unknown>(undefined))
 
   const stop = useCallback(() => {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    queueRef.current = []
+    const active = session.current
+    session.current = null
+    active?.clear?.()
+    if (active?.ctx) void active.ctx.close().catch(() => {})
+    if (active) audioActivity.current = audioActivity.current.then(() => AudioManager.setAudioSessionActivity(false)).catch(() => {})
     setRunning(false)
-    setCurrentBeat(null)
-    ctxRef.current?.suspend().catch(() => {})
-    AudioManager.setAudioSessionActivity(false).catch(() => {})
+    setPulse(null)
   }, [])
 
   const start = useCallback(async () => {
-    if (intervalRef.current !== null) return
-    AudioManager.setAudioSessionOptions({
-      iosCategory: 'playback',
-      iosMode: 'default',
-      iosOptions: ['mixWithOthers'],
-      iosAllowHaptics: true,
-    })
-    await AudioManager.setAudioSessionActivity(true).catch(() => {})
-    let ctx = ctxRef.current
-    if (!ctx) {
-      ctx = new AudioContext()
-      ctxRef.current = ctx
-    }
-    if (ctx.state === 'suspended') await ctx.resume().catch(() => {})
-    beatRef.current = 0
-    queueRef.current = []
-    nextTimeRef.current = ctx.currentTime + START_DELAY_S
+    if (session.current) return
+    const active: AudioSession = {}
+    session.current = active
+    setError(false)
     setRunning(true)
-    intervalRef.current = setInterval(tick, LOOKAHEAD_MS)
-    tick()
-  }, [tick])
-
-  useEffect(
-    () => () => {
+    try {
+      AudioManager.setAudioSessionOptions({
+        iosCategory: 'playback',
+        iosMode: 'default',
+        iosOptions: ['mixWithOthers'],
+        iosAllowHaptics: true,
+      })
+      const activation = audioActivity.current.then(() => {
+        if (session.current === active) return AudioManager.setAudioSessionActivity(true)
+      })
+      audioActivity.current = activation.catch(() => {})
+      await activation
+      if (session.current !== active) return
+      const ctx = new AudioContext()
+      active.ctx = ctx
+      if (ctx.state === 'suspended') await ctx.resume()
+      if (session.current !== active) return
+      active.clear = runMetronome(() => ctx.currentTime, () => settingsRef.current,
+        (at, emphasis) => scheduleClick(ctx, at, emphasis), setPulse)
+    } catch {
+      if (session.current !== active) return
       stop()
-      ctxRef.current?.close().catch(() => {})
-      ctxRef.current = null
-    },
-    [stop]
-  )
+      setError(true)
+    }
+  }, [stop])
+
+  useEffect(() => stop, [stop])
 
   const setBpm = useCallback((next: number) => {
     const clamped = clampBpm(next)
@@ -160,18 +122,6 @@ export function useMetronome(initialBpm = 100): Metronome {
     [setBpm]
   )
 
-  const setSignature = useCallback((sig: TimeSignatureId) => {
-    sigRef.current = sig
-    // Restart the measure so the next scheduled click is a downbeat.
-    beatRef.current = 0
-    setSignatureState(sig)
-  }, [])
-
-  const setAccentEnabled = useCallback((on: boolean) => {
-    accentRef.current = on
-    setAccentEnabledState(on)
-  }, [])
-
   return {
     running,
     start,
@@ -180,9 +130,15 @@ export function useMetronome(initialBpm = 100): Metronome {
     setBpm,
     stepBpm,
     signature,
-    setSignature,
+    setSignature: setSignatureState,
     accentEnabled,
-    setAccentEnabled,
-    currentBeat,
+    setAccentEnabled: setAccentEnabledState,
+    currentBeat: pulse?.beat ?? null,
+    remaining: pulse?.remaining ?? 0,
+    division,
+    setDivision,
+    countIn,
+    setCountIn,
+    error,
   }
 }

@@ -63,6 +63,9 @@ describe('SongView mobile dock', () => {
     )
 
     expect(await screen.findByRole('heading', { name: /abba/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Rehearsal audio' })).toHaveAttribute('href', '/mixer?song=song-1&slug=abba&title=Abba')
+    expect(screen.getByRole('link', { name: 'Tablature' })).toHaveAttribute('href', '/tablature?song=song-1&slug=abba&title=Abba')
+    expect(screen.getByRole('link', { name: 'Score' })).toHaveAttribute('href', '/score?song=song-1&slug=abba&title=Abba')
     expect(screen.getByRole('button', { name: /toggle chords/i })).toBeInTheDocument()
 
     // Download/Worship are icon-only on mobile but keep accessible names.

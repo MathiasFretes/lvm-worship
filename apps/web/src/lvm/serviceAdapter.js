@@ -1,47 +1,8 @@
-import { parseChordProOrLegacy } from '@lavozmisionera/core/chordpro/parser'
-import { stepsBetween, transposeSymPrefer } from '@lavozmisionera/core/chordpro/index.js'
+import { toSong } from '@lavozmisionera/core/setlists/worshipPlan.js'
+
+export { toSong }
 
 const SCHEMA_VERSION = '0.1'
-
-export function toSong(entry, sectionOrder, toKey) {
-  const parsed = parseChordProOrLegacy(entry.chordpro_content || '')
-  const sourceSections = parsed.sections
-    .map((section) => ({
-      kind: section.kind,
-      label: section.label || section.kind,
-      lines: section.lines
-        .filter((line) => line.lyrics.trim())
-        .map((line) => ({
-          text: line.lyrics,
-          chords: line.chords.map(({ sym, index }) => ({ symbol: sym, index })),
-        })),
-    }))
-    .filter((section) => section.lines.length)
-
-  if (!sourceSections.length) throw new Error(`Song ${entry.id} has no lyrics to present`)
-  const order = sectionOrder == null ? sourceSections.map((_, index) => index + 1) : sectionOrder
-  if (!Array.isArray(order) || !order.length || order.some((n) => !Number.isInteger(n) || n < 1 || n > sourceSections.length)) {
-    throw new Error(`Invalid section order for ${entry.title}: use numbers 1–${sourceSections.length}`)
-  }
-  const sourceKey = entry.originalKey || parsed.meta.key || ''
-  const steps = stepsBetween(sourceKey, toKey)
-  const sections = order.map((n) => sourceSections[n - 1]).map((section) => ({
-    ...section,
-    lines: section.lines.map((line) => ({
-      ...line,
-      chords: line.chords.map((chord) => ({
-        ...chord,
-        symbol: toKey ? transposeSymPrefer(chord.symbol, steps, toKey.includes('b')) : chord.symbol,
-      })),
-    })),
-  }))
-  return {
-    id: entry.id,
-    title: entry.title,
-    key: toKey || sourceKey,
-    sections,
-  }
-}
 
 export function buildService(plan, catalog) {
   if (!plan?.id || !plan?.title || !plan?.startsAt || !Array.isArray(plan?.setlist?.entries || plan?.setlist?.songIds)) {

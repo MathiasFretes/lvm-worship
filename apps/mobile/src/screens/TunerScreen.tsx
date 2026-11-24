@@ -16,7 +16,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 import type { Tokens } from '@lavozmisionera/tokens/native'
-import { STANDARD_TUNING, type TunerString } from '../lib/tuner/notes'
+import { STANDARD_TUNING, type TunerString } from '@lavozmisionera/core/music/tunerNotes'
 import { useTuner, type TunerFrame, type TunerReading } from '../lib/tuner/useTuner'
 
 // The guitar tuner (Utilities → Tuner). Auto-detects the nearest
