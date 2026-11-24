@@ -1,6 +1,10 @@
+@import "./brand/identity.css";
 /* UIKit-inspired tokens (Apple system colors) for La Voz Misionera */
 
 :root {
+  /* 60% neutral surfaces, 30% navy structure, 10% gold controls. */
+  --lvm-brand-gradient: linear-gradient(160deg, #304965 0%, #1c2a39 48%, #0d1624 100%);
+  --lvm-brand-pearl: #f5f3fa;
   /* Practice layout uses LVM's navy/gold identity in either surrounding theme. */
   --lvm-practice-bg: var(--lvm-brand-navy-raised);
   --lvm-practice-surface: var(--lvm-brand-navy);
@@ -93,7 +97,7 @@
 
   /* LVM Design System 0.1 — shared brand foundation for the new web shell. */
   --lvm-brand-navy: #1c2a39;
-  --lvm-brand-navy-raised: #172033;
+  --lvm-brand-navy-raised: #263b52;
   --lvm-brand-gold: #c6a15b;
   --lvm-gold-text-on-light: #825c18;
   --lvm-focus-ring: #b4872e;

@@ -351,7 +351,7 @@ function emitLayout(node, docs, depth = 1, parents = []) {
 
 function buildSwift(tokens, docs) {
   const { lightColors, darkColors, lightContrastBoost, darkContrastBoost } = tokens
-  const { spacing, radii, layout, typography } = tokens
+  const { spacing, radii, layout, typography, brandIdentity } = tokens
 
   const { colors, gradientKeys } = emitColors(
     lightColors,
@@ -398,6 +398,11 @@ ${gradients}}
 /// 4-pt spacing scale.
 enum LVMSpacing {
 ${emitScale('spacing', spacing, docs)}}
+
+// MARK: - Brand identity
+
+enum LVMBrandIdentity {
+${emitScale('brandIdentity', brandIdentity, docs)}}
 
 // MARK: - Radii
 

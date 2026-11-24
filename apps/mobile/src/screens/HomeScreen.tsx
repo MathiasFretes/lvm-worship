@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ConstrainedContent from '../components/ConstrainedContent'
+import BrandIdentity from '../components/BrandIdentity'
 import HeroOverscrollFill from '../components/HeroOverscrollFill'
 import SymbolIcon from '../components/SymbolIcon'
 import DailyWordCard from '../components/home/DailyWordCard'
@@ -382,22 +383,13 @@ export default function HomeScreen() {
             {/* Brand row + avatar */}
             <View
               style={{
-                height: 40,
+                minHeight: 40,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-                <Image
-                  source={require('../../assets/mark.webp')}
-                  accessibilityLabel="La Voz Misionera"
-                  style={{ width: 28, height: 28, borderRadius: 8 }}
-                />
-                <Text style={{ fontSize: 20, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-                  La Voz Misionera
-                </Text>
-              </View>
+              <BrandIdentity />
               <Pressable
                 onPress={onAvatar}
                 accessibilityRole="button"

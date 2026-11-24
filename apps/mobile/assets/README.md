@@ -2,8 +2,8 @@
 
 ## `icon.png` — the La Voz Misionera brand app icon
 
-`icon.png` is generated from the original `lvm-mark.svg`: the LVM white cross
-inside a gold circle on a navy field. The same source generates the
+`icon.png` is generated from the original `lvm-mark.svg`: the supplied book, flame and dove silhouette in pearl white
+on a circular navy gradient. The same source generates the
 macOS Studio AppIcon, so Mobile and Studio remain one product family.
 
 - **Requirements:** 1024×1024, **no alpha channel** (flat RGB PNG), no rounded
@@ -23,7 +23,7 @@ transparent**. Reusing `icon.png` as the splash image would show a hard-edged
 navy square floating on the splash background instead of the transparent mark.
 
 - `splash-icon.png` — mark for the **light** splash background (`#F6F7F9`).
-- `splash-icon-dark.png` — mark for the **dark** splash background (`#111C28`).
+- `splash-icon-dark.png` — mark for the **dark** splash background (`#0D1624`).
 - **Requirements:** 1024×1024, alpha channel intact, no background fill. Wired via
   the `expo-splash-screen` plugin in `apps/mobile/app.json`.
 - `imageWidth` in that plugin config (200) and `SPLASH_IMAGE_WIDTH` in
@@ -41,6 +41,8 @@ Regenerate after editing the SVG:
 ```sh
 npm run studio:icons
 ```
+
+Android uses `round-icon.png` as its circular launcher source and an inset foreground for the adaptive icon. The OS controls the outer mask. The authoritative proportion and colour policy is in `packages/tokens/brand/IDENTITY.md`.
 
 ## `sprites/` — the profile avatars (**WebP, via `expo-image` only**)
 
