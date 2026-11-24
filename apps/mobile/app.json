@@ -54,10 +54,11 @@
       }
     },
     "android": {
+      "icon": "./assets/round-icon.png",
       "package": "com.lavozmisionera.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E2227"
+        "backgroundColor": "#1C2A39"
       },
       "intentFilters": [
         {
@@ -102,7 +103,7 @@
           "backgroundColor": "#F6F7F9",
           "dark": {
             "image": "./assets/splash-icon-dark.png",
-            "backgroundColor": "#111C28"
+            "backgroundColor": "#0D1624"
           }
         }
       ],

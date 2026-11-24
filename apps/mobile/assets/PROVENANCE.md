@@ -52,3 +52,7 @@ Run `node apps/mobile/scripts/generate-lvm-assets.mjs` from the repository root.
 It preserves all 15 public sprite ids, emits 384×384 alpha WebP files, and
 writes the same bytes to `apps/mobile/assets/sprites` and
 `apps/web/public/sprites`.
+
+## Institutional artwork — 2026-11-24
+
+The book, flame and dove master was supplied by the user as `D:/IPLVM/LOGO - LA VOZ MISIONERA.pdf` and its Illustrator original. Launcher, splash and in-app mark now derive from these vector contours. Navy gradient and pearl white were requested explicitly. `packages/tokens/brand/IDENTITY.md` records proportions, colors and platform masks; the original files remain unchanged.

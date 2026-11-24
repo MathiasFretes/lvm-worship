@@ -23,9 +23,9 @@ enum LVMColor {
     /// Page background (the surface the list scrolls on).
     static let bg = LVMDynamicColor(
         light: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0),
-        dark: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0),
+        dark: LVMRGBA(red: 0.05098, green: 0.086275, blue: 0.141176, alpha: 1.0),
         lightIncreasedContrast: LVMRGBA(red: 0.964706, green: 0.968627, blue: 0.976471, alpha: 1.0),
-        darkIncreasedContrast: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0)
+        darkIncreasedContrast: LVMRGBA(red: 0.05098, green: 0.086275, blue: 0.141176, alpha: 1.0)
     ).color
 
     /// Raised surfaces: cards, tab bar, sheets.
@@ -179,9 +179,9 @@ enum LVMColor {
     /// Soft top-center highlight overlaid on the hero to hint the radial glow.
     static let heroGlow = LVMDynamicColor(
         light: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55),
-        dark: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 0.18),
+        dark: LVMRGBA(red: 0.960784, green: 0.952941, blue: 0.980392, alpha: 0.12),
         lightIncreasedContrast: LVMRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55),
-        darkIncreasedContrast: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 0.18)
+        darkIncreasedContrast: LVMRGBA(red: 0.960784, green: 0.952941, blue: 0.980392, alpha: 0.12)
     ).color
 }
 
@@ -197,11 +197,11 @@ enum LVMGradient {
         case .dark:
             return [
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.227451, green: 0.196078, blue: 0.121569, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.188235, green: 0.286275, blue: 0.396078, alpha: 1.0).color,
                     location: 0.0
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.14902, green: 0.219608, blue: 0.294118, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.14902, green: 0.231373, blue: 0.321569, alpha: 1.0).color,
                     location: 0.38
                 ),
                 Gradient.Stop(
@@ -209,22 +209,22 @@ enum LVMGradient {
                     location: 0.78
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.066667, green: 0.109804, blue: 0.156863, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.05098, green: 0.086275, blue: 0.141176, alpha: 1.0).color,
                     location: 1.0
                 ),
             ]
         default:
             return [
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.886275, green: 0.772549, blue: 0.541176, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.866667, green: 0.901961, blue: 0.937255, alpha: 1.0).color,
                     location: 0.0
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.921569, green: 0.85098, blue: 0.72549, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.905882, green: 0.929412, blue: 0.952941, alpha: 1.0).color,
                     location: 0.34
                 ),
                 Gradient.Stop(
-                    color: LVMRGBA(red: 0.945098, green: 0.921569, blue: 0.87451, alpha: 1.0).color,
+                    color: LVMRGBA(red: 0.945098, green: 0.956863, blue: 0.968627, alpha: 1.0).color,
                     location: 0.72
                 ),
                 Gradient.Stop(

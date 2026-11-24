@@ -96,14 +96,14 @@ export const lightColors: ThemeColors = {
   off: 'rgba(138,146,155,0.45)',
   sheetHandle: 'rgba(138,146,155,0.4)',
   heroGradient: {
-    colors: ['#E2C58A', '#EBD9B9', '#F1EBDF', '#F6F7F9'],
+    colors: ['#DDE6EF', '#E7EDF3', '#F1F4F7', '#F6F7F9'],
     locations: [0, 0.34, 0.72, 1],
   },
   heroGlow: 'rgba(255,255,255,0.55)',
 }
 
 export const darkColors: ThemeColors = {
-  bg: '#111C28',
+  bg: '#0D1624',
   surface: '#1C2A39',
   surfaceAlt: '#26384B',
   ink: '#F6F7F9',
@@ -123,10 +123,10 @@ export const darkColors: ThemeColors = {
   off: 'rgba(145,160,174,0.5)',
   sheetHandle: 'rgba(145,160,174,0.4)',
   heroGradient: {
-    colors: ['#3A321F', '#26384B', '#1C2A39', '#111C28'],
+    colors: ['#304965', '#263B52', '#1C2A39', '#0D1624'],
     locations: [0, 0.38, 0.78, 1],
   },
-  heroGlow: 'rgba(226,197,138,0.18)',
+  heroGlow: 'rgba(245,243,250,0.12)',
 }
 
 /**
