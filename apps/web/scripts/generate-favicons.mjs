@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const circle = readFileSync(resolve(webRoot, 'public/brand/lvm-circle.svg'))
 const square = readFileSync(resolve(webRoot, 'public/brand/lvm-square.svg'))
-const out = resolve(webRoot, 'public/icons/v3')
+const out = resolve(webRoot, 'public/icons/v4')
 mkdirSync(out, { recursive: true })
 writeFileSync(resolve(out, 'favicon.svg'), circle)
 for (const [name, size] of [
@@ -25,4 +25,4 @@ await sharp({ create: { width: 512, height: 512, channels: 3, background: '#1C2A
 const ico = await pngToIco([resolve(out, 'favicon-16x16.png'), resolve(out, 'favicon-32x32.png')])
 writeFileSync(resolve(out, 'favicon.ico'), ico)
 writeFileSync(resolve(webRoot, 'public/favicon.ico'), ico)
-console.log('LVM circular gradient icons generated in icons/v3')
+console.log('LVM circular gradient icons generated in icons/v4')
