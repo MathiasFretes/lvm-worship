@@ -275,3 +275,11 @@ export function getTokens(mode: ThemeMode, increaseContrast = false): Tokens {
   if (!increaseContrast) return base
   return { ...base, colors: { ...base.colors, ...getContrastBoost(mode) } }
 }
+
+/** Compact institutional identity; native text continues to use the system font. */
+export const brandIdentity = {
+  emblemSize: 40,
+  gap: 12,
+  nameSize: 15,
+  productSize: 12,
+} as const

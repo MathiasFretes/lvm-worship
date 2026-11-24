@@ -33,13 +33,13 @@
   padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--lvm-brand-nav-gap);
 }
 
 .lvm-worship-nav__brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--lvm-brand-lockup-gap);
   color: var(--lvm-worship-header-ink);
   font-weight: 700;
   white-space: nowrap;
@@ -48,17 +48,17 @@
 
 .lvm-worship-nav__brand-mark {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: var(--lvm-brand-emblem-size);
+  height: var(--lvm-brand-emblem-size);
   flex: none;
   border-radius: 50%;
   background: url('/brand/lvm-circle.svg') center / contain no-repeat;
 }
 
 .lvm-worship-nav__brand-copy { display: grid; line-height: 1.2; }
-.lvm-worship-nav__brand-copy strong { font-size: 14px; }
+.lvm-worship-nav__brand-copy strong { font-size: var(--lvm-brand-name-size); }
 .lvm-worship-nav__brand-copy strong span { color: var(--lvm-worship-gold); }
-.lvm-worship-nav__brand-copy small { font-size: 11px; font-weight: 500; }
+.lvm-worship-nav__brand-copy small { font-size: var(--lvm-brand-product-size); font-weight: 500; }
 [data-theme="dark"] .lvm-worship-nav__brand-copy strong span { color: #e2c58a; }
 
 .lvm-worship-nav__desktop,

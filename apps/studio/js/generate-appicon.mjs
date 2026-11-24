@@ -7,6 +7,7 @@ import sharp from 'sharp'
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const assets = path.join(repo, 'apps/mobile/assets')
 const source = await readFile(path.join(assets, 'lvm-mark.svg'))
+const micro = await readFile(path.join(repo, 'packages/tokens/brand/lvm-micro.svg'))
 const foreground = await readFile(path.join(repo, 'packages/tokens/brand/lvm-foreground.svg'))
 const iconset = path.join(repo, 'apps/studio/La Voz Misionera Studio/La Voz Misionera Studio/Assets.xcassets/AppIcon.appiconset')
 await mkdir(iconset, { recursive: true })
@@ -22,7 +23,7 @@ for (const suffix of ['', '-dark']) {
 const images = []
 for (const [size, scale] of [[16, 1], [16, 2], [32, 1], [32, 2], [128, 1], [128, 2], [256, 1], [256, 2], [512, 1], [512, 2]]) {
   const filename = `icon_${size}x${size}${scale === 2 ? '@2x' : ''}.png`
-  await sharp(source).resize(size * scale, size * scale).png().toFile(path.join(iconset, filename))
+  await sharp(size * scale <= 32 ? micro : source).resize(size * scale, size * scale).png().toFile(path.join(iconset, filename))
   images.push({ filename, idiom: 'mac', scale: `${scale}x`, size: `${size}x${size}` })
 }
 await writeFile(path.join(iconset, 'Contents.json'), JSON.stringify({ images, info: { author: 'lvm-generate-appicon', version: 1 } }, null, 2) + '\n')

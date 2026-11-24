@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const circle = readFileSync(resolve(webRoot, 'public/brand/lvm-circle.svg'))
+const micro = readFileSync(resolve(webRoot, 'public/brand/lvm-micro.svg'))
 const square = readFileSync(resolve(webRoot, 'public/brand/lvm-square.svg'))
 const out = resolve(webRoot, 'public/icons/v4')
 mkdirSync(out, { recursive: true })
@@ -16,7 +17,7 @@ for (const [name, size] of [
   ['favicon-16x16.png', 16], ['favicon-32x32.png', 32],
   ['android-chrome-192x192.png', 192], ['android-chrome-512x512.png', 512],
 ]) {
-  await sharp(circle).resize(size, size).png().toFile(resolve(out, name))
+  await sharp(size <= 32 ? micro : circle).resize(size, size).png().toFile(resolve(out, name))
 }
 await sharp(square).resize(180, 180).removeAlpha().png().toFile(resolve(out, 'apple-touch-icon.png'))
 const inset = await sharp(circle).resize(400, 400).png().toBuffer()

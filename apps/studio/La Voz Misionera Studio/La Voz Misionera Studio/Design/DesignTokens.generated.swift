@@ -248,6 +248,15 @@ enum LVMSpacing {
     static let xxl: CGFloat = 32
 }
 
+// MARK: - Brand identity
+
+enum LVMBrandIdentity {
+    static let emblemSize: CGFloat = 40
+    static let gap: CGFloat = 12
+    static let nameSize: CGFloat = 15
+    static let productSize: CGFloat = 12
+}
+
 // MARK: - Radii
 
 /// Corner radii.
